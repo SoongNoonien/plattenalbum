@@ -22,7 +22,7 @@ Features
 Building and installation
 -------------------------
 
-To build from the latest source, use::
+To build from source, use::
 
     ./autogen.sh
     make
