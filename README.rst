@@ -5,19 +5,13 @@ mpdevil is focused on playing your local music directly instead of managing play
 Features
 --------
 
--playing songs without doubleclicking
-
--displaying covers
-
--fetching lyrics form the web (based on PyLyrics 1.1.0)
-
--searching songs in your music library
-
--removing single tracks form playlist by hovering and pressing del
-
--sending notifications on title change
-
--managing multiple mpd servers
+1. playing songs without doubleclicking
+2. displaying covers
+3. fetching lyrics form the web (based on PyLyrics 1.1.0)
+4. searching songs in your music library
+5. removing single tracks form playlist by hovering and pressing del
+6. sending notifications on title change
+7. managing multiple mpd servers
 
 Building and installation
 -------------------------
