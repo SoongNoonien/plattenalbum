@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.mpdevil" path="/org/mpdevil/">
+    <key type="i" name="width">
+      <default>1080</default>
+      <summary>Default width of window</summary>
+      <description></description>
+    </key>
+    <key type="i" name="height">
+      <default>840</default>
+      <summary>Default height of window</summary>
+      <description></description>
+    </key>
+    <key type="i" name="paned1">
+      <default>170</default>
+      <summary>Default position of artist/album separator</summary>
+      <description></description>
+    </key>
+    <key type="i" name="paned2">
+      <default>680</default>
+      <summary>Default position of browser/playlist separator</summary>
+      <description></description>
+    </key>
+    <key type="i" name="album-cover">
+      <default>150</default>
+      <summary>Size of covers in album view</summary>
+      <description></description>
+    </key>
+    <key type="i" name="track-cover">
+      <default>400</default>
+      <summary>Size of main cover</summary>
+      <description></description>
+    </key>
+    <key type="b" name="show-stop">
+      <default>false</default>
+      <summary>Show stop button</summary>
+      <description></description>
+    </key>
+    <key type="b" name="show-album-view-tooltips">
+      <default>true</default>
+      <summary>Show tooltips in album-view</summary>
+      <description></description>
+    </key>
+    <key type="b" name="send-notify">
+      <default>false</default>
+      <summary>Send notification on title change</summary>
+      <description></description>
+    </key>
+    <key type="b" name="stop-on-quit">
+      <default>false</default>
+      <summary>Stop playback on quit</summary>
+      <description></description>
+    </key>
+    <key type="b" name="add-album">
+      <default>false</default>
+      <summary>Add selected album instead of playing</summary>
+      <description></description>
+    </key>
+    <key type="i" name="active-profile">
+      <default>0</default>
+      <summary>Active profile</summary>
+      <description></description>
+    </key>
+    <key type="as" name="profiles">
+      <default>["default"]</default>
+      <summary>List of profile names</summary>
+      <description></description>
+    </key>
+    <key type="as" name="hosts">
+      <default>["localhost"]</default>
+      <summary>List of hosts</summary>
+      <description></description>
+    </key>
+    <key type="ai" name="ports">
+      <default>[6600]</default>
+      <summary>List of ports</summary>
+      <description></description>
+    </key>
+    <key type="as" name="paths">
+      <default>[""]</default>
+      <summary>List of library paths</summary>
+      <description></description>
+    </key>
+  </schema>
+</schemalist>

@@ -1,0 +1,239 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-01-06 00:53+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: mpdevil.py:116 mpdevil.py:250 mpdevil.py:1215
+msgid "Artist"
+msgstr ""
+
+#: mpdevil.py:173 mpdevil.py:346 mpdevil.py:1260
+msgid "Unknown Title"
+msgstr ""
+
+#: mpdevil.py:184
+#, python-format
+msgid "%(album)s%(year)s (tracks: %(total_tracks)i) (%(total_length)s):"
+msgstr ""
+
+#: mpdevil.py:240 mpdevil.py:1205
+msgid "No"
+msgstr ""
+
+#: mpdevil.py:245 mpdevil.py:1210
+msgid "Title"
+msgstr ""
+
+#: mpdevil.py:255 mpdevil.py:1225
+msgid "Length"
+msgstr ""
+
+#: mpdevil.py:354 mpdevil.py:1268
+msgid "Unknown Artist"
+msgstr ""
+
+#: mpdevil.py:358 mpdevil.py:1272
+msgid "Unknown Album"
+msgstr ""
+
+#: mpdevil.py:567
+msgid "Select"
+msgstr ""
+
+#: mpdevil.py:569
+msgid "Profile:"
+msgstr ""
+
+#: mpdevil.py:571
+msgid "Name:"
+msgstr ""
+
+#: mpdevil.py:573
+msgid "Host:"
+msgstr ""
+
+#: mpdevil.py:575
+msgid "Port:"
+msgstr ""
+
+#: mpdevil.py:577
+msgid "Music lib:"
+msgstr ""
+
+#: mpdevil.py:667
+msgid "Choose directory"
+msgstr ""
+
+#: mpdevil.py:703
+msgid "Main cover size:"
+msgstr ""
+
+#: mpdevil.py:705
+msgid "Album-view cover size:"
+msgstr ""
+
+#: mpdevil.py:711
+msgid "Show stop button"
+msgstr ""
+
+#: mpdevil.py:714
+msgid "Show title list as tooltip in album view"
+msgstr ""
+
+#: mpdevil.py:717
+msgid "Send notification on title change"
+msgstr ""
+
+#: mpdevil.py:720
+msgid "Stop playback on quit"
+msgstr ""
+
+#: mpdevil.py:723
+msgid "Play selected album after current title"
+msgstr ""
+
+#: mpdevil.py:754 mpdevil.py:1432
+msgid "Settings"
+msgstr ""
+
+#: mpdevil.py:767
+msgid "General"
+msgstr ""
+
+#: mpdevil.py:768
+msgid "Profiles"
+msgstr ""
+
+#: mpdevil.py:919
+msgid "Random mode"
+msgstr ""
+
+#: mpdevil.py:921
+msgid "Repeat mode"
+msgstr ""
+
+#: mpdevil.py:923
+msgid "Single mode"
+msgstr ""
+
+#: mpdevil.py:925
+msgid "Consume mode"
+msgstr ""
+
+#: mpdevil.py:1019
+msgid "Right click to show additional information"
+msgstr ""
+
+#: mpdevil.py:1042
+msgid "MPD-Tag"
+msgstr ""
+
+#: mpdevil.py:1045 mpdevil.py:1153
+msgid "Value"
+msgstr ""
+
+#: mpdevil.py:1066
+#, python-format
+msgid ""
+"%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
+"channels, %(file_type)s"
+msgstr ""
+
+#: mpdevil.py:1132
+msgid "Stats"
+msgstr ""
+
+#: mpdevil.py:1150
+msgid "Tag"
+msgstr ""
+
+#: mpdevil.py:1170
+msgid "Search"
+msgstr ""
+
+#: mpdevil.py:1220
+msgid "Album"
+msgstr ""
+
+#: mpdevil.py:1275
+#, python-format
+msgid "Hits: %i"
+msgstr ""
+
+#: mpdevil.py:1279
+msgid "Lyrics"
+msgstr ""
+
+#: mpdevil.py:1323
+msgid "searching..."
+msgstr ""
+
+#: mpdevil.py:1327
+msgid "not found"
+msgstr ""
+
+#: mpdevil.py:1332
+msgid "not connected"
+msgstr ""
+
+#: mpdevil.py:1412
+msgid "Select profile"
+msgstr ""
+
+#: mpdevil.py:1416
+msgid "Return to album of current title"
+msgstr ""
+
+#: mpdevil.py:1418
+msgid "Title search"
+msgstr ""
+
+#: mpdevil.py:1420
+msgid "Show lyrics"
+msgstr ""
+
+#: mpdevil.py:1427
+msgid "Not connected to MPD-server. Reconnect?"
+msgstr ""
+
+#: mpdevil.py:1431
+msgid "Save window size"
+msgstr ""
+
+#: mpdevil.py:1433
+msgid "Update database"
+msgstr ""
+
+#: mpdevil.py:1434
+msgid "Server stats"
+msgstr ""
+
+#: mpdevil.py:1435
+msgid "About"
+msgstr ""
+
+#: mpdevil.py:1436
+msgid "Quit"
+msgstr ""
+
+#: mpdevil.py:1441
+msgid "Main menu"
+msgstr ""
+
+#: mpdevil.py:1593
+msgid "A small MPD client written in python"
+msgstr ""
