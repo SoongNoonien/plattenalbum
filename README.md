@@ -2,6 +2,8 @@ README for mpdevil
 ==================
 mpdevil is focused on playing your local music directly instead of managing playlists or playing network streams. So it neither supports saving playlists nor restoring them. Therefore mpdevil is mainly a music browser which aims to be easy to use. mpdevil dosen't store any client side database of your music library. Instead all tags and covers get presented to you in real time. So you'll never see any outdated information in your browser.
 
+![ScreenShot](screenshots/mainwindow.png)
+
 Features
 --------
 
