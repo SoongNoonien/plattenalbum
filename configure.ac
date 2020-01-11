@@ -41,6 +41,30 @@ else
     AC_MSG_ERROR(required gtk version not found)
 fi
 
+dnl Check for MPDClient
+AC_MSG_CHECKING(for MPDClient installed)
+prog="
+from mpd import MPDClient
+"
+if $PYTHON -c "$prog" 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_RESULT(not found)
+    AC_MSG_ERROR(MPDClient not found)
+fi
+
+dnl Check for beautifulsoup
+AC_MSG_CHECKING(for beautifulsoup installed)
+prog="
+from bs4 import BeautifulSoup, Comment
+"
+if $PYTHON -c "$prog" 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_RESULT(not found)
+    AC_MSG_ERROR(beautifulsoup not found)
+fi
+
 AC_CONFIG_FILES([Makefile
         po/Makefile.in
         bin/Makefile
