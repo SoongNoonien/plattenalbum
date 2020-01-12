@@ -113,7 +113,7 @@ class ArtistView(Gtk.ScrolledWindow):
 
 		#Old Name Column
 		renderer_text = Gtk.CellRendererText()
-		self.column_name = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=0)
+		self.column_name = Gtk.TreeViewColumn(_("Album Artist"), renderer_text, text=0)
 		self.column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_name.set_property("resizable", True)
 		self.column_name.set_sort_column_id(0)
@@ -175,8 +175,12 @@ class AlbumView(Gtk.ScrolledWindow):
 					track=song["track"].zfill(2)
 				except:
 					track="00"
-				length=length+float(song["duration"])
-				duration=str(datetime.timedelta(seconds=int(float(song["duration"]))))
+				try:
+					dura=float(song["duration"])
+				except:
+					dura=0.0
+				length=length+dura
+				duration=str(datetime.timedelta(seconds=int(dura)))
 				title_list=title_list+"\n"+(track+" - "+title+" ("+duration+")")
 			if not year == "":
 				year=" ("+year+")"
@@ -356,7 +360,11 @@ class TrackView(Gtk.Box):
 							album=song["album"]
 						except:
 							album=_("Unknown Album")
-						duration=str(datetime.timedelta(seconds=int(float(song["duration"]))))
+						try:
+							dura=float(song["duration"])
+						except:
+							dura=0.0
+						duration=str(datetime.timedelta(seconds=int(dura )))
 						self.store.append([track, title, artist, album, duration, song["file"].replace("&", "")])
 				self.playlist=self.client.playlist()
 			else:
@@ -882,13 +890,10 @@ class SeekBar(Gtk.Box):
 
 	def seek(self, range, scroll, value):
 		status=self.client.status()
-		try:
-			duration=float(status["duration"])
-			factor=(value/100)
-			pos=(duration*factor)
-			self.client.seekcur(pos)
-		except:
-			pass
+		duration=float(status["duration"])
+		factor=(value/100)
+		pos=(duration*factor)
+		self.client.seekcur(pos)
 
 	def update(self):
 		try:
@@ -1270,7 +1275,11 @@ class Search(Gtk.Dialog):
 				album=song["album"]
 			except:
 				album=_("Unknown Album")
-			duration=str(datetime.timedelta(seconds=int(float(song["duration"]))))
+			try:
+				dura=float(song["duration"])
+			except:
+				dura=0.0
+			duration=str(datetime.timedelta(seconds=int(dura)))
 			self.store.append([track, title, artist, album, duration, song["file"].replace("&", "")] )
 		self.label.set_text(_("Hits: %i") % (len(self.store)))
 
@@ -1561,6 +1570,7 @@ class mpdevil(Gtk.Application):
 	BASE_KEY = "org.mpdevil"
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, application_id="org.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
+		#Gtk.window_set_default_icon_name("mpdevil")
 		self.client=Client()
 		self.settings = Gio.Settings.new(self.BASE_KEY)
 		self.window=None
@@ -1592,6 +1602,7 @@ class mpdevil(Gtk.Application):
 		dialog.set_version(VERSION)
 		dialog.set_comments(_("A small MPD client written in python"))
 		dialog.set_authors(["Martin Wagner"])
+		dialog.set_website("https://github.com/SoongNoonien/mpdevil")
 		dialog.set_logo_icon_name(PACKAGE)
 		dialog.run()
 		dialog.destroy()
