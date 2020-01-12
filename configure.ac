@@ -50,7 +50,7 @@ if $PYTHON -c "$prog" 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD; then
     AC_MSG_RESULT(found)
 else
     AC_MSG_RESULT(not found)
-    AC_MSG_ERROR(MPDClient not found)
+    AC_MSG_ERROR(python module mpd not found)
 fi
 
 dnl Check for beautifulsoup
@@ -62,7 +62,19 @@ if $PYTHON -c "$prog" 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD; then
     AC_MSG_RESULT(found)
 else
     AC_MSG_RESULT(not found)
-    AC_MSG_ERROR(beautifulsoup not found)
+    AC_MSG_ERROR(python module bs4 not found)
+fi
+
+dnl Check for requests
+AC_MSG_CHECKING(for requests installed)
+prog="
+import requests
+"
+if $PYTHON -c "$prog" 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_RESULT(not found)
+    AC_MSG_ERROR(python module requests not found)
 fi
 
 AC_CONFIG_FILES([Makefile
