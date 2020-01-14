@@ -306,14 +306,11 @@ class TrackView(Gtk.Box):
 				for song in songs:
 					self.client.add(song["file"])
 		else:
-			if self.settings.get_boolean("add-album") and not force:
+			if self.settings.get_boolean("add-album") and not force and not self.client.status()["state"] == "stop":
 				self.selection.handler_block(self.title_change)
 				status=self.client.status()
-				try:
-					self.client.moveid(status["songid"], 0) #bad song index possible
-					self.song_to_delete=self.client.playlistinfo()[0]["file"]
-				except:
-					pass
+				self.client.moveid(status["songid"], 0)
+				self.song_to_delete=self.client.playlistinfo()[0]["file"]
 				self.selection.handler_unblock(self.title_change)
 				try:
 					self.client.delete((1,)) # delete all songs, but the first. #bad song index possible
