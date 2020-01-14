@@ -787,10 +787,10 @@ class ClientControl(Gtk.ButtonBox):
 		self.settings=settings
 
 		#widgets
-		self.play_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start", Gtk.IconSize.DND))
-		self.stop_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop", Gtk.IconSize.DND))
-		self.prev_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward", Gtk.IconSize.DND))
-		self.next_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward", Gtk.IconSize.DND))
+		self.play_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.DND))
+		self.stop_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", Gtk.IconSize.DND))
+		self.prev_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward-symbolic", Gtk.IconSize.DND))
+		self.next_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward-symbolic", Gtk.IconSize.DND))
 
 		#connect
 		self.play_button.connect("clicked", self.on_play_clicked)
@@ -813,15 +813,15 @@ class ClientControl(Gtk.ButtonBox):
 		if self.client.connected():
 			status=self.client.status()
 			if status["state"] == "play":
-				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-pause", Gtk.IconSize.DND))
+				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-pause-symbolic", Gtk.IconSize.DND))
 				self.prev_button.set_sensitive(True)
 				self.next_button.set_sensitive(True)
 			elif status["state"] == "pause":
-				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start", Gtk.IconSize.DND))
+				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.DND))
 				self.prev_button.set_sensitive(True)
 				self.next_button.set_sensitive(True)
 			else:
-				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start", Gtk.IconSize.DND))
+				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.DND))
 				self.prev_button.set_sensitive(False)
 				self.next_button.set_sensitive(False)
 		return True
@@ -1421,11 +1421,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.profiles.set_tooltip_text(_("Select profile"))
 		self.control=ClientControl(self.client, self.settings)
 		self.progress=SeekBar(self.client)
-		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-home", Gtk.IconSize.DND))
+		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-home-symbolic", Gtk.IconSize.DND))
 		self.go_home_button.set_tooltip_text(_("Return to album of current title"))
-		self.search_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("system-search", Gtk.IconSize.DND))
+		self.search_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("system-search-symbolic", Gtk.IconSize.DND))
 		self.search_button.set_tooltip_text(_("Title search"))
-		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles", Gtk.IconSize.DND))
+		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.DND))
 		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
 		self.play_opts=PlaybackOptions(self.client)
 
