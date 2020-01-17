@@ -269,7 +269,6 @@ class AlbumView(Gtk.ScrolledWindow):
 				except:
 					dura=0.0
 				length=length+dura
-				duration=str(datetime.timedelta(seconds=int(dura)))
 			length_human_readable=str(datetime.timedelta(seconds=int(length)))
 			tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": length_human_readable})
 			return tooltip
@@ -613,7 +612,6 @@ class Browser(Gtk.Box):
 					elif response == Gtk.ResponseType.YES:
 						self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
 					album.destroy()
-
 
 	def on_album_selection_change(self, widget):
 		paths=widget.get_selected_items()

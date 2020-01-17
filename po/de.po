@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-01-12 16:18+0100\n"
-"PO-Revision-Date: 2020-01-12 16:18+0100\n"
+"POT-Creation-Date: 2020-01-17 22:33+0100\n"
+"PO-Revision-Date: 2020-01-17 22:34+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -18,140 +18,140 @@ msgstr ""
 "X-Generator: Poedit 2.2.4\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: mpdevil.py:116
-msgid "Album Artist"
-msgstr "Albuminterpret"
-
-#: mpdevil.py:173 mpdevil.py:350 mpdevil.py:1265
-msgid "Unknown Title"
-msgstr "Unbekannter Titel"
-
-#: mpdevil.py:188
-#, python-format
-msgid "%(album)s%(year)s (tracks: %(total_tracks)i) (%(total_length)s):"
-msgstr "%(album)s%(year)s (Titel: %(total_tracks)i) (%(total_length)s):"
-
-#: mpdevil.py:244 mpdevil.py:1210
+#: mpdevil.py:120 mpdevil.py:328 mpdevil.py:1302
 msgid "No"
 msgstr "Nr."
 
-#: mpdevil.py:249 mpdevil.py:1215
+#: mpdevil.py:125 mpdevil.py:333 mpdevil.py:1307
 msgid "Title"
 msgstr "Titel"
 
-#: mpdevil.py:254 mpdevil.py:1220
+#: mpdevil.py:130 mpdevil.py:338 mpdevil.py:1312
 msgid "Artist"
 msgstr "Interpret"
 
-#: mpdevil.py:259 mpdevil.py:1230
+#: mpdevil.py:135 mpdevil.py:343 mpdevil.py:1322
 msgid "Length"
 msgstr "Länge"
 
-#: mpdevil.py:358 mpdevil.py:1273
+#: mpdevil.py:174 mpdevil.py:431 mpdevil.py:1358
+msgid "Unknown Title"
+msgstr "Unbekannter Titel"
+
+#: mpdevil.py:178 mpdevil.py:439 mpdevil.py:1366
 msgid "Unknown Artist"
 msgstr "Unbekannter Künstler"
 
-#: mpdevil.py:362 mpdevil.py:1277
+#: mpdevil.py:214
+msgid "Album Artist"
+msgstr "Albuminterpret"
+
+#: mpdevil.py:273
+#, python-format
+msgid "%(total_tracks)i titles (%(total_length)s)"
+msgstr "%(total_tracks)i Titel (%(total_length)s)"
+
+#: mpdevil.py:443 mpdevil.py:1370
 msgid "Unknown Album"
 msgstr "Unbekanntes Album"
 
-#: mpdevil.py:575
+#: mpdevil.py:669
 msgid "Select"
 msgstr "Auswählen"
 
-#: mpdevil.py:577
+#: mpdevil.py:671
 msgid "Profile:"
 msgstr "Profil:"
 
-#: mpdevil.py:579
+#: mpdevil.py:673
 msgid "Name:"
 msgstr "Name:"
 
-#: mpdevil.py:581
+#: mpdevil.py:675
 msgid "Host:"
 msgstr "Host:"
 
-#: mpdevil.py:583
+#: mpdevil.py:677
 msgid "Port:"
 msgstr "Port:"
 
-#: mpdevil.py:585
+#: mpdevil.py:679
 msgid "Music lib:"
 msgstr "Musikverzeichnis:"
 
-#: mpdevil.py:675
+#: mpdevil.py:769
 msgid "Choose directory"
 msgstr "Verzeichnis Wählen"
 
-#: mpdevil.py:711
+#: mpdevil.py:805
 msgid "Main cover size:"
 msgstr "Größe des Haupt-Covers:"
 
-#: mpdevil.py:713
+#: mpdevil.py:807
 msgid "Album-view cover size:"
 msgstr "Covergröße in Albumansicht:"
 
-#: mpdevil.py:719
+#: mpdevil.py:813
 msgid "Show stop button"
 msgstr "Zeige Stopp-Knopf"
 
-#: mpdevil.py:722
-msgid "Show title list as tooltip in album view"
-msgstr "Zeige Titellisten als Tooltips in Albumansicht"
+#: mpdevil.py:816
+msgid "Show tooltips in album view"
+msgstr "Zeige Tooltips in Albumansicht"
 
-#: mpdevil.py:725
+#: mpdevil.py:819
 msgid "Send notification on title change"
 msgstr "Sende Benachrichtigung bei Titelwechsel"
 
-#: mpdevil.py:728
+#: mpdevil.py:822
 msgid "Stop playback on quit"
 msgstr "Wiedergabe beim Beenden stoppen"
 
-#: mpdevil.py:731
+#: mpdevil.py:825
 msgid "Play selected album after current title"
 msgstr "Ausgewähltes Album hinter aktuellem Titel einreihen"
 
-#: mpdevil.py:762 mpdevil.py:1441
+#: mpdevil.py:856 mpdevil.py:1534
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: mpdevil.py:775
+#: mpdevil.py:869
 msgid "General"
 msgstr "Allgemein"
 
-#: mpdevil.py:776
+#: mpdevil.py:870
 msgid "Profiles"
 msgstr "Profile"
 
-#: mpdevil.py:924
+#: mpdevil.py:1018
 msgid "Random mode"
 msgstr "Zufallsmodus"
 
-#: mpdevil.py:926
+#: mpdevil.py:1020
 msgid "Repeat mode"
 msgstr "Dauerschleife"
 
-#: mpdevil.py:928
+#: mpdevil.py:1022
 msgid "Single mode"
 msgstr "Einzelstückmodus"
 
-#: mpdevil.py:930
+#: mpdevil.py:1024
 msgid "Consume mode"
 msgstr "Playliste verbrauchen"
 
-#: mpdevil.py:1024
+#: mpdevil.py:1118
 msgid "Right click to show additional information"
 msgstr "Rechtsclick für weitere Informationen"
 
-#: mpdevil.py:1047
+#: mpdevil.py:1141
 msgid "MPD-Tag"
 msgstr "MPD-Tag"
 
-#: mpdevil.py:1050 mpdevil.py:1158
+#: mpdevil.py:1144 mpdevil.py:1252
 msgid "Value"
 msgstr "Wert"
 
-#: mpdevil.py:1071
+#: mpdevil.py:1165
 #, python-format
 msgid ""
 "%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
@@ -160,88 +160,88 @@ msgstr ""
 "%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
 "Kanäle, %(file_type)s"
 
-#: mpdevil.py:1137
+#: mpdevil.py:1231
 msgid "Stats"
 msgstr "Statistik"
 
-#: mpdevil.py:1155
+#: mpdevil.py:1249
 msgid "Tag"
 msgstr "Tag"
 
-#: mpdevil.py:1175
+#: mpdevil.py:1269
 msgid "Search"
 msgstr "Suche"
 
-#: mpdevil.py:1225
+#: mpdevil.py:1317
 msgid "Album"
 msgstr "Album"
 
-#: mpdevil.py:1284
+#: mpdevil.py:1377
 #, python-format
 msgid "Hits: %i"
 msgstr "Treffer: %i"
 
-#: mpdevil.py:1288
+#: mpdevil.py:1381
 msgid "Lyrics"
 msgstr "Liedtext"
 
-#: mpdevil.py:1332
+#: mpdevil.py:1425
 msgid "searching..."
 msgstr "suche..."
 
-#: mpdevil.py:1336
+#: mpdevil.py:1429
 msgid "not found"
 msgstr "nicht gefunden"
 
-#: mpdevil.py:1341
+#: mpdevil.py:1434
 msgid "not connected"
 msgstr "nicht verbunden"
 
-#: mpdevil.py:1421
+#: mpdevil.py:1514
 msgid "Select profile"
 msgstr "Profil auswählen"
 
-#: mpdevil.py:1425
+#: mpdevil.py:1518
 msgid "Return to album of current title"
 msgstr "Zu Album des aktuellen Titels zurückkehren"
 
-#: mpdevil.py:1427
+#: mpdevil.py:1520
 msgid "Title search"
 msgstr "Titelsuche"
 
-#: mpdevil.py:1429
+#: mpdevil.py:1522
 msgid "Show lyrics"
 msgstr "Zeige Liedtext"
 
-#: mpdevil.py:1436
+#: mpdevil.py:1529
 msgid "Not connected to MPD-server. Reconnect?"
 msgstr "Nicht mit MPD-Server verbunden. Verbindung wiederherstellen?"
 
-#: mpdevil.py:1440
+#: mpdevil.py:1533
 msgid "Save window size"
 msgstr "Fenstergröße speichern"
 
-#: mpdevil.py:1442
+#: mpdevil.py:1535
 msgid "Update database"
 msgstr "Datenbank aktualisieren"
 
-#: mpdevil.py:1443
+#: mpdevil.py:1536
 msgid "Server stats"
 msgstr "Serverstatistik"
 
-#: mpdevil.py:1444
+#: mpdevil.py:1537
 msgid "About"
 msgstr "Über"
 
-#: mpdevil.py:1445
+#: mpdevil.py:1538
 msgid "Quit"
 msgstr "Beenden"
 
-#: mpdevil.py:1450
+#: mpdevil.py:1543
 msgid "Main menu"
 msgstr "Hauptmenu"
 
-#: mpdevil.py:1603
+#: mpdevil.py:1696
 msgid "A small MPD client written in python"
 msgstr ""
 
