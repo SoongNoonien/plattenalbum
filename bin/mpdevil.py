@@ -1269,7 +1269,7 @@ class ServerStats(Gtk.Dialog):
 class Search(Gtk.Dialog):
 	def __init__(self, parent, client):
 		Gtk.Dialog.__init__(self, title=_("Search"), transient_for=parent)
-		self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+		self.add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
 		self.set_default_size(800, 600)
 
 		#adding vars
