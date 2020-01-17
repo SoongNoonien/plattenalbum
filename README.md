@@ -12,9 +12,10 @@ Features
 3. fetching lyrics form the web (based on PyLyrics 1.1.0)
 4. searching songs in your music library
 5. removing single tracks form playlist by hovering and pressing del
-6. appending albums by rightclick 
-7. sending notifications on title change
-8. managing multiple mpd servers
+6. appending albums by middleclick
+7. query albums by rightclick 
+8. sending notifications on title change
+9. managing multiple mpd servers
 
 TODO
 ----
