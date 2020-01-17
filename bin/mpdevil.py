@@ -89,6 +89,104 @@ class Client(MPDClient):
 		except:
 			return False
 
+class AlbumDialog(Gtk.Dialog):
+	def __init__(self, parent, client, album, artist, year):
+		Gtk.Dialog.__init__(self, title=(artist+" - "+album+" ("+year+")"), transient_for=parent)
+		self.add_buttons(Gtk.STOCK_ADD, Gtk.ResponseType.ACCEPT, Gtk.STOCK_MEDIA_PLAY, Gtk.ResponseType.YES, Gtk.STOCK_OK, Gtk.ResponseType.OK, Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+		self.set_default_size(800, 600)
+
+		#adding vars
+		self.client=client
+
+		#scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+
+		#Store
+		#(track, title, artist, duration, file)
+		self.store = Gtk.ListStore(str, str, str, str, str)
+
+		#TreeView
+		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview.set_search_column(-1)
+		self.treeview.columns_autosize()
+
+		self.selection = self.treeview.get_selection()
+		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
+
+		#Column
+		renderer_text = Gtk.CellRendererText()
+
+		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text, text=0)
+		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_track.set_property("resizable", False)
+		self.treeview.append_column(self.column_track)
+
+		self.column_title = Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
+		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_title.set_property("resizable", False)
+		self.treeview.append_column(self.column_title)
+
+		self.column_artist = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
+		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_artist.set_property("resizable", False)
+		self.treeview.append_column(self.column_artist)
+
+		self.column_time = Gtk.TreeViewColumn(_("Length"), renderer_text, text=3)
+		self.column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_time.set_property("resizable", False)
+		self.treeview.append_column(self.column_time)
+
+		self.populate_treeview(album, artist, year)
+
+		#connect
+		self.title_activated=self.treeview.connect("row-activated", self.on_row_activated)
+
+		#packing
+		scroll.add(self.treeview)
+		self.vbox.pack_start(scroll, True, True, 0) #vbox default widget of dialogs
+		self.show_all()
+
+		#selection workaround
+		self.selection.unselect_all()
+		self.title_change=self.selection.connect("changed", self.on_selection_change)
+
+	def on_row_activated(self, widget, path, view_column):
+		treeiter=self.store.get_iter(path)
+		selected_title=self.store.get_value(treeiter, 4)
+		self.client.clear()
+		self.client.add(selected_title)
+		self.client.play(0)
+
+	def on_selection_change(self, widget):
+		treeiter=widget.get_selected()[1]
+		if not treeiter == None:
+			selected_title=self.store.get_value(treeiter, 4)
+			self.client.add(selected_title)
+
+	def populate_treeview(self, album, artist, year):
+		songs=self.client.find("album", album, "date", year, "albumartist", artist)
+		if not songs == []:
+			for song in songs:
+				try:
+					title=song["title"]
+				except:
+					title=_("Unknown Title")
+				try:
+					artist=song["artist"]
+				except:
+					artist=_("Unknown Artist")
+				try:
+					track=song["track"].zfill(2)
+				except:
+					track="00"
+				try:
+					dura=float(song["duration"])
+				except:
+					dura=0.0
+				duration=str(datetime.timedelta(seconds=int(dura)))
+				self.store.append([track, title, artist, duration, song["file"]] )
+
 class ArtistView(Gtk.ScrolledWindow):
 	def __init__(self, client):
 		Gtk.ScrolledWindow.__init__(self)
@@ -161,32 +259,20 @@ class AlbumView(Gtk.ScrolledWindow):
 
 		self.add(self.iconview)
 
-	def gen_title_list(self, album, artist, year): #needed for tooltips
+	def gen_tooltip(self, album, artist, year):
 		if self.settings.get_boolean("show-album-view-tooltips"):
 			songs=self.client.find("album", album, "date", year, "albumartist", artist)
 			length=float(0)
-			title_list=""
 			for song in songs:
-				try:
-					title=song["title"]
-				except:
-					title=_("Unknown Title")
-				try:
-					track=song["track"].zfill(2)
-				except:
-					track="00"
 				try:
 					dura=float(song["duration"])
 				except:
 					dura=0.0
 				length=length+dura
 				duration=str(datetime.timedelta(seconds=int(dura)))
-				title_list=title_list+"\n"+(track+" - "+title+" ("+duration+")")
-			if not year == "":
-				year=" ("+year+")"
 			length_human_readable=str(datetime.timedelta(seconds=int(length)))
-			title_list=(_("%(album)s%(year)s (tracks: %(total_tracks)i) (%(total_length)s):") % {"album": album, "year": year, "total_tracks": len(songs), "total_length": length_human_readable})+title_list
-			return title_list.replace("&", "") #& must not be in tooltips
+			tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": length_human_readable})
+			return tooltip
 		else:
 			return None
 
@@ -206,9 +292,9 @@ class AlbumView(Gtk.ScrolledWindow):
 			cover=Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
 			img=cover.get_pixbuf(size)
 			if album["year"] == "":
-				self.store.append([img, album["album"], self.gen_title_list(album["album"], artist, album["year"]), album["album"], album["year"]])
+				self.store.append([img, album["album"], self.gen_tooltip(album["album"], artist, album["year"]), album["album"], album["year"]])
 			else:
-				self.store.append([img, album["album"]+" ("+album["year"]+")", self.gen_title_list(album["album"], artist, album["year"]), album["album"], album["year"]])
+				self.store.append([img, album["album"]+" ("+album["year"]+")", self.gen_tooltip(album["album"], artist, album["year"]), album["album"], album["year"]])
 			while Gtk.events_pending():
 				Gtk.main_iteration_do(True)
 
@@ -231,7 +317,6 @@ class TrackView(Gtk.Box):
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
-		self.treeview.set_tooltip_column(5)
 		self.treeview.columns_autosize()
 
 		#selection
@@ -422,12 +507,13 @@ class TrackView(Gtk.Box):
 		self.client.play(selected_title)
 
 class Browser(Gtk.Box):
-	def __init__(self, client, settings):
+	def __init__(self, client, settings, window):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
+		self.window=window
 
 		#widgets
 		self.artist_list=ArtistView(self.client)
@@ -507,14 +593,27 @@ class Browser(Gtk.Box):
 
 	def on_album_view_button_press_event(self, widget, event):
 		path = widget.get_path_at_pos(int(event.x), int(event.y))
-		if event.button == 3:
-			if not path == None:
+		if not path == None:
+			if not event.button == 1:
 				treeiter=self.album_list.store.get_iter(path)
 				selected_album=self.album_list.store.get_value(treeiter, 3)
 				selected_album_year=self.album_list.store.get_value(treeiter, 4)
 				treeiter=self.artist_list.selection.get_selected()[1]
 				selected_artist=self.artist_list.store.get_value(treeiter, 0)
+			if event.button == 2:
 				self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
+			elif event.button == 3:
+				if self.client.connected():
+					album = AlbumDialog(self.window, self.client, selected_album, selected_artist, selected_album_year)
+					response = album.run()
+					if response == Gtk.ResponseType.OK:
+						self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, False)
+					elif response == Gtk.ResponseType.ACCEPT:
+						self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
+					elif response == Gtk.ResponseType.YES:
+						self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
+					album.destroy()
+
 
 	def on_album_selection_change(self, widget):
 		paths=widget.get_selected_items()
@@ -716,7 +815,7 @@ class GeneralSettings(Gtk.Grid):
 		show_stop=Gtk.CheckButton(label=_("Show stop button"))
 		show_stop.set_active(self.settings.get_boolean("show-stop"))
 
-		show_album_view_tooltips=Gtk.CheckButton(label=_("Show title list as tooltip in album view"))
+		show_album_view_tooltips=Gtk.CheckButton(label=_("Show tooltips in album view"))
 		show_album_view_tooltips.set_active(self.settings.get_boolean("show-album-view-tooltips"))
 
 		send_notify=Gtk.CheckButton(label=_("Send notification on title change"))
@@ -1182,7 +1281,6 @@ class Search(Gtk.Dialog):
 
 		#search entry
 		self.search_entry=Gtk.SearchEntry()
-		self.search_entry.connect("search-changed", self.on_search_changed)
 
 		#label
 		self.label=Gtk.Label()
@@ -1195,7 +1293,6 @@ class Search(Gtk.Dialog):
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
-		self.treeview.set_tooltip_column(5)
 		self.treeview.columns_autosize()
 
 		self.selection = self.treeview.get_selection()
@@ -1232,6 +1329,7 @@ class Search(Gtk.Dialog):
 		#connect
 		self.title_activated=self.treeview.connect("row-activated", self.on_row_activated)
 		self.title_change=self.selection.connect("changed", self.on_selection_change)
+		self.search_entry.connect("search-changed", self.on_search_changed)
 
 		#packing
 		scroll.add(self.treeview)
@@ -1413,7 +1511,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.add_action(update_action)
 
 		#widgets
-		self.browser=Browser(self.client, self.settings)
+		self.browser=Browser(self.client, self.settings, self)
 		self.profiles=ProfileSelect(self.client, self.settings)
 		self.profiles.set_tooltip_text(_("Select profile"))
 		self.control=ClientControl(self.client, self.settings)
