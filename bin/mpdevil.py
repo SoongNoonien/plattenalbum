@@ -145,6 +145,7 @@ class AlbumDialog(Gtk.Dialog):
 		#packing
 		scroll.add(self.treeview)
 		self.vbox.pack_start(scroll, True, True, 0) #vbox default widget of dialogs
+		self.vbox.set_spacing(6)
 		self.show_all()
 
 		#selection workaround
@@ -869,6 +870,7 @@ class SettingsDialog(Gtk.Dialog):
 		tabs.append_page(general, Gtk.Label(label=_("General")))
 		tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 		self.vbox.pack_start(tabs, True, True, 0) #vbox default widget of dialogs
+		self.vbox.set_spacing(6)
 
 		self.show_all()
 
@@ -967,7 +969,9 @@ class SeekBar(Gtk.Box):
 
 		#widgets
 		self.elapsed=Gtk.Label()
+		self.elapsed.set_width_chars(7)
 		self.rest=Gtk.Label()
+		self.rest.set_width_chars(8)
 		self.scale=Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=0, max=100, step=0.001)
 		self.scale.set_draw_value(False)
 
@@ -1572,6 +1576,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.hbox.pack_end(menu_button, False, False, 0)
 
 		self.add(self.vbox)
+		self.show_all()
 
 	def update(self, app): #update title and send notify
 		if self.client.connected():
@@ -1663,15 +1668,15 @@ class mpdevil(Gtk.Application):
 	BASE_KEY = "org.mpdevil"
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, application_id="org.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
-		#Gtk.window_set_default_icon_name("mpdevil")
 		self.client=Client()
 		self.settings = Gio.Settings.new(self.BASE_KEY)
 		self.window=None
 
 	def do_activate(self):
-		self.window = MainWindow(self, self.client, self.settings)
-		self.window.connect("delete-event", self.on_delete_event)
-		self.window.show_all()
+		if not self.window: #allow just one instance
+			self.window = MainWindow(self, self.client, self.settings)
+			self.window.connect("delete-event", self.on_delete_event)
+		self.window.present()
 
 	def do_startup(self):
 		Gtk.Application.do_startup(self)
