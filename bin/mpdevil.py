@@ -92,7 +92,7 @@ class Client(MPDClient):
 class AlbumDialog(Gtk.Dialog):
 	def __init__(self, parent, client, album, artist, year):
 		Gtk.Dialog.__init__(self, title=(artist+" - "+album+" ("+year+")"), transient_for=parent)
-		self.add_buttons(Gtk.STOCK_ADD, Gtk.ResponseType.ACCEPT, Gtk.STOCK_MEDIA_PLAY, Gtk.ResponseType.YES, Gtk.STOCK_OK, Gtk.ResponseType.OK, Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+		self.add_buttons(Gtk.STOCK_ADD, Gtk.ResponseType.ACCEPT, Gtk.STOCK_MEDIA_PLAY, Gtk.ResponseType.YES, Gtk.STOCK_OPEN, Gtk.ResponseType.OK, Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
 		self.set_default_size(800, 600)
 
 		#adding vars
@@ -606,7 +606,7 @@ class Browser(Gtk.Box):
 					album = AlbumDialog(self.window, self.client, selected_album, selected_artist, selected_album_year)
 					response = album.run()
 					if response == Gtk.ResponseType.OK:
-						self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, False)
+						self.album_list.iconview.select_path(path)
 					elif response == Gtk.ResponseType.ACCEPT:
 						self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
 					elif response == Gtk.ResponseType.YES:
