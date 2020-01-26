@@ -79,8 +79,18 @@ class Cover(object):
 		return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
 
 class Client(MPDClient):
-	def __init__(self):
+	def __init__(self, settings):
 		MPDClient.__init__(self)
+		self.settings = settings
+
+		self.try_connect_default()
+
+	def try_connect_default(self):
+		active=self.settings.get_int("active-profile")
+		try:
+			self.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
+		except:
+			pass
 
 	def connected(self):
 		try:
@@ -1201,15 +1211,17 @@ class ProfileSelect(Gtk.ComboBoxText):
 		self.client=client
 		self.settings=settings
 
+		#connect
 		self.changed=self.connect("changed", self.on_changed)
-
-		self.reload()
-		self.set_active(self.settings.get_int("active-profile"))
-
 		self.settings.connect("changed::profiles", self.on_settings_changed)
 		self.settings.connect("changed::hosts", self.on_settings_changed)
 		self.settings.connect("changed::ports", self.on_settings_changed)
 		self.settings.connect("changed::paths", self.on_settings_changed)
+
+		self.reload()
+		self.handler_block(self.changed)
+		self.set_active(self.settings.get_int("active-profile"))
+		self.handler_unblock(self.changed)
 
 	def reload(self, *args):
 		self.handler_block(self.changed)
@@ -1224,11 +1236,8 @@ class ProfileSelect(Gtk.ComboBoxText):
 	def on_changed(self, *args):
 		active=self.get_active()
 		self.settings.set_int("active-profile", active)
-		try:
-			self.client.disconnect()
-			self.client.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
-		except:
-			pass
+		self.client.disconnect()
+		self.client.try_connect_default()
 
 class ServerStats(Gtk.Dialog):
 	def __init__(self, parent, client):
@@ -1387,15 +1396,11 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 		self.set_default_size(450, 800)
 
 		#adding vars
-		self.client=Client()
 		self.settings=settings
+		self.client=Client(self.settings)
 
 		#connect client
-		active=self.settings.get_int("active-profile")
-		try:
-			self.client.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
-		except:
-			pass
+		self.client.try_connect_default()
 		self.current_song={}
 
 		#widgets
@@ -1422,7 +1427,7 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 
 		def update_loop():
 			while not self.stop:
-				try:
+				if self.client.connected():
 					cs=self.client.currentsong()
 					cs.pop("pos") #avoid unnecessary reloads caused by position change of current title
 					if cs != self.current_song:
@@ -1433,7 +1438,7 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 							text=_("not found")
 						GLib.idle_add(update_label, text)
 						self.current_song=cs
-				except:
+				else:
 					self.current_song={}
 					GLib.idle_add(update_label, _("not connected"))
 				time.sleep(1)
@@ -1477,12 +1482,8 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 			return output.encode('utf-8')
 
 	def on_settings_changed(self, *args):
-		active=self.settings.get_int("active-profile")
-		try:
-			self.client.disconnect()
-			self.client.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
-		except:
-			pass
+		self.client.disconnect()
+		self.client.try_connect_default()
 
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings):
@@ -1616,11 +1617,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_info_bar_response(self, info_bar, response_id):
 		if response_id == Gtk.ResponseType.OK:
-			active=self.settings.get_int("active-profile")
-			try:
-				self.client.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
-			except:
-				pass
+			self.client.try_connect_default()
 			info_bar.set_revealed(False)
 
 	def on_search_clicked(self, widget):
@@ -1668,8 +1665,8 @@ class mpdevil(Gtk.Application):
 	BASE_KEY = "org.mpdevil"
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, application_id="org.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
-		self.client=Client()
 		self.settings = Gio.Settings.new(self.BASE_KEY)
+		self.client=Client(self.settings)
 		self.window=None
 
 	def do_activate(self):
