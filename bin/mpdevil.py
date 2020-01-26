@@ -157,7 +157,7 @@ class AlbumDialog(Gtk.Dialog):
 		selected_title=self.store.get_value(treeiter, 4)
 		self.client.clear()
 		self.client.add(selected_title)
-		self.client.play(0)
+		self.client.play()
 
 	def on_selection_change(self, widget):
 		treeiter=widget.get_selected()[1]
@@ -416,7 +416,7 @@ class TrackView(Gtk.Box):
 					self.client.clear()
 					for song in songs:
 						self.client.add(song["file"])
-					self.client.play(0)
+					self.client.play()
 
 	def refresh(self):
 		self.selection.handler_block(self.title_change)
@@ -463,7 +463,7 @@ class TrackView(Gtk.Box):
 				path = Gtk.TreePath(int(song))
 				self.selection.select_path(path)
 			except:
-				self.selection.select_path(Gtk.TreePath(0))
+				self.selection.unselect_all()
 		else:
 			self.store.clear()
 			self.playlist=[]
@@ -934,7 +934,7 @@ class ClientControl(Gtk.ButtonBox):
 					self.client.play(status["song"])
 				except:
 					try:
-						self.client.play(0) #bad song index possible
+						self.client.play()
 					except:
 						pass
 			self.update()
@@ -1345,7 +1345,7 @@ class Search(Gtk.Dialog):
 		selected_title=self.store.get_value(treeiter, 5)
 		self.client.clear()
 		self.client.add(selected_title)
-		self.client.play(0)
+		self.client.play()
 
 	def on_selection_change(self, widget):
 		treeiter=widget.get_selected()[1]
