@@ -83,8 +83,6 @@ class Client(MPDClient):
 		MPDClient.__init__(self)
 		self.settings = settings
 
-		self.try_connect_default()
-
 	def try_connect_default(self):
 		active=self.settings.get_int("active-profile")
 		try:
@@ -1577,6 +1575,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.hbox.pack_end(menu_button, False, False, 0)
 
 		self.add(self.vbox)
+
+		#connect client
+		self.client.try_connect_default()
+
 		self.show_all()
 
 	def update(self, app): #update title and send notify
