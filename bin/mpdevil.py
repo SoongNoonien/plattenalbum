@@ -20,7 +20,7 @@
 
 import gi #python-gobject  dev-python/pygobject:3[${PYTHON_USEDEP}]
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, GObject, GLib
+from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
 from mpd import MPDClient
 import requests #dev-python/requests
 from bs4 import BeautifulSoup, Comment #, NavigableString #dev-python/beautifulsoup
@@ -366,6 +366,16 @@ class TrackView(Gtk.Box):
 		#audio infos
 		audio=AudioType(self.client)
 
+		#playlist info
+		self.playlist_info=Gtk.Label()
+		self.playlist_info.set_xalign(0)
+		self.playlist_info.set_ellipsize(Pango.EllipsizeMode.END)
+
+		#status bar
+		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+		status_bar.pack_start(self.playlist_info, True, True, 0)
+		status_bar.pack_end(audio, False, False, 0)
+
 		#timeouts
 		GLib.timeout_add(1000, self.update_cover)
 		GLib.timeout_add(100, self.refresh)
@@ -380,7 +390,7 @@ class TrackView(Gtk.Box):
 		#packing
 		self.pack_start(self.cover, False, False, 0)
 		self.pack_start(scroll, True, True, 0)
-		self.pack_end(audio, False, False, 0)
+		self.pack_end(status_bar, False, False, 0)
 
 	def update_cover(self):
 		try:
@@ -430,9 +440,11 @@ class TrackView(Gtk.Box):
 		self.selection.handler_block(self.title_change)
 		if self.client.connected():
 			if self.client.playlist() != self.playlist:
+				self.playlist_info.set_text("")
 				self.store.clear()
 				songs=self.client.playlistinfo()
 				if not songs == []:
+					whole_length=float(0)
 					for song in songs:
 						try:
 							title=song["title"]
@@ -454,8 +466,11 @@ class TrackView(Gtk.Box):
 							dura=float(song["duration"])
 						except:
 							dura=0.0
+						whole_length=whole_length+dura
 						duration=str(datetime.timedelta(seconds=int(dura )))
 						self.store.append([track, title, artist, album, duration, song["file"].replace("&", "")])
+					whole_length_human_readable=str(datetime.timedelta(seconds=int(whole_length)))
+					self.playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
 				self.playlist=self.client.playlist()
 			else:
 				if not self.song_to_delete == "":
@@ -473,6 +488,7 @@ class TrackView(Gtk.Box):
 			except:
 				self.selection.unselect_all()
 		else:
+			self.playlist_info.set_text("")
 			self.store.clear()
 			self.playlist=[]
 		self.selection.handler_unblock(self.title_change)
@@ -1135,6 +1151,7 @@ class AudioType(Gtk.EventBox):
 		#widgets
 		self.label=Gtk.Label()
 		self.label.set_xalign(1)
+		self.label.set_ellipsize(Pango.EllipsizeMode.END)
 		self.popover=Gtk.Popover()
 
 		#Store
