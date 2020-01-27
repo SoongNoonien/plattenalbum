@@ -1330,26 +1330,31 @@ class Search(Gtk.Dialog):
 		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text, text=0)
 		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_track.set_property("resizable", False)
+		self.column_track.set_sort_column_id(0)
 		self.treeview.append_column(self.column_track)
 
 		self.column_title = Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
 		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_title.set_property("resizable", False)
+		self.column_title.set_sort_column_id(1)
 		self.treeview.append_column(self.column_title)
 
 		self.column_artist = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
 		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_artist.set_property("resizable", False)
+		self.column_artist.set_sort_column_id(2)
 		self.treeview.append_column(self.column_artist)
 
 		self.column_album = Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
 		self.column_album.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_album.set_property("resizable", False)
+		self.column_album.set_sort_column_id(3)
 		self.treeview.append_column(self.column_album)
 
 		self.column_time = Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
 		self.column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_time.set_property("resizable", False)
+		self.column_time.set_sort_column_id(4)
 		self.treeview.append_column(self.column_time)
 
 		#connect
@@ -1379,7 +1384,7 @@ class Search(Gtk.Dialog):
 
 	def on_search_changed(self, widget):
 		self.store.clear()
-		for song in self.client.search("title", self.search_entry.get_text()):
+		for song in self.client.search("any", self.search_entry.get_text()):
 			try:
 				title=song["title"]
 			except:
