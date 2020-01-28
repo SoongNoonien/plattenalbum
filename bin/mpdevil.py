@@ -100,7 +100,7 @@ class Client(MPDClient):
 class Settings(Gio.Settings):
 	BASE_KEY = "org.mpdevil"
 	def __init__(self):
-		super().__init__(self.BASE_KEY)
+		super().__init__(schema=self.BASE_KEY)
 
 	def array_append(self, vtype, key, value): #append to Gio.Settings (self.settings) array
 		array=self.get_value(key).unpack()
@@ -116,6 +116,17 @@ class Settings(Gio.Settings):
 		array=self.get_value(key).unpack()
 		array[pos]=value
 		self.set_value(key, GLib.Variant(vtype, array))
+
+	def get_gtk_icon_size(self, key):
+		icon_size=self.get_int(key)
+		if icon_size == 16:
+			return Gtk.IconSize.BUTTON
+		elif icon_size == 32:
+			return Gtk.IconSize.DND
+		elif icon_size == 48:
+			return Gtk.IconSize.DIALOG
+		else:
+			raise ValueError
 
 class AlbumDialog(Gtk.Dialog):
 	def __init__(self, parent, client, album, artist, year):
@@ -840,6 +851,15 @@ class GeneralSettings(Gtk.Grid):
 		track_cover_size=IntEntry(self.settings.get_int("track-cover"), 100, 1200)
 		album_cover_size=IntEntry(self.settings.get_int("album-cover"), 50, 600)
 
+		icon_size_label=Gtk.Label(label=_("Button icon size (restart required):"))
+		icon_size_label.set_xalign(1)
+		icon_size_combo=Gtk.ComboBoxText()
+		icon_size_combo.set_entry_text_column(0)
+		sizes=[16, 32, 48]
+		for i in sizes:
+			icon_size_combo.append_text(str(i))
+		icon_size_combo.set_active(sizes.index(self.settings.get_int("icon-size")))
+
 		show_stop=Gtk.CheckButton(label=_("Show stop button"))
 		show_stop.set_active(self.settings.get_boolean("show-stop"))
 
@@ -858,6 +878,7 @@ class GeneralSettings(Gtk.Grid):
 		#connect
 		track_cover_size.connect("value-changed", self.on_int_changed, "track-cover")
 		album_cover_size.connect("value-changed", self.on_int_changed, "album-cover")
+		icon_size_combo.connect("changed", self.on_icon_size_changed)
 		show_stop.connect("toggled", self.on_toggled, "show-stop")
 		show_album_view_tooltips.connect("toggled", self.on_toggled, "show-album-view-tooltips")
 		send_notify.connect("toggled", self.on_toggled, "send-notify")
@@ -867,9 +888,11 @@ class GeneralSettings(Gtk.Grid):
 		#packing
 		self.add(track_cover_label)
 		self.attach_next_to(album_cover_label, track_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(icon_size_label, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(show_stop, album_cover_label, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
+		self.attach_next_to(show_stop, icon_size_label, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(show_album_view_tooltips, show_stop, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(send_notify, show_album_view_tooltips, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(add_album, send_notify, Gtk.PositionType.BOTTOM, 2, 1)
@@ -880,6 +903,10 @@ class GeneralSettings(Gtk.Grid):
 
 	def on_toggled(self, widget, key):
 		self.settings.set_boolean(key, widget.get_active())
+
+	def on_icon_size_changed(self, box):
+		active_size=int(box.get_active_text())
+		self.settings.set_int("icon-size", active_size)
 
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, settings):
@@ -910,12 +937,13 @@ class ClientControl(Gtk.ButtonBox):
 		#adding vars
 		self.client=client
 		self.settings=settings
+		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#widgets
-		self.play_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.DND))
-		self.stop_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", Gtk.IconSize.DND))
-		self.prev_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward-symbolic", Gtk.IconSize.DND))
-		self.next_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward-symbolic", Gtk.IconSize.DND))
+		self.play_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start-symbolic", self.icon_size))
+		self.stop_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", self.icon_size))
+		self.prev_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward-symbolic", self.icon_size))
+		self.next_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward-symbolic", self.icon_size))
 
 		#connect
 		self.play_button.connect("clicked", self.on_play_clicked)
@@ -938,15 +966,15 @@ class ClientControl(Gtk.ButtonBox):
 		if self.client.connected():
 			status=self.client.status()
 			if status["state"] == "play":
-				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-pause-symbolic", Gtk.IconSize.DND))
+				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-pause-symbolic", self.icon_size))
 				self.prev_button.set_sensitive(True)
 				self.next_button.set_sensitive(True)
 			elif status["state"] == "pause":
-				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.DND))
+				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", self.icon_size))
 				self.prev_button.set_sensitive(True)
 				self.next_button.set_sensitive(True)
 			else:
-				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.DND))
+				self.play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", self.icon_size))
 				self.prev_button.set_sensitive(False)
 				self.next_button.set_sensitive(False)
 		return True
@@ -1040,22 +1068,25 @@ class SeekBar(Gtk.Box):
 		return True
 
 class PlaybackOptions(Gtk.Box):
-	def __init__(self, client):
+	def __init__(self, client, settings):
 		Gtk.Box.__init__(self)
 
 		#adding vars
 		self.client=client
+		self.settings=settings
+		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#widgets
-		self.random=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-playlist-shuffle-symbolic", Gtk.IconSize.DND))
+		self.random=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-playlist-shuffle-symbolic", self.icon_size))
 		self.random.set_tooltip_text(_("Random mode"))
-		self.repeat=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-playlist-repeat-symbolic", Gtk.IconSize.DND))
+		self.repeat=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-playlist-repeat-symbolic", self.icon_size))
 		self.repeat.set_tooltip_text(_("Repeat mode"))
-		self.single=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("zoom-original-symbolic", Gtk.IconSize.DND))
+		self.single=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("zoom-original-symbolic", self.icon_size))
 		self.single.set_tooltip_text(_("Single mode"))
-		self.consume=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("edit-cut-symbolic", Gtk.IconSize.DND))
+		self.consume=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("edit-cut-symbolic", self.icon_size))
 		self.consume.set_tooltip_text(_("Consume mode"))
 		self.volume=Gtk.VolumeButton()
+		self.volume.set_property("size", self.icon_size)
 
 		#connect
 		self.random_toggled=self.random.connect("toggled", self.set_random)
@@ -1520,6 +1551,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		#adding vars
 		self.client=client
 		self.songid_playing=None
+		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#actions
 		save_action = Gio.SimpleAction.new("save", None)
@@ -1544,13 +1576,13 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.profiles.set_tooltip_text(_("Select profile"))
 		self.control=ClientControl(self.client, self.settings)
 		self.progress=SeekBar(self.client)
-		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-home-symbolic", Gtk.IconSize.DND))
+		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-home-symbolic", self.icon_size))
 		self.go_home_button.set_tooltip_text(_("Return to album of current title"))
-		self.search_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("system-search-symbolic", Gtk.IconSize.DND))
+		self.search_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
 		self.search_button.set_tooltip_text(_("Title search"))
-		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.DND))
+		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
 		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
-		self.play_opts=PlaybackOptions(self.client)
+		self.play_opts=PlaybackOptions(self.client, self.settings)
 
 		#info bar
 		self.info_bar=Gtk.InfoBar.new()
