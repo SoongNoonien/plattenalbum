@@ -97,6 +97,26 @@ class Client(MPDClient):
 		except:
 			return False
 
+class Settings(Gio.Settings):
+	BASE_KEY = "org.mpdevil"
+	def __init__(self):
+		super().__init__(self.BASE_KEY)
+
+	def array_append(self, vtype, key, value): #append to Gio.Settings (self.settings) array
+		array=self.get_value(key).unpack()
+		array.append(value)
+		self.set_value(key, GLib.Variant(vtype, array))
+
+	def array_delete(self, vtype, key, pos): #delete entry of Gio.Settings (self.settings) array
+		array=self.get_value(key).unpack()
+		array.pop(pos)
+		self.set_value(key, GLib.Variant(vtype, array))
+
+	def array_modify(self, vtype, key, pos, value): #modify entry of Gio.Settings (self.settings) array
+		array=self.get_value(key).unpack()
+		array[pos]=value
+		self.set_value(key, GLib.Variant(vtype, array))
+
 class AlbumDialog(Gtk.Dialog):
 	def __init__(self, parent, client, album, artist, year):
 		Gtk.Dialog.__init__(self, title=(artist+" - "+album+" ("+year+")"), transient_for=parent)
@@ -730,21 +750,6 @@ class ProfileSettings(Gtk.Grid):
 		self.attach_next_to(self.port_entry, port_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(self.path_select_button, path_label, Gtk.PositionType.RIGHT, 1, 1)
 
-	def settings_array_append(self, vtype, key, value): #append to Gio.Settings (self.settings) array
-		array=self.settings.get_value(key).unpack()
-		array.append(value)
-		self.settings.set_value(key, GLib.Variant(vtype, array))
-
-	def settings_array_delete(self, vtype, key, pos): #delete entry of Gio.Settings (self.settings) array
-		array=self.settings.get_value(key).unpack()
-		array.pop(pos)
-		self.settings.set_value(key, GLib.Variant(vtype, array))
-
-	def settings_array_modify(self, vtype, key, pos, value): #modify entry of Gio.Settings (self.settings) array
-		array=self.settings.get_value(key).unpack()
-		array[pos]=value
-		self.settings.set_value(key, GLib.Variant(vtype, array))
-
 	def profiles_combo_reload(self, *args):
 		self.profiles_combo.handler_block(self.profiles_combo_changed)
 		self.profile_entry.handler_block(self.profile_entry_changed)
@@ -762,33 +767,33 @@ class ProfileSettings(Gtk.Grid):
 
 	def on_add_button_clicked(self, *args):
 		pos=self.profiles_combo.get_active()
-		self.settings_array_append('as', "profiles", "new profile")
-		self.settings_array_append('as', "hosts", "localhost")
-		self.settings_array_append('ai', "ports", 6600)
-		self.settings_array_append('as', "paths", "")
+		self.settings.array_append('as', "profiles", "new profile")
+		self.settings.array_append('as', "hosts", "localhost")
+		self.settings.array_append('ai', "ports", 6600)
+		self.settings.array_append('as', "paths", "")
 		self.profiles_combo_reload()
 		self.profiles_combo.set_active(pos)
 
 	def on_delete_button_clicked(self, *args):
 		pos=self.profiles_combo.get_active()
-		self.settings_array_delete('as', "profiles", pos)
-		self.settings_array_delete('as', "hosts", pos)
-		self.settings_array_delete('ai', "ports", pos)
-		self.settings_array_delete('as', "paths", pos)
+		self.settings.array_delete('as', "profiles", pos)
+		self.settings.array_delete('as', "hosts", pos)
+		self.settings.array_delete('ai', "ports", pos)
+		self.settings.array_delete('as', "paths", pos)
 		self.profiles_combo_reload()
 		self.profiles_combo.set_active(0)	
 
 	def on_profile_entry_changed(self, *args):
 		pos=self.profiles_combo.get_active()
-		self.settings_array_modify('as', "profiles", pos, self.profile_entry.get_text())
+		self.settings.array_modify('as', "profiles", pos, self.profile_entry.get_text())
 		self.profiles_combo_reload()
 		self.profiles_combo.set_active(pos)
 
 	def on_host_entry_changed(self, *args):
-		self.settings_array_modify('as', "hosts", self.profiles_combo.get_active(), self.host_entry.get_text())
+		self.settings.array_modify('as', "hosts", self.profiles_combo.get_active(), self.host_entry.get_text())
 
 	def on_port_entry_changed(self, *args):
-		self.settings_array_modify('ai', "ports", self.profiles_combo.get_active(), self.port_entry.get_int())
+		self.settings.array_modify('ai', "ports", self.profiles_combo.get_active(), self.port_entry.get_int())
 
 	def on_path_select_button_clicked(self, widget, parent):
 		dialog = Gtk.FileChooserDialog(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
@@ -798,7 +803,7 @@ class ProfileSettings(Gtk.Grid):
 		dialog.set_current_folder(self.settings.get_value("paths")[self.profiles_combo.get_active()])
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
-			self.settings_array_modify('as', "paths", self.profiles_combo.get_active(), dialog.get_filename())
+			self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), dialog.get_filename())
 		dialog.destroy()
 
 	def on_profiles_changed(self, *args):
@@ -1686,10 +1691,9 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.client.update()
 
 class mpdevil(Gtk.Application):
-	BASE_KEY = "org.mpdevil"
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, application_id="org.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
-		self.settings = Gio.Settings.new(self.BASE_KEY)
+		self.settings = Settings()
 		self.client=Client(self.settings)
 		self.window=None
 
