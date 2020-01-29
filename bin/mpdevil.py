@@ -121,11 +121,14 @@ class Settings(Gio.Settings):
 		icon_size=self.get_int(key)
 		if icon_size == 16:
 			return Gtk.IconSize.BUTTON
+		elif icon_size == 24:
+			return Gtk.IconSize.LARGE_TOOLBAR
 		elif icon_size == 32:
 			return Gtk.IconSize.DND
 		elif icon_size == 48:
 			return Gtk.IconSize.DIALOG
 		else:
+#			return Gtk.IconSize.INVALID
 			raise ValueError
 
 class AlbumDialog(Gtk.Dialog):
@@ -855,7 +858,7 @@ class GeneralSettings(Gtk.Grid):
 		icon_size_label.set_xalign(1)
 		icon_size_combo=Gtk.ComboBoxText()
 		icon_size_combo.set_entry_text_column(0)
-		sizes=[16, 32, 48]
+		sizes=[16, 24, 32, 48]
 		for i in sizes:
 			icon_size_combo.append_text(str(i))
 		icon_size_combo.set_active(sizes.index(self.settings.get_int("icon-size")))
