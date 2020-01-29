@@ -444,11 +444,9 @@ class TrackView(Gtk.Box):
 					self.client.add(song["file"])
 		else:
 			if self.settings.get_boolean("add-album") and not force and not self.client.status()["state"] == "stop":
-				self.selection.handler_block(self.title_change)
 				status=self.client.status()
 				self.client.moveid(status["songid"], 0)
 				self.song_to_delete=self.client.playlistinfo()[0]["file"]
-				self.selection.handler_unblock(self.title_change)
 				try:
 					self.client.delete((1,)) # delete all songs, but the first. #bad song index possible
 				except:
@@ -470,6 +468,21 @@ class TrackView(Gtk.Box):
 						self.client.add(song["file"])
 					self.client.play()
 
+	def refresh_playlist_info(self):
+		songs=self.client.playlistinfo()
+		if not songs == []:
+			whole_length=float(0)
+			for song in songs:
+				try:
+					dura=float(song["duration"])
+				except:
+					dura=0.0
+				whole_length=whole_length+dura
+			whole_length_human_readable=str(datetime.timedelta(seconds=int(whole_length)))
+			self.playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
+		else:
+			self.playlist_info.set_text("")
+
 	def refresh(self):
 		self.selection.handler_block(self.title_change)
 		if self.client.connected():
@@ -478,7 +491,6 @@ class TrackView(Gtk.Box):
 				self.store.clear()
 				songs=self.client.playlistinfo()
 				if not songs == []:
-					whole_length=float(0)
 					for song in songs:
 						try:
 							title=song["title"]
@@ -500,11 +512,9 @@ class TrackView(Gtk.Box):
 							dura=float(song["duration"])
 						except:
 							dura=0.0
-						whole_length=whole_length+dura
 						duration=str(datetime.timedelta(seconds=int(dura )))
 						self.store.append([track, title, artist, album, duration, song["file"].replace("&", "")])
-					whole_length_human_readable=str(datetime.timedelta(seconds=int(whole_length)))
-					self.playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
+					self.refresh_playlist_info()
 				self.playlist=self.client.playlist()
 			else:
 				if not self.song_to_delete == "":
@@ -514,6 +524,7 @@ class TrackView(Gtk.Box):
 							self.client.delete(0)
 							self.playlist=self.client.playlist()
 							self.store.remove(self.store.get_iter_first())
+							self.refresh_playlist_info()
 						self.song_to_delete=""
 			try:
 				song=self.client.status()["song"]
@@ -537,6 +548,7 @@ class TrackView(Gtk.Box):
 					self.client.delete(self.hovered_songpos) #bad song index possible
 					self.playlist=self.client.playlist()
 					self.store.remove(self.store.get_iter(self.hovered_songpos))
+					self.refresh_playlist_info()
 				except:
 					self.hovered_songpos == None
 				self.selection.handler_unblock(self.title_change)
