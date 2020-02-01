@@ -88,6 +88,10 @@ class Client(MPDClient):
 		active=self.settings.get_int("active-profile")
 		try:
 			self.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
+			if self.settings.get_value("passwords")[active] == "":
+				self.password(None)
+			else:
+				self.password(self.settings.get_value("passwords")[active])
 		except:
 			pass
 
@@ -773,6 +777,8 @@ class ProfileSettings(Gtk.Grid):
 		self.profile_entry=Gtk.Entry()
 		self.host_entry=Gtk.Entry()
 		self.port_entry=IntEntry(0, 0, 65535)
+		self.password_entry=Gtk.Entry()
+		self.password_entry.set_visibility(False)
 		self.path_select_button=Gtk.Button(label=_("Select"), image=Gtk.Image(stock=Gtk.STOCK_OPEN))
 
 		profiles_label=Gtk.Label(label=_("Profile:"))
@@ -783,13 +789,16 @@ class ProfileSettings(Gtk.Grid):
 		host_label.set_xalign(1)
 		port_label=Gtk.Label(label=_("Port:"))
 		port_label.set_xalign(1)
+		password_label=Gtk.Label(label=_("Password:"))
+		password_label.set_xalign(1)
 		path_label=Gtk.Label(label=_("Music lib:"))
 		path_label.set_xalign(1)
 
 		#connect
-		self.profile_entry_changed=self.profile_entry.connect("activate", self.on_profile_entry_changed)
-		self.host_entry_changed=self.host_entry.connect("activate", self.on_host_entry_changed)
+		self.profile_entry_changed=self.profile_entry.connect("changed", self.on_profile_entry_changed)
+		self.host_entry_changed=self.host_entry.connect("changed", self.on_host_entry_changed)
 		self.port_entry_changed=self.port_entry.connect("value-changed", self.on_port_entry_changed)
+		self.password_entry_changed=self.password_entry.connect("changed", self.on_password_entry_changed)
 		self.path_select_button.connect("clicked", self.on_path_select_button_clicked, parent)
 		add_button.connect("clicked", self.on_add_button_clicked)
 		delete_button.connect("clicked", self.on_delete_button_clicked)
@@ -803,13 +812,15 @@ class ProfileSettings(Gtk.Grid):
 		self.attach_next_to(profile_label, profiles_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(host_label, profile_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(port_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(path_label, port_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(password_label, port_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(self.profiles_combo, profiles_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(add_button, self.profiles_combo, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(delete_button, add_button, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(self.profile_entry, profile_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(self.host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(self.port_entry, port_label, Gtk.PositionType.RIGHT, 1, 1)
+		self.attach_next_to(self.password_entry, password_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(self.path_select_button, path_label, Gtk.PositionType.RIGHT, 1, 1)
 
 	def profiles_combo_reload(self, *args):
@@ -857,6 +868,9 @@ class ProfileSettings(Gtk.Grid):
 	def on_port_entry_changed(self, *args):
 		self.settings.array_modify('ai', "ports", self.profiles_combo.get_active(), self.port_entry.get_int())
 
+	def on_password_entry_changed(self, *args):
+		self.settings.array_modify('as', "passwords", self.profiles_combo.get_active(), self.password_entry.get_text())
+
 	def on_path_select_button_clicked(self, widget, parent):
 		dialog = Gtk.FileChooserDialog(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
 		dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
@@ -873,15 +887,18 @@ class ProfileSettings(Gtk.Grid):
 		self.profile_entry.handler_block(self.profile_entry_changed)
 		self.host_entry.handler_block(self.host_entry_changed)
 		self.port_entry.handler_block(self.port_entry_changed)
+		self.password_entry.handler_block(self.password_entry_changed)
 
 		self.profile_entry.set_text(self.settings.get_value("profiles")[active])
 		self.host_entry.set_text(self.settings.get_value("hosts")[active])
 		self.port_entry.set_int(self.settings.get_value("ports")[active])
+		self.password_entry.set_text(self.settings.get_value("passwords")[active])
 		self.path_select_button.set_tooltip_text(self.settings.get_value("paths")[active])
 
 		self.profile_entry.handler_unblock(self.profile_entry_changed)
 		self.host_entry.handler_unblock(self.host_entry_changed)
 		self.port_entry.handler_unblock(self.port_entry_changed)
+		self.password_entry.handler_unblock(self.password_entry_changed)
 
 class GeneralSettings(Gtk.Grid):
 	def __init__(self, settings):
@@ -1318,6 +1335,7 @@ class ProfileSelect(Gtk.ComboBoxText):
 		self.settings.connect("changed::profiles", self.on_settings_changed)
 		self.settings.connect("changed::hosts", self.on_settings_changed)
 		self.settings.connect("changed::ports", self.on_settings_changed)
+		self.settings.connect("changed::passwords", self.on_settings_changed)
 		self.settings.connect("changed::paths", self.on_settings_changed)
 
 		self.reload()

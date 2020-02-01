@@ -81,6 +81,11 @@
       <summary>List of ports</summary>
       <description></description>
     </key>
+    <key type="as" name="passwords">
+      <default>[""]</default>
+      <summary>List of passwords</summary>
+      <description></description>
+    </key>
     <key type="as" name="paths">
       <default>[""]</default>
       <summary>List of library paths</summary>
