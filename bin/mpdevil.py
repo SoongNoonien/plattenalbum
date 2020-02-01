@@ -320,6 +320,16 @@ class ArtistView(Gtk.ScrolledWindow):
 			self.clear()
 			return True
 
+	def get_selected_artists(self):
+		paths=self.selection.get_selected_rows()[1]
+		artists=[]
+		for path in paths:
+			treeiter = self.store.get_iter(path)
+			if not treeiter == None:
+				selected_artist=self.store.get_value(treeiter, 0)
+				artists.append(selected_artist)
+		return artists
+
 class AlbumIconView(Gtk.IconView):
 	def __init__(self, client, settings, window):
 		Gtk.IconView.__init__(self)
@@ -760,14 +770,8 @@ class Browser(Gtk.Box):
 			pass
 		self.title_list.scroll_to_selected_title()
 
-	def on_artist_selection_change(self, widget):
-		paths=widget.get_selected_rows()[1]
-		artists=[]
-		for path in paths:
-			treeiter = self.artist_list.store.get_iter(path)
-			if not treeiter == None:
-				selected_artist=self.artist_list.store.get_value(treeiter, 0)
-			artists.append(selected_artist)
+	def on_artist_selection_change(self, *args):
+		artists=self.artist_list.get_selected_artists()
 		self.album_list.refresh(artists)
 
 class ProfileSettings(Gtk.Grid):
