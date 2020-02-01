@@ -82,6 +82,7 @@ class Client(MPDClient):
 	def __init__(self, settings):
 		MPDClient.__init__(self)
 		self.settings = settings
+		self.song_to_delete=""
 
 	def try_connect_default(self):
 		active=self.settings.get_int("active-profile")
@@ -96,6 +97,38 @@ class Client(MPDClient):
 			return True
 		except:
 			return False
+
+	def album_to_playlist(self, album, artist, year, append, force=False):
+		if append:
+			songs=self.find("album", album, "date", year, "albumartist", artist)
+			if not songs == []:
+				for song in songs:
+					self.add(song["file"])
+		else:
+			if self.settings.get_boolean("add-album") and not force and not self.status()["state"] == "stop":
+				status=self.status()
+				self.moveid(status["songid"], 0)
+				self.song_to_delete=self.playlistinfo()[0]["file"]
+				try:
+					self.delete((1,)) # delete all songs, but the first. #bad song index possible
+				except:
+					pass
+				songs=self.find("album", album, "date", year, "albumartist", artist)
+				if not songs == []:
+					for song in songs:
+						if not song["file"] == self.song_to_delete:
+							self.add(song["file"])
+						else:
+							self.move(0, (len(self.playlist())-1))
+							self.song_to_delete=""
+			else:
+				songs=self.find("album", album, "date", year, "albumartist", artist)
+				if not songs == []:
+					self.stop()
+					self.clear()
+					for song in songs:
+						self.add(song["file"])
+					self.play()
 
 class Settings(Gio.Settings):
 	BASE_KEY = "org.mpdevil"
@@ -247,10 +280,11 @@ class ArtistView(Gtk.ScrolledWindow):
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
+		self.treeview.set_rubber_banding(True)
 
 		#artistSelection
 		self.selection = self.treeview.get_selection()
-		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
+		self.selection.set_mode(Gtk.SelectionMode.MULTIPLE)
 
 		#Old Name Column
 		renderer_text = Gtk.CellRendererText()
@@ -279,66 +313,155 @@ class ArtistView(Gtk.ScrolledWindow):
 			self.albumartists=[]
 			return True
 
+class AlbumIconView(Gtk.IconView):
+	def __init__(self, client, settings, window):
+		Gtk.IconView.__init__(self)
+
+		#adding vars
+		self.settings=settings
+		self.client=client
+		self.window=window
+
+		#cover, display_label, tooltip(titles), album, year, artist
+		self.store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str)
+		self.store.set_sort_column_id(4, Gtk.SortType.ASCENDING)
+
+		#iconview
+		self.set_model(self.store)
+		self.set_pixbuf_column(0)
+		self.set_text_column(1)
+		self.set_item_width(0)
+		self.tooltip_settings()
+
+		#connect
+		self.album_change=self.connect("selection-changed", self.on_album_selection_change)
+		self.album_item_activated=self.connect("item-activated", self.on_album_item_activated)
+		self.connect("button-press-event", self.on_album_view_button_press_event)
+		self.settings.connect("changed::show-album-view-tooltips", self.tooltip_settings)
+
+	def tooltip_settings(self, *args):
+		if self.settings.get_boolean("show-album-view-tooltips"):
+			self.set_tooltip_column(2)
+		else:
+			self.set_tooltip_column(-1)
+
+	def gen_tooltip(self, album, artist, year):
+		songs=self.client.find("album", album, "date", year, "albumartist", artist)
+		length=float(0)
+		for song in songs:
+			try:
+				dura=float(song["duration"])
+			except:
+				dura=0.0
+			length=length+dura
+		length_human_readable=str(datetime.timedelta(seconds=int(length)))
+		tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": length_human_readable})
+		return tooltip
+
+	def populate(self, artists):
+		for artist in artists:
+			size=self.settings.get_int("album-cover")
+			albums=[]
+			for album in self.client.list("album", "albumartist", artist):
+				albums.append({"album": album, "year": self.client.list("date", "album", album, "albumartist", artist)[0]})
+			albums = sorted(albums, key=lambda k: k['year'])
+			for album in albums:
+				if self.get_visible():
+					songs=self.client.find("album", album["album"], "date", album["year"], "albumartist", artist)
+					if songs == []:
+						song_file=None
+					else:
+						song_file=songs[0]["file"]
+					cover=Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
+					img=cover.get_pixbuf(size)
+					if album["year"] == "":
+						self.store.append([img, album["album"], self.gen_tooltip(album["album"], artist, album["year"]), album["album"], album["year"], artist])
+					else:
+						self.store.append([img, album["album"]+" ("+album["year"]+")", self.gen_tooltip(album["album"], artist, album["year"]), album["album"], album["year"], artist])
+					while Gtk.events_pending():
+						Gtk.main_iteration_do(True)
+				else:
+					break
+
+	def scroll_to_selected_album(self, first_run):
+		songid=self.client.status()["songid"]
+		song=self.client.playlistid(songid)[0]
+		if not self.settings.get_boolean("add-album") or first_run:
+			self.handler_block(self.album_change)
+		self.unselect_all()
+		row_num=len(self.store)
+		for i in range(0, row_num):
+			path=Gtk.TreePath(i)
+			treeiter = self.store.get_iter(path)
+			if self.store.get_value(treeiter, 3) == song["album"]:
+				self.select_path(path)
+				self.scroll_to_path(path, True, 0, 0)
+				break
+		if not self.settings.get_boolean("add-album") or first_run:
+			self.handler_unblock(self.album_change)
+
+	def on_album_view_button_press_event(self, widget, event):
+		path = widget.get_path_at_pos(int(event.x), int(event.y))
+		if not path == None:
+			if not event.button == 1:
+				treeiter=self.store.get_iter(path)
+				selected_album=self.store.get_value(treeiter, 3)
+				selected_album_year=self.store.get_value(treeiter, 4)
+				selected_artist=self.store.get_value(treeiter, 5)
+			if event.button == 2:
+				self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
+			elif event.button == 3:
+				if self.client.connected():
+					album = AlbumDialog(self.window, self.client, selected_album, selected_artist, selected_album_year)
+					response = album.run()
+					if response == Gtk.ResponseType.OK:
+						self.select_path(path)
+					elif response == Gtk.ResponseType.ACCEPT:
+						self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
+					elif response == Gtk.ResponseType.YES:
+						self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
+					album.destroy()
+
+	def on_album_selection_change(self, widget):
+		paths=widget.get_selected_items()
+		if not len(paths) == 0:
+			treeiter=self.store.get_iter(paths[0])
+			selected_album=self.store.get_value(treeiter, 3)
+			selected_album_year=self.store.get_value(treeiter, 4)
+			selected_artist=self.store.get_value(treeiter, 5)
+			self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False)
+
+	def on_album_item_activated(self, widget, path):
+		treeiter=self.store.get_iter(path)
+		selected_album=self.store.get_value(treeiter, 3)
+		selected_album_year=self.store.get_value(treeiter, 4)
+		selected_artist=self.store.get_value(treeiter, 5)
+		self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
+
 class AlbumView(Gtk.ScrolledWindow):
-	def __init__(self, client, settings):
+	def __init__(self, client, settings, window):
 		Gtk.ScrolledWindow.__init__(self)
 		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		#adding vars
 		self.settings=settings
 		self.client=client
+		self.window=window
 
-		#cover, display_label, tooltip(titles), album, year
-		self.store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str)
-		self.store.set_sort_column_id(4, Gtk.SortType.ASCENDING)
+		self.iconview=None
 
-		#iconview
-		self.iconview = Gtk.IconView.new()
-		self.iconview.set_model(self.store)
-		self.iconview.set_pixbuf_column(0)
-		self.iconview.set_text_column(1)
-		self.iconview.set_tooltip_column(2)
-		self.iconview.set_item_width(0)
-
+	def refresh(self, artists):
+		if self.iconview:
+			self.remove(self.iconview)
+			self.iconview.destroy()
+			self.iconview=None
+		self.iconview=AlbumIconView(self.client, self.settings, self.window)
 		self.add(self.iconview)
+		self.iconview.show_all()
+		self.iconview.populate(artists)
 
-	def gen_tooltip(self, album, artist, year):
-		if self.settings.get_boolean("show-album-view-tooltips"):
-			songs=self.client.find("album", album, "date", year, "albumartist", artist)
-			length=float(0)
-			for song in songs:
-				try:
-					dura=float(song["duration"])
-				except:
-					dura=0.0
-				length=length+dura
-			length_human_readable=str(datetime.timedelta(seconds=int(length)))
-			tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": length_human_readable})
-			return tooltip
-		else:
-			return None
-
-	def refresh(self, artist):
-		self.store.clear()
-		size=self.settings.get_int("album-cover")
-		albums=[]
-		for album in self.client.list("album", "albumartist", artist):
-			albums.append({"album": album, "year": self.client.list("date", "album", album, "albumartist", artist)[0]})
-		albums = sorted(albums, key=lambda k: k['year'])
-		for album in albums:
-			songs=self.client.find("album", album["album"], "date", album["year"], "albumartist", artist)
-			if songs == []:
-				song_file=None
-			else:
-				song_file=songs[0]["file"]
-			cover=Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
-			img=cover.get_pixbuf(size)
-			if album["year"] == "":
-				self.store.append([img, album["album"], self.gen_tooltip(album["album"], artist, album["year"]), album["album"], album["year"]])
-			else:
-				self.store.append([img, album["album"]+" ("+album["year"]+")", self.gen_tooltip(album["album"], artist, album["year"]), album["album"], album["year"]])
-			while Gtk.events_pending():
-				Gtk.main_iteration_do(True)
+	def scroll_to_selected_album(self, first_run):
+		self.iconview.scroll_to_selected_album(first_run)
 
 class TrackView(Gtk.Box):
 	def __init__(self, client, settings):
@@ -348,7 +471,6 @@ class TrackView(Gtk.Box):
 		#adding vars
 		self.client=client
 		self.playlist=[]
-		self.song_to_delete=""
 		self.hovered_songpos=None
 		self.song_file=None
 
@@ -411,7 +533,6 @@ class TrackView(Gtk.Box):
 		status_bar.pack_end(audio, False, False, 0)
 
 		#timeouts
-		GLib.timeout_add(1000, self.update_cover)
 		GLib.timeout_add(100, self.refresh)
 
 		#connect
@@ -426,7 +547,13 @@ class TrackView(Gtk.Box):
 		self.pack_start(scroll, True, True, 0)
 		self.pack_end(status_bar, False, False, 0)
 
-	def update_cover(self):
+	def scroll_to_selected_title(self):
+		treeview, treeiter=self.selection.get_selected()
+		if not treeiter == None:
+			path=treeview.get_path(treeiter)
+			self.treeview.scroll_to_cell(path)
+
+	def refresh_cover(self):
 		try:
 			song_file=self.client.currentsong()["file"]
 		except:
@@ -435,38 +562,6 @@ class TrackView(Gtk.Box):
 			self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
 			self.song_file=song_file
 		return True
-
-	def album_to_playlist(self, album, artist, year, append, force=False):
-		if append:
-			songs=self.client.find("album", album, "date", year, "albumartist", artist)
-			if not songs == []:
-				for song in songs:
-					self.client.add(song["file"])
-		else:
-			if self.settings.get_boolean("add-album") and not force and not self.client.status()["state"] == "stop":
-				status=self.client.status()
-				self.client.moveid(status["songid"], 0)
-				self.song_to_delete=self.client.playlistinfo()[0]["file"]
-				try:
-					self.client.delete((1,)) # delete all songs, but the first. #bad song index possible
-				except:
-					pass
-				songs=self.client.find("album", album, "date", year, "albumartist", artist)
-				if not songs == []:
-					for song in songs:
-						if not song["file"] == self.song_to_delete:
-							self.client.add(song["file"])
-						else:
-							self.client.move(0, (len(self.client.playlist())-1))
-							self.song_to_delete=""
-			else:
-				songs=self.client.find("album", album, "date", year, "albumartist", artist)
-				if not songs == []:
-					self.client.stop()
-					self.client.clear()
-					for song in songs:
-						self.client.add(song["file"])
-					self.client.play()
 
 	def refresh_playlist_info(self):
 		songs=self.client.playlistinfo()
@@ -482,6 +577,15 @@ class TrackView(Gtk.Box):
 			self.playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
 		else:
 			self.playlist_info.set_text("")
+
+	def refresh_selection(self):
+		try:
+			song=self.client.status()["song"]
+			path = Gtk.TreePath(int(song))
+			self.selection.select_path(path)
+		except:
+			self.selection.unselect_all()
+		self.refresh_cover()
 
 	def refresh(self):
 		self.selection.handler_block(self.title_change)
@@ -516,22 +620,19 @@ class TrackView(Gtk.Box):
 						self.store.append([track, title, artist, album, duration, song["file"].replace("&", "")])
 					self.refresh_playlist_info()
 				self.playlist=self.client.playlist()
+				self.refresh_selection()
+				self.scroll_to_selected_title()
 			else:
-				if not self.song_to_delete == "":
+				if not self.client.song_to_delete == "":
 					status=self.client.status()
 					if not status["song"] == "0":
-						if self.client.playlistinfo()[0]["file"] == self.song_to_delete:
+						if self.client.playlistinfo()[0]["file"] == self.client.song_to_delete:
 							self.client.delete(0)
 							self.playlist=self.client.playlist()
 							self.store.remove(self.store.get_iter_first())
 							self.refresh_playlist_info()
-						self.song_to_delete=""
-			try:
-				song=self.client.status()["song"]
-				path = Gtk.TreePath(int(song))
-				self.selection.select_path(path)
-			except:
-				self.selection.unselect_all()
+						self.client.song_to_delete=""
+				self.refresh_selection()
 		else:
 			self.playlist_info.set_text("")
 			self.store.clear()
@@ -570,6 +671,7 @@ class TrackView(Gtk.Box):
 		if not treeiter == None:
 			selected_title=self.store.get_path(treeiter)
 			self.client.play(selected_title)
+		self.refresh_cover()
 
 	def on_row_activated(self, widget, path, view_column):
 		treeiter=self.store.get_iter(path)
@@ -587,19 +689,14 @@ class Browser(Gtk.Box):
 
 		#widgets
 		self.artist_list=ArtistView(self.client)
-		self.album_list=AlbumView(self.client, self.settings)
+		self.album_list=AlbumView(self.client, self.settings, self.window)
 		self.title_list=TrackView(self.client, self.settings)
 
 		#connect
 		self.artist_change=self.artist_list.selection.connect("changed", self.on_artist_selection_change)
-		self.album_change=self.album_list.iconview.connect("selection-changed", self.on_album_selection_change)
-		self.album_item_activated=self.album_list.iconview.connect("item-activated", self.on_album_item_activated)
-		self.album_list.iconview.connect("button-press-event", self.on_album_view_button_press_event)
 
 		#timeouts
 		GLib.timeout_add(1000, self.refresh)
-
-		self.go_home(self, first_run=True)
 
 		#packing
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
@@ -619,7 +716,7 @@ class Browser(Gtk.Box):
 		self.paned1.set_position(self.settings.get_int("paned1"))
 		self.paned2.set_position(self.settings.get_int("paned2"))
 
-	def refresh(self):
+	def refresh(self, *args):
 		self.artist_list.selection.handler_block(self.artist_change)
 		return_val=self.artist_list.refresh()
 		self.artist_list.selection.handler_unblock(self.artist_change)
@@ -631,91 +728,30 @@ class Browser(Gtk.Box):
 		try:
 			songid=self.client.status()["songid"]
 			song=self.client.playlistid(songid)[0]
-
 			row_num=len(self.artist_list.store)
 			for i in range(0, row_num):
 				path=Gtk.TreePath(i)
 				treeiter = self.artist_list.store.get_iter(path)
 				if self.artist_list.store.get_value(treeiter, 0) == song["albumartist"]:
-					self.artist_list.selection.select_iter(treeiter)
+					if not self.artist_list.selection.iter_is_selected(treeiter):
+						self.artist_list.selection.unselect_all()
+						self.artist_list.selection.select_iter(treeiter)
 					self.artist_list.treeview.scroll_to_cell(path)
 					break
-			if not self.settings.get_boolean("add-album") or first_run:
-				self.album_list.iconview.handler_block(self.album_change)
-			self.album_list.iconview.unselect_all()
-			row_num=len(self.album_list.store)
-			for i in range(0, row_num):
-				path=Gtk.TreePath(i)
-				treeiter = self.album_list.store.get_iter(path)
-				if self.album_list.store.get_value(treeiter, 3) == song["album"]:
-					self.album_list.iconview.select_path(path)
-					self.album_list.iconview.scroll_to_path(path, True, 0, 0)
-					break
-			if not self.settings.get_boolean("add-album") or first_run:
-				self.album_list.iconview.handler_unblock(self.album_change)
+			self.album_list.scroll_to_selected_album(first_run)
 		except:
-			self.artist_list.selection.unselect_all()
-			self.album_list.store.clear()
-		treeview, treeiter=self.title_list.selection.get_selected()
-		if not treeiter == None:
-			path=treeview.get_path(treeiter)
-			self.title_list.treeview.scroll_to_cell(path) #TODO multiple home-button presses needed
-
-	def on_album_view_button_press_event(self, widget, event):
-		path = widget.get_path_at_pos(int(event.x), int(event.y))
-		if not path == None:
-			if not event.button == 1:
-				treeiter=self.album_list.store.get_iter(path)
-				selected_album=self.album_list.store.get_value(treeiter, 3)
-				selected_album_year=self.album_list.store.get_value(treeiter, 4)
-				treeiter=self.artist_list.selection.get_selected()[1]
-				selected_artist=self.artist_list.store.get_value(treeiter, 0)
-			if event.button == 2:
-				self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
-			elif event.button == 3:
-				if self.client.connected():
-					album = AlbumDialog(self.window, self.client, selected_album, selected_artist, selected_album_year)
-					response = album.run()
-					if response == Gtk.ResponseType.OK:
-						self.album_list.iconview.select_path(path)
-					elif response == Gtk.ResponseType.ACCEPT:
-						self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
-					elif response == Gtk.ResponseType.YES:
-						self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
-					album.destroy()
-
-	def on_album_selection_change(self, widget):
-		paths=widget.get_selected_items()
-		if not len(paths) == 0:
-			treeiter=self.album_list.store.get_iter(paths[0])
-			selected_album=self.album_list.store.get_value(treeiter, 3)
-			selected_album_year=self.album_list.store.get_value(treeiter, 4)
-			treeiter=self.artist_list.selection.get_selected()[1]
-			selected_artist=self.artist_list.store.get_value(treeiter, 0)
-			self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, False)
-
-	def on_album_item_activated(self, widget, path):
-		treeiter=self.album_list.store.get_iter(path)
-		selected_album=self.album_list.store.get_value(treeiter, 3)
-		selected_album_year=self.album_list.store.get_value(treeiter, 4)
-		treeiter=self.artist_list.selection.get_selected()[1]
-		selected_artist=self.artist_list.store.get_value(treeiter, 0)
-		self.title_list.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
+			pass
+		self.title_list.scroll_to_selected_title()
 
 	def on_artist_selection_change(self, widget):
-		treeiter=widget.get_selected()[1]
-		if not treeiter == None:
-			def test(*args):
-				return False
-			selected_artist=self.artist_list.store.get_value(treeiter, 0)
-			self.artist_list.selection.handler_block(self.artist_change)
-			self.artist_list.selection.set_select_function(test)
-			self.album_list.refresh(selected_artist)
-			self.artist_list.selection.set_select_function(None)
-			self.artist_list.selection.select_iter(treeiter)
-			self.artist_list.selection.handler_unblock(self.artist_change)
-		else:
-			self.album_list.refresh(None)
+		paths=widget.get_selected_rows()[1]
+		artists=[]
+		for path in paths:
+			treeiter = self.artist_list.store.get_iter(path)
+			if not treeiter == None:
+				selected_artist=self.artist_list.store.get_value(treeiter, 0)
+			artists.append(selected_artist)
+		self.album_list.refresh(artists)
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
