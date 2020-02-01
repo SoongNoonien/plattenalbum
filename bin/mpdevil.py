@@ -1845,6 +1845,7 @@ class mpdevil(Gtk.Application):
 		dialog.set_comments(_("A small MPD client written in python"))
 		dialog.set_authors(["Martin Wagner"])
 		dialog.set_website("https://github.com/SoongNoonien/mpdevil")
+		dialog.set_copyright("\xa9 2020 Martin Wagner")
 		dialog.set_logo_icon_name(PACKAGE)
 		dialog.run()
 		dialog.destroy()
