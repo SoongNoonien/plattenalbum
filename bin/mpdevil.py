@@ -302,6 +302,10 @@ class ArtistView(Gtk.ScrolledWindow):
 
 		self.add(self.treeview)
 
+	def clear(self):
+		self.store.clear()
+		self.albumartists=[]
+
 	def refresh(self): #returns True if refresh was actually performed
 		if self.client.connected():
 			if self.albumartists != self.client.list("albumartist"):
@@ -313,8 +317,7 @@ class ArtistView(Gtk.ScrolledWindow):
 			else:
 				return False
 		else:
-			self.store.clear()
-			self.albumartists=[]
+			self.clear()
 			return True
 
 class AlbumIconView(Gtk.IconView):
@@ -454,11 +457,14 @@ class AlbumView(Gtk.ScrolledWindow):
 
 		self.iconview=None
 
-	def refresh(self, artists):
+	def clear(self):
 		if self.iconview:
 			self.remove(self.iconview)
 			self.iconview.destroy()
 			self.iconview=None
+
+	def refresh(self, artists):
+		self.clear()
 		self.iconview=AlbumIconView(self.client, self.settings, self.window)
 		self.add(self.iconview)
 		self.iconview.show_all()
@@ -641,6 +647,7 @@ class TrackView(Gtk.Box):
 			self.playlist_info.set_text("")
 			self.store.clear()
 			self.playlist=[]
+			self.refresh_cover()
 		self.selection.handler_unblock(self.title_change)
 		return True
 
@@ -721,11 +728,17 @@ class Browser(Gtk.Box):
 		self.paned2.set_position(self.settings.get_int("paned2"))
 
 	def refresh(self, *args):
-		self.artist_list.selection.handler_block(self.artist_change)
-		return_val=self.artist_list.refresh()
-		self.artist_list.selection.handler_unblock(self.artist_change)
-		if return_val:
-			self.go_home(self, first_run=True)
+		if self.client.connected():
+			self.artist_list.selection.handler_block(self.artist_change)
+			return_val=self.artist_list.refresh()
+			self.artist_list.selection.handler_unblock(self.artist_change)
+			if return_val:
+				self.go_home(self, first_run=True)
+		else:
+			self.artist_list.selection.handler_block(self.artist_change)
+			self.artist_list.clear()
+			self.artist_list.selection.handler_unblock(self.artist_change)
+			self.album_list.clear()
 		return True
 
 	def go_home(self, widget, first_run=False): #TODO
