@@ -20,7 +20,6 @@ Features
 TODO
 ----
 1. MPRIS interface
-2. connecting to mpd servers with password
 
 Building and installation
 -------------------------
