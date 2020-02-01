@@ -284,7 +284,6 @@ class ArtistView(Gtk.ScrolledWindow):
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
-		self.treeview.set_rubber_banding(True)
 
 		#artistSelection
 		self.selection = self.treeview.get_selection()
@@ -677,12 +676,14 @@ class TrackView(Gtk.Box):
 		self.treeview.handler_unblock(self.key_press_event)
 
 	def on_move_event(self, widget, event):
-		self.treeview.grab_focus()
-		return_tuple = self.treeview.get_path_at_pos(int(event.x), int(event.y))
-		if not return_tuple == None:
-			self.hovered_songpos=return_tuple[0]
-		else:
-			self.hovered_songpos=None
+		treeiter=self.selection.get_selected()[1]
+		if not treeiter == None:
+			self.treeview.grab_focus()
+			return_tuple = self.treeview.get_path_at_pos(int(event.x), int(event.y))
+			if not return_tuple == None:
+				self.hovered_songpos=return_tuple[0]
+			else:
+				self.hovered_songpos=None
 
 	def on_leave_event(self, widget, event):
 		self.hovered_songpos=None
