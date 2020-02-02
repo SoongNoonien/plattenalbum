@@ -406,11 +406,10 @@ class AlbumIconView(Gtk.IconView):
 				else:
 					break
 
-	def scroll_to_selected_album(self, first_run):
+	def scroll_to_selected_album(self):
 		songid=self.client.status()["songid"]
 		song=self.client.playlistid(songid)[0]
-		if not self.settings.get_boolean("add-album") or first_run:
-			self.handler_block(self.album_change)
+		self.handler_block(self.album_change)
 		self.unselect_all()
 		row_num=len(self.store)
 		for i in range(0, row_num):
@@ -420,8 +419,7 @@ class AlbumIconView(Gtk.IconView):
 				self.select_path(path)
 				self.scroll_to_path(path, True, 0, 0)
 				break
-		if not self.settings.get_boolean("add-album") or first_run:
-			self.handler_unblock(self.album_change)
+		self.handler_unblock(self.album_change)
 
 	def on_album_view_button_press_event(self, widget, event):
 		path = widget.get_path_at_pos(int(event.x), int(event.y))
@@ -489,16 +487,17 @@ class AlbumView(Gtk.ScrolledWindow):
 		self.iconview.show_all()
 		self.iconview.populate(artists)
 
-	def scroll_to_selected_album(self, first_run):
-		self.iconview.scroll_to_selected_album(first_run)
+	def scroll_to_selected_album(self):
+		self.iconview.scroll_to_selected_album()
 
 class TrackView(Gtk.Box):
-	def __init__(self, client, settings):
+	def __init__(self, client, settings, window):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
 		self.settings = settings
 
 		#adding vars
 		self.client=client
+		self.window=window
 		self.playlist=[]
 		self.hovered_songpos=None
 		self.song_file=None
@@ -547,6 +546,8 @@ class TrackView(Gtk.Box):
 		#cover
 		self.cover=Gtk.Image.new()
 		self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover"))) #set to fallback cover
+		cover_event_box=Gtk.EventBox()
+		cover_event_box.add(self.cover)
 
 		#audio infos
 		audio=AudioType(self.client)
@@ -572,9 +573,10 @@ class TrackView(Gtk.Box):
 		self.treeview.connect("motion-notify-event", self.on_move_event)
 		self.treeview.connect("leave-notify-event", self.on_leave_event)
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
+		cover_event_box.connect("button-press-event", self.on_button_press_event)
 
 		#packing
-		self.pack_start(self.cover, False, False, 0)
+		self.pack_start(cover_event_box, False, False, 0)
 		self.pack_start(scroll, True, True, 0)
 		self.pack_end(status_bar, False, False, 0)
 
@@ -712,6 +714,37 @@ class TrackView(Gtk.Box):
 		selected_title=self.store.get_path(treeiter)
 		self.client.play(selected_title)
 
+	def on_button_press_event(self, widget, event):
+		if self.client.connected():
+			song=self.client.currentsong()
+			if not song == {}:
+				try:
+					artist=song["albumartist"]
+				except:
+					artist=""
+				try:
+					album=song["album"]
+				except:
+					album=""
+				try:
+					album_year=song["date"]
+				except:
+					album_year=""
+				if event.button == 1:
+					self.client.album_to_playlist(album, artist, album_year, False)
+				elif event.button == 2:
+					self.client.album_to_playlist(album, artist, album_year, True)
+				elif event.button == 3:
+					album_dialog = AlbumDialog(self.window, self.client, album, artist, album_year)
+					response = album_dialog.run()
+					if response == Gtk.ResponseType.OK:
+						self.client.album_to_playlist(album, artist, album_year, False)
+					elif response == Gtk.ResponseType.ACCEPT:
+						self.client.album_to_playlist(album, artist, album_year, True)
+					elif response == Gtk.ResponseType.YES:
+						self.client.album_to_playlist(album, artist, album_year, False, True)
+					album_dialog.destroy()
+
 class Browser(Gtk.Box):
 	def __init__(self, client, settings, window):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
@@ -724,7 +757,7 @@ class Browser(Gtk.Box):
 		#widgets
 		self.artist_list=ArtistView(self.client)
 		self.album_list=AlbumView(self.client, self.settings, self.window)
-		self.title_list=TrackView(self.client, self.settings)
+		self.title_list=TrackView(self.client, self.settings, self.window)
 
 		#connect
 		self.artist_change=self.artist_list.selection.connect("changed", self.on_artist_selection_change)
@@ -758,7 +791,7 @@ class Browser(Gtk.Box):
 			return_val=self.artist_list.refresh()
 			self.artist_list.selection.handler_unblock(self.artist_change)
 			if return_val:
-				self.go_home(self, first_run=True)
+				self.go_home(self)
 		else:
 			self.artist_list.selection.handler_block(self.artist_change)
 			self.artist_list.clear()
@@ -766,7 +799,7 @@ class Browser(Gtk.Box):
 			self.album_list.clear()
 		return True
 
-	def go_home(self, widget, first_run=False): #TODO
+	def go_home(self, widget): #TODO
 		try:
 			songid=self.client.status()["songid"]
 			song=self.client.playlistid(songid)[0]
@@ -780,7 +813,7 @@ class Browser(Gtk.Box):
 						self.artist_list.selection.select_iter(treeiter)
 					self.artist_list.treeview.scroll_to_cell(path)
 					break
-			self.album_list.scroll_to_selected_album(first_run)
+			self.album_list.scroll_to_selected_album()
 		except:
 			pass
 		self.title_list.scroll_to_selected_title()
