@@ -1626,7 +1626,8 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 			while not self.stop:
 				if self.client.connected():
 					cs=self.client.currentsong()
-					cs.pop("pos") #avoid unnecessary reloads caused by position change of current title
+					if not cs == {}:
+						cs.pop("pos") #avoid unnecessary reloads caused by position change of current title
 					if cs != self.current_song:
 						GLib.idle_add(update_label, _("searching..."))
 						try:
