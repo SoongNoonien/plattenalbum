@@ -873,8 +873,11 @@ class ProfileSettings(Gtk.Grid):
 		self.settings.array_delete('ai', "ports", pos)
 		self.settings.array_delete('as', "passwords", pos)
 		self.settings.array_delete('as', "paths", pos)
-		self.profiles_combo_reload()
-		self.profiles_combo.set_active(0)	
+		if len(self.settings.get_value("profiles")) == 0:
+			self.on_add_button_clicked()
+		else:
+			self.profiles_combo_reload()
+			self.profiles_combo.set_active(0)	
 
 	def on_profile_entry_changed(self, *args):
 		pos=self.profiles_combo.get_active()
@@ -900,6 +903,7 @@ class ProfileSettings(Gtk.Grid):
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
 			self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), dialog.get_filename())
+			self.path_select_button.set_tooltip_text(dialog.get_filename())
 		dialog.destroy()
 
 	def on_profiles_changed(self, *args):
