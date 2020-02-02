@@ -559,8 +559,8 @@ class TrackView(Gtk.Box):
 
 		#status bar
 		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-		status_bar.set_margin_left(4)
-		status_bar.set_margin_right(4)
+		status_bar.set_margin_start(4)
+		status_bar.set_margin_end(4)
 		status_bar.pack_start(self.playlist_info, True, True, 0)
 		status_bar.pack_end(audio, False, False, 0)
 
@@ -1763,8 +1763,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		#packing
 		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
 		self.hbox=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-		self.hbox.set_margin_left(2)
-		self.hbox.set_margin_right(2)
+		self.hbox.set_margin_start(2)
+		self.hbox.set_margin_end(2)
 		self.hbox.set_margin_bottom(2)
 		self.vbox.pack_start(self.info_bar, False, False, 0)
 		self.vbox.pack_start(self.browser, True, True, 0)
