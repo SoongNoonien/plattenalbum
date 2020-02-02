@@ -297,6 +297,9 @@ class ArtistView(Gtk.ScrolledWindow):
 		self.column_name.set_sort_column_id(0)
 		self.treeview.append_column(self.column_name)
 
+		#connect
+		self.treeview.connect("enter-notify-event", self.on_enter_event)
+
 		self.refresh()
 
 		self.add(self.treeview)
@@ -329,6 +332,9 @@ class ArtistView(Gtk.ScrolledWindow):
 				artists.append(selected_artist)
 		return artists
 
+	def on_enter_event(self, widget, event):
+		self.treeview.grab_focus()
+
 class AlbumIconView(Gtk.IconView):
 	def __init__(self, client, settings, window):
 		Gtk.IconView.__init__(self)
@@ -354,6 +360,7 @@ class AlbumIconView(Gtk.IconView):
 		self.album_item_activated=self.connect("item-activated", self.on_album_item_activated)
 		self.connect("button-press-event", self.on_album_view_button_press_event)
 		self.settings.connect("changed::show-album-view-tooltips", self.tooltip_settings)
+		self.connect("motion-notify-event", self.on_move_event)
 
 	def tooltip_settings(self, *args):
 		if self.settings.get_boolean("show-album-view-tooltips"):
@@ -454,6 +461,9 @@ class AlbumIconView(Gtk.IconView):
 		selected_artist=self.store.get_value(treeiter, 5)
 		self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
 
+	def on_move_event(self, widget, event):
+		self.grab_focus()
+
 class AlbumView(Gtk.ScrolledWindow):
 	def __init__(self, client, settings, window):
 		Gtk.ScrolledWindow.__init__(self)
@@ -548,6 +558,8 @@ class TrackView(Gtk.Box):
 
 		#status bar
 		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+		status_bar.set_margin_left(4)
+		status_bar.set_margin_right(4)
 		status_bar.pack_start(self.playlist_info, True, True, 0)
 		status_bar.pack_end(audio, False, False, 0)
 
@@ -702,7 +714,7 @@ class TrackView(Gtk.Box):
 
 class Browser(Gtk.Box):
 	def __init__(self, client, settings, window):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
 
 		#adding vars
 		self.client=client
@@ -722,7 +734,9 @@ class Browser(Gtk.Box):
 
 		#packing
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
+		self.paned1.set_wide_handle(True)
 		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
+		self.paned2.set_wide_handle(True)
 		self.paned1.pack1(self.artist_list, False, False)
 		self.paned1.pack2(self.album_list, True, False)
 		self.paned2.pack1(self.paned1, True, False)
@@ -778,9 +792,9 @@ class Browser(Gtk.Box):
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
 		Gtk.Grid.__init__(self)
-		self.set_row_spacing(3)
-		self.set_column_spacing(3)
-		self.set_property("border-width", 3)
+		self.set_row_spacing(4)
+		self.set_column_spacing(4)
+		self.set_property("border-width", 4)
 
 		#adding vars
 		self.settings = settings
@@ -927,9 +941,9 @@ class ProfileSettings(Gtk.Grid):
 class GeneralSettings(Gtk.Grid):
 	def __init__(self, settings):
 		Gtk.Grid.__init__(self)
-		self.set_row_spacing(3)
-		self.set_column_spacing(3)
-		self.set_property("border-width", 3)
+		self.set_row_spacing(4)
+		self.set_column_spacing(4)
+		self.set_property("border-width", 4)
 
 		#adding vars
 		self.settings = settings
@@ -1024,7 +1038,7 @@ class SettingsDialog(Gtk.Dialog):
 
 class ClientControl(Gtk.ButtonBox):
 	def __init__(self, client, settings):
-		Gtk.ButtonBox.__init__(self, spacing=3)
+		Gtk.ButtonBox.__init__(self, spacing=4)
 
 		#adding vars
 		self.client=client
@@ -1123,6 +1137,7 @@ class SeekBar(Gtk.Box):
 		self.rest.set_width_chars(8)
 		self.scale=Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=0, max=100, step=0.001)
 		self.scale.set_draw_value(False)
+		self.scale.set_can_focus(False)
 
 		#connect
 		self.scale.connect("change-value", self.seek)
@@ -1271,7 +1286,7 @@ class PlaybackOptions(Gtk.Box):
 class AudioType(Gtk.EventBox):
 	def __init__(self, client):
 		Gtk.EventBox.__init__(self)
-		self.set_tooltip_text(_("Right click to show additional information"))
+		self.set_tooltip_text(_("Click to show additional information"))
 
 		#adding vars
 		self.client=client
@@ -1328,7 +1343,7 @@ class AudioType(Gtk.EventBox):
 		return True
 
 	def on_button_press_event(self, widget, event):
-		if event.button == 3:
+		if event.button == 1 or event.button == 2 or event.button == 3:
 			self.popover.remove(self.treeview) #workaround
 			self.store.clear()
 			self.popover.add(self.treeview) #workaround
@@ -1712,8 +1727,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		GLib.timeout_add(1000, self.update, app)
 
 		#packing
-		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
-		self.hbox=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
+		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+		self.hbox=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+		self.hbox.set_margin_left(2)
+		self.hbox.set_margin_right(2)
+		self.hbox.set_margin_bottom(2)
 		self.vbox.pack_start(self.info_bar, False, False, 0)
 		self.vbox.pack_start(self.browser, True, True, 0)
 		self.vbox.pack_start(self.hbox, False, False, 0)
