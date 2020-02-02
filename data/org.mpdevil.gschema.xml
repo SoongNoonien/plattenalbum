@@ -32,7 +32,7 @@
       <description></description>
     </key>
     <key type="i" name="icon-size">
-      <default>16</default>
+      <default>24</default>
       <summary>Size of button icons in control bar</summary>
       <description></description>
     </key>
