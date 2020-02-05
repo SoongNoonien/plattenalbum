@@ -19,7 +19,8 @@ Features
 
 TODO
 ----
-1. MPRIS interface
+1. Support media keys
+2. MPRIS interface
 
 Building and installation
 -------------------------
