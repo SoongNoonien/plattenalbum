@@ -1843,7 +1843,9 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lyrics_win.destroy()
 
 	def on_key_press_event(self, widget, event):
-		if event.keyval == 32 or event.keyval == 269025044: #space / AudioPlay
+		if event.keyval == 32: #space
+			self.control.play_button.grab_focus()
+		if event.keyval == 269025044: #AudioPlay
 			self.control.play_button.emit("clicked")
 		elif event.keyval == 269025047: #AudioNext
 			self.control.next_button.emit("clicked")
