@@ -138,6 +138,8 @@ class Settings(Gio.Settings):
 	BASE_KEY = "org.mpdevil"
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
+		if len(self.get_value("profiles")) < (self.get_int("active-profile")+1):
+			self.set_int("active-profile", 0)
 
 	def array_append(self, vtype, key, value): #append to Gio.Settings (self.settings) array
 		array=self.get_value(key).unpack()
@@ -1411,15 +1413,13 @@ class ProfileSelect(Gtk.ComboBoxText):
 		self.settings.connect("changed::paths", self.on_settings_changed)
 
 		self.reload()
-		self.handler_block(self.changed)
-		self.set_active(self.settings.get_int("active-profile"))
-		self.handler_unblock(self.changed)
 
 	def reload(self, *args):
 		self.handler_block(self.changed)
 		self.remove_all()
 		for profile in self.settings.get_value("profiles"):
 			self.append_text(profile)
+		self.set_active(self.settings.get_int("active-profile"))
 		self.handler_unblock(self.changed)
 
 	def on_settings_changed(self, *args):
@@ -1751,6 +1751,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.search_button.connect("clicked", self.on_search_clicked)
 		self.lyrics_button.connect("toggled", self.on_lyrics_toggled)
 		self.info_bar.connect("response", self.on_info_bar_response)
+		self.settings.connect("changed::profiles", self.on_settings_changed)
 		#unmap space
 		binding_set=Gtk.binding_set_find('GtkTreeView')
 		Gtk.binding_entry_remove(binding_set, 32, Gdk.ModifierType.MOD2_MASK)
@@ -1774,7 +1775,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.hbox.pack_start(self.go_home_button, False, False, 0)
 		self.hbox.pack_start(self.search_button, False, False, 0)
 		self.hbox.pack_start(self.lyrics_button, False, False, 0)
-		self.hbox.pack_start(self.profiles, False, False, 0)
+		if len(self.settings.get_value("profiles")) > 1:
+			self.hbox.pack_start(self.profiles, False, False, 0)
 		self.hbox.pack_start(self.play_opts, False, False, 0)
 		self.hbox.pack_end(menu_button, False, False, 0)
 
@@ -1872,6 +1874,13 @@ class MainWindow(Gtk.ApplicationWindow):
 	def on_update(self, action, param):
 		if self.client.connected():
 			self.client.update()
+
+	def on_settings_changed(self, *args):
+		self.hbox.remove(self.profiles)
+		if len(self.settings.get_value("profiles")) > 1:
+			self.hbox.pack_start(self.profiles, False, False, 0)
+			self.hbox.reorder_child(self.profiles, 5)
+			self.profiles.show()
 
 class mpdevil(Gtk.Application):
 	def __init__(self, *args, **kwargs):
