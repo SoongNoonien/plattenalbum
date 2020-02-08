@@ -1331,6 +1331,7 @@ class AudioType(Gtk.EventBox):
 		self.label.set_xalign(1)
 		self.label.set_ellipsize(Pango.EllipsizeMode.END)
 		self.popover=Gtk.Popover()
+		self.popover.set_relative_to(self)
 
 		#Store
 		#(tag, value)
@@ -1346,12 +1347,12 @@ class AudioType(Gtk.EventBox):
 		renderer_text = Gtk.CellRendererText()
 
 		self.column_tag = Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text, text=0)
+		self.column_tag.set_property("resizable", False)
 		self.treeview.append_column(self.column_tag)
 
 		self.column_value = Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
+		self.column_value.set_property("resizable", False)
 		self.treeview.append_column(self.column_value)
-
-		self.popover.add(self.treeview)
 
 		#timeouts
 		GLib.timeout_add(1000, self.update)
@@ -1359,6 +1360,8 @@ class AudioType(Gtk.EventBox):
 		#connect
 		self.connect("button-press-event", self.on_button_press_event)
 
+		#packing
+		self.popover.add(self.treeview)
 		self.add(self.label)
 
 	def update(self):
@@ -1379,10 +1382,8 @@ class AudioType(Gtk.EventBox):
 
 	def on_button_press_event(self, widget, event):
 		if event.button == 1 or event.button == 2 or event.button == 3:
-			self.popover.remove(self.treeview) #workaround
-			self.store.clear()
-			self.popover.add(self.treeview) #workaround
 			try:
+				self.store.clear()
 				song=self.client.status()["song"]
 				tags=self.client.playlistinfo(song)[0]
 				for key in tags:
@@ -1390,9 +1391,8 @@ class AudioType(Gtk.EventBox):
 						self.store.append([key, str(datetime.timedelta(seconds=int(tags[key])))])
 					else:
 						self.store.append([key, tags[key]])
-				self.popover.set_relative_to(self)
 				self.popover.show_all()
-				self.popover.popup()
+				self.treeview.queue_resize()
 			except:
 				pass
 
