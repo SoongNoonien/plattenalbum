@@ -1810,6 +1810,7 @@ class MainWindow(Gtk.ApplicationWindow):
 							app.send_notification(None, notify)
 					self.songid_playing=songid
 			except:
+				self.songid_playing=None
 				self.set_title("mpdevil")
 		else:
 			self.set_title("mpdevil (not connected)")
