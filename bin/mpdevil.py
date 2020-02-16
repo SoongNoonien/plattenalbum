@@ -1164,15 +1164,24 @@ class SeekBar(Gtk.Box):
 
 		#adding vars
 		self.client=client
+		self.seek_time="10" #seek increment in seconds
 
-		#widgets
+		#labels
 		self.elapsed=Gtk.Label()
 		self.elapsed.set_width_chars(7)
 		self.rest=Gtk.Label()
 		self.rest.set_width_chars(8)
+
+		#progress bar
 		self.scale=Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=0, max=100, step=0.001)
 		self.scale.set_draw_value(False)
 		self.scale.set_can_focus(False)
+
+		#event boxes
+		self.elapsed_event_box=Gtk.EventBox()
+		self.rest_event_box=Gtk.EventBox()
+		self.elapsed_event_box.connect("button-press-event", self.on_elapsed_button_press_event)
+		self.rest_event_box.connect("button-press-event", self.on_rest_button_press_event)
 
 		#connect
 		self.scale.connect("change-value", self.seek)
@@ -1181,9 +1190,11 @@ class SeekBar(Gtk.Box):
 		GLib.timeout_add(100, self.update)
 
 		#packing
-		self.pack_start(self.elapsed, False, False, 0)
+		self.elapsed_event_box.add(self.elapsed)
+		self.rest_event_box.add(self.rest)
+		self.pack_start(self.elapsed_event_box, False, False, 0)
 		self.pack_start(self.scale, True, True, 0)
-		self.pack_end(self.rest, False, False, 0)
+		self.pack_end(self.rest_event_box, False, False, 0)
 
 	def seek(self, range, scroll, value):
 		status=self.client.status()
@@ -1191,6 +1202,18 @@ class SeekBar(Gtk.Box):
 		factor=(value/100)
 		pos=(duration*factor)
 		self.client.seekcur(pos)
+
+	def on_elapsed_button_press_event(self, widget, event):
+		if event.button == 1:
+			self.client.seekcur("-"+self.seek_time)
+		elif event.button == 3:
+			self.client.seekcur("+"+self.seek_time)
+
+	def on_rest_button_press_event(self, widget, event):
+		if event.button == 1:
+			self.client.seekcur("+"+self.seek_time)
+		elif event.button == 3:
+			self.client.seekcur("-"+self.seek_time)
 
 	def update(self):
 		try:
@@ -1202,11 +1225,15 @@ class SeekBar(Gtk.Box):
 			self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))))
 			self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))))
 			self.scale.set_sensitive(True)
+			self.elapsed_event_box.set_sensitive(True)
+			self.rest_event_box.set_sensitive(True)
 		except:
 			self.scale.set_value(0.0)
 			self.elapsed.set_text("0:00:00")
 			self.rest.set_text("-0:00:00")
 			self.scale.set_sensitive(False)
+			self.elapsed_event_box.set_sensitive(False)
+			self.rest_event_box.set_sensitive(False)
 		return True
 
 class PlaybackOptions(Gtk.Box):
