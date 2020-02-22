@@ -83,6 +83,8 @@ class Client(MPDClient):
 		MPDClient.__init__(self)
 		self.settings = settings
 		self.song_to_delete=""
+		self.try_connect_default()
+		self.settings.connect("changed::active-profile", self.on_settings_changed)
 
 	def try_connect_default(self):
 		active=self.settings.get_int("active-profile")
@@ -133,6 +135,10 @@ class Client(MPDClient):
 					for song in songs:
 						self.add(song["file"])
 					self.play()
+
+	def on_settings_changed(self, *args):
+		self.disconnect()
+		self.try_connect_default()
 
 class Settings(Gio.Settings):
 	BASE_KEY = "org.mpdevil"
@@ -301,8 +307,6 @@ class ArtistView(Gtk.ScrolledWindow):
 
 		#connect
 		self.treeview.connect("enter-notify-event", self.on_enter_event)
-
-		self.refresh()
 
 		self.add(self.treeview)
 
@@ -1455,8 +1459,6 @@ class ProfileSelect(Gtk.ComboBoxText):
 	def on_changed(self, *args):
 		active=self.get_active()
 		self.settings.set_int("active-profile", active)
-		self.client.disconnect()
-		self.client.try_connect_default()
 
 class ServerStats(Gtk.Dialog):
 	def __init__(self, parent, client):
@@ -1622,9 +1624,6 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 		#adding vars
 		self.settings=settings
 		self.client=Client(self.settings)
-
-		#connect client
-		self.client.try_connect_default()
 		self.current_song={}
 
 		#widgets
@@ -1635,7 +1634,6 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 		self.label.set_xalign(0)
 
 		#connect
-		self.settings.connect("changed::active-profile", self.on_settings_changed)
 		self.connect("destroy", self.quit)
 
 		#packing
@@ -1705,10 +1703,6 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 			return output
 		except:
 			return output.encode('utf-8')
-
-	def on_settings_changed(self, *args):
-		self.client.disconnect()
-		self.client.try_connect_default()
 
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings):
@@ -1808,9 +1802,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.hbox.pack_end(menu_button, False, False, 0)
 
 		self.add(self.vbox)
-
-		#connect client
-		self.client.try_connect_default()
 
 		self.show_all()
 
