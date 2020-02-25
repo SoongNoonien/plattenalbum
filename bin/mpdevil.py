@@ -105,7 +105,7 @@ class Client(MPDClient):
 
 	def album_to_playlist(self, album, artist, year, append, force=False):
 		if append:
-			songs=self.find("album", album, "date", year, "albumartist", artist)
+			songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
 			if not songs == []:
 				for song in songs:
 					self.add(song["file"])
@@ -118,7 +118,7 @@ class Client(MPDClient):
 					self.delete((1,)) # delete all songs, but the first. #bad song index possible
 				except:
 					pass
-				songs=self.find("album", album, "date", year, "albumartist", artist)
+				songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
 				if not songs == []:
 					for song in songs:
 						if not song["file"] == self.song_to_delete:
@@ -127,7 +127,7 @@ class Client(MPDClient):
 							self.move(0, (len(self.playlist())-1))
 							self.song_to_delete=""
 			else:
-				songs=self.find("album", album, "date", year, "albumartist", artist)
+				songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
 				if not songs == []:
 					self.stop()
 					self.clear()
@@ -252,14 +252,21 @@ class Settings(Gio.Settings):
 #			return Gtk.IconSize.INVALID
 			raise ValueError
 
+	def get_artist_type(self):
+		if self.get_boolean("show-all-artists"):
+			return ("artist")
+		else:
+			return ("albumartist")
+
 class AlbumDialog(Gtk.Dialog):
-	def __init__(self, parent, client, album, artist, year):
+	def __init__(self, parent, client, settings, album, artist, year):
 		Gtk.Dialog.__init__(self, title=(artist+" - "+album+" ("+year+")"), transient_for=parent)
 		self.add_buttons(Gtk.STOCK_ADD, Gtk.ResponseType.ACCEPT, Gtk.STOCK_MEDIA_PLAY, Gtk.ResponseType.YES, Gtk.STOCK_OPEN, Gtk.ResponseType.OK, Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
 		self.set_default_size(800, 600)
 
 		#adding vars
 		self.client=client
+		self.settings=settings
 
 		#scroll
 		scroll=Gtk.ScrolledWindow()
@@ -329,7 +336,7 @@ class AlbumDialog(Gtk.Dialog):
 			self.client.add(selected_title)
 
 	def populate_treeview(self, album, artist, year):
-		songs=self.client.find("album", album, "date", year, "albumartist", artist)
+		songs=self.client.find("album", album, "date", year, self.settings.get_artist_type(), artist)
 		if not songs == []:
 			for song in songs:
 				try:
@@ -352,12 +359,13 @@ class AlbumDialog(Gtk.Dialog):
 				self.store.append([track, title, artist, duration, song["file"]] )
 
 class ArtistView(Gtk.ScrolledWindow):
-	def __init__(self, client, emitter):
+	def __init__(self, client, settings, emitter):
 		Gtk.ScrolledWindow.__init__(self)
 		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		#adding vars
 		self.client=client
+		self.settings=settings
 		self.emitter=emitter
 
 		#artistStore
@@ -367,7 +375,8 @@ class ArtistView(Gtk.ScrolledWindow):
 
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
-		self.treeview.set_search_column(-1)
+		self.treeview.set_search_column(0)
+		self.treeview.columns_autosize()
 
 		#artistSelection
 		self.selection = self.treeview.get_selection()
@@ -377,12 +386,13 @@ class ArtistView(Gtk.ScrolledWindow):
 		renderer_text = Gtk.CellRendererText()
 		self.column_name = Gtk.TreeViewColumn(_("Album Artist"), renderer_text, text=0)
 		self.column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_name.set_property("resizable", True)
+		self.column_name.set_property("resizable", False)
 		self.column_name.set_sort_column_id(0)
 		self.treeview.append_column(self.column_name)
 
 		#connect
 		self.treeview.connect("enter-notify-event", self.on_enter_event)
+		self.settings.connect("changed::show-all-artists", self.refresh)
 		self.update_signal=self.emitter.connect("update", self.refresh)
 
 		self.add(self.treeview)
@@ -393,7 +403,7 @@ class ArtistView(Gtk.ScrolledWindow):
 	def refresh(self, *args):
 		self.selection.set_mode(Gtk.SelectionMode.NONE)
 		self.clear()
-		for artist in self.client.list("albumartist"):
+		for artist in self.client.list(self.settings.get_artist_type()):
 			self.store.append([artist])
 		self.selection.set_mode(Gtk.SelectionMode.MULTIPLE)
 
@@ -449,7 +459,7 @@ class AlbumIconView(Gtk.IconView):
 			self.set_tooltip_column(-1)
 
 	def gen_tooltip(self, album, artist, year):
-		songs=self.client.find("album", album, "date", year, "albumartist", artist)
+		songs=self.client.find("album", album, "date", year, self.settings.get_artist_type(), artist)
 		length=float(0)
 		for song in songs:
 			try:
@@ -466,12 +476,12 @@ class AlbumIconView(Gtk.IconView):
 		size=self.settings.get_int("album-cover")
 		albums=[]
 		for artist in artists:
-			for album in self.client.list("album", "albumartist", artist):
-				albums.append({"artist": artist, "album": album, "year": self.client.list("date", "album", album, "albumartist", artist)[0]})
+			for album in self.client.list("album", self.settings.get_artist_type(), artist):
+				albums.append({"artist": artist, "album": album, "year": self.client.list("date", "album", album, self.settings.get_artist_type(), artist)[0]})
 		albums = sorted(albums, key=lambda k: k['year'])
 		for album in albums:
 			if self.client.connected() and not self.stop_flag: #self.get_visible() and self.client.connected() and 
-				songs=self.client.find("album", album["album"], "date", album["year"], "albumartist", album["artist"])
+				songs=self.client.find("album", album["album"], "date", album["year"], self.settings.get_artist_type(), album["artist"])
 				if songs == []:
 					song_file=None
 				else:
@@ -518,7 +528,7 @@ class AlbumIconView(Gtk.IconView):
 				self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
 			elif event.button == 3:
 				if self.client.connected():
-					album = AlbumDialog(self.window, self.client, selected_album, selected_artist, selected_album_year)
+					album = AlbumDialog(self.window, self.client, self.settings, selected_album, selected_artist, selected_album_year)
 					response = album.run()
 					if response == Gtk.ResponseType.OK:
 						self.select_path(path)
@@ -589,10 +599,10 @@ class AlbumView(Gtk.ScrolledWindow):
 class TrackView(Gtk.Box):
 	def __init__(self, client, settings, emitter, window):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
-		self.settings = settings
 
 		#adding vars
 		self.client=client
+		self.settings = settings
 		self.emitter=emitter
 		self.window=window
 		self.hovered_songpos=None
@@ -761,7 +771,7 @@ class TrackView(Gtk.Box):
 			song=self.client.currentsong()
 			if not song == {}:
 				try:
-					artist=song["albumartist"]
+					artist=song[self.settings.get_artist_type()]
 				except:
 					artist=""
 				try:
@@ -777,7 +787,7 @@ class TrackView(Gtk.Box):
 				elif event.button == 2:
 					self.client.album_to_playlist(album, artist, album_year, True)
 				elif event.button == 3:
-					album_dialog = AlbumDialog(self.window, self.client, album, artist, album_year)
+					album_dialog = AlbumDialog(self.window, self.client, self.settings, album, artist, album_year)
 					response = album_dialog.run()
 					if response == Gtk.ResponseType.OK:
 						self.client.album_to_playlist(album, artist, album_year, False)
@@ -851,7 +861,7 @@ class Browser(Gtk.Box):
 		self.window=window
 
 		#widgets
-		self.artist_list=ArtistView(self.client, self.emitter)
+		self.artist_list=ArtistView(self.client, self.settings, self.emitter)
 		self.album_list=AlbumView(self.client, self.settings, self.window)
 		self.title_list=TrackView(self.client, self.settings, self.emitter, self.window)
 
@@ -893,7 +903,7 @@ class Browser(Gtk.Box):
 			for i in range(0, row_num):
 				path=Gtk.TreePath(i)
 				treeiter = self.artist_list.store.get_iter(path)
-				if self.artist_list.store.get_value(treeiter, 0) == song["albumartist"]:
+				if self.artist_list.store.get_value(treeiter, 0) == song[self.settings.get_artist_type()]:
 					if not self.artist_list.selection.iter_is_selected(treeiter):
 						self.artist_list.selection.handler_block(self.artist_change)
 						self.artist_list.selection.unselect_all()
@@ -1094,6 +1104,9 @@ class GeneralSettings(Gtk.Grid):
 		show_album_view_tooltips=Gtk.CheckButton(label=_("Show tooltips in album view"))
 		show_album_view_tooltips.set_active(self.settings.get_boolean("show-album-view-tooltips"))
 
+		show_all_artists=Gtk.CheckButton(label=_("Show all artists"))
+		show_all_artists.set_active(self.settings.get_boolean("show-all-artists"))
+
 		send_notify=Gtk.CheckButton(label=_("Send notification on title change"))
 		send_notify.set_active(self.settings.get_boolean("send-notify"))
 
@@ -1109,6 +1122,7 @@ class GeneralSettings(Gtk.Grid):
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
 		show_stop.connect("toggled", self.on_toggled, "show-stop")
 		show_album_view_tooltips.connect("toggled", self.on_toggled, "show-album-view-tooltips")
+		show_all_artists.connect("toggled", self.on_toggled, "show-all-artists")
 		send_notify.connect("toggled", self.on_toggled, "send-notify")
 		stop_on_quit.connect("toggled", self.on_toggled, "stop-on-quit")
 		add_album.connect("toggled", self.on_toggled, "add-album")
@@ -1122,7 +1136,8 @@ class GeneralSettings(Gtk.Grid):
 		self.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(show_stop, icon_size_label, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(show_album_view_tooltips, show_stop, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(send_notify, show_album_view_tooltips, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(show_all_artists, show_album_view_tooltips, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(send_notify, show_all_artists, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(add_album, send_notify, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(stop_on_quit, add_album, Gtk.PositionType.BOTTOM, 2, 1)
 
