@@ -500,6 +500,7 @@ class AlbumIconView(Gtk.IconView):
 			path=Gtk.TreePath(i)
 			treeiter = self.store.get_iter(path)
 			if self.store.get_value(treeiter, 3) == song["album"]:
+				self.set_cursor(path, None, False)
 				self.select_path(path)
 				self.scroll_to_path(path, True, 0, 0)
 				break
@@ -711,6 +712,7 @@ class TrackView(Gtk.Box):
 		try:
 			song=self.client.status()["song"]
 			path = Gtk.TreePath(int(song))
+			self.treeview.set_cursor(path, None, False)
 			self.selection.select_path(path)
 		except:
 			self.selection.unselect_all()
@@ -749,7 +751,7 @@ class TrackView(Gtk.Box):
 		self.refresh_selection()
 		self.hovered_songpos=None
 
-	def on_row_activated(self, widget, path, view_column):
+	def on_row_activated(self, widget, path, view_column): #TODO
 		treeiter=self.store.get_iter(path)
 		selected_title=self.store.get_path(treeiter)
 		self.client.play(selected_title)
@@ -828,7 +830,7 @@ class TrackView(Gtk.Box):
 		self.playlist_version=self.client.status()["playlist"]
 
 	def on_player_changed(self, *args):
-		if not self.client.song_to_delete == "":
+		if not self.client.song_to_delete == "": #TODO should be in Client class
 			status=self.client.status()
 			if not status["song"] == "0" and self.client.playlistinfo()[0]["file"] == self.client.song_to_delete:
 				self.client.delete(0)
@@ -896,6 +898,7 @@ class Browser(Gtk.Box):
 						self.artist_list.selection.handler_block(self.artist_change)
 						self.artist_list.selection.unselect_all()
 						self.artist_list.selection.handler_unblock(self.artist_change)
+						self.artist_list.treeview.set_cursor(path, None, False)
 						self.artist_list.selection.select_iter(treeiter)
 					self.artist_list.treeview.scroll_to_cell(path)
 					break
