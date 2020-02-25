@@ -594,7 +594,6 @@ class TrackView(Gtk.Box):
 		self.client=client
 		self.emitter=emitter
 		self.window=window
-		self.playlist=[]
 		self.hovered_songpos=None
 		self.song_file=None
 		self.playlist_version=None
@@ -730,8 +729,8 @@ class TrackView(Gtk.Box):
 			if not self.hovered_songpos == None:
 				try:
 					self.client.delete(self.hovered_songpos) #bad song index possible
-					self.playlist=self.client.playlist()
-					self.refresh_playlist_info()
+					self.store.remove(self.store.get_iter(self.hovered_songpos))
+					self.playlist_version=self.client.status()["playlist"]
 				except:
 					self.hovered_songpos == None
 		self.treeview.handler_unblock(self.key_press_event)
@@ -818,9 +817,9 @@ class TrackView(Gtk.Box):
 				duration=str(datetime.timedelta(seconds=int(dura )))
 				try:
 					treeiter=self.store.get_iter(song["pos"])
-					self.store.set(treeiter, 0, track, 1, title, 2, artist, 3, album, 4, duration, 5, song["file"].replace("&", ""))
+					self.store.set(treeiter, 0, track, 1, title, 2, artist, 3, album, 4, duration, 5, song["file"])
 				except:
-					self.store.append([track, title, artist, album, duration, song["file"].replace("&", "")])
+					self.store.append([track, title, artist, album, duration, song["file"]])
 			for i in reversed(range(int(self.client.status()["playlistlength"]), len(self.store))):
 				treeiter=self.store.get_iter(i)
 				self.store.remove(treeiter)
