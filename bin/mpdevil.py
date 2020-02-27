@@ -358,8 +358,69 @@ class AlbumDialog(Gtk.Dialog):
 				duration=str(datetime.timedelta(seconds=int(dura)))
 				self.store.append([track, title, artist, duration, song["file"]] )
 
-class ArtistView(Gtk.ScrolledWindow):
+class GenreSelect(Gtk.Box):
 	def __init__(self, client, settings, emitter):
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+
+		#adding vars
+		self.client=client
+		self.settings=settings
+		self.emitter=emitter
+		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
+
+		self.combo=Gtk.ComboBoxText()
+		self.button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("object-select-symbolic", self.icon_size))
+
+		#connect
+		#self.connect("changed", self.on_changed)
+		self.combo_changed=self.combo.connect("changed", self.on_combo_changed)
+		self.button.connect("toggled", self.on_button_toggled)
+		self.update_signal=self.emitter.connect("update", self.refresh)
+
+		self.pack_start(self.button, False, False, 0)
+		self.pack_start(self.combo, True, True, 0)
+
+	@GObject.Signal
+	def changed(self):
+		self.emitter.handler_block(self.update_signal)
+		self.emitter.emit("update")
+		self.emitter.handler_unblock(self.update_signal)
+
+	def refresh(self, *args):
+		self.combo.handler_block(self.combo_changed)
+		self.combo.remove_all()
+		for genre in self.client.list("genre"):
+			self.combo.append_text(genre)
+		self.combo.set_active(0)
+		self.combo.handler_unblock(self.combo_changed)
+		self.button.emit("toggled")
+
+	def get_value(self):
+		if self.button.get_active():
+			return self.combo.get_active_text()
+		else:
+			return None
+
+	def on_changed(self, *args):
+		value=self.get_value()
+		if value == None:
+			print("None")
+		else:
+			print(value)
+			print(self.client.list(self.settings.get_artist_type(), "genre", value))
+
+	def on_combo_changed(self, *args):
+		self.emit("changed")
+
+	def on_button_toggled(self, widget):
+		if widget.get_active():
+			self.combo.set_sensitive(True)
+		else:
+			self.combo.set_sensitive(False)
+		self.emit("changed")
+
+class ArtistView(Gtk.ScrolledWindow):
+	def __init__(self, client, settings, emitter, genre_select):
 		Gtk.ScrolledWindow.__init__(self)
 		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
@@ -367,6 +428,7 @@ class ArtistView(Gtk.ScrolledWindow):
 		self.client=client
 		self.settings=settings
 		self.emitter=emitter
+		self.genre_select=genre_select
 
 		#artistStore
 		#(name)
@@ -403,7 +465,12 @@ class ArtistView(Gtk.ScrolledWindow):
 	def refresh(self, *args):
 		self.selection.set_mode(Gtk.SelectionMode.NONE)
 		self.clear()
-		for artist in self.client.list(self.settings.get_artist_type()):
+		genre=self.genre_select.get_value()
+		if genre == None:
+			artists=self.client.list(self.settings.get_artist_type())
+		else:
+			artists=self.client.list(self.settings.get_artist_type(), "genre", genre)
+		for artist in artists:
 			self.store.append([artist])
 		self.selection.set_mode(Gtk.SelectionMode.MULTIPLE)
 
@@ -421,12 +488,13 @@ class ArtistView(Gtk.ScrolledWindow):
 		self.treeview.grab_focus()
 
 class AlbumIconView(Gtk.IconView):
-	def __init__(self, client, settings, window):
+	def __init__(self, client, settings, genre_select, window):
 		Gtk.IconView.__init__(self)
 
 		#adding vars
 		self.settings=settings
 		self.client=client
+		self.genre_select=genre_select
 		self.window=window
 		self.stop_flag=True
 
@@ -475,8 +543,13 @@ class AlbumIconView(Gtk.IconView):
 		self.stop_flag=False
 		size=self.settings.get_int("album-cover")
 		albums=[]
+		genre=self.genre_select.get_value()
 		for artist in artists:
-			for album in self.client.list("album", self.settings.get_artist_type(), artist):
+			if genre == None:
+				album_candidates=self.client.list("album", self.settings.get_artist_type(), artist)
+			else:
+				album_candidates=self.client.list("album", self.settings.get_artist_type(), artist, "genre", genre)
+			for album in album_candidates:
 				albums.append({"artist": artist, "album": album, "year": self.client.list("date", "album", album, self.settings.get_artist_type(), artist)[0]})
 		albums = sorted(albums, key=lambda k: k['year'])
 		for album in albums:
@@ -558,17 +631,18 @@ class AlbumIconView(Gtk.IconView):
 		self.grab_focus()
 
 class AlbumView(Gtk.ScrolledWindow):
-	def __init__(self, client, settings, window):
+	def __init__(self, client, settings, genre_select, window):
 		Gtk.ScrolledWindow.__init__(self)
 		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		#adding vars
 		self.settings=settings
 		self.client=client
+		self.genre_select=genre_select
 		self.window=window
 		self.artists=[]
 
-		self.iconview=AlbumIconView(self.client, self.settings, self.window)
+		self.iconview=AlbumIconView(self.client, self.settings, self.genre_select, self.window)
 		self.iconview.connect("stopped", self.update)
 
 		self.add(self.iconview)
@@ -722,7 +796,7 @@ class TrackView(Gtk.Box):
 		try:
 			song=self.client.status()["song"]
 			path = Gtk.TreePath(int(song))
-			self.treeview.set_cursor(path, None, False)
+			self.treeview.set_cursor(path, None, False) #TODO
 			self.selection.select_path(path)
 		except:
 			self.selection.unselect_all()
@@ -852,7 +926,7 @@ class TrackView(Gtk.Box):
 
 class Browser(Gtk.Box):
 	def __init__(self, client, settings, emitter, window):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=4)
 
 		#adding vars
 		self.client=client
@@ -861,19 +935,23 @@ class Browser(Gtk.Box):
 		self.window=window
 
 		#widgets
-		self.artist_list=ArtistView(self.client, self.settings, self.emitter)
-		self.album_list=AlbumView(self.client, self.settings, self.window)
+		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
+		self.artist_list=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
+		self.album_list=AlbumView(self.client, self.settings, self.genre_select, self.window)
 		self.title_list=TrackView(self.client, self.settings, self.emitter, self.window)
+		hbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
 		#connect
 		self.artist_change=self.artist_list.selection.connect("changed", self.on_artist_selection_change)
 
 		#packing
+		hbox.pack_start(self.genre_select, False, False, 4)
+		hbox.pack_start(self.artist_list, True, True, 0)
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
 		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned2.set_wide_handle(True)
-		self.paned1.pack1(self.artist_list, False, False)
+		self.paned1.pack1(hbox, False, False)
 		self.paned1.pack2(self.album_list, True, False)
 		self.paned2.pack1(self.paned1, True, False)
 		self.paned2.pack2(self.title_list, False, False)
