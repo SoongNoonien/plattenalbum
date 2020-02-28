@@ -46,6 +46,11 @@
       <summary>Show tooltips in album-view</summary>
       <description></description>
     </key>
+    <key type="b" name="sort-albums-by-year">
+      <default>true</default>
+      <summary>Sort albums by year</summary>
+      <description></description>
+    </key>
     <key type="b" name="send-notify">
       <default>false</default>
       <summary>Send notification on title change</summary>

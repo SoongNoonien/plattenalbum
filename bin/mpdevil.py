@@ -493,7 +493,7 @@ class AlbumIconView(Gtk.IconView):
 
 		#cover, display_label, tooltip(titles), album, year, artist
 		self.store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str)
-		self.store.set_sort_column_id(4, Gtk.SortType.ASCENDING)
+		self.sort_settings()
 
 		#iconview
 		self.set_model(self.store)
@@ -507,6 +507,7 @@ class AlbumIconView(Gtk.IconView):
 		self.album_item_activated=self.connect("item-activated", self.on_album_item_activated)
 		self.connect("button-press-event", self.on_album_view_button_press_event)
 		self.settings.connect("changed::show-album-view-tooltips", self.tooltip_settings)
+		self.settings.connect("changed::sort-albums-by-year", self.sort_settings)
 		self.connect("motion-notify-event", self.on_move_event)
 
 	@GObject.Signal
@@ -518,6 +519,12 @@ class AlbumIconView(Gtk.IconView):
 			self.set_tooltip_column(2)
 		else:
 			self.set_tooltip_column(-1)
+
+	def sort_settings(self, *args):
+		if self.settings.get_boolean("sort-albums-by-year"):
+			self.store.set_sort_column_id(4, Gtk.SortType.ASCENDING)
+		else:
+			self.store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
 
 	def gen_tooltip(self, album, artist, year):
 		songs=self.client.find("album", album, "date", year, self.settings.get_artist_type(), artist)
@@ -544,7 +551,10 @@ class AlbumIconView(Gtk.IconView):
 				album_candidates=self.client.list("album", self.settings.get_artist_type(), artist, "genre", genre)
 			for album in album_candidates:
 				albums.append({"artist": artist, "album": album, "year": self.client.list("date", "album", album, self.settings.get_artist_type(), artist)[0]})
-		albums = sorted(albums, key=lambda k: k['year'])
+		if self.settings.get_boolean("sort-albums-by-year"):
+			albums = sorted(albums, key=lambda k: k['year'])
+		else:
+			albums = sorted(albums, key=lambda k: k['album'])
 		for album in albums:
 			if self.client.connected() and not self.stop_flag: #self.get_visible() and self.client.connected() and 
 				songs=self.client.find("album", album["album"], "date", album["year"], self.settings.get_artist_type(), album["artist"])
@@ -1175,6 +1185,9 @@ class GeneralSettings(Gtk.Grid):
 		show_album_view_tooltips=Gtk.CheckButton(label=_("Show tooltips in album view"))
 		show_album_view_tooltips.set_active(self.settings.get_boolean("show-album-view-tooltips"))
 
+		sort_albums_by_year=Gtk.CheckButton(label=_("Sort albums by year"))
+		sort_albums_by_year.set_active(self.settings.get_boolean("sort-albums-by-year"))
+
 		show_all_artists=Gtk.CheckButton(label=_("Show all artists"))
 		show_all_artists.set_active(self.settings.get_boolean("show-all-artists"))
 
@@ -1193,6 +1206,7 @@ class GeneralSettings(Gtk.Grid):
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
 		show_stop.connect("toggled", self.on_toggled, "show-stop")
 		show_album_view_tooltips.connect("toggled", self.on_toggled, "show-album-view-tooltips")
+		sort_albums_by_year.connect("toggled", self.on_toggled, "sort-albums-by-year")
 		show_all_artists.connect("toggled", self.on_toggled, "show-all-artists")
 		send_notify.connect("toggled", self.on_toggled, "send-notify")
 		stop_on_quit.connect("toggled", self.on_toggled, "stop-on-quit")
@@ -1207,7 +1221,8 @@ class GeneralSettings(Gtk.Grid):
 		self.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(show_stop, icon_size_label, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(show_album_view_tooltips, show_stop, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(show_all_artists, show_album_view_tooltips, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(sort_albums_by_year, show_album_view_tooltips, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(show_all_artists, sort_albums_by_year, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(send_notify, show_all_artists, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(add_album, send_notify, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(stop_on_quit, add_album, Gtk.PositionType.BOTTOM, 2, 1)
