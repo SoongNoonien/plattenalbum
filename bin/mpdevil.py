@@ -699,7 +699,7 @@ class TrackView(Gtk.Box):
 
 		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text, text=0)
 		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_track.set_property("resizable", True)
+		self.column_track.set_property("resizable", False)
 		self.treeview.append_column(self.column_track)
 
 		self.column_title = Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
@@ -714,7 +714,7 @@ class TrackView(Gtk.Box):
 
 		self.column_duration = Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
 		self.column_duration.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_duration.set_property("resizable", True)
+		self.column_duration.set_property("resizable", False)
 		self.treeview.append_column(self.column_duration)
 
 		#scroll
