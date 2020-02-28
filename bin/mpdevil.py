@@ -1792,7 +1792,7 @@ class Search(Gtk.Dialog):
 			self.store.append([track, title, artist, album, duration, song["file"].replace("&", "")] )
 		self.label.set_text(_("Hits: %i") % (len(self.store)))
 
-class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient isn't threadsafe
+class LyricsWindow(Gtk.Window):
 	def __init__(self, client, settings, emitter):
 		Gtk.Window.__init__(self, title=_("Lyrics"))
 		self.set_icon_name("mpdevil")
@@ -1813,6 +1813,7 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 
 		#connect
 		self.player_changed=self.emitter.connect("player", self.update)
+		self.connect("destroy", self.remove_handlers)
 
 		#packing
 		self.scroll.add(self.label)
@@ -1821,6 +1822,9 @@ class LyricsWindow(Gtk.Window): #Lyrics view with own client because MPDClient i
 		self.show_all()
 
 		self.update()
+
+	def remove_handlers(self, *args):
+		self.emitter.disconnect(self.player_changed)
 
 	def display_lyrics(self):
 		GLib.idle_add(self.label.set_text, _("searching..."))
