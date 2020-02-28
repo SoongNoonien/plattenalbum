@@ -366,18 +366,14 @@ class GenreSelect(Gtk.Box):
 		self.client=client
 		self.settings=settings
 		self.emitter=emitter
-		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		self.combo=Gtk.ComboBoxText()
-		self.button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("object-select-symbolic", self.icon_size))
 
 		#connect
 		#self.connect("changed", self.on_changed)
 		self.combo_changed=self.combo.connect("changed", self.on_combo_changed)
-		self.button.connect("toggled", self.on_button_toggled)
 		self.update_signal=self.emitter.connect("update", self.refresh)
 
-		self.pack_start(self.button, False, False, 0)
 		self.pack_start(self.combo, True, True, 0)
 
 	@GObject.Signal
@@ -389,17 +385,17 @@ class GenreSelect(Gtk.Box):
 	def refresh(self, *args):
 		self.combo.handler_block(self.combo_changed)
 		self.combo.remove_all()
+		self.combo.append_text(_("all genres"))
 		for genre in self.client.list("genre"):
 			self.combo.append_text(genre)
 		self.combo.set_active(0)
 		self.combo.handler_unblock(self.combo_changed)
-		self.button.emit("toggled")
 
 	def get_value(self):
-		if self.button.get_active():
-			return self.combo.get_active_text()
-		else:
+		if self.combo.get_active() == 0:
 			return None
+		else:
+			return self.combo.get_active_text()
 
 	def on_changed(self, *args):
 		value=self.get_value()
@@ -410,13 +406,6 @@ class GenreSelect(Gtk.Box):
 			print(self.client.list(self.settings.get_artist_type(), "genre", value))
 
 	def on_combo_changed(self, *args):
-		self.emit("changed")
-
-	def on_button_toggled(self, widget):
-		if widget.get_active():
-			self.combo.set_sensitive(True)
-		else:
-			self.combo.set_sensitive(False)
 		self.emit("changed")
 
 class ArtistView(Gtk.ScrolledWindow):
