@@ -370,7 +370,6 @@ class GenreSelect(Gtk.Box):
 		self.combo=Gtk.ComboBoxText()
 
 		#connect
-		#self.connect("changed", self.on_changed)
 		self.combo_changed=self.combo.connect("changed", self.on_combo_changed)
 		self.update_signal=self.emitter.connect("update", self.refresh)
 
@@ -396,14 +395,6 @@ class GenreSelect(Gtk.Box):
 			return None
 		else:
 			return self.combo.get_active_text()
-
-	def on_changed(self, *args):
-		value=self.get_value()
-		if value == None:
-			print("None")
-		else:
-			print(value)
-			print(self.client.list(self.settings.get_artist_type(), "genre", value))
 
 	def on_combo_changed(self, *args):
 		self.emit("changed")
