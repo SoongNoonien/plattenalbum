@@ -752,6 +752,7 @@ class TrackView(Gtk.Box):
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.treeview.connect("motion-notify-event", self.on_move_event)
+		self.treeview.connect("leave-notify-event", self.on_focus_out_event)
 		self.treeview.connect("focus-out-event", self.on_focus_out_event)
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 		cover_event_box.connect("button-press-event", self.on_button_press_event)
@@ -799,8 +800,10 @@ class TrackView(Gtk.Box):
 		try:
 			song=self.client.status()["song"]
 			path = Gtk.TreePath(int(song))
-			self.treeview.set_cursor(path, None, False) #TODO
-			self.selection.select_path(path)
+			if self.hovered_songpos:
+				self.selection.select_path(path)
+			else:
+				self.treeview.set_cursor(path, None, False)
 		except:
 			self.selection.unselect_all()
 		self.refresh_cover()
@@ -990,8 +993,6 @@ class Browser(Gtk.Box):
 						self.artist_list.selection.unselect_all()
 						self.artist_list.selection.handler_unblock(self.artist_change)
 						self.artist_list.treeview.set_cursor(path, None, False)
-						self.artist_list.selection.select_iter(treeiter)
-					self.artist_list.treeview.scroll_to_cell(path)
 					break
 			self.album_list.scroll_to_selected_album()
 		except:
@@ -1272,8 +1273,11 @@ class ClientControl(Gtk.ButtonBox):
 		#widgets
 		self.play_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start-symbolic", self.icon_size))
 		self.stop_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", self.icon_size))
+		self.stop_button.set_can_focus(False)
 		self.prev_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward-symbolic", self.icon_size))
+		self.prev_button.set_can_focus(False)
 		self.next_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward-symbolic", self.icon_size))
+		self.next_button.set_can_focus(False)
 
 		#connect
 		self.play_button.connect("clicked", self.on_play_clicked)
@@ -1433,14 +1437,19 @@ class PlaybackOptions(Gtk.Box):
 
 		#widgets
 		self.random=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-playlist-shuffle-symbolic", self.icon_size))
+		self.random.set_can_focus(False)
 		self.random.set_tooltip_text(_("Random mode"))
 		self.repeat=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-playlist-repeat-symbolic", self.icon_size))
+		self.repeat.set_can_focus(False)
 		self.repeat.set_tooltip_text(_("Repeat mode"))
 		self.single=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("zoom-original-symbolic", self.icon_size))
+		self.single.set_can_focus(False)
 		self.single.set_tooltip_text(_("Single mode"))
 		self.consume=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("edit-cut-symbolic", self.icon_size))
+		self.consume.set_can_focus(False)
 		self.consume.set_tooltip_text(_("Consume mode"))
 		self.volume=Gtk.VolumeButton()
+		self.volume.set_can_focus(False)
 		self.volume.set_property("size", self.icon_size)
 
 		#connect
@@ -1906,10 +1915,13 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.control=ClientControl(self.client, self.settings, self.emitter)
 		self.progress=SeekBar(self.client)
 		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-home-symbolic", self.icon_size))
+		self.go_home_button.set_can_focus(False)
 		self.go_home_button.set_tooltip_text(_("Return to album of current title"))
 		self.search_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
+		self.search_button.set_can_focus(False)
 		self.search_button.set_tooltip_text(_("Title search"))
 		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
+		self.lyrics_button.set_can_focus(False)
 		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
 		self.play_opts=PlaybackOptions(self.client, self.settings, self.emitter)
 
@@ -1923,6 +1935,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append(_("Quit"), "app.quit")
 
 		menu_button = Gtk.MenuButton.new()
+		menu_button.set_can_focus(False)
 		menu_popover = Gtk.Popover.new_from_model(menu_button, menu)
 		menu_button.set_popover(menu_popover)
 		menu_button.set_tooltip_text(_("Main menu"))
