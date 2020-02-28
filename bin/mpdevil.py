@@ -435,7 +435,7 @@ class ArtistView(Gtk.ScrolledWindow):
 
 		#Old Name Column
 		renderer_text = Gtk.CellRendererText()
-		self.column_name = Gtk.TreeViewColumn(_("Album Artist"), renderer_text, text=0)
+		self.column_name = Gtk.TreeViewColumn("", renderer_text, text=0)
 		self.column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_name.set_property("resizable", False)
 		self.column_name.set_sort_column_id(0)
@@ -454,6 +454,10 @@ class ArtistView(Gtk.ScrolledWindow):
 	def refresh(self, *args):
 		self.selection.set_mode(Gtk.SelectionMode.NONE)
 		self.clear()
+		if self.settings.get_artist_type() == "albumartist":
+			self.column_name.set_title(_("Album Artist"))
+		else:
+			self.column_name.set_title(_("Artist"))
 		genre=self.genre_select.get_value()
 		if genre == None:
 			artists=self.client.list(self.settings.get_artist_type())
