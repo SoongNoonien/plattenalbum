@@ -381,6 +381,9 @@ class GenreSelect(Gtk.Box):
 		self.emitter.emit("update")
 		self.emitter.handler_unblock(self.update_signal)
 
+	def deactivate(self):
+		self.combo.set_active(0)
+
 	def refresh(self, *args):
 		self.combo.handler_block(self.combo_changed)
 		self.combo.remove_all()
@@ -933,22 +936,27 @@ class Browser(Gtk.Box):
 
 		#widgets
 		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
+		self.genre_select.set_margin_start(2)
+		self.genre_select.set_margin_end(2)
+		self.genre_select.set_margin_top(2)
 		self.artist_list=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
 		self.album_list=AlbumView(self.client, self.settings, self.genre_select, self.window)
 		self.title_list=TrackView(self.client, self.settings, self.emitter, self.window)
-		hbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
 		#connect
 		self.artist_change=self.artist_list.selection.connect("changed", self.on_artist_selection_change)
+		self.settings.connect("changed::show-genre-filter", self.on_settings_changed)
 
 		#packing
-		hbox.pack_start(self.genre_select, False, False, 4)
-		hbox.pack_start(self.artist_list, True, True, 0)
+		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+		if self.settings.get_boolean("show-genre-filter"):
+			self.vbox.pack_start(self.genre_select, False, False, 0)
+		self.vbox.pack_start(self.artist_list, True, True, 0)
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
 		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned2.set_wide_handle(True)
-		self.paned1.pack1(hbox, False, False)
+		self.paned1.pack1(self.vbox, False, False)
 		self.paned1.pack2(self.album_list, True, False)
 		self.paned2.pack1(self.paned1, True, False)
 		self.paned2.pack2(self.title_list, False, False)
@@ -993,6 +1001,15 @@ class Browser(Gtk.Box):
 	def on_artist_selection_change(self, *args):
 		artists=self.artist_list.get_selected_artists()
 		self.album_list.refresh(artists)
+
+	def on_settings_changed(self, *args):
+		if self.settings.get_boolean("show-genre-filter"):
+			self.vbox.pack_start(self.genre_select, False, False, 0)
+			self.vbox.reorder_child(self.genre_select, 0)
+			self.genre_select.show_all()
+		else:
+			self.genre_select.deactivate()
+			self.vbox.remove(self.genre_select)
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
@@ -1174,6 +1191,9 @@ class GeneralSettings(Gtk.Grid):
 		show_stop=Gtk.CheckButton(label=_("Show stop button"))
 		show_stop.set_active(self.settings.get_boolean("show-stop"))
 
+		show_genre_filter=Gtk.CheckButton(label=_("Show genre filter"))
+		show_genre_filter.set_active(self.settings.get_boolean("show-genre-filter"))
+
 		show_album_view_tooltips=Gtk.CheckButton(label=_("Show tooltips in album view"))
 		show_album_view_tooltips.set_active(self.settings.get_boolean("show-album-view-tooltips"))
 
@@ -1197,6 +1217,7 @@ class GeneralSettings(Gtk.Grid):
 		album_cover_size.connect("value-changed", self.on_int_changed, "album-cover")
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
 		show_stop.connect("toggled", self.on_toggled, "show-stop")
+		show_genre_filter.connect("toggled", self.on_toggled, "show-genre-filter")
 		show_album_view_tooltips.connect("toggled", self.on_toggled, "show-album-view-tooltips")
 		sort_albums_by_year.connect("toggled", self.on_toggled, "sort-albums-by-year")
 		show_all_artists.connect("toggled", self.on_toggled, "show-all-artists")
@@ -1212,7 +1233,8 @@ class GeneralSettings(Gtk.Grid):
 		self.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(show_stop, icon_size_label, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(show_album_view_tooltips, show_stop, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(show_genre_filter, show_stop, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(show_album_view_tooltips, show_genre_filter, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(sort_albums_by_year, show_album_view_tooltips, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(show_all_artists, sort_albums_by_year, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(send_notify, show_all_artists, Gtk.PositionType.BOTTOM, 2, 1)

@@ -41,6 +41,11 @@
       <summary>Show stop button</summary>
       <description></description>
     </key>
+    <key type="b" name="show-genre-filter">
+      <default>false</default>
+      <summary>Show genre filter</summary>
+      <description></description>
+    </key>
     <key type="b" name="show-album-view-tooltips">
       <default>true</default>
       <summary>Show tooltips in album-view</summary>
