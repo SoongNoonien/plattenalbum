@@ -426,7 +426,7 @@ class ArtistView(Gtk.ScrolledWindow):
 
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
-		self.treeview.set_search_column(0)
+		self.treeview.set_search_column(-1)
 		self.treeview.columns_autosize()
 
 		#artistSelection
