@@ -1828,6 +1828,7 @@ class LyricsWindow(Gtk.Window):
 		self.scroll=Gtk.ScrolledWindow()
 		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		self.label=Gtk.Label()
+		self.label.set_selectable(True)
 		self.label.set_yalign(0)
 		self.label.set_xalign(0)
 
