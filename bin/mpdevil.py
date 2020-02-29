@@ -790,14 +790,12 @@ class TrackView(Gtk.Box):
 		else:
 			self.playlist_info.set_text("")
 
-	def refresh_selection(self):
+	def refresh_selection(self): #Gtk.TreePath(len(self.store) is used to generate an invalid TreePath (needed to unset cursor)
+		self.treeview.set_cursor(Gtk.TreePath(len(self.store)), None, False)
 		try:
 			song=self.client.status()["song"]
 			path = Gtk.TreePath(int(song))
-			if self.hovered_songpos:
-				self.selection.select_path(path)
-			else:
-				self.treeview.set_cursor(path, None, False)
+			self.selection.select_path(path)
 		except:
 			self.selection.unselect_all()
 		self.refresh_cover()
