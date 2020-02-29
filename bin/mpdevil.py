@@ -1385,6 +1385,7 @@ class SeekBar(Gtk.Box):
 
 		#connect
 		self.scale.connect("change-value", self.seek)
+		self.scale.connect("scroll-event", self.dummy) #disable mouse wheel which caused some noise
 
 		#timeouts
 		GLib.timeout_add(100, self.update)
@@ -1395,6 +1396,9 @@ class SeekBar(Gtk.Box):
 		self.pack_start(self.elapsed_event_box, False, False, 0)
 		self.pack_start(self.scale, True, True, 0)
 		self.pack_end(self.rest_event_box, False, False, 0)
+
+	def dummy(self, *args):
+		return True
 
 	def seek(self, range, scroll, value):
 		status=self.client.status()
