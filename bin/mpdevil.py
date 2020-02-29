@@ -2058,6 +2058,8 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.control.next_button.emit("clicked")
 		elif event.keyval == 269025046 or event.keyval == 45 or event.keyval == 65453: #AudioPrev
 			self.control.prev_button.emit("clicked")
+		elif event.keyval == 65307: #esc
+			self.go_home_button.emit("clicked")
 
 	def on_save(self, action, param):
 		size=self.get_size()
