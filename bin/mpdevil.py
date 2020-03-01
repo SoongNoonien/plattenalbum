@@ -1699,10 +1699,10 @@ class ServerStats(Gtk.Dialog):
 		self.vbox.pack_start(self.treeview, True, True, 0)
 		self.show_all()
 
-class Search(Gtk.Dialog):
-	def __init__(self, parent, client):
-		Gtk.Dialog.__init__(self, title=_("Search"), transient_for=parent)
-		self.add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+class SearchWindow(Gtk.Window):
+	def __init__(self, client):
+		Gtk.Window.__init__(self, title=_("Search"))
+		self.set_icon_name("mpdevil")
 		self.set_default_size(800, 600)
 
 		#adding vars
@@ -1714,10 +1714,15 @@ class Search(Gtk.Dialog):
 
 		#search entry
 		self.search_entry=Gtk.SearchEntry()
+		self.search_entry.set_margin_start(2)
+		self.search_entry.set_margin_end(2)
+		self.search_entry.set_margin_top(2)
 
 		#label
 		self.label=Gtk.Label()
 		self.label.set_xalign(1)
+		self.label.set_margin_end(4)
+		self.label.set_margin_bottom(2)
 
 		#Store
 		#(track, title, artist, album, duration, file)
@@ -1771,9 +1776,12 @@ class Search(Gtk.Dialog):
 
 		#packing
 		scroll.add(self.treeview)
-		self.vbox.pack_start(self.search_entry, False, False, 0) #vbox default widget of dialogs
-		self.vbox.pack_start(scroll, True, True, 0)
-		self.vbox.pack_start(self.label, False, False, 0)
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+		vbox.pack_start(self.search_entry, False, False, 0)
+		vbox.pack_start(scroll, True, True, 0)
+		vbox.pack_start(self.label, False, False, 0)
+		self.add(vbox)
+
 		self.show_all()
 
 	def on_row_activated(self, widget, path, view_column):
@@ -1937,7 +1945,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-home-symbolic", self.icon_size))
 		self.go_home_button.set_can_focus(False)
 		self.go_home_button.set_tooltip_text(_("Return to album of current title"))
-		self.search_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
+		self.search_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
 		self.search_button.set_can_focus(False)
 		self.search_button.set_tooltip_text(_("Title search"))
 		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
@@ -1962,7 +1970,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		#connect
 		self.go_home_button.connect("clicked", self.browser.go_home)
-		self.search_button.connect("clicked", self.on_search_clicked)
+		self.search_button.connect("toggled", self.on_search_toggled)
 		self.lyrics_button.connect("toggled", self.on_lyrics_toggled)
 		self.settings.connect("changed::profiles", self.on_settings_changed)
 		self.player_changed=self.emitter.connect("player", self.title_update)
@@ -2028,6 +2036,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_disconnected(self, *args):
 		self.lyrics_button.set_active(False)
+		self.search_button.set_active(False)
 		self.set_title("mpdevil (not connected)")
 		self.songid_playing=None
 		self.browser.clear()
@@ -2038,11 +2047,15 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.search_button.set_sensitive(False)
 		self.lyrics_button.set_sensitive(False)
 
-	def on_search_clicked(self, widget):
-		if self.client.connected():
-			search = Search(self, self.client)
-			search.run()
-			search.destroy()
+	def on_search_toggled(self, widget):
+		if widget.get_active():
+			if self.client.connected():
+				def set_active(*args):
+					self.search_button.set_active(False)
+				self.search_win = SearchWindow(self.client)
+				self.search_win.connect("destroy", set_active)
+		else:
+			self.search_win.destroy()
 
 	def on_lyrics_toggled(self, widget):
 		if widget.get_active():
