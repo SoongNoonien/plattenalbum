@@ -157,6 +157,7 @@ class MpdEventEmitter(GObject.Object):
 		except:
 			self.client.try_connect_default()
 			if self.client.connected():
+				self.emit("disconnected")
 				self.emit("reconnected")
 				self.connected=True
 			elif self.connected:
@@ -753,6 +754,7 @@ class TrackView(Gtk.Box):
 
 		self.playlist_changed=self.emitter.connect("playlist", self.on_playlist_changed)
 		self.player_changed=self.emitter.connect("player", self.on_player_changed)
+		self.disconnected_signal=self.emitter.connect("disconnected", self.on_disconnected)
 
 		#packing
 		self.pack_start(cover_event_box, False, False, 0)
@@ -921,6 +923,9 @@ class TrackView(Gtk.Box):
 			self.client.song_to_delete=""
 		else:
 			self.refresh_selection()
+
+	def on_disconnected(self, *args):
+		self.playlist_version=None
 
 class Browser(Gtk.Box):
 	def __init__(self, client, settings, emitter, window):
