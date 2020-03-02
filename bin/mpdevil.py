@@ -906,11 +906,11 @@ class TrackView(Gtk.Box):
 					self.store.set(treeiter, 0, track, 1, title, 2, artist, 3, album, 4, duration, 5, song["file"])
 				except:
 					self.store.append([track, title, artist, album, duration, song["file"]])
-			for i in reversed(range(int(self.client.status()["playlistlength"]), len(self.store))):
-				treeiter=self.store.get_iter(i)
-				self.store.remove(treeiter)
-			self.refresh_playlist_info()
-			self.refresh_selection()
+		for i in reversed(range(int(self.client.status()["playlistlength"]), len(self.store))):
+			treeiter=self.store.get_iter(i)
+			self.store.remove(treeiter)
+		self.refresh_playlist_info()
+		self.refresh_selection()
 		self.playlist_version=self.client.status()["playlist"]
 
 	def on_player_changed(self, *args):
