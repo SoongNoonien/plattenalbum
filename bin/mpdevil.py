@@ -1429,17 +1429,23 @@ class SeekBar(Gtk.Box):
 		pos=(duration*factor)
 		self.client.seekcur(pos)
 
+	def seek_forward(self):
+		self.client.seekcur("+"+self.seek_time)
+
+	def seek_backward(self):
+		self.client.seekcur("-"+self.seek_time)
+
 	def on_elapsed_button_press_event(self, widget, event):
 		if event.button == 1:
-			self.client.seekcur("-"+self.seek_time)
+			self.seek_backward()
 		elif event.button == 3:
-			self.client.seekcur("+"+self.seek_time)
+			self.seek_forward()
 
 	def on_rest_button_press_event(self, widget, event):
 		if event.button == 1:
-			self.client.seekcur("+"+self.seek_time)
+			self.seek_forward()
 		elif event.button == 3:
-			self.client.seekcur("-"+self.seek_time)
+			self.seek_backward()
 
 	def update(self):
 		try:
@@ -2106,6 +2112,10 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.control.prev_button.emit("clicked")
 		elif event.keyval == 65307: #esc
 			self.go_home_button.emit("clicked")
+		elif event.keyval == 65450: #*
+			self.progress.seek_forward()
+		elif event.keyval == 65455: #/
+			self.progress.seek_backward()
 
 	def on_save(self, action, param):
 		size=self.get_size()
