@@ -416,9 +416,8 @@ class ArtistView(Gtk.ScrolledWindow):
 		self.genre_select=genre_select
 
 		#artistStore
-		#(name)
-		self.store = Gtk.ListStore(str)
-		self.store.set_sort_column_id(0, Gtk.SortType.ASCENDING)
+		#(name, weight, font-scale, selectable)
+		self.store = Gtk.ListStore(str, Pango.Weight, float, bool)
 
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
@@ -428,13 +427,16 @@ class ArtistView(Gtk.ScrolledWindow):
 		#artistSelection
 		self.selection = self.treeview.get_selection()
 		self.selection.set_mode(Gtk.SelectionMode.MULTIPLE)
+		def selection_function(selection, model, path, path_currently_selected, *data):
+			treeiter=model.get_iter(path)
+			return model.get_value(treeiter, 3)
+		self.selection.set_select_function(selection_function)
 
 		#Old Name Column
 		renderer_text = Gtk.CellRendererText()
-		self.column_name = Gtk.TreeViewColumn("", renderer_text, text=0)
+		self.column_name = Gtk.TreeViewColumn("", renderer_text, text=0, weight=1, scale=2)
 		self.column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_name.set_property("resizable", False)
-		self.column_name.set_sort_column_id(0)
 		self.treeview.append_column(self.column_name)
 
 		#connect
@@ -459,8 +461,15 @@ class ArtistView(Gtk.ScrolledWindow):
 			artists=self.client.list(self.settings.get_artist_type())
 		else:
 			artists=self.client.list(self.settings.get_artist_type(), "genre", genre)
+		current_char=""
 		for artist in artists:
-			self.store.append([artist])
+			try:
+				if current_char != artist[0]:
+					self.store.append([artist[0], Pango.Weight.BOLD, 1.3, False])
+					current_char=artist[0]
+			except:
+				pass
+			self.store.append([artist, Pango.Weight.BOOK, 1, True])
 		self.selection.set_mode(Gtk.SelectionMode.MULTIPLE)
 
 	def get_selected_artists(self):
