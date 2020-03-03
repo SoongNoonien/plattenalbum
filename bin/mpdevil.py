@@ -971,26 +971,29 @@ class Browser(Gtk.Box):
 
 		#connect
 		self.artist_change=self.artist_list.selection.connect("changed", self.on_artist_selection_change)
-		self.settings.connect("changed::show-genre-filter", self.on_settings_changed)
+		self.settings.connect("changed::show-genre-filter", self.on_show_genre_settings_changed)
+		self.settings.connect("changed::alt-layout", self.on_layout_settings_changed)
 
 		#packing
-		self.vbox1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+		self.box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
 		if self.settings.get_boolean("show-genre-filter"):
-			self.vbox1.pack_start(self.genre_select, False, False, 0)
-		self.vbox1.pack_start(self.artist_list, True, True, 0)
-		self.vbox2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-		self.vbox2.pack_start(self.main_cover, False, False, 0)
-		self.vbox2.pack_start(self.title_list, True, True, 0)
+			self.box1.pack_start(self.genre_select, False, False, 0)
+		self.box1.pack_start(self.artist_list, True, True, 0)
+		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+		self.box2.pack_start(self.main_cover, False, False, 0)
+		self.box2.pack_start(self.title_list, True, True, 0)
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
 		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned2.set_wide_handle(True)
-		self.paned1.pack1(self.vbox1, False, False)
+		self.paned1.pack1(self.box1, False, False)
 		self.paned1.pack2(self.album_list, True, False)
 		self.paned2.pack1(self.paned1, True, False)
-		self.paned2.pack2(self.vbox2, False, False)
+		self.paned2.pack2(self.box2, False, False)
 		self.load_settings()
 		self.pack_start(self.paned2, True, True, 0)
+
+		self.on_layout_settings_changed()
 
 	def save_settings(self):
 		self.settings.set_int("paned1", self.paned1.get_position())
@@ -1032,14 +1035,22 @@ class Browser(Gtk.Box):
 		artists=self.artist_list.get_selected_artists()
 		self.album_list.refresh(artists)
 
-	def on_settings_changed(self, *args):
+	def on_show_genre_settings_changed(self, *args):
 		if self.settings.get_boolean("show-genre-filter"):
-			self.vbox1.pack_start(self.genre_select, False, False, 0)
-			self.vbox1.reorder_child(self.genre_select, 0)
+			self.box1.pack_start(self.genre_select, False, False, 0)
+			self.box1.reorder_child(self.genre_select, 0)
 			self.genre_select.show_all()
 		else:
 			self.genre_select.deactivate()
-			self.vbox1.remove(self.genre_select)
+			self.box1.remove(self.genre_select)
+
+	def on_layout_settings_changed(self, *args):
+		if self.settings.get_boolean("alt-layout"):
+			self.box2.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self.paned2.set_orientation(Gtk.Orientation.VERTICAL)
+		else:
+			self.box2.set_orientation(Gtk.Orientation.VERTICAL)
+			self.paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
@@ -1218,6 +1229,9 @@ class GeneralSettings(Gtk.Grid):
 			icon_size_combo.append_text(str(i))
 		icon_size_combo.set_active(sizes.index(self.settings.get_int("icon-size")))
 
+		alt_layout=Gtk.CheckButton(label=_("Use alternative Layout"))
+		alt_layout.set_active(self.settings.get_boolean("alt-layout"))
+
 		show_stop=Gtk.CheckButton(label=_("Show stop button"))
 		show_stop.set_active(self.settings.get_boolean("show-stop"))
 
@@ -1246,6 +1260,7 @@ class GeneralSettings(Gtk.Grid):
 		track_cover_size.connect("value-changed", self.on_int_changed, "track-cover")
 		album_cover_size.connect("value-changed", self.on_int_changed, "album-cover")
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
+		alt_layout.connect("toggled", self.on_toggled, "alt-layout")
 		show_stop.connect("toggled", self.on_toggled, "show-stop")
 		show_genre_filter.connect("toggled", self.on_toggled, "show-genre-filter")
 		show_album_view_tooltips.connect("toggled", self.on_toggled, "show-album-view-tooltips")
@@ -1262,7 +1277,8 @@ class GeneralSettings(Gtk.Grid):
 		self.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(show_stop, icon_size_label, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(alt_layout, icon_size_label, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(show_stop, alt_layout, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(show_genre_filter, show_stop, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(show_album_view_tooltips, show_genre_filter, Gtk.PositionType.BOTTOM, 2, 1)
 		self.attach_next_to(sort_albums_by_year, show_album_view_tooltips, Gtk.PositionType.BOTTOM, 2, 1)
