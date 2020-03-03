@@ -744,10 +744,11 @@ class TrackView(Gtk.Box):
 		self.emitter=emitter
 		self.hovered_songpos=None
 		self.playlist_version=None
+		self.last_song_iter=None
 
 		#Store
-		#(track, title, artist, album, duration, file)
-		self.store = Gtk.ListStore(str, str, str, str, str, str)
+		#(track, title, artist, album, duration, file, weight)
+		self.store = Gtk.ListStore(str, str, str, str, str, str, Pango.Weight)
 
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
@@ -762,22 +763,22 @@ class TrackView(Gtk.Box):
 		#Column
 		renderer_text = Gtk.CellRendererText()
 
-		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text, text=0)
+		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text, text=0, weight=6)
 		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_track.set_property("resizable", False)
 		self.treeview.append_column(self.column_track)
 
-		self.column_title = Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
+		self.column_title = Gtk.TreeViewColumn(_("Title"), renderer_text, text=1, weight=6)
 		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_title.set_property("resizable", True)
 		self.treeview.append_column(self.column_title)
 
-		self.column_artist = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
+		self.column_artist = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2, weight=6)
 		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_artist.set_property("resizable", True)
 		self.treeview.append_column(self.column_artist)
 
-		self.column_duration = Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
+		self.column_duration = Gtk.TreeViewColumn(_("Length"), renderer_text, text=4, weight=6)
 		self.column_duration.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_duration.set_property("resizable", False)
 		self.treeview.append_column(self.column_duration)
@@ -844,7 +845,15 @@ class TrackView(Gtk.Box):
 			song=self.client.status()["song"]
 			path = Gtk.TreePath(int(song))
 			self.selection.select_path(path)
+			if self.last_song_iter != None:
+				self.store.set_value(self.last_song_iter, 6, Pango.Weight.BOOK)
+			treeiter=self.store.get_iter(path)
+			self.store.set_value(treeiter, 6, Pango.Weight.BOLD)
+			self.last_song_iter=treeiter
 		except:
+			if self.last_song_iter != None:
+				self.store.set_value(self.last_song_iter, 6, Pango.Weight.BOOK)
+			self.last_song_iter=None
 			self.selection.unselect_all()
 
 	def clear(self, *args):
@@ -915,9 +924,9 @@ class TrackView(Gtk.Box):
 				duration=str(datetime.timedelta(seconds=int(dura )))
 				try:
 					treeiter=self.store.get_iter(song["pos"])
-					self.store.set(treeiter, 0, track, 1, title, 2, artist, 3, album, 4, duration, 5, song["file"])
+					self.store.set(treeiter, 0, track, 1, title, 2, artist, 3, album, 4, duration, 5, song["file"], 6, Pango.Weight.BOOK)
 				except:
-					self.store.append([track, title, artist, album, duration, song["file"]])
+					self.store.append([track, title, artist, album, duration, song["file"], Pango.Weight.BOOK])
 		for i in reversed(range(int(self.client.status()["playlistlength"]), len(self.store))):
 			treeiter=self.store.get_iter(i)
 			self.store.remove(treeiter)
