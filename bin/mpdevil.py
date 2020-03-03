@@ -845,7 +845,7 @@ class TrackView(Gtk.Box):
 			song=self.client.status()["song"]
 			path = Gtk.TreePath(int(song))
 			self.selection.select_path(path)
-			if self.last_song_iter != None:
+			if self.last_song_iter != None and self.store.iter_is_valid(self.last_song_iter):
 				self.store.set_value(self.last_song_iter, 6, Pango.Weight.BOOK)
 			treeiter=self.store.get_iter(path)
 			self.store.set_value(treeiter, 6, Pango.Weight.BOLD)
