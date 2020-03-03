@@ -20,7 +20,8 @@
 
 import gi #python-gobject  dev-python/pygobject:3[${PYTHON_USEDEP}]
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
+gi.require_version('Notify', '0.7')
+from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib, Notify
 from mpd import MPDClient
 import requests #dev-python/requests
 from bs4 import BeautifulSoup, Comment #, NavigableString #dev-python/beautifulsoup
@@ -1930,6 +1931,7 @@ class LyricsWindow(Gtk.Window):
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings, emitter):
 		Gtk.ApplicationWindow.__init__(self, title=("mpdevil"), application=app)
+		Notify.init("mpdevil")
 		self.set_icon_name("mpdevil")
 		self.settings = settings
 		self.set_default_size(self.settings.get_int("width"), self.settings.get_int("height"))
@@ -1939,6 +1941,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.client=client
 		self.emitter=emitter
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
+		self.song_file=None
 
 		#actions
 		save_action = Gio.SimpleAction.new("save", None)
@@ -2031,12 +2034,16 @@ class MainWindow(Gtk.ApplicationWindow):
 			if status["songid"] == None:
 				self.set_title("mpdevil")
 			else:
-				song=self.client.playlistid(status["songid"])[0]
-				self.set_title(song["artist"]+" - "+song["title"]+" - "+song["album"])
-				if not self.is_active() and self.settings.get_boolean("send-notify") and status["state"] == "play":
-					notify=Gio.Notification.new(title=song["title"])
-					notify.set_body(song["artist"]+"\n"+song["album"])
-					self.app.send_notification(None, notify)
+				song=self.client.currentsong()
+				if song["file"] != self.song_file:
+					self.set_title(song["artist"]+" - "+song["title"]+" - "+song["album"])
+					if self.settings.get_boolean("send-notify"):
+						if not self.is_active() and status["state"] == "play":
+							notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"])
+							pixbuf=Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song["file"]).get_pixbuf(400)
+							notify.set_image_from_pixbuf(pixbuf)
+							notify.show()
+					self.song_file=song["file"]
 		except:
 			self.set_title("mpdevil")
 
