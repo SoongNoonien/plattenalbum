@@ -937,12 +937,12 @@ class TrackView(Gtk.Box):
 	def on_player_changed(self, *args):
 		if not self.client.song_to_delete == "": #TODO should be in Client class
 			status=self.client.status()
-			if not status["song"] == "0" and self.client.playlistinfo()[0]["file"] == self.client.song_to_delete:
-				self.client.delete(0)
+			if not status["song"] == "0":
+				if self.client.playlistinfo()[0]["file"] == self.client.song_to_delete:
+					self.client.delete(0)
 				self.client.song_to_delete=""
 			else:
 				self.refresh_selection()
-				self.client.song_to_delete=""
 		else:
 			self.refresh_selection()
 
