@@ -668,17 +668,80 @@ class AlbumView(Gtk.ScrolledWindow):
 	def scroll_to_selected_album(self):
 		self.iconview.scroll_to_selected_album()
 
-class TrackView(Gtk.Box):
+class MainCover(Gtk.EventBox):
 	def __init__(self, client, settings, emitter, window):
+		Gtk.EventBox.__init__(self)
+
+		#adding vars
+		self.client=client
+		self.settings=settings
+		self.emitter=emitter
+		self.window=window
+		self.song_file=None
+
+		#cover
+		self.cover=Gtk.Image.new()
+		self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover"))) #set to fallback cover
+
+		#connect
+		self.connect("button-press-event", self.on_button_press_event)
+		self.player_changed=self.emitter.connect("player", self.refresh)
+
+		self.add(self.cover)
+
+	def refresh(self, *args):
+		try:
+			song_file=self.client.currentsong()["file"]
+		except:
+			song_file=None
+		if not song_file == self.song_file:
+			self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
+			self.song_file=song_file
+
+	def on_button_press_event(self, widget, event):
+		if self.client.connected():
+			song=self.client.currentsong()
+			if not song == {}:
+				try:
+					artist=song[self.settings.get_artist_type()]
+				except:
+					artist=""
+				try:
+					album=song["album"]
+				except:
+					album=""
+				try:
+					album_year=song["date"]
+				except:
+					album_year=""
+				if event.button == 1:
+					self.client.album_to_playlist(album, artist, album_year, False)
+				elif event.button == 2:
+					self.client.album_to_playlist(album, artist, album_year, True)
+				elif event.button == 3:
+					album_dialog = AlbumDialog(self.window, self.client, self.settings, album, artist, album_year)
+					response = album_dialog.run()
+					if response == Gtk.ResponseType.OK:
+						self.client.album_to_playlist(album, artist, album_year, False)
+					elif response == Gtk.ResponseType.ACCEPT:
+						self.client.album_to_playlist(album, artist, album_year, True)
+					elif response == Gtk.ResponseType.YES:
+						self.client.album_to_playlist(album, artist, album_year, False, True)
+					album_dialog.destroy()
+
+	def clear(self, *args):
+		self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover")))
+		self.song_file=None
+
+class TrackView(Gtk.Box):
+	def __init__(self, client, settings, emitter):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
 
 		#adding vars
 		self.client=client
-		self.settings = settings
+		self.settings=settings #currently unused
 		self.emitter=emitter
-		self.window=window
 		self.hovered_songpos=None
-		self.song_file=None
 		self.playlist_version=None
 
 		#Store
@@ -723,12 +786,6 @@ class TrackView(Gtk.Box):
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scroll.add(self.treeview)
 
-		#cover
-		self.cover=Gtk.Image.new()
-		self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover"))) #set to fallback cover
-		cover_event_box=Gtk.EventBox()
-		cover_event_box.add(self.cover)
-
 		#audio infos
 		audio=AudioType(self.client)
 
@@ -750,14 +807,12 @@ class TrackView(Gtk.Box):
 		self.treeview.connect("leave-notify-event", self.on_focus_out_event)
 		self.treeview.connect("focus-out-event", self.on_focus_out_event)
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
-		cover_event_box.connect("button-press-event", self.on_button_press_event)
 
 		self.playlist_changed=self.emitter.connect("playlist", self.on_playlist_changed)
 		self.player_changed=self.emitter.connect("player", self.on_player_changed)
 		self.disconnected_signal=self.emitter.connect("disconnected", self.on_disconnected)
 
 		#packing
-		self.pack_start(cover_event_box, False, False, 0)
 		self.pack_start(scroll, True, True, 0)
 		self.pack_end(status_bar, False, False, 0)
 
@@ -766,16 +821,6 @@ class TrackView(Gtk.Box):
 		if not treeiter == None:
 			path=treeview.get_path(treeiter)
 			self.treeview.scroll_to_cell(path)
-
-	def refresh_cover(self):
-		try:
-			song_file=self.client.currentsong()["file"]
-		except:
-			song_file=None
-		if not song_file == self.song_file:
-			self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
-			self.song_file=song_file
-		return True
 
 	def refresh_playlist_info(self):
 		songs=self.client.playlistinfo()
@@ -800,14 +845,11 @@ class TrackView(Gtk.Box):
 			self.selection.select_path(path)
 		except:
 			self.selection.unselect_all()
-		self.refresh_cover()
 
 	def clear(self, *args):
 		self.playlist_info.set_text("")
 		self.store.clear()
 		self.playlist_version=None
-		self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover")))
-		self.song_file=None
 
 	def on_key_press_event(self, widget, event):
 		self.treeview.handler_block(self.key_press_event)
@@ -839,37 +881,6 @@ class TrackView(Gtk.Box):
 		treeiter=self.store.get_iter(path)
 		selected_title=self.store.get_path(treeiter)
 		self.client.play(selected_title)
-
-	def on_button_press_event(self, widget, event):
-		if self.client.connected():
-			song=self.client.currentsong()
-			if not song == {}:
-				try:
-					artist=song[self.settings.get_artist_type()]
-				except:
-					artist=""
-				try:
-					album=song["album"]
-				except:
-					album=""
-				try:
-					album_year=song["date"]
-				except:
-					album_year=""
-				if event.button == 1:
-					self.client.album_to_playlist(album, artist, album_year, False)
-				elif event.button == 2:
-					self.client.album_to_playlist(album, artist, album_year, True)
-				elif event.button == 3:
-					album_dialog = AlbumDialog(self.window, self.client, self.settings, album, artist, album_year)
-					response = album_dialog.run()
-					if response == Gtk.ResponseType.OK:
-						self.client.album_to_playlist(album, artist, album_year, False)
-					elif response == Gtk.ResponseType.ACCEPT:
-						self.client.album_to_playlist(album, artist, album_year, True)
-					elif response == Gtk.ResponseType.YES:
-						self.client.album_to_playlist(album, artist, album_year, False, True)
-					album_dialog.destroy()
 
 	def on_playlist_changed(self, *args):
 		songs=[]
@@ -944,25 +955,29 @@ class Browser(Gtk.Box):
 		self.genre_select.set_margin_top(2)
 		self.artist_list=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
 		self.album_list=AlbumView(self.client, self.settings, self.genre_select, self.window)
-		self.title_list=TrackView(self.client, self.settings, self.emitter, self.window)
+		self.main_cover=MainCover(self.client, self.settings, self.emitter, self.window)
+		self.title_list=TrackView(self.client, self.settings, self.emitter)
 
 		#connect
 		self.artist_change=self.artist_list.selection.connect("changed", self.on_artist_selection_change)
 		self.settings.connect("changed::show-genre-filter", self.on_settings_changed)
 
 		#packing
-		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+		self.vbox1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
 		if self.settings.get_boolean("show-genre-filter"):
-			self.vbox.pack_start(self.genre_select, False, False, 0)
-		self.vbox.pack_start(self.artist_list, True, True, 0)
+			self.vbox1.pack_start(self.genre_select, False, False, 0)
+		self.vbox1.pack_start(self.artist_list, True, True, 0)
+		self.vbox2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+		self.vbox2.pack_start(self.main_cover, False, False, 0)
+		self.vbox2.pack_start(self.title_list, True, True, 0)
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
 		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned2.set_wide_handle(True)
-		self.paned1.pack1(self.vbox, False, False)
+		self.paned1.pack1(self.vbox1, False, False)
 		self.paned1.pack2(self.album_list, True, False)
 		self.paned2.pack1(self.paned1, True, False)
-		self.paned2.pack2(self.title_list, False, False)
+		self.paned2.pack2(self.vbox2, False, False)
 		self.load_settings()
 		self.pack_start(self.paned2, True, True, 0)
 
@@ -980,6 +995,7 @@ class Browser(Gtk.Box):
 		self.artist_list.selection.handler_unblock(self.artist_change)
 		self.album_list.clear()
 		self.title_list.clear()
+		self.main_cover.clear()
 
 	def go_home(self, *args): #TODO
 		try:
@@ -1007,12 +1023,12 @@ class Browser(Gtk.Box):
 
 	def on_settings_changed(self, *args):
 		if self.settings.get_boolean("show-genre-filter"):
-			self.vbox.pack_start(self.genre_select, False, False, 0)
-			self.vbox.reorder_child(self.genre_select, 0)
+			self.vbox1.pack_start(self.genre_select, False, False, 0)
+			self.vbox1.reorder_child(self.genre_select, 0)
 			self.genre_select.show_all()
 		else:
 			self.genre_select.deactivate()
-			self.vbox.remove(self.genre_select)
+			self.vbox1.remove(self.genre_select)
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
