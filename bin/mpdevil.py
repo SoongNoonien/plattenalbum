@@ -840,10 +840,11 @@ class TrackView(Gtk.Box):
 		self.pack_end(status_bar, False, False, 0)
 
 	def save_settings(self): #only saves the column sizes
-		sizes=[]
 		columns=self.treeview.get_columns()
-		for column in columns:
-			sizes.append(column.get_width())
+		permutation=self.settings.get_value("column-permutation").unpack()
+		sizes=[0] * len(permutation)
+		for i in range(len(permutation)):
+			sizes[permutation[i]]=columns[i].get_width()
 		self.settings.set_value("column-sizes", GLib.Variant("ai", sizes))
 
 	def load_settings(self, *args):
@@ -852,13 +853,10 @@ class TrackView(Gtk.Box):
 			self.treeview.remove_column(column)
 		sizes=self.settings.get_value("column-sizes").unpack()
 		visibilities=self.settings.get_value("column-visibilities").unpack()
-		index=0
-		for column in self.columns:
-			if sizes[index] > 0:
-				column.set_fixed_width(sizes[index])
-			column.set_visible(visibilities[index])
-			index=index+1
 		for i in self.settings.get_value("column-permutation"):
+			if sizes[i] > 0:
+				self.columns[i].set_fixed_width(sizes[i])
+			self.columns[i].set_visible(visibilities[i])
 			self.treeview.append_column(self.columns[i])
 
 	def scroll_to_selected_title(self):
