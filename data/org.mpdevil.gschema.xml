@@ -76,6 +76,21 @@
       <summary>Show all artists instead of albumartists</summary>
       <description></description>
     </key>
+    <key type="ai" name="column-permutation">
+      <default>[0, 1, 2, 3, 4, 5, 6, 7]</default>
+      <summary>Column order in playlist</summary>
+      <description></description>
+    </key>
+    <key type="ab" name="column-visibilities">
+      <default>[true, false, true, true, false, true, false, false]</default>
+      <summary>Visibility of columns in playlist</summary>
+      <description></description>
+    </key>
+    <key type="ai" name="column-sizes">
+      <default>[0, 0, 0, 0, 0, 0, 0, 0]</default>
+      <summary>Sizes of columns in playlist</summary>
+      <description></description>
+    </key>
     <key type="b" name="alt-layout">
       <default>false</default>
       <summary>Use alternative layout</summary>

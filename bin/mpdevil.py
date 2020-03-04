@@ -752,20 +752,19 @@ class TrackView(Gtk.Box):
 
 		#adding vars
 		self.client=client
-		self.settings=settings #currently unused
+		self.settings=settings
 		self.emitter=emitter
 		self.hovered_songpos=None
 		self.playlist_version=None
 		self.last_song_iter=None
 
 		#Store
-		#(track, title, artist, album, duration, file, weight)
-		self.store = Gtk.ListStore(str, str, str, str, str, str, Pango.Weight)
+		#(track, disc, title, artist, album, duration, date, genre, file, weight)
+		self.store = Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
 
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
-		self.treeview.columns_autosize()
 		self.treeview.set_property("activate-on-single-click", True)
 
 		#selection
@@ -774,26 +773,33 @@ class TrackView(Gtk.Box):
 
 		#Column
 		renderer_text = Gtk.CellRendererText()
+		self.columns=[None, None, None, None, None, None, None, None]
 
-		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text, text=0, weight=6)
-		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_track.set_property("resizable", False)
-		self.treeview.append_column(self.column_track)
+		self.columns[0] = Gtk.TreeViewColumn(_("No"), renderer_text, text=0, weight=9)
+		self.columns[0].set_property("resizable", True)
 
-		self.column_title = Gtk.TreeViewColumn(_("Title"), renderer_text, text=1, weight=6)
-		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_title.set_property("resizable", True)
-		self.treeview.append_column(self.column_title)
+		self.columns[1] = Gtk.TreeViewColumn(_("Disc"), renderer_text, text=1, weight=9)
+		self.columns[1].set_property("resizable", True)
 
-		self.column_artist = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2, weight=6)
-		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_artist.set_property("resizable", True)
-		self.treeview.append_column(self.column_artist)
+		self.columns[2] = Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9)
+		self.columns[2].set_property("resizable", True)
 
-		self.column_duration = Gtk.TreeViewColumn(_("Length"), renderer_text, text=4, weight=6)
-		self.column_duration.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_duration.set_property("resizable", False)
-		self.treeview.append_column(self.column_duration)
+		self.columns[3] = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9)
+		self.columns[3].set_property("resizable", True)
+
+		self.columns[4] = Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9)
+		self.columns[4].set_property("resizable", True)
+
+		self.columns[5] = Gtk.TreeViewColumn(_("Length"), renderer_text, text=5, weight=9)
+		self.columns[5].set_property("resizable", True)
+
+		self.columns[6] = Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9)
+		self.columns[6].set_property("resizable", True)
+
+		self.columns[7] = Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
+		self.columns[7].set_property("resizable", True)
+
+		self.load_settings()
 
 		#scroll
 		scroll=Gtk.ScrolledWindow()
@@ -826,9 +832,34 @@ class TrackView(Gtk.Box):
 		self.player_changed=self.emitter.connect("player", self.on_player_changed)
 		self.disconnected_signal=self.emitter.connect("disconnected", self.on_disconnected)
 
+		self.settings.connect("changed::column-visibilities", self.load_settings)
+		self.settings.connect("changed::column-permutation", self.load_settings)
+
 		#packing
 		self.pack_start(scroll, True, True, 0)
 		self.pack_end(status_bar, False, False, 0)
+
+	def save_settings(self): #only saves the column sizes
+		sizes=[]
+		columns=self.treeview.get_columns()
+		for column in columns:
+			sizes.append(column.get_width())
+		self.settings.set_value("column-sizes", GLib.Variant("ai", sizes))
+
+	def load_settings(self, *args):
+		columns=self.treeview.get_columns()
+		for column in columns:
+			self.treeview.remove_column(column)
+		sizes=self.settings.get_value("column-sizes").unpack()
+		visibilities=self.settings.get_value("column-visibilities").unpack()
+		index=0
+		for column in self.columns:
+			if sizes[index] > 0:
+				column.set_fixed_width(sizes[index])
+			column.set_visible(visibilities[index])
+			index=index+1
+		for i in self.settings.get_value("column-permutation"):
+			self.treeview.append_column(self.columns[i])
 
 	def scroll_to_selected_title(self):
 		treeview, treeiter=self.selection.get_selected()
@@ -858,13 +889,13 @@ class TrackView(Gtk.Box):
 			path = Gtk.TreePath(int(song))
 			self.selection.select_path(path)
 			if self.last_song_iter != None and self.store.iter_is_valid(self.last_song_iter):
-				self.store.set_value(self.last_song_iter, 6, Pango.Weight.BOOK)
+				self.store.set_value(self.last_song_iter, 9, Pango.Weight.BOOK)
 			treeiter=self.store.get_iter(path)
-			self.store.set_value(treeiter, 6, Pango.Weight.BOLD)
+			self.store.set_value(treeiter, 9, Pango.Weight.BOLD)
 			self.last_song_iter=treeiter
 		except:
 			if self.last_song_iter != None:
-				self.store.set_value(self.last_song_iter, 6, Pango.Weight.BOOK)
+				self.store.set_value(self.last_song_iter, 9, Pango.Weight.BOOK)
 			self.last_song_iter=None
 			self.selection.unselect_all()
 
@@ -922,6 +953,10 @@ class TrackView(Gtk.Box):
 				except:
 					track="00"
 				try:
+					disc=song["disc"]
+				except:
+					disc=""
+				try:
 					artist=song["artist"]
 				except:
 					artist=_("Unknown Artist")
@@ -933,12 +968,20 @@ class TrackView(Gtk.Box):
 					dura=float(song["duration"])
 				except:
 					dura=0.0
+				try:
+					year=song["date"]
+				except:
+					year=""
+				try:
+					genre=song["genre"]
+				except:
+					genre=""
 				duration=str(datetime.timedelta(seconds=int(dura )))
 				try:
 					treeiter=self.store.get_iter(song["pos"])
-					self.store.set(treeiter, 0, track, 1, title, 2, artist, 3, album, 4, duration, 5, song["file"], 6, Pango.Weight.BOOK)
+					self.store.set(treeiter, 0, track, 1, disc, 2, title, 3, artist, 4, album, 5, duration, 6, year, 7, genre, 8, song["file"], 9, Pango.Weight.BOOK)
 				except:
-					self.store.append([track, title, artist, album, duration, song["file"], Pango.Weight.BOOK])
+					self.store.append([track, disc, title, artist, album, duration, year, genre, song["file"], Pango.Weight.BOOK])
 		for i in reversed(range(int(self.client.status()["playlistlength"]), len(self.store))):
 			treeiter=self.store.get_iter(i)
 			self.store.remove(treeiter)
@@ -1013,6 +1056,7 @@ class Browser(Gtk.Box):
 	def save_settings(self):
 		self.settings.set_int("paned1", self.paned1.get_position())
 		self.settings.set_int("paned2", self.paned2.get_position())
+		self.title_list.save_settings()
 
 	def load_settings(self):
 		self.paned1.set_position(self.settings.get_int("paned1"))
@@ -1312,6 +1356,66 @@ class GeneralSettings(Gtk.Grid):
 		active_size=int(box.get_active_text())
 		self.settings.set_int("icon-size", active_size)
 
+class PlaylistSettings(Gtk.Box):
+	def __init__(self, settings):
+		Gtk.Box.__init__(self)
+		self.set_property("border-width", 4)
+
+		#adding vars
+		self.settings = settings
+
+		#Store
+		#(toggle, header, index)
+		self.store = Gtk.ListStore(bool, str, int)
+
+		#TreeView
+		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview.set_search_column(-1)
+		self.treeview.set_headers_visible(False)
+		self.treeview.set_property("activate-on-single-click", True)
+		self.treeview.set_reorderable(True)
+
+		#selection
+		self.selection = self.treeview.get_selection()
+		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
+
+		#Column
+		renderer_text = Gtk.CellRendererText()
+		renderer_toggle = Gtk.CellRendererToggle()
+		renderer_toggle.connect("toggled", self.on_cell_toggled)
+
+		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
+		self.treeview.append_column(column_toggle)
+
+		column_text=Gtk.TreeViewColumn("", renderer_text, text=1)
+		self.treeview.append_column(column_text)
+
+		self.headers=[_("No"), _("Disc"), _("Title"), _("Artist"), _("Album"), _("Length"), _("Year"), _("Genre")]
+		visibilities=self.settings.get_value("column-visibilities").unpack()
+
+		for index in self.settings.get_value("column-permutation"):
+			self.store.append([visibilities[index], self.headers[index], index])
+
+		#connect
+		self.store.connect("row-deleted", self.on_row_inserted)
+
+		#scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		scroll.add(self.treeview)
+
+		self.pack_start(scroll, True, True, 0)
+
+	def on_cell_toggled(self, widget, path):
+		self.store[path][0] = not self.store[path][0]
+		self.settings.array_modify('ab', "column-visibilities", self.store[path][2], self.store[path][0])
+
+	def on_row_inserted(self, *args):
+		permutation=[]
+		for row in self.store:
+			permutation.append(row[2])
+		self.settings.set_value("column-permutation", GLib.Variant("ai", permutation))
+
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, settings):
 		Gtk.Dialog.__init__(self, title=_("Settings"), transient_for=parent)
@@ -1324,11 +1428,13 @@ class SettingsDialog(Gtk.Dialog):
 		#widgets
 		general=GeneralSettings(self.settings)
 		profiles=ProfileSettings(parent, self.settings)
+		playlist=PlaylistSettings(self.settings)
 
 		#packing
 		tabs = Gtk.Notebook()
 		tabs.append_page(general, Gtk.Label(label=_("General")))
 		tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
+		tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
 		self.vbox.pack_start(tabs, True, True, 0) #vbox default widget of dialogs
 		self.vbox.set_spacing(6)
 
@@ -2028,7 +2134,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		#menu
 		menu = Gio.Menu()
-		menu.append(_("Save window size"), "win.save")
+		menu.append(_("Save window layout"), "win.save")
 		menu.append(_("Settings"), "win.settings")
 		menu.append(_("Update database"), "win.update")
 		menu.append(_("Server stats"), "win.stats")
