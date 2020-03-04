@@ -1639,6 +1639,7 @@ class AudioType(Gtk.EventBox):
 
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview.set_can_focus(False)
 		self.treeview.set_search_column(-1)
 		sel = self.treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
@@ -1743,6 +1744,7 @@ class ServerStats(Gtk.Dialog):
 
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview.set_can_focus(False)
 		self.treeview.set_search_column(-1)
 		sel = self.treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
