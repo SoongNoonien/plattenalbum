@@ -482,6 +482,9 @@ class ArtistView(Gtk.ScrolledWindow):
 				artists.append(selected_artist)
 		return artists
 
+	def is_iter_selectable(self, iter):
+		return self.store.get_value(iter, 3)
+
 	def on_enter_event(self, widget, event):
 		self.treeview.grab_focus()
 
@@ -1028,7 +1031,7 @@ class Browser(Gtk.Box):
 			for i in range(0, row_num):
 				path=Gtk.TreePath(i)
 				treeiter = self.artist_list.store.get_iter(path)
-				if self.artist_list.store.get_value(treeiter, 0) == song[self.settings.get_artist_type()]:
+				if self.artist_list.store.get_value(treeiter, 0) == song[self.settings.get_artist_type()] and self.artist_list.is_iter_selectable(treeiter):
 					if not self.artist_list.selection.iter_is_selected(treeiter):
 						self.artist_list.selection.handler_block(self.artist_change)
 						self.artist_list.selection.unselect_all()
