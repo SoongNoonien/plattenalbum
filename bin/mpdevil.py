@@ -979,6 +979,9 @@ class Browser(Gtk.Box):
 		self.artist_list=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
 		self.album_list=AlbumView(self.client, self.settings, self.genre_select, self.window)
 		self.main_cover=MainCover(self.client, self.settings, self.emitter, self.window)
+		self.main_cover.set_property("border-width", 5)
+		cover_frame=Gtk.Frame()
+		cover_frame.add(self.main_cover)
 		self.title_list=TrackView(self.client, self.settings, self.emitter)
 
 		#connect
@@ -992,7 +995,7 @@ class Browser(Gtk.Box):
 			self.box1.pack_start(self.genre_select, False, False, 0)
 		self.box1.pack_start(self.artist_list, True, True, 0)
 		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-		self.box2.pack_start(self.main_cover, False, False, 0)
+		self.box2.pack_start(cover_frame, False, False, 0)
 		self.box2.pack_start(self.title_list, True, True, 0)
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
