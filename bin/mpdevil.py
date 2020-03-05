@@ -128,6 +128,7 @@ class Client(MPDClient):
 							self.move(0, (len(self.playlist())-1))
 							self.song_to_delete=""
 			else:
+				self.song_to_delete=""
 				songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
 				if not songs == []:
 					self.stop()
