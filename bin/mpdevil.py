@@ -774,12 +774,13 @@ class TrackView(Gtk.Box):
 
 		#Column
 		renderer_text = Gtk.CellRendererText()
+		renderer_text_ralign = Gtk.CellRendererText(xalign=1.0)
 		self.columns=[None, None, None, None, None, None, None, None]
 
-		self.columns[0] = Gtk.TreeViewColumn(_("No"), renderer_text, text=0, weight=9)
+		self.columns[0] = Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=9)
 		self.columns[0].set_property("resizable", True)
 
-		self.columns[1] = Gtk.TreeViewColumn(_("Disc"), renderer_text, text=1, weight=9)
+		self.columns[1] = Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9)
 		self.columns[1].set_property("resizable", True)
 
 		self.columns[2] = Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9)
@@ -948,9 +949,9 @@ class TrackView(Gtk.Box):
 				except:
 					title=_("Unknown Title")
 				try:
-					track=song["track"].zfill(2)
+					track=song["track"]
 				except:
-					track="00"
+					track="0"
 				try:
 					disc=song["disc"]
 				except:
