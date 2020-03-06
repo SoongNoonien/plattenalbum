@@ -1358,11 +1358,15 @@ class GeneralSettings(Gtk.Grid):
 
 class PlaylistSettings(Gtk.Box):
 	def __init__(self, settings):
-		Gtk.Box.__init__(self)
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=4)
 		self.set_property("border-width", 4)
 
 		#adding vars
 		self.settings = settings
+
+		#label
+		label=Gtk.Label(label=_("Drag & Drop to rearange"))
+		label.set_line_wrap(True)
 
 		#Store
 		#(toggle, header, index)
@@ -1371,7 +1375,6 @@ class PlaylistSettings(Gtk.Box):
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
-		self.treeview.set_headers_visible(False)
 		self.treeview.set_property("activate-on-single-click", True)
 		self.treeview.set_reorderable(True)
 
@@ -1387,7 +1390,7 @@ class PlaylistSettings(Gtk.Box):
 		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
 		self.treeview.append_column(column_toggle)
 
-		column_text=Gtk.TreeViewColumn("", renderer_text, text=1)
+		column_text=Gtk.TreeViewColumn(_("Column"), renderer_text, text=1)
 		self.treeview.append_column(column_text)
 
 		self.headers=[_("No"), _("Disc"), _("Title"), _("Artist"), _("Album"), _("Length"), _("Year"), _("Genre")]
@@ -1405,6 +1408,7 @@ class PlaylistSettings(Gtk.Box):
 		scroll.add(self.treeview)
 
 		self.pack_start(scroll, True, True, 0)
+		self.pack_start(label, False, False, 0)
 
 	def on_cell_toggled(self, widget, path):
 		self.store[path][0] = not self.store[path][0]
