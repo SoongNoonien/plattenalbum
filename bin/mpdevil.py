@@ -1313,7 +1313,7 @@ class GeneralSettings(Gtk.Grid):
 		self.treeview.append_column(column_text)
 
 		#fill store
-		settings_list=[(_("Use alternative Layout"), "alt-layout"), (_("Show stop button"), "show-stop"), \
+		settings_list=[(_("Use alternative layout"), "alt-layout"), (_("Show stop button"), "show-stop"), \
 				(_("Show genre filter"), "show-genre-filter"), (_("Show tooltips in album view"), "show-album-view-tooltips"), \
 				(_("Sort albums by year"), "sort-albums-by-year"), (_("Show all artists"), "show-all-artists"), \
 				(_("Send notification on title change"), "send-notify"), (_("Stop playback on quit"), "stop-on-quit"), \
