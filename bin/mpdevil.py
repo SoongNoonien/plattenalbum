@@ -1288,46 +1288,45 @@ class GeneralSettings(Gtk.Grid):
 			icon_size_combo.append_text(str(i))
 		icon_size_combo.set_active(sizes.index(self.settings.get_int("icon-size")))
 
-		alt_layout=Gtk.CheckButton(label=_("Use alternative Layout"))
-		alt_layout.set_active(self.settings.get_boolean("alt-layout"))
+		#Store
+		#(toggle, display-text, key)
+		self.store = Gtk.ListStore(bool, str, str)
 
-		show_stop=Gtk.CheckButton(label=_("Show stop button"))
-		show_stop.set_active(self.settings.get_boolean("show-stop"))
+		#TreeView
+		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview.set_search_column(-1)
+		self.treeview.set_property("activate-on-single-click", True)
+		self.treeview.set_headers_visible(False)
 
-		show_genre_filter=Gtk.CheckButton(label=_("Show genre filter"))
-		show_genre_filter.set_active(self.settings.get_boolean("show-genre-filter"))
+		#selection
+		self.selection = self.treeview.get_selection()
+		self.selection.set_mode(Gtk.SelectionMode.NONE)
 
-		show_album_view_tooltips=Gtk.CheckButton(label=_("Show tooltips in album view"))
-		show_album_view_tooltips.set_active(self.settings.get_boolean("show-album-view-tooltips"))
+		#Column
+		renderer_text = Gtk.CellRendererText()
+		renderer_toggle = Gtk.CellRendererToggle()
 
-		sort_albums_by_year=Gtk.CheckButton(label=_("Sort albums by year"))
-		sort_albums_by_year.set_active(self.settings.get_boolean("sort-albums-by-year"))
+		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
+		self.treeview.append_column(column_toggle)
 
-		show_all_artists=Gtk.CheckButton(label=_("Show all artists"))
-		show_all_artists.set_active(self.settings.get_boolean("show-all-artists"))
+		column_text=Gtk.TreeViewColumn("", renderer_text, text=1)
+		self.treeview.append_column(column_text)
 
-		send_notify=Gtk.CheckButton(label=_("Send notification on title change"))
-		send_notify.set_active(self.settings.get_boolean("send-notify"))
+		#fill store
+		settings_list=[(_("Use alternative Layout"), "alt-layout"), (_("Show stop button"), "show-stop"), \
+				(_("Show genre filter"), "show-genre-filter"), (_("Show tooltips in album view"), "show-album-view-tooltips"), \
+				(_("Sort albums by year"), "sort-albums-by-year"), (_("Show all artists"), "show-all-artists"), \
+				(_("Send notification on title change"), "send-notify"), (_("Stop playback on quit"), "stop-on-quit"), \
+				(_("Play selected album after current title"), "add-album")]
 
-		stop_on_quit=Gtk.CheckButton(label=_("Stop playback on quit"))
-		stop_on_quit.set_active(self.settings.get_boolean("stop-on-quit"))
-
-		add_album=Gtk.CheckButton(label=_("Play selected album after current title"))
-		add_album.set_active(self.settings.get_boolean("add-album"))
+		for data in settings_list:
+			self.store.append([self.settings.get_boolean(data[1]), data[0], data[1]])
 
 		#connect
 		track_cover_size.connect("value-changed", self.on_int_changed, "track-cover")
 		album_cover_size.connect("value-changed", self.on_int_changed, "album-cover")
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
-		alt_layout.connect("toggled", self.on_toggled, "alt-layout")
-		show_stop.connect("toggled", self.on_toggled, "show-stop")
-		show_genre_filter.connect("toggled", self.on_toggled, "show-genre-filter")
-		show_album_view_tooltips.connect("toggled", self.on_toggled, "show-album-view-tooltips")
-		sort_albums_by_year.connect("toggled", self.on_toggled, "sort-albums-by-year")
-		show_all_artists.connect("toggled", self.on_toggled, "show-all-artists")
-		send_notify.connect("toggled", self.on_toggled, "send-notify")
-		stop_on_quit.connect("toggled", self.on_toggled, "stop-on-quit")
-		add_album.connect("toggled", self.on_toggled, "add-album")
+		self.treeview.connect("row-activated", self.on_row_activated)
 
 		#packing
 		self.add(track_cover_label)
@@ -1336,25 +1335,18 @@ class GeneralSettings(Gtk.Grid):
 		self.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(alt_layout, icon_size_label, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(show_stop, alt_layout, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(show_genre_filter, show_stop, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(show_album_view_tooltips, show_genre_filter, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(sort_albums_by_year, show_album_view_tooltips, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(show_all_artists, sort_albums_by_year, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(send_notify, show_all_artists, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(add_album, send_notify, Gtk.PositionType.BOTTOM, 2, 1)
-		self.attach_next_to(stop_on_quit, add_album, Gtk.PositionType.BOTTOM, 2, 1)
+		self.attach_next_to(self.treeview, icon_size_label, Gtk.PositionType.BOTTOM, 2, 2)
 
 	def on_int_changed(self, widget, key):
 		self.settings.set_int(key, widget.get_int())
 
-	def on_toggled(self, widget, key):
-		self.settings.set_boolean(key, widget.get_active())
-
 	def on_icon_size_changed(self, box):
 		active_size=int(box.get_active_text())
 		self.settings.set_int("icon-size", active_size)
+
+	def on_row_activated(self, widget, path, view_column): #TODO
+		self.store[path][0] = not self.store[path][0]
+		self.settings.set_boolean(self.store[path][2], self.store[path][0])
 
 class PlaylistSettings(Gtk.Box):
 	def __init__(self, settings):
@@ -1375,17 +1367,11 @@ class PlaylistSettings(Gtk.Box):
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
-		self.treeview.set_property("activate-on-single-click", True)
 		self.treeview.set_reorderable(True)
-
-		#selection
-		self.selection = self.treeview.get_selection()
-		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		#Column
 		renderer_text = Gtk.CellRendererText()
 		renderer_toggle = Gtk.CellRendererToggle()
-		renderer_toggle.connect("toggled", self.on_cell_toggled)
 
 		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
 		self.treeview.append_column(column_toggle)
@@ -1393,6 +1379,7 @@ class PlaylistSettings(Gtk.Box):
 		column_text=Gtk.TreeViewColumn(_("Column"), renderer_text, text=1)
 		self.treeview.append_column(column_text)
 
+		#fill store
 		self.headers=[_("No"), _("Disc"), _("Title"), _("Artist"), _("Album"), _("Length"), _("Year"), _("Genre")]
 		visibilities=self.settings.get_value("column-visibilities").unpack()
 
@@ -1401,6 +1388,7 @@ class PlaylistSettings(Gtk.Box):
 
 		#connect
 		self.store.connect("row-deleted", self.on_row_inserted)
+		renderer_toggle.connect("toggled", self.on_cell_toggled)
 
 		#scroll
 		scroll=Gtk.ScrolledWindow()
