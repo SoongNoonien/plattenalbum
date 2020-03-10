@@ -50,9 +50,9 @@ except locale.Error:
 	gettext.install(PACKAGE, localedir='@datadir@/locale')
 
 class IntEntry(Gtk.SpinButton):
-	def __init__(self, default, lower, upper):
+	def __init__(self, default, lower, upper, step):
 		Gtk.SpinButton.__init__(self)
-		adj = Gtk.Adjustment(value=default, lower=lower, upper=upper, step_increment=1)
+		adj = Gtk.Adjustment(value=default, lower=lower, upper=upper, step_increment=step)
 		self.set_adjustment(adj)
 
 	def get_int(self):
@@ -657,6 +657,9 @@ class AlbumView(Gtk.ScrolledWindow):
 		self.iconview=AlbumIconView(self.client, self.settings, self.genre_select, self.window)
 		self.iconview.connect("stopped", self.update)
 
+		#connect
+		self.settings.connect("changed::album-cover", self.on_settings_changed)
+
 		self.add(self.iconview)
 
 	def update(self, *args):
@@ -682,6 +685,11 @@ class AlbumView(Gtk.ScrolledWindow):
 	def scroll_to_selected_album(self):
 		self.iconview.scroll_to_selected_album()
 
+	def on_settings_changed(self, *args):
+		artists=self.artists
+		self.artists=[]
+		self.refresh(artists)
+
 class MainCover(Gtk.EventBox):
 	def __init__(self, client, settings, emitter, window):
 		Gtk.EventBox.__init__(self)
@@ -700,6 +708,7 @@ class MainCover(Gtk.EventBox):
 		#connect
 		self.connect("button-press-event", self.on_button_press_event)
 		self.player_changed=self.emitter.connect("player", self.refresh)
+		self.settings.connect("changed::track-cover", self.on_settings_changed)
 
 		self.add(self.cover)
 
@@ -742,6 +751,10 @@ class MainCover(Gtk.EventBox):
 					elif response == Gtk.ResponseType.YES:
 						self.client.album_to_playlist(album, artist, album_year, False, True)
 					album_dialog.destroy()
+
+	def on_settings_changed(self, *args):
+		self.song_file=None
+		self.refresh()
 
 	def clear(self, *args):
 		self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover")))
@@ -1130,7 +1143,7 @@ class ProfileSettings(Gtk.Grid):
 
 		self.profile_entry=Gtk.Entry()
 		self.host_entry=Gtk.Entry()
-		self.port_entry=IntEntry(0, 0, 65535)
+		self.port_entry=IntEntry(0, 0, 65535, 1)
 		self.password_entry=Gtk.Entry()
 		self.password_entry.set_visibility(False)
 		self.path_select_button=Gtk.Button(label=_("Select"), image=Gtk.Image(stock=Gtk.STOCK_OPEN))
@@ -1276,8 +1289,8 @@ class GeneralSettings(Gtk.Grid):
 		album_cover_label=Gtk.Label(label=_("Album-view cover size:"))
 		album_cover_label.set_xalign(1)
 
-		track_cover_size=IntEntry(self.settings.get_int("track-cover"), 100, 1200)
-		album_cover_size=IntEntry(self.settings.get_int("album-cover"), 50, 600)
+		track_cover_size=IntEntry(self.settings.get_int("track-cover"), 100, 1200, 10)
+		album_cover_size=IntEntry(self.settings.get_int("album-cover"), 50, 600, 10)
 
 		icon_size_label=Gtk.Label(label=_("Button icon size (restart required):"))
 		icon_size_label.set_xalign(1)
