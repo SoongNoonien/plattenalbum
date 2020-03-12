@@ -417,8 +417,8 @@ class ArtistView(Gtk.ScrolledWindow):
 		self.genre_select=genre_select
 
 		#artistStore
-		#(name, weight, font-scale, selectable)
-		self.store = Gtk.ListStore(str, Pango.Weight, float, bool)
+		#(name, initial-letter, weight, font-scale)
+		self.store = Gtk.ListStore(str, str, Pango.Weight, float)
 
 		#TreeView
 		self.treeview = Gtk.TreeView(model=self.store)
@@ -428,14 +428,17 @@ class ArtistView(Gtk.ScrolledWindow):
 		#artistSelection
 		self.selection = self.treeview.get_selection()
 		self.selection.set_mode(Gtk.SelectionMode.MULTIPLE)
-		def selection_function(selection, model, path, path_currently_selected, *data):
-			treeiter=model.get_iter(path)
-			return model.get_value(treeiter, 3)
-		self.selection.set_select_function(selection_function)
 
-		#Old Name Column
+		#Columns
+		renderer_text_malign = Gtk.CellRendererText(xalign=0.5)
+		self.column_initials = Gtk.TreeViewColumn("", renderer_text_malign, text=1, weight=2, scale=3)
+		self.column_initials.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_initials.set_property("resizable", False)
+		self.column_initials.set_visible(self.settings.get_boolean("show-initials"))
+		self.treeview.append_column(self.column_initials)
+
 		renderer_text = Gtk.CellRendererText()
-		self.column_name = Gtk.TreeViewColumn("", renderer_text, text=0, weight=1, scale=2)
+		self.column_name = Gtk.TreeViewColumn("", renderer_text, text=0)
 		self.column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_name.set_property("resizable", False)
 		self.treeview.append_column(self.column_name)
@@ -443,6 +446,7 @@ class ArtistView(Gtk.ScrolledWindow):
 		#connect
 		self.treeview.connect("enter-notify-event", self.on_enter_event)
 		self.settings.connect("changed::show-all-artists", self.refresh)
+		self.settings.connect("changed::show-initials", self.on_show_initials_settings_changed)
 		self.update_signal=self.emitter.connect("update", self.refresh)
 
 		self.add(self.treeview)
@@ -466,11 +470,12 @@ class ArtistView(Gtk.ScrolledWindow):
 		for artist in artists:
 			try:
 				if current_char != artist[0]:
-					self.store.append([artist[0], Pango.Weight.BOLD, 1.3, False])
+					self.store.append([artist, artist[0], Pango.Weight.BOLD, 1])
 					current_char=artist[0]
+				else:
+					self.store.append([artist, "", Pango.Weight.BOOK, 1])
 			except:
-				pass
-			self.store.append([artist, Pango.Weight.BOOK, 1, True])
+				self.store.append([artist, "", Pango.Weight.BOOK, 1])
 		self.selection.set_mode(Gtk.SelectionMode.MULTIPLE)
 
 	def get_selected_artists(self):
@@ -483,11 +488,11 @@ class ArtistView(Gtk.ScrolledWindow):
 				artists.append(selected_artist)
 		return artists
 
-	def is_iter_selectable(self, iter):
-		return self.store.get_value(iter, 3)
-
 	def on_enter_event(self, widget, event):
 		self.treeview.grab_focus()
+
+	def on_show_initials_settings_changed(self, *args):
+		self.column_initials.set_visible(self.settings.get_boolean("show-initials"))
 
 class AlbumIconView(Gtk.IconView):
 	def __init__(self, client, settings, genre_select, window):
@@ -1091,7 +1096,7 @@ class Browser(Gtk.Box):
 			for i in range(0, row_num):
 				path=Gtk.TreePath(i)
 				treeiter = self.artist_list.store.get_iter(path)
-				if self.artist_list.store.get_value(treeiter, 0) == song[self.settings.get_artist_type()] and self.artist_list.is_iter_selectable(treeiter):
+				if self.artist_list.store.get_value(treeiter, 0) == song[self.settings.get_artist_type()]:
 					if not self.artist_list.selection.iter_is_selected(treeiter):
 						self.artist_list.selection.handler_block(self.artist_change)
 						self.artist_list.selection.unselect_all()
@@ -1327,7 +1332,8 @@ class GeneralSettings(Gtk.Grid):
 
 		#fill store
 		settings_list=[(_("Use alternative layout"), "alt-layout"), (_("Show stop button"), "show-stop"), \
-				(_("Show genre filter"), "show-genre-filter"), (_("Show tooltips in album view"), "show-album-view-tooltips"), \
+				(_("Show genre filter"), "show-genre-filter"), (_("Show initials in artist view"), "show-initials"), \
+				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
 				(_("Sort albums by year"), "sort-albums-by-year"), (_("Show all artists"), "show-all-artists"), \
 				(_("Send notification on title change"), "send-notify"), (_("Stop playback on quit"), "stop-on-quit"), \
 				(_("Play selected album after current title"), "add-album")]
