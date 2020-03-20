@@ -18,6 +18,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
+# MPRIS interface based on 'mpDris2' (master 19.03.2020) by Jean-Philippe Braun <eon@patapon.info>, Mantas Mikulėnas <grawity@gmail.com>
+
 import gi #python-gobject  dev-python/pygobject:3[${PYTHON_USEDEP}]
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
@@ -31,6 +33,146 @@ import gettext
 import datetime
 import os
 import sys
+
+#MPRIS
+import dbus
+import dbus.service
+from dbus.mainloop.glib import DBusGMainLoop
+import base64
+import re
+
+# MPRIS allowed metadata tags
+allowed_tags = {
+	'mpris:trackid': dbus.ObjectPath,
+	'mpris:length': dbus.Int64,
+	'mpris:artUrl': str,
+	'xesam:album': str,
+	'xesam:albumArtist': list,
+	'xesam:artist': list,
+	'xesam:asText': str,
+	'xesam:audioBPM': int,
+	'xesam:comment': list,
+	'xesam:composer': list,
+	'xesam:contentCreated': str,
+	'xesam:discNumber': int,
+	'xesam:firstUsed': str,
+	'xesam:genre': list,
+	'xesam:lastUsed': str,
+	'xesam:lyricist': str,
+	'xesam:title': str,
+	'xesam:trackNumber': int,
+	'xesam:url': str,
+	'xesam:useCount': int,
+	'xesam:userRating': float,
+}
+
+# python dbus bindings don't include annotations and properties
+MPRIS2_INTROSPECTION = """<node name="/org/mpris/MediaPlayer2">
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
+      <arg direction="out" name="xml_data" type="s"/>
+    </method>
+  </interface>
+  <interface name="org.freedesktop.DBus.Properties">
+    <method name="Get">
+      <arg direction="in" name="interface_name" type="s"/>
+      <arg direction="in" name="property_name" type="s"/>
+      <arg direction="out" name="value" type="v"/>
+    </method>
+    <method name="GetAll">
+      <arg direction="in" name="interface_name" type="s"/>
+      <arg direction="out" name="properties" type="a{sv}"/>
+    </method>
+    <method name="Set">
+      <arg direction="in" name="interface_name" type="s"/>
+      <arg direction="in" name="property_name" type="s"/>
+      <arg direction="in" name="value" type="v"/>
+    </method>
+    <signal name="PropertiesChanged">
+      <arg name="interface_name" type="s"/>
+      <arg name="changed_properties" type="a{sv}"/>
+      <arg name="invalidated_properties" type="as"/>
+    </signal>
+  </interface>
+  <interface name="org.mpris.MediaPlayer2">
+    <method name="Raise"/>
+    <method name="Quit"/>
+    <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"/>
+    <property name="CanQuit" type="b" access="read"/>
+    <property name="CanRaise" type="b" access="read"/>
+    <property name="HasTrackList" type="b" access="read"/>
+    <property name="Identity" type="s" access="read"/>
+    <property name="DesktopEntry" type="s" access="read"/>
+    <property name="SupportedUriSchemes" type="as" access="read"/>
+    <property name="SupportedMimeTypes" type="as" access="read"/>
+  </interface>
+  <interface name="org.mpris.MediaPlayer2.Player">
+    <method name="Next"/>
+    <method name="Previous"/>
+    <method name="Pause"/>
+    <method name="PlayPause"/>
+    <method name="Stop"/>
+    <method name="Play"/>
+    <method name="Seek">
+      <arg direction="in" name="Offset" type="x"/>
+    </method>
+    <method name="SetPosition">
+      <arg direction="in" name="TrackId" type="o"/>
+      <arg direction="in" name="Position" type="x"/>
+    </method>
+    <method name="OpenUri">
+      <arg direction="in" name="Uri" type="s"/>
+    </method>
+    <signal name="Seeked">
+      <arg name="Position" type="x"/>
+    </signal>
+    <property name="PlaybackStatus" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="LoopStatus" type="s" access="readwrite">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="Rate" type="d" access="readwrite">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="Shuffle" type="b" access="readwrite">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="Metadata" type="a{sv}" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="Volume" type="d" access="readwrite">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"/>
+    </property>
+    <property name="Position" type="x" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"/>
+    </property>
+    <property name="MinimumRate" type="d" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="MaximumRate" type="d" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="CanGoNext" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="CanGoPrevious" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="CanPlay" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="CanPause" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="CanSeek" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+    <property name="CanControl" type="b" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"/>
+    </property>
+  </interface>
+</node>"""
 
 DATADIR = '@datadir@'
 NAME = 'mpdevil'
@@ -62,7 +204,7 @@ class IntEntry(Gtk.SpinButton):
 		self.set_value(value)
 
 class Cover(object):
-	def __init__(self, client, lib_path, song_file):
+	def __init__(self, client, lib_path, song_file): #TODO client not needed
 		self.client=client
 		self.lib_path=lib_path
 		self.path=None
@@ -218,6 +360,372 @@ class MpdEventEmitter(GObject.Object):
 	@GObject.Signal
 	def reconnected(self):
 		pass
+
+class MPRISInterface(dbus.service.Object): #TODO
+	''' The base object of an MPRIS player '''
+	#TODO emit Seeked if needed
+
+	__introspect_interface = "org.freedesktop.DBus.Introspectable"
+	__prop_interface = dbus.PROPERTIES_IFACE
+
+	def __init__(self, window, client, settings, emitter):
+		dbus.service.Object.__init__(self, dbus.SessionBus(), "/org/mpris/MediaPlayer2")
+		self._name = "org.mpris.MediaPlayer2.mpd"
+
+		self._bus = dbus.SessionBus()
+		self._uname = self._bus.get_unique_name()
+		self._dbus_obj = self._bus.get_object("org.freedesktop.DBus", "/org/freedesktop/DBus")
+		self._dbus_obj.connect_to_signal("NameOwnerChanged", self._name_owner_changed_callback, arg0=self._name)
+
+		self.window=window
+		self.client=client
+		self.settings=settings
+		self.emitter=emitter
+		self.metadata={}
+
+		#connect
+		self.emitter.connect("player", self.on_player_changed)
+		self.emitter.connect("mixer", self.on_volume_changed)
+		self.emitter.connect("options", self.on_options_changed)
+
+	def on_player_changed(self, *args):
+		self.update_property('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
+		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoNext')
+		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoPrevious')
+		self.update_metadata()
+		self.update_property('org.mpris.MediaPlayer2.Player', 'Metadata')
+
+	def on_volume_changed(self, *args):
+		self.update_property('org.mpris.MediaPlayer2.Player', 'Volume')
+
+	def on_options_changed(self, *args):
+		self.update_property('org.mpris.MediaPlayer2.Player', 'LoopStatus')
+		self.update_property('org.mpris.MediaPlayer2.Player', 'Shuffle')
+
+	def update_metadata(self): #TODO
+		"""
+		Translate metadata returned by MPD to the MPRIS v2 syntax.
+		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
+		"""
+
+		mpd_meta = self.client.currentsong()
+		self.metadata = {}
+
+		for tag in ('album', 'title'):
+			if tag in mpd_meta:
+				self.metadata['xesam:%s' % tag] = mpd_meta[tag]
+
+		if 'id' in mpd_meta:
+			self.metadata['mpris:trackid'] = "/org/mpris/MediaPlayer2/Track/%s" % mpd_meta['id']
+
+		if 'time' in mpd_meta:
+			self.metadata['mpris:length'] = int(mpd_meta['time']) * 1000000
+
+		if 'date' in mpd_meta:
+			self.metadata['xesam:contentCreated'] = mpd_meta['date'][0:4]
+
+		if 'track' in mpd_meta:
+			# TODO: Is it even *possible* for mpd_meta['track'] to be a list?
+			if type(mpd_meta['track']) == list and len(mpd_meta['track']) > 0:
+				track = str(mpd_meta['track'][0])
+			else:
+				track = str(mpd_meta['track'])
+
+			m = re.match('^([0-9]+)', track)
+			if m:
+				self.metadata['xesam:trackNumber'] = int(m.group(1))
+				# Ensure the integer is signed 32bit
+				if self.metadata['xesam:trackNumber'] & 0x80000000:
+					self.metadata['xesam:trackNumber'] += -0x100000000
+			else:
+				self.metadata['xesam:trackNumber'] = 0
+
+		if 'disc' in mpd_meta:
+			# TODO: Same as above. When is it a list?
+			if type(mpd_meta['disc']) == list and len(mpd_meta['disc']) > 0:
+				disc = str(mpd_meta['disc'][0])
+			else:
+				disc = str(mpd_meta['disc'])
+
+			m = re.match('^([0-9]+)', disc)
+			if m:
+				self.metadata['xesam:discNumber'] = int(m.group(1))
+
+		if 'artist' in mpd_meta:
+			if type(mpd_meta['artist']) == list:
+				self.metadata['xesam:artist'] = mpd_meta['artist']
+			else:
+				self.metadata['xesam:artist'] = [mpd_meta['artist']]
+
+		if 'composer' in mpd_meta:
+			if type(mpd_meta['composer']) == list:
+				self.metadata['xesam:composer'] = mpd_meta['composer']
+			else:
+				self.metadata['xesam:composer'] = [mpd_meta['composer']]
+
+		# Stream: populate some missings tags with stream's name
+		if 'name' in mpd_meta:
+			if 'xesam:title' not in self.metadata:
+				self.metadata['xesam:title'] = mpd_meta['name']
+			elif 'xesam:album' not in self.metadata:
+				self.metadata['xesam:album'] = mpd_meta['name']
+
+		if 'file' in mpd_meta:
+			song_file = mpd_meta['file']
+			self.metadata['xesam:url'] = "file://"+os.path.join(self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file)
+			cover=Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
+			if not cover.path == None:
+				self.metadata['mpris:artUrl'] = "file://"+cover.path
+			else:
+				self.metadata['mpris:artUrl'] = None
+
+		# Cast self.metadata to the correct type, or discard it
+		for key, value in self.metadata.items():
+			try:
+				self.metadata[key] = allowed_tags[key](value)
+			except ValueError:
+				del self.metadata[key]
+
+	def _name_owner_changed_callback(self, name, old_owner, new_owner):
+		if name == self._name and old_owner == self._uname and new_owner != "":
+			try:
+				pid = self._dbus_obj.GetConnectionUnixProcessID(new_owner)
+			except:
+				pid = None
+			loop.quit()
+
+	def acquire_name(self):
+		self._bus_name = dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)
+
+	def release_name(self):
+		if hasattr(self, "_bus_name"):
+			del self._bus_name
+
+	__root_interface = "org.mpris.MediaPlayer2"
+	__root_props = {
+		"CanQuit": (False, None),
+		"CanRaise": (True, None),
+		"DesktopEntry": ("mpdevil", None),
+		"HasTrackList": (False, None),
+		"Identity": ("mpdevil", None),
+		"SupportedUriSchemes": (dbus.Array(signature="s"), None),
+		"SupportedMimeTypes": (dbus.Array(signature="s"), None)
+	}
+
+	def __get_playback_status(self):
+		status = self.client.status()
+		return {'play': 'Playing', 'pause': 'Paused', 'stop': 'Stopped'}[status['state']]
+
+	def __set_loop_status(self, value):
+		if value == "Playlist":
+			self.client.repeat(1)
+			self.client.single(0)
+		elif value == "Track":
+			self.client.repeat(1)
+			self.client.single(1)
+		elif value == "None":
+			self.client.repeat(0)
+			self.client.single(0)
+		else:
+			raise dbus.exceptions.DBusException("Loop mode %r not supported" % value)
+		return
+
+	def __get_loop_status(self):
+		status = self.client.status()
+		if int(status['repeat']) == 1:
+			if int(status.get('single', 0)) == 1:
+				return "Track"
+			else:
+				return "Playlist"
+		else:
+			return "None"
+
+	def __set_shuffle(self, value):
+		self.client.random(value)
+		return
+
+	def __get_shuffle(self):
+		if int(self.client.status()['random']) == 1:
+			return True
+		else:
+			return False
+
+	def __get_metadata(self):
+		return dbus.Dictionary(self.metadata, signature='sv')
+
+	def __get_volume(self):
+		vol = float(self.client.status().get('volume', 0))
+		if vol > 0:
+			return vol / 100.0
+		else:
+			return 0.0
+
+	def __set_volume(self, value):
+		if value >= 0 and value <= 1:
+			self.client.setvol(int(value * 100))
+		return
+
+	def __get_position(self):
+		status = self.client.status()
+		if 'time' in status:
+			current, end = status['time'].split(':')
+			return dbus.Int64((int(current) * 1000000))
+		else:
+			return dbus.Int64(0)
+
+	def __get_can_next_prev(self):
+		status = self.client.status()
+		if status['state'] == "stop":
+			return False
+		else:
+			return True
+
+	__player_interface = "org.mpris.MediaPlayer2.Player"
+	__player_props = {
+		"PlaybackStatus": (__get_playback_status, None),
+		"LoopStatus": (__get_loop_status, __set_loop_status),
+		"Rate": (1.0, None),
+		"Shuffle": (__get_shuffle, __set_shuffle),
+		"Metadata": (__get_metadata, None),
+		"Volume": (__get_volume, __set_volume),
+		"Position": (__get_position, None),
+		"MinimumRate": (1.0, None),
+		"MaximumRate": (1.0, None),
+		"CanGoNext": (__get_can_next_prev, None),
+		"CanGoPrevious": (__get_can_next_prev, None),
+		"CanPlay": (True, None),
+		"CanPause": (True, None),
+		"CanSeek": (True, None),
+		"CanControl": (True, None),
+	}
+
+	__tracklist_interface = "org.mpris.MediaPlayer2.TrackList"
+
+	__prop_mapping = {
+		__player_interface: __player_props,
+		__root_interface: __root_props,
+	}
+
+	@dbus.service.method(__introspect_interface)
+	def Introspect(self):
+		return MPRIS2_INTROSPECTION
+
+	@dbus.service.signal(__prop_interface, signature="sa{sv}as")
+	def PropertiesChanged(self, interface, changed_properties, invalidated_properties):
+		pass
+
+	@dbus.service.method(__prop_interface, in_signature="ss", out_signature="v")
+	def Get(self, interface, prop):
+		getter, setter = self.__prop_mapping[interface][prop]
+		if callable(getter):
+			return getter(self)
+		return getter
+
+	@dbus.service.method(__prop_interface, in_signature="ssv", out_signature="")
+	def Set(self, interface, prop, value):
+		getter, setter = self.__prop_mapping[interface][prop]
+		if setter is not None:
+			setter(value)
+
+	@dbus.service.method(__prop_interface, in_signature="s", out_signature="a{sv}")
+	def GetAll(self, interface):
+		read_props = {}
+		props = self.__prop_mapping[interface]
+		for key, (getter, setter) in props.items():
+			if callable(getter):
+				getter = getter(self)
+			read_props[key] = getter
+		return read_props
+
+	def update_property(self, interface, prop):
+		getter, setter = self.__prop_mapping[interface][prop]
+		if callable(getter):
+			value = getter(self)
+		else:
+			value = getter
+		self.PropertiesChanged(interface, {prop: value}, [])
+		return value
+
+	# Root methods
+	@dbus.service.method(__root_interface, in_signature='', out_signature='')
+	def Raise(self):
+		self.window.present()
+		return
+
+	@dbus.service.method(__root_interface, in_signature='', out_signature='')
+	def Quit(self):
+		return
+
+	# Player methods
+	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	def Next(self):
+		self.client.next()
+		return
+
+	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	def Previous(self):
+		self.client.previous()
+		return
+
+	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	def Pause(self):
+		self.client.pause(1)
+		return
+
+	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	def PlayPause(self):
+		status = self.client.status()
+		if status['state'] == 'play':
+			self.client.pause(1)
+		else:
+			self.client.play()
+		return
+
+	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	def Stop(self):
+		self.client.stop()
+		return
+
+	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	def Play(self):
+		self.client.play()
+		return
+
+	@dbus.service.method(__player_interface, in_signature='x', out_signature='')
+	def Seek(self, offset): #TODO
+		status = self.client.status()
+		current, end = status['time'].split(':')
+		current = int(current)
+		end = int(end)
+		offset = int(offset) / 1000000
+		if current + offset <= end:
+			position = current + offset
+			if position < 0:
+				position = 0
+			self.client.seekid(int(status['songid']), position)
+			self.Seeked(position * 1000000)
+		return
+
+	@dbus.service.method(__player_interface, in_signature='ox', out_signature='')
+	def SetPosition(self, trackid, position):
+		song = self.client.currentsong()
+		# FIXME: use real dbus objects
+		if str(trackid) != '/org/mpris/MediaPlayer2/Track/%s' % song['id']:
+			return
+		# Convert position to seconds
+		position = int(position) / 1000000
+		if position <= int(song['time']):
+			self.client.seekid(int(song['id']), position)
+			self.Seeked(position * 1000000)
+		return
+
+	@dbus.service.signal(__player_interface, signature='x')
+	def Seeked(self, position):
+		return float(position)
+
+	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	def OpenUri(self):
+		return
 
 class Settings(Gio.Settings):
 	BASE_KEY = "org.mpdevil"
@@ -2109,6 +2617,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 		self.song_file=None
 
+		#MPRIS
+		DBusGMainLoop(set_as_default=True)
+		self.dbus_service = MPRISInterface(self, self.client, self.settings, self.emitter)
+
 		#actions
 		save_action = Gio.SimpleAction.new("save", None)
 		save_action.connect("activate", self.on_save)
@@ -2215,6 +2727,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_reconnected(self, *args):
 		self.client.try_connect_default()
+		self.dbus_service.acquire_name()
 		self.progress.set_sensitive(True)
 		self.control.set_sensitive(True)
 		self.play_opts.set_sensitive(True)
@@ -2229,6 +2742,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.browser.go_home()
 
 	def on_disconnected(self, *args):
+		self.dbus_service.release_name()
 		self.lyrics_button.set_active(False)
 		self.search_button.set_active(False)
 		self.set_title("mpdevil (not connected)")
