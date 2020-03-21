@@ -370,7 +370,7 @@ class MPRISInterface(dbus.service.Object): #TODO
 
 	def __init__(self, window, client, settings, emitter):
 		dbus.service.Object.__init__(self, dbus.SessionBus(), "/org/mpris/MediaPlayer2")
-		self._name = "org.mpris.MediaPlayer2.mpd"
+		self._name = "org.mpris.MediaPlayer2.mpdevil"
 
 		self._bus = dbus.SessionBus()
 		self._uname = self._bus.get_unique_name()
