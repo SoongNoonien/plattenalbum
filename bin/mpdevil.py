@@ -625,7 +625,7 @@ class MPRISInterface(dbus.service.Object): #TODO
 	def Set(self, interface, prop, value):
 		getter, setter = self.__prop_mapping[interface][prop]
 		if setter is not None:
-			setter(value)
+			setter(self, value)
 
 	@dbus.service.method(__prop_interface, in_signature="s", out_signature="a{sv}")
 	def GetAll(self, interface):
