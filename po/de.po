@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-03-22 21:30+0100\n"
-"PO-Revision-Date: 2020-03-22 21:47+0100\n"
+"PO-Revision-Date: 2020-03-22 22:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -114,7 +114,7 @@ msgstr "Größe des Haupt-Covers:"
 
 #: mpdevil.py:1808
 msgid "Album view cover size:"
-msgstr "Covergröße in Albumansicht:"
+msgstr "Covergröße in Albumliste:"
 
 #: mpdevil.py:1814
 msgid "Button icon size (restart required):"
