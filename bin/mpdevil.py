@@ -2548,7 +2548,7 @@ class LyricsWindow(Gtk.Window):
 
 		self.show_all()
 
-		self.update()
+		self.refresh()
 
 	def remove_handlers(self, *args):
 		self.emitter.disconnect(self.file_changed)
