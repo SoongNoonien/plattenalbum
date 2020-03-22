@@ -204,8 +204,7 @@ class IntEntry(Gtk.SpinButton):
 		self.set_value(value)
 
 class Cover(object):
-	def __init__(self, client, lib_path, song_file): #TODO client not needed
-		self.client=client
+	def __init__(self, lib_path, song_file):
 		self.lib_path=lib_path
 		self.path=None
 		if not song_file == None:
@@ -473,7 +472,7 @@ class MPRISInterface(dbus.service.Object): #TODO
 		if 'file' in mpd_meta:
 			song_file = mpd_meta['file']
 			self.metadata['xesam:url'] = "file://"+os.path.join(self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file)
-			cover=Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
+			cover=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
 			if not cover.path == None:
 				self.metadata['mpris:artUrl'] = "file://"+cover.path
 			else:
@@ -1084,7 +1083,7 @@ class AlbumIconView(Gtk.IconView):
 					song_file=None
 				else:
 					song_file=songs[0]["file"]
-				cover=Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
+				cover=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
 				img=cover.get_pixbuf(size)
 				if album["year"] == "":
 					self.store.append([img, album["album"], self.gen_tooltip(album["album"], album["artist"], album["year"]), album["album"], album["year"], album["artist"]])
@@ -1216,7 +1215,7 @@ class MainCover(Gtk.EventBox):
 
 		#cover
 		self.cover=Gtk.Image.new()
-		self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover"))) #set to fallback cover
+		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover"))) #set to fallback cover
 
 		#connect
 		self.connect("button-press-event", self.on_button_press_event)
@@ -1231,7 +1230,7 @@ class MainCover(Gtk.EventBox):
 		except:
 			song_file=None
 		if not song_file == self.song_file:
-			self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
+			self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
 			self.song_file=song_file
 
 	def on_button_press_event(self, widget, event):
@@ -1270,7 +1269,7 @@ class MainCover(Gtk.EventBox):
 		self.refresh()
 
 	def clear(self, *args):
-		self.cover.set_from_pixbuf(Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover")))
+		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover")))
 		self.song_file=None
 
 class TrackView(Gtk.Box):
@@ -2718,7 +2717,7 @@ class MainWindow(Gtk.ApplicationWindow):
 					if self.settings.get_boolean("send-notify"):
 						if not self.is_active() and status["state"] == "play":
 							notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"])
-							pixbuf=Cover(client=self.client, lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song["file"]).get_pixbuf(400)
+							pixbuf=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song["file"]).get_pixbuf(400)
 							notify.set_image_from_pixbuf(pixbuf)
 							notify.show()
 					self.song_file=song["file"]
