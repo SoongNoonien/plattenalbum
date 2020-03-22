@@ -1236,11 +1236,11 @@ class MainCover(Gtk.EventBox):
 		self.add(self.cover)
 
 	def refresh(self, *args):
-		current_song=self.client.currentsong()
-		if current_song == {}:
-			song_file=None
-		else:
+		try:
+			current_song=self.client.currentsong()
 			song_file=current_song['file']
+		except:
+			song_file=None
 		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
 
 	def clear(self, *args):
