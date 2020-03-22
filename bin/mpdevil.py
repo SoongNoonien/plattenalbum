@@ -287,6 +287,7 @@ class MpdEventEmitter(GObject.Object):
 		self.client=Client(settings)
 		GLib.timeout_add(100, self.watch)
 		self.connected=True
+		self.current_file=None
 
 	def watch(self, *args):
 		try:
@@ -302,10 +303,8 @@ class MpdEventEmitter(GObject.Object):
 			if self.client.connected():
 				self.emit("disconnected")
 				self.emit("reconnected")
-				self.connected=True
 			elif self.connected:
 				self.emit("disconnected")
-				self.connected=False
 		return True
 
 	@GObject.Signal
@@ -326,7 +325,14 @@ class MpdEventEmitter(GObject.Object):
 
 	@GObject.Signal
 	def player(self):
-		pass
+		current_song=self.client.currentsong()
+		if not current_song == {}:
+			if not current_song['file'] == self.current_file:
+				self.emit("playing_file_changed")
+				self.current_file=current_song['file']
+		else:
+			self.emit("playing_file_changed")
+			self.current_file=None
 
 	@GObject.Signal
 	def mixer(self):
@@ -354,10 +360,16 @@ class MpdEventEmitter(GObject.Object):
 
 	@GObject.Signal
 	def disconnected(self):
-		pass
+		self.connected=False
+		self.current_file=None
 
 	@GObject.Signal
 	def reconnected(self):
+		self.connected=True
+
+	#custom signals
+	@GObject.Signal
+	def playing_file_changed(self):
 		pass
 
 class MPRISInterface(dbus.service.Object): #TODO
@@ -384,6 +396,7 @@ class MPRISInterface(dbus.service.Object): #TODO
 
 		#connect
 		self.emitter.connect("player", self.on_player_changed)
+		self.emitter.connect("playing_file_changed", self.on_file_changed)
 		self.emitter.connect("mixer", self.on_volume_changed)
 		self.emitter.connect("options", self.on_options_changed)
 
@@ -391,6 +404,8 @@ class MPRISInterface(dbus.service.Object): #TODO
 		self.update_property('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
 		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoNext')
 		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoPrevious')
+
+	def on_file_changed(self, *args):
 		self.update_metadata()
 		self.update_property('org.mpris.MediaPlayer2.Player', 'Metadata')
 
@@ -1211,7 +1226,6 @@ class MainCover(Gtk.EventBox):
 		self.settings=settings
 		self.emitter=emitter
 		self.window=window
-		self.song_file=None
 
 		#cover
 		self.cover=Gtk.Image.new()
@@ -1219,19 +1233,18 @@ class MainCover(Gtk.EventBox):
 
 		#connect
 		self.connect("button-press-event", self.on_button_press_event)
-		self.player_changed=self.emitter.connect("player", self.refresh)
+		self.emitter.connect("playing_file_changed", self.refresh)
 		self.settings.connect("changed::track-cover", self.on_settings_changed)
 
 		self.add(self.cover)
 
 	def refresh(self, *args):
-		try:
-			song_file=self.client.currentsong()["file"]
-		except:
+		current_song=self.client.currentsong()
+		if current_song == {}:
 			song_file=None
-		if not song_file == self.song_file:
-			self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
-			self.song_file=song_file
+		else:
+			song_file=current_song['file']
+		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
 
 	def on_button_press_event(self, widget, event):
 		if self.client.connected():
@@ -1355,8 +1368,8 @@ class TrackView(Gtk.Box):
 		self.treeview.connect("focus-out-event", self.on_focus_out_event)
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 
-		self.playlist_changed=self.emitter.connect("playlist", self.on_playlist_changed)
-		self.player_changed=self.emitter.connect("player", self.on_player_changed)
+		self.emitter.connect("playlist", self.on_playlist_changed)
+		self.emitter.connect("playing_file_changed", self.on_file_changed)
 		self.disconnected_signal=self.emitter.connect("disconnected", self.on_disconnected)
 
 		self.settings.connect("changed::column-visibilities", self.load_settings)
@@ -1514,7 +1527,7 @@ class TrackView(Gtk.Box):
 		self.refresh_selection()
 		self.playlist_version=self.client.status()["playlist"]
 
-	def on_player_changed(self, *args):
+	def on_file_changed(self, *args):
 		if not self.client.song_to_delete == "": #TODO should be in Client class
 			status=self.client.status()
 			if not status["song"] == "0":
@@ -2529,7 +2542,6 @@ class LyricsWindow(Gtk.Window):
 		self.settings=settings
 		self.client=client
 		self.emitter=emitter
-		self.current_song={}
 
 		#widgets
 		self.scroll=Gtk.ScrolledWindow()
@@ -2540,7 +2552,7 @@ class LyricsWindow(Gtk.Window):
 		self.label.set_xalign(0)
 
 		#connect
-		self.player_changed=self.emitter.connect("player", self.update)
+		self.emitter.connect("playing_file_changed", self.update)
 		self.connect("destroy", self.remove_handlers)
 
 		#packing
@@ -2563,13 +2575,8 @@ class LyricsWindow(Gtk.Window):
 		GLib.idle_add(self.label.set_text, text)
 
 	def update(self, *args):
-		cs=self.client.currentsong()
-		if not cs == {}:
-			cs.pop("pos") #avoid unnecessary reloads caused by position change of current title
-		if cs != self.current_song:
-			self.current_song=cs
-			update_thread=threading.Thread(target=self.display_lyrics, daemon=True)
-			update_thread.start()
+		update_thread=threading.Thread(target=self.display_lyrics, daemon=True)
+		update_thread.start()
 
 	def getLyrics(self, singer, song): #partially copied from PyLyrics 1.1.0
 		#Replace spaces with _
@@ -2614,7 +2621,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.client=client
 		self.emitter=emitter
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
-		self.song_file=None
 
 		#MPRIS
 		DBusGMainLoop(set_as_default=True)
@@ -2674,7 +2680,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.search_button.connect("toggled", self.on_search_toggled)
 		self.lyrics_button.connect("toggled", self.on_lyrics_toggled)
 		self.settings.connect("changed::profiles", self.on_settings_changed)
-		self.player_changed=self.emitter.connect("player", self.title_update)
+		self.emitter.connect("playing_file_changed", self.title_update)
 		self.disconnected_signal=self.emitter.connect("disconnected", self.on_disconnected)
 		self.reconnected_signal=self.emitter.connect("reconnected", self.on_reconnected)
 		#unmap space
@@ -2707,20 +2713,14 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def title_update(self, *args):
 		try:
-			status=self.client.status()
-			if status["songid"] == None:
-				self.set_title("mpdevil")
-			else:
-				song=self.client.currentsong()
-				if song["file"] != self.song_file:
-					self.set_title(song["artist"]+" - "+song["title"]+" - "+song["album"])
-					if self.settings.get_boolean("send-notify"):
-						if not self.is_active() and status["state"] == "play":
-							notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"])
-							pixbuf=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song["file"]).get_pixbuf(400)
-							notify.set_image_from_pixbuf(pixbuf)
-							notify.show()
-					self.song_file=song["file"]
+			song=self.client.currentsong()
+			self.set_title(song["artist"]+" - "+song["title"]+" - "+song["album"])
+			if self.settings.get_boolean("send-notify"):
+				if not self.is_active() and self.client.status()["state"] == "play":
+					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"])
+					pixbuf=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song["file"]).get_pixbuf(400)
+					notify.set_image_from_pixbuf(pixbuf)
+					notify.show()
 		except:
 			self.set_title("mpdevil")
 
