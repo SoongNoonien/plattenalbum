@@ -282,6 +282,23 @@ class Client(MPDClient):
 		self.disconnect()
 
 class MpdEventEmitter(GObject.Object):
+	__gsignals__ = {
+		'database': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'update': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'stored_playlist': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'playlist': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'player': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'mixer': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'output': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'options': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'sticker': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'subscription': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'message': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'disconnected': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'reconnected': (GObject.SIGNAL_RUN_FIRST, None, ()),
+		'playing_file_changed': (GObject.SIGNAL_RUN_FIRST, None, ())
+	}
+
 	def __init__(self, settings):
 		super().__init__()
 		self.client=Client(settings)
@@ -307,24 +324,20 @@ class MpdEventEmitter(GObject.Object):
 				self.emit("disconnected")
 		return True
 
-	@GObject.Signal
-	def database(self):
+	#mpd signals
+	def do_database(self):
 		pass
 
-	@GObject.Signal
-	def update(self):
+	def do_update(self):
 		pass
 
-	@GObject.Signal
-	def stored_playlist(self):
+	def do_stored_playlist(self):
 		pass
 
-	@GObject.Signal
-	def playlist(self):
+	def do_playlist(self):
 		pass
 
-	@GObject.Signal
-	def player(self):
+	def do_player(self):
 		current_song=self.client.currentsong()
 		if not current_song == {}:
 			if not current_song['file'] == self.current_file:
@@ -334,42 +347,33 @@ class MpdEventEmitter(GObject.Object):
 			self.emit("playing_file_changed")
 			self.current_file=None
 
-	@GObject.Signal
-	def mixer(self):
+	def do_mixer(self):
 		pass
 
-	@GObject.Signal
-	def output(self):
+	def do_output(self):
 		pass
 
-	@GObject.Signal
-	def options(self):
+	def do_options(self):
 		pass
 
-	@GObject.Signal
-	def sticker(self):
+	def do_sticker(self):
 		pass
 
-	@GObject.Signal
-	def subscription(self):
+	def do_subscription(self):
 		pass
 
-	@GObject.Signal
-	def message(self):
+	def do_message(self):
 		pass
 
-	@GObject.Signal
-	def disconnected(self):
+	#custom signals
+	def do_disconnected(self):
 		self.connected=False
 		self.current_file=None
 
-	@GObject.Signal
-	def reconnected(self):
+	def do_reconnected(self):
 		self.connected=True
 
-	#custom signals
-	@GObject.Signal
-	def playing_file_changed(self):
+	def do_playing_file_changed(self):
 		pass
 
 class MPRISInterface(dbus.service.Object): #TODO
@@ -2552,7 +2556,7 @@ class LyricsWindow(Gtk.Window):
 		self.label.set_xalign(0)
 
 		#connect
-		self.emitter.connect("playing_file_changed", self.update)
+		self.player_changed=self.emitter.connect("playing_file_changed", self.update)
 		self.connect("destroy", self.remove_handlers)
 
 		#packing
@@ -2566,16 +2570,16 @@ class LyricsWindow(Gtk.Window):
 	def remove_handlers(self, *args):
 		self.emitter.disconnect(self.player_changed)
 
-	def display_lyrics(self):
+	def display_lyrics(self, current_song):
 		GLib.idle_add(self.label.set_text, _("searching..."))
 		try:
-			text=self.getLyrics(self.current_song["artist"], self.current_song["title"])
+			text=self.getLyrics(current_song["artist"], current_song["title"])
 		except:
 			text=_("not found")
 		GLib.idle_add(self.label.set_text, text)
 
 	def update(self, *args):
-		update_thread=threading.Thread(target=self.display_lyrics, daemon=True)
+		update_thread=threading.Thread(target=self.display_lyrics, kwargs={"current_song": self.client.currentsong()}, daemon=True)
 		update_thread.start()
 
 	def getLyrics(self, singer, song): #partially copied from PyLyrics 1.1.0
