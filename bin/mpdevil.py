@@ -283,20 +283,20 @@ class Client(MPDClient):
 
 class MpdEventEmitter(GObject.Object):
 	__gsignals__ = {
-		'database': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'update': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'stored_playlist': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'playlist': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'player': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'mixer': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'output': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'options': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'sticker': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'subscription': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'message': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'disconnected': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'reconnected': (GObject.SIGNAL_RUN_FIRST, None, ()),
-		'playing_file_changed': (GObject.SIGNAL_RUN_FIRST, None, ())
+		'database': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'update': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'stored_playlist': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'playlist': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'player': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'mixer': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'output': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'options': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'sticker': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'subscription': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'message': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'disconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'reconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'playing_file_changed': (GObject.SignalFlags.RUN_FIRST, None, ())
 	}
 
 	def __init__(self, settings):
