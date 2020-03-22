@@ -1805,7 +1805,7 @@ class GeneralSettings(Gtk.Grid):
 		#widgets
 		track_cover_label=Gtk.Label(label=_("Main cover size:"))
 		track_cover_label.set_xalign(1)
-		album_cover_label=Gtk.Label(label=_("Album-view cover size:"))
+		album_cover_label=Gtk.Label(label=_("Album view cover size:"))
 		album_cover_label.set_xalign(1)
 
 		track_cover_size=IntEntry(self.settings.get_int("track-cover"), 100, 1200, 10)
@@ -1845,12 +1845,16 @@ class GeneralSettings(Gtk.Grid):
 		self.treeview.append_column(column_text)
 
 		#fill store
-		settings_list=[(_("Use alternative layout"), "alt-layout"), (_("Show stop button"), "show-stop"), \
-				(_("Show genre filter"), "show-genre-filter"), (_("Show initials in artist view"), "show-initials"), \
+		settings_list=[(_("Use alternative layout"), "alt-layout"), \
+				(_("Show stop button"), "show-stop"), \
+				(_("Show genre filter"), "show-genre-filter"), \
+				(_("Show initials in artist view"), "show-initials"), \
 				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
-				(_("Sort albums by year"), "sort-albums-by-year"), (_("Show all artists"), "show-all-artists"), \
-				(_("Send notification on title change"), "send-notify"), (_("Stop playback on quit"), "stop-on-quit"), \
-				(_("Play selected album after current title"), "add-album")]
+				(_("Sort albums by year"), "sort-albums-by-year"), \
+				(_("Use 'Artist' instead of 'Album Artist'"), "show-all-artists"), \
+				(_("Send notification on title change"), "send-notify"), \
+				(_("Stop playback on quit"), "stop-on-quit"), \
+				(_("Don't interrupt current title on album select"), "add-album")]
 
 		for data in settings_list:
 			self.store.append([self.settings.get_boolean(data[1]), data[0], data[1]])
@@ -1890,7 +1894,7 @@ class PlaylistSettings(Gtk.Box):
 		self.settings = settings
 
 		#label
-		label=Gtk.Label(label=_("Drag & Drop to rearange"))
+		label=Gtk.Label(label=_("Drag & Drop to rearrange"))
 		label.set_line_wrap(True)
 
 		#Store
@@ -2517,7 +2521,7 @@ class SearchWindow(Gtk.Window):
 				dura=0.0
 			duration=str(datetime.timedelta(seconds=int(dura)))
 			self.store.append([track, title, artist, album, duration, song["file"].replace("&", "")] )
-		self.label.set_text(_("Hits: %i") % (len(self.store)))
+		self.label.set_text(_("hits: %i") % (len(self.store)))
 
 class LyricsWindow(Gtk.Window):
 	def __init__(self, client, settings, emitter):
@@ -2638,10 +2642,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.progress=SeekBar(self.client)
 		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-home-symbolic", self.icon_size))
 		self.go_home_button.set_can_focus(False)
-		self.go_home_button.set_tooltip_text(_("Return to album of current title"))
+		self.go_home_button.set_tooltip_text(_("Back to current album"))
 		self.search_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
 		self.search_button.set_can_focus(False)
-		self.search_button.set_tooltip_text(_("Title search"))
+		self.search_button.set_tooltip_text(_("Search"))
 		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
 		self.lyrics_button.set_can_focus(False)
 		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
@@ -2660,7 +2664,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu_button.set_can_focus(False)
 		menu_popover = Gtk.Popover.new_from_model(menu_button, menu)
 		menu_button.set_popover(menu_popover)
-		menu_button.set_tooltip_text(_("Main menu"))
+		menu_button.set_tooltip_text(_("Menu"))
 
 		#connect
 		self.go_home_button.connect("clicked", self.browser.go_home)
