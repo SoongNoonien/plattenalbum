@@ -77,6 +77,20 @@ else
     AC_MSG_ERROR(python module requests not found)
 fi
 
+dnl Check for dbus
+AC_MSG_CHECKING(for dbus installed)
+prog="
+import dbus
+import dbus.service
+from dbus.mainloop.glib import DBusGMainLoop
+"
+if $PYTHON -c "$prog" 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_RESULT(not found)
+    AC_MSG_ERROR(python module dbus not found)
+fi
+
 AC_CONFIG_FILES([Makefile
         po/Makefile.in
         bin/Makefile
