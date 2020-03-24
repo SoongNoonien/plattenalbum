@@ -1352,9 +1352,8 @@ class PlaylistView(Gtk.Box):
 		self.playlist_info.set_ellipsize(Pango.EllipsizeMode.END)
 
 		#status bar
-		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-		status_bar.set_margin_start(4)
-		status_bar.set_margin_end(4)
+		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+		status_bar.set_property("border-width", 6)
 		status_bar.pack_start(self.playlist_info, True, True, 0)
 		status_bar.pack_end(audio, False, False, 0)
 
@@ -1374,6 +1373,7 @@ class PlaylistView(Gtk.Box):
 
 		#packing
 		self.pack_start(scroll, True, True, 0)
+		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.pack_end(status_bar, False, False, 0)
 
 	def save_settings(self): #only saves the column sizes
@@ -1549,13 +1549,11 @@ class Browser(Gtk.Box):
 
 		#widgets
 		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
-		self.genre_select.set_margin_start(2)
-		self.genre_select.set_margin_end(2)
-		self.genre_select.set_margin_top(2)
+		self.genre_select.set_property("border-width", 6)
 		self.artist_view=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
 		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
 		self.main_cover=MainCover(self.client, self.settings, self.emitter, self.window)
-		self.main_cover.set_property("border-width", 5)
+		self.main_cover.set_property("border-width", 6)
 		cover_frame=Gtk.Frame()
 		cover_frame.add(self.main_cover)
 		self.playlist_view=PlaylistView(self.client, self.settings, self.emitter)
@@ -1566,11 +1564,12 @@ class Browser(Gtk.Box):
 		self.settings.connect("changed::alt-layout", self.on_layout_settings_changed)
 
 		#packing
-		self.box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+		self.box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		if self.settings.get_boolean("show-genre-filter"):
 			self.box1.pack_start(self.genre_select, False, False, 0)
+		self.box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.box1.pack_start(self.artist_view, True, True, 0)
-		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.box2.pack_start(cover_frame, False, False, 0)
 		self.box2.pack_start(self.playlist_view, True, True, 0)
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
@@ -2483,15 +2482,13 @@ class SearchWindow(Gtk.Window):
 
 		#search entry
 		self.search_entry=Gtk.SearchEntry()
-		self.search_entry.set_margin_start(2)
-		self.search_entry.set_margin_end(2)
-		self.search_entry.set_margin_top(2)
+		self.search_entry.set_margin_end(6)
+		self.search_entry.set_margin_start(6)
 
 		#label
 		self.label=Gtk.Label()
 		self.label.set_xalign(1)
-		self.label.set_margin_end(4)
-		self.label.set_margin_bottom(2)
+		self.label.set_margin_end(6)
 
 		#Store
 		#(track, title, artist, album, duration, file)
@@ -2545,10 +2542,12 @@ class SearchWindow(Gtk.Window):
 
 		#packing
 		scroll.add(self.treeview)
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-		vbox.pack_start(self.search_entry, False, False, 0)
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		vbox.pack_start(self.search_entry, False, False, 6)
+		vbox.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		vbox.pack_start(scroll, True, True, 0)
-		vbox.pack_start(self.label, False, False, 0)
+		vbox.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		vbox.pack_start(self.label, False, False, 6)
 		self.add(vbox)
 
 		self.show_all()
