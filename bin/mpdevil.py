@@ -915,6 +915,11 @@ class GenreSelect(Gtk.Box):
 		self.combo.set_active(0)
 		self.combo.handler_unblock(self.combo_changed)
 
+	def clear(self, *args):
+		self.combo.handler_block(self.combo_changed)
+		self.combo.remove_all()
+		self.combo.handler_unblock(self.combo_changed)
+
 	def get_value(self):
 		if self.combo.get_active() == 0:
 			return None
@@ -1546,10 +1551,16 @@ class Browser(Gtk.Box):
 		self.emitter=emitter
 		self.settings=settings
 		self.window=window
+		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#widgets
+		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", self.icon_size))
+		self.go_home_button.set_can_focus(False)
+		self.go_home_button.set_tooltip_text(_("Back to current album"))
+		self.search_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
+		self.search_button.set_can_focus(False)
+		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
-		self.genre_select.set_property("border-width", 6)
 		self.artist_view=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
 		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
 		self.main_cover=MainCover(self.client, self.settings, self.emitter, self.window)
@@ -1559,27 +1570,41 @@ class Browser(Gtk.Box):
 		self.playlist_view=PlaylistView(self.client, self.settings, self.emitter)
 
 		#connect
+		self.go_home_button.connect("clicked", self.go_home)
+		self.search_button.connect("toggled", self.on_search_toggled)
 		self.artist_change=self.artist_view.selection.connect("changed", self.on_artist_selection_change)
-		self.settings.connect("changed::show-genre-filter", self.on_show_genre_settings_changed)
 		self.settings.connect("changed::alt-layout", self.on_layout_settings_changed)
+		self.emitter.connect("disconnected", self.on_disconnected)
+		self.emitter.connect("reconnected", self.on_reconnected)
 
 		#packing
+		hbox=Gtk.Box(spacing=6)
+		hbox.set_property("border-width", 6)
+		hbox.pack_start(self.go_home_button, False, False, 0)
+		hbox.pack_start(self.search_button, False, False, 0)
+		hbox.pack_start(self.genre_select, True, True, 0)
+
 		self.box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		if self.settings.get_boolean("show-genre-filter"):
-			self.box1.pack_start(self.genre_select, False, False, 0)
+		self.box1.pack_start(hbox, False, False, 0)
 		self.box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.box1.pack_start(self.artist_view, True, True, 0)
+
 		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.box2.pack_start(cover_frame, False, False, 0)
 		self.box2.pack_start(self.playlist_view, True, True, 0)
+
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
+
 		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned2.set_wide_handle(True)
+
 		self.paned1.pack1(self.box1, False, False)
 		self.paned1.pack2(self.album_view, True, False)
+
 		self.paned2.pack1(self.paned1, True, False)
 		self.paned2.pack2(self.box2, False, False)
+
 		self.load_settings()
 		self.pack_start(self.paned2, True, True, 0)
 
@@ -1605,6 +1630,7 @@ class Browser(Gtk.Box):
 	def go_home(self, *args):
 		try: #since this can still be running when the connection is lost, various exceptions can occur
 			song=self.client.currentsong()
+			self.genre_select.deactivate() #deactivate genre filter to show all artists
 			row_num=len(self.artist_view.store)
 			for i in range(0, row_num):
 				path=Gtk.TreePath(i)
@@ -1621,18 +1647,31 @@ class Browser(Gtk.Box):
 		except:
 			pass
 
+	def on_search_toggled(self, widget):
+		if widget.get_active():
+			if self.client.connected():
+				def set_active(*args):
+					self.search_button.set_active(False)
+				self.search_win = SearchWindow(self.client)
+				self.search_win.connect("destroy", set_active)
+		else:
+			self.search_win.destroy()
+
+	def on_reconnected(self, *args):
+		self.go_home_button.set_sensitive(True)
+		self.search_button.set_sensitive(True)
+		self.genre_select.set_sensitive(True)
+
+	def on_disconnected(self, *args):
+		self.go_home_button.set_sensitive(False)
+		self.search_button.set_active(False)
+		self.search_button.set_sensitive(False)
+		self.genre_select.clear()
+		self.genre_select.set_sensitive(False)
+
 	def on_artist_selection_change(self, *args):
 		artists=self.artist_view.get_selected_artists()
 		self.album_view.refresh(artists)
-
-	def on_show_genre_settings_changed(self, *args):
-		if self.settings.get_boolean("show-genre-filter"):
-			self.box1.pack_start(self.genre_select, False, False, 0)
-			self.box1.reorder_child(self.genre_select, 0)
-			self.genre_select.show_all()
-		else:
-			self.genre_select.deactivate()
-			self.box1.remove(self.genre_select)
 
 	def on_layout_settings_changed(self, *args):
 		if self.settings.get_boolean("alt-layout"):
@@ -1803,15 +1842,18 @@ class GeneralSettings(Gtk.Box):
 
 		#widgets
 		track_cover_label=Gtk.Label(label=_("Main cover size:"))
-		track_cover_label.set_xalign(1)
+		track_cover_label.set_xalign(0)
 		track_cover_size=IntEntry(self.settings.get_int("track-cover"), 100, 1200, 10)
 
 		album_cover_label=Gtk.Label(label=_("Album view cover size:"))
-		album_cover_label.set_xalign(1)
+		album_cover_label.set_xalign(0)
 		album_cover_size=IntEntry(self.settings.get_int("album-cover"), 50, 600, 10)
 
-		icon_size_label=Gtk.Label(label=_("Button icon size (restart required):"))
-		icon_size_label.set_xalign(1)
+		icon_size_label1=Gtk.Label(label=_("Button icon size:"))
+		icon_size_label1.set_xalign(0)
+		icon_size_label2=Gtk.Label(label=_("(restart required)"))
+		icon_size_label2.set_xalign(0)
+		icon_size_label2.set_sensitive(False)
 		icon_size_combo=Gtk.ComboBoxText()
 		icon_size_combo.set_entry_text_column(0)
 		sizes=[16, 24, 32, 48]
@@ -1826,10 +1868,11 @@ class GeneralSettings(Gtk.Box):
 		grid.set_margin_start(12)
 		grid.add(track_cover_label)
 		grid.attach_next_to(album_cover_label, track_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
-		grid.attach_next_to(icon_size_label, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
+		grid.attach_next_to(icon_size_label1, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
 		grid.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		grid.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
-		grid.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
+		grid.attach_next_to(icon_size_combo, icon_size_label1, Gtk.PositionType.RIGHT, 1, 1)
+		grid.attach_next_to(icon_size_label2, icon_size_combo, Gtk.PositionType.RIGHT, 1, 1)
 
 		#headings
 		view_heading=Gtk.Label()
@@ -1843,7 +1886,6 @@ class GeneralSettings(Gtk.Box):
 		check_buttons={}
 		settings_list=[(_("Use alternative layout"), "alt-layout"), \
 				(_("Show stop button"), "show-stop"), \
-				(_("Show genre filter"), "show-genre-filter"), \
 				(_("Show initials in artist view"), "show-initials"), \
 				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
 				(_("Sort albums by year"), "sort-albums-by-year"), \
@@ -1867,7 +1909,6 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(view_heading, True, True, 0)
 		self.pack_start(check_buttons["alt-layout"], True, True, 0)
 		self.pack_start(check_buttons["show-stop"], True, True, 0)
-		self.pack_start(check_buttons["show-genre-filter"], True, True, 0)
 		self.pack_start(check_buttons["show-initials"], True, True, 0)
 		self.pack_start(check_buttons["show-album-view-tooltips"], True, True, 0)
 		self.pack_start(grid, True, True, 0)
@@ -2707,12 +2748,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.profiles.set_tooltip_text(_("Select profile"))
 		self.control=ClientControl(self.client, self.settings, self.emitter)
 		self.progress=SeekBar(self.client)
-		self.go_home_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-home-symbolic", self.icon_size))
-		self.go_home_button.set_can_focus(False)
-		self.go_home_button.set_tooltip_text(_("Back to current album"))
-		self.search_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
-		self.search_button.set_can_focus(False)
-		self.search_button.set_tooltip_text(_("Search"))
 		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
 		self.lyrics_button.set_can_focus(False)
 		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
@@ -2735,8 +2770,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", self.icon_size))
 
 		#connect
-		self.go_home_button.connect("clicked", self.browser.go_home)
-		self.search_button.connect("toggled", self.on_search_toggled)
 		self.lyrics_button.connect("toggled", self.on_lyrics_toggled)
 		self.settings.connect("changed::profiles", self.on_settings_changed)
 		self.emitter.connect("playing_file_changed", self.on_file_changed)
@@ -2755,8 +2788,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.vbox.pack_start(self.action_bar, False, False, 0)
 		self.action_bar.pack_start(self.control)
 		self.action_bar.pack_start(self.progress)
-		self.action_bar.pack_start(self.go_home_button)
-		self.action_bar.pack_start(self.search_button)
 		self.action_bar.pack_start(self.lyrics_button)
 		self.action_bar.pack_start(self.profiles)
 		self.action_bar.pack_start(self.play_opts)
@@ -2786,8 +2817,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.progress.set_sensitive(True)
 		self.control.set_sensitive(True)
 		self.play_opts.set_sensitive(True)
-		self.go_home_button.set_sensitive(True)
-		self.search_button.set_sensitive(True)
 		self.lyrics_button.set_sensitive(True)
 		self.emitter.emit("playlist")
 		self.emitter.emit("player")
@@ -2799,26 +2828,13 @@ class MainWindow(Gtk.ApplicationWindow):
 	def on_disconnected(self, *args):
 		self.dbus_service.release_name()
 		self.lyrics_button.set_active(False)
-		self.search_button.set_active(False)
 		self.set_title("mpdevil (not connected)")
 		self.songid_playing=None
 		self.browser.clear()
 		self.progress.set_sensitive(False)
 		self.control.set_sensitive(False)
 		self.play_opts.set_sensitive(False)
-		self.go_home_button.set_sensitive(False)
-		self.search_button.set_sensitive(False)
 		self.lyrics_button.set_sensitive(False)
-
-	def on_search_toggled(self, widget):
-		if widget.get_active():
-			if self.client.connected():
-				def set_active(*args):
-					self.search_button.set_active(False)
-				self.search_win = SearchWindow(self.client)
-				self.search_win.connect("destroy", set_active)
-		else:
-			self.search_win.destroy()
 
 	def on_lyrics_toggled(self, widget):
 		if widget.get_active():
@@ -2840,7 +2856,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		elif event.keyval == 269025046 or event.keyval == 45 or event.keyval == 65453: #AudioPrev
 			self.control.prev_button.emit("clicked")
 		elif event.keyval == 65307: #esc
-			self.go_home_button.emit("clicked")
+			self.browser.go_home()
 		elif event.keyval == 65450: #*
 			self.progress.seek_forward()
 		elif event.keyval == 65455: #/

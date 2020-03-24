@@ -41,11 +41,6 @@
       <summary>Show stop button</summary>
       <description></description>
     </key>
-    <key type="b" name="show-genre-filter">
-      <default>false</default>
-      <summary>Show genre filter</summary>
-      <description></description>
-    </key>
     <key type="b" name="show-initials">
       <default>true</default>
       <summary>Show initial letters in artist-view</summary>
