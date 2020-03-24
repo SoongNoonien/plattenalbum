@@ -2760,16 +2760,13 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.action_bar.pack_start(self.search_button)
 		self.action_bar.pack_start(self.lyrics_button)
 		self.action_bar.pack_start(self.profiles)
-		if len(self.settings.get_value("profiles")) > 1:
-			self.profiles.set_property("visible", True)
-		else:
-			self.profiles.set_property("visible", False)
 		self.action_bar.pack_start(self.play_opts)
 		self.action_bar.pack_end(menu_button)
 
 		self.add(self.vbox)
 
 		self.show_all()
+		self.on_settings_changed() #hide profiles button
 
 	def on_file_changed(self, *args):
 		try:
