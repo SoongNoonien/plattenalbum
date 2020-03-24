@@ -1646,9 +1646,9 @@ class Browser(Gtk.Box):
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
 		Gtk.Grid.__init__(self)
-		self.set_row_spacing(4)
-		self.set_column_spacing(4)
-		self.set_property("border-width", 4)
+		self.set_row_spacing(6)
+		self.set_column_spacing(12)
+		self.set_property("border-width", 18)
 
 		#adding vars
 		self.settings = settings
@@ -1659,10 +1659,17 @@ class ProfileSettings(Gtk.Grid):
 
 		add_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_ADD))
 		delete_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_DELETE))
+		add_delete_buttons=Gtk.ButtonBox()
+		add_delete_buttons.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
+		add_delete_buttons.pack_start(add_button, True, True, 0)
+		add_delete_buttons.pack_start(delete_button, True, True, 0)
 
 		self.profile_entry=Gtk.Entry()
 		self.host_entry=Gtk.Entry()
 		self.port_entry=IntEntry(0, 0, 65535, 1)
+		address_entry=Gtk.Box(spacing=6)
+		address_entry.pack_start(self.host_entry, True, True, 0)
+		address_entry.pack_start(self.port_entry, False, False, 0)
 		self.password_entry=Gtk.Entry()
 		self.password_entry.set_visibility(False)
 		self.path_select_button=Gtk.Button(label=_("Select"), image=Gtk.Image(stock=Gtk.STOCK_OPEN))
@@ -1673,8 +1680,6 @@ class ProfileSettings(Gtk.Grid):
 		profile_label.set_xalign(1)
 		host_label=Gtk.Label(label=_("Host:"))
 		host_label.set_xalign(1)
-		port_label=Gtk.Label(label=_("Port:"))
-		port_label.set_xalign(1)
 		password_label=Gtk.Label(label=_("Password:"))
 		password_label.set_xalign(1)
 		path_label=Gtk.Label(label=_("Music lib:"))
@@ -1697,17 +1702,14 @@ class ProfileSettings(Gtk.Grid):
 		self.add(profiles_label)
 		self.attach_next_to(profile_label, profiles_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(host_label, profile_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(port_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(password_label, port_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(self.profiles_combo, profiles_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(add_button, self.profiles_combo, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(delete_button, add_button, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(self.profile_entry, profile_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(self.host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(self.port_entry, port_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(self.password_entry, password_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(self.path_select_button, path_label, Gtk.PositionType.RIGHT, 1, 1)
+		self.attach_next_to(self.profiles_combo, profiles_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(add_delete_buttons, self.profiles_combo, Gtk.PositionType.RIGHT, 1, 1)
+		self.attach_next_to(self.profile_entry, profile_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(address_entry, host_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(self.password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(self.path_select_button, path_label, Gtk.PositionType.RIGHT, 2, 1)
 
 	def profiles_combo_reload(self, *args):
 		self.profiles_combo.handler_block(self.profiles_combo_changed)
@@ -1792,12 +1794,10 @@ class ProfileSettings(Gtk.Grid):
 		self.port_entry.handler_unblock(self.port_entry_changed)
 		self.password_entry.handler_unblock(self.password_entry_changed)
 
-class GeneralSettings(Gtk.Grid):
+class GeneralSettings(Gtk.Box):
 	def __init__(self, settings):
-		Gtk.Grid.__init__(self)
-		self.set_row_spacing(4)
-		self.set_column_spacing(4)
-		self.set_property("border-width", 4)
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		self.set_property("border-width", 18)
 
 		#adding vars
 		self.settings = settings
@@ -1805,10 +1805,10 @@ class GeneralSettings(Gtk.Grid):
 		#widgets
 		track_cover_label=Gtk.Label(label=_("Main cover size:"))
 		track_cover_label.set_xalign(1)
+		track_cover_size=IntEntry(self.settings.get_int("track-cover"), 100, 1200, 10)
+
 		album_cover_label=Gtk.Label(label=_("Album view cover size:"))
 		album_cover_label.set_xalign(1)
-
-		track_cover_size=IntEntry(self.settings.get_int("track-cover"), 100, 1200, 10)
 		album_cover_size=IntEntry(self.settings.get_int("album-cover"), 50, 600, 10)
 
 		icon_size_label=Gtk.Label(label=_("Button icon size (restart required):"))
@@ -1820,31 +1820,28 @@ class GeneralSettings(Gtk.Grid):
 			icon_size_combo.append_text(str(i))
 		icon_size_combo.set_active(sizes.index(self.settings.get_int("icon-size")))
 
-		#Store
-		#(toggle, display-text, key)
-		self.store = Gtk.ListStore(bool, str, str)
+		#grid
+		grid=Gtk.Grid()
+		grid.set_row_spacing(6)
+		grid.set_column_spacing(12)
+		grid.set_margin_start(12)
+		grid.add(track_cover_label)
+		grid.attach_next_to(album_cover_label, track_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
+		grid.attach_next_to(icon_size_label, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
+		grid.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
+		grid.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
+		grid.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
 
-		#TreeView
-		self.treeview = Gtk.TreeView(model=self.store)
-		self.treeview.set_search_column(-1)
-		self.treeview.set_property("activate-on-single-click", True)
-		self.treeview.set_headers_visible(False)
-
-		#selection
-		self.selection = self.treeview.get_selection()
-		self.selection.set_mode(Gtk.SelectionMode.NONE)
-
-		#Column
-		renderer_text = Gtk.CellRendererText()
-		renderer_toggle = Gtk.CellRendererToggle()
-
-		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
-		self.treeview.append_column(column_toggle)
-
-		column_text=Gtk.TreeViewColumn("", renderer_text, text=1)
-		self.treeview.append_column(column_text)
+		#headings
+		view_heading=Gtk.Label()
+		view_heading.set_markup(_("<b>View</b>"))
+		view_heading.set_xalign(0)
+		behavior_heading=Gtk.Label()
+		behavior_heading.set_markup(_("<b>Behavior</b>"))
+		behavior_heading.set_xalign(0)
 
 		#fill store
+		check_buttons={}
 		settings_list=[(_("Use alternative layout"), "alt-layout"), \
 				(_("Show stop button"), "show-stop"), \
 				(_("Show genre filter"), "show-genre-filter"), \
@@ -1857,22 +1854,31 @@ class GeneralSettings(Gtk.Grid):
 				(_("Don't interrupt current title on album select"), "add-album")]
 
 		for data in settings_list:
-			self.store.append([self.settings.get_boolean(data[1]), data[0], data[1]])
+			check_buttons[data[1]]=Gtk.CheckButton(label=data[0])
+			check_buttons[data[1]].set_active(self.settings.get_boolean(data[1]))
+			check_buttons[data[1]].connect("toggled", self.on_toggled, data[1])
+			check_buttons[data[1]].set_margin_start(12)
 
 		#connect
 		track_cover_size.connect("value-changed", self.on_int_changed, "track-cover")
 		album_cover_size.connect("value-changed", self.on_int_changed, "album-cover")
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
-		self.treeview.connect("row-activated", self.on_row_activated)
 
 		#packing
-		self.add(track_cover_label)
-		self.attach_next_to(album_cover_label, track_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(icon_size_label, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(icon_size_combo, icon_size_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(self.treeview, icon_size_label, Gtk.PositionType.BOTTOM, 2, 2)
+		self.pack_start(view_heading, True, True, 0)
+		self.pack_start(check_buttons["alt-layout"], True, True, 0)
+		self.pack_start(check_buttons["show-stop"], True, True, 0)
+		self.pack_start(check_buttons["show-genre-filter"], True, True, 0)
+		self.pack_start(check_buttons["show-initials"], True, True, 0)
+		self.pack_start(check_buttons["show-album-view-tooltips"], True, True, 0)
+		self.pack_start(grid, True, True, 0)
+		self.pack_start(behavior_heading, True, True, 0)
+		self.pack_start(check_buttons["sort-albums-by-year"], True, True, 0)
+		self.pack_start(check_buttons["show-all-artists"], True, True, 0)
+		self.pack_start(check_buttons["send-notify"], True, True, 0)
+		self.pack_start(check_buttons["stop-on-quit"], True, True, 0)
+		self.pack_start(check_buttons["add-album"], True, True, 0)
+
 
 	def on_int_changed(self, widget, key):
 		self.settings.set_int(key, widget.get_int())
@@ -1881,21 +1887,22 @@ class GeneralSettings(Gtk.Grid):
 		active_size=int(box.get_active_text())
 		self.settings.set_int("icon-size", active_size)
 
-	def on_row_activated(self, widget, path, view_column):
-		self.store[path][0] = not self.store[path][0]
-		self.settings.set_boolean(self.store[path][2], self.store[path][0])
+	def on_toggled(self, widget, key):
+		self.settings.set_boolean(key, widget.get_active())
+
 
 class PlaylistSettings(Gtk.Box):
 	def __init__(self, settings):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=4)
-		self.set_property("border-width", 4)
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		self.set_property("border-width", 18)
 
 		#adding vars
 		self.settings = settings
 
 		#label
-		label=Gtk.Label(label=_("Drag & Drop to rearrange"))
+		label=Gtk.Label(label=_("Choose the order of information to appear in the playlist:"))
 		label.set_line_wrap(True)
+		label.set_xalign(0)
 
 		#Store
 		#(toggle, header, index)
@@ -1905,6 +1912,10 @@ class PlaylistSettings(Gtk.Box):
 		self.treeview = Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
 		self.treeview.set_reorderable(True)
+		self.treeview.set_headers_visible(False)
+
+		#selection
+		self.selection = self.treeview.get_selection()
 
 		#Column
 		renderer_text = Gtk.CellRendererText()
@@ -1913,7 +1924,7 @@ class PlaylistSettings(Gtk.Box):
 		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
 		self.treeview.append_column(column_toggle)
 
-		column_text=Gtk.TreeViewColumn(_("Column"), renderer_text, text=1)
+		column_text=Gtk.TreeViewColumn("", renderer_text, text=1)
 		self.treeview.append_column(column_text)
 
 		#fill store
@@ -1923,27 +1934,82 @@ class PlaylistSettings(Gtk.Box):
 		for index in self.settings.get_value("column-permutation"):
 			self.store.append([visibilities[index], self.headers[index], index])
 
-		#connect
-		self.store.connect("row-deleted", self.on_row_inserted)
-		renderer_toggle.connect("toggled", self.on_cell_toggled)
-
 		#scroll
 		scroll=Gtk.ScrolledWindow()
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scroll.add(self.treeview)
+		frame=Gtk.Frame()
+		frame.add(scroll)
 
-		self.pack_start(scroll, True, True, 0)
+		#Toolbar
+		toolbar=Gtk.Toolbar()
+		style_context=toolbar.get_style_context()
+		style_context.add_class("inline-toolbar")
+		self.up_button=Gtk.ToolButton.new(Gtk.Image.new_from_icon_name("go-up-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+		self.up_button.set_sensitive(False)
+		self.down_button=Gtk.ToolButton.new(Gtk.Image.new_from_icon_name("go-down-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+		self.down_button.set_sensitive(False)
+		toolbar.insert(self.up_button, 0)
+		toolbar.insert(self.down_button, 1)
+
+		#column chooser
+		column_chooser=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		column_chooser.pack_start(frame, True, True, 0)
+		column_chooser.pack_start(toolbar, False, False, 0)
+
+		#connect
+		self.store.connect("row-deleted", self.save_permutation)
+		renderer_toggle.connect("toggled", self.on_cell_toggled)
+		self.up_button.connect("clicked", self.on_up_button_clicked)
+		self.down_button.connect("clicked", self.on_down_button_clicked)
+		self.selection.connect("changed", self.set_button_sensitivity)
+
+		#packing
 		self.pack_start(label, False, False, 0)
+		self.pack_start(column_chooser, True, True, 0)
 
 	def on_cell_toggled(self, widget, path):
 		self.store[path][0] = not self.store[path][0]
 		self.settings.array_modify('ab', "column-visibilities", self.store[path][2], self.store[path][0])
 
-	def on_row_inserted(self, *args):
+	def save_permutation(self, *args):
 		permutation=[]
 		for row in self.store:
 			permutation.append(row[2])
 		self.settings.set_value("column-permutation", GLib.Variant("ai", permutation))
+
+	def on_up_button_clicked(self, *args):
+		treeiter=self.selection.get_selected()[1]
+		path=self.store.get_path(treeiter)
+		path.prev()
+		prev=self.store.get_iter(path)
+		self.store.move_before(treeiter, prev)
+		self.set_button_sensitivity()
+		self.save_permutation()
+
+	def on_down_button_clicked(self, *args):
+		treeiter=self.selection.get_selected()[1]
+		path=self.store.get_path(treeiter)
+		next=self.store.iter_next(treeiter)
+		self.store.move_after(treeiter, next)
+		self.set_button_sensitivity()
+		self.save_permutation()
+
+	def set_button_sensitivity(self, *args):
+		treeiter=self.selection.get_selected()[1]
+		path=self.store.get_path(treeiter)
+		if treeiter == None:
+			self.up_button.set_sensitive(False)
+			self.down_button.set_sensitive(False)
+		elif self.store.iter_next(treeiter) == None:
+			self.up_button.set_sensitive(True)
+			self.down_button.set_sensitive(False)
+		elif not path.prev():
+			self.up_button.set_sensitive(False)
+			self.down_button.set_sensitive(True)
+		else:
+			self.up_button.set_sensitive(True)
+			self.down_button.set_sensitive(True)
 
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, settings):
@@ -1971,7 +2037,8 @@ class SettingsDialog(Gtk.Dialog):
 
 class ClientControl(Gtk.ButtonBox):
 	def __init__(self, client, settings, emitter):
-		Gtk.ButtonBox.__init__(self, spacing=4)
+		Gtk.ButtonBox.__init__(self, spacing=6)
+		self.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
 
 		#adding vars
 		self.client=client
@@ -2057,6 +2124,7 @@ class ClientControl(Gtk.ButtonBox):
 class SeekBar(Gtk.Box):
 	def __init__(self, client):
 		Gtk.Box.__init__(self)
+		self.set_hexpand(True)
 
 		#adding vars
 		self.client=client
@@ -2144,7 +2212,7 @@ class SeekBar(Gtk.Box):
 
 class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings, emitter):
-		Gtk.Box.__init__(self)
+		Gtk.Box.__init__(self, spacing=6)
 
 		#adding vars
 		self.client=client
@@ -2665,6 +2733,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu_popover = Gtk.Popover.new_from_model(menu_button, menu)
 		menu_button.set_popover(menu_popover)
 		menu_button.set_tooltip_text(_("Menu"))
+		menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", self.icon_size))
 
 		#connect
 		self.go_home_button.connect("clicked", self.browser.go_home)
@@ -2681,22 +2750,22 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.connect("key-press-event", self.on_key_press_event)
 
 		#packing
-		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-		self.hbox=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-		self.hbox.set_margin_start(2)
-		self.hbox.set_margin_end(2)
-		self.hbox.set_margin_bottom(2)
+		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		self.action_bar=Gtk.ActionBar()
 		self.vbox.pack_start(self.browser, True, True, 0)
-		self.vbox.pack_start(self.hbox, False, False, 0)
-		self.hbox.pack_start(self.control, False, False, 0)
-		self.hbox.pack_start(self.progress, True, True, 10)
-		self.hbox.pack_start(self.go_home_button, False, False, 0)
-		self.hbox.pack_start(self.search_button, False, False, 0)
-		self.hbox.pack_start(self.lyrics_button, False, False, 0)
+		self.vbox.pack_start(self.action_bar, False, False, 0)
+		self.action_bar.pack_start(self.control)
+		self.action_bar.pack_start(self.progress)
+		self.action_bar.pack_start(self.go_home_button)
+		self.action_bar.pack_start(self.search_button)
+		self.action_bar.pack_start(self.lyrics_button)
+		self.action_bar.pack_start(self.profiles)
 		if len(self.settings.get_value("profiles")) > 1:
-			self.hbox.pack_start(self.profiles, False, False, 0)
-		self.hbox.pack_start(self.play_opts, False, False, 0)
-		self.hbox.pack_end(menu_button, False, False, 0)
+			self.profiles.set_property("visible", True)
+		else:
+			self.profiles.set_property("visible", False)
+		self.action_bar.pack_start(self.play_opts)
+		self.action_bar.pack_end(menu_button)
 
 		self.add(self.vbox)
 
@@ -2803,11 +2872,10 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.client.update()
 
 	def on_settings_changed(self, *args):
-		self.hbox.remove(self.profiles)
 		if len(self.settings.get_value("profiles")) > 1:
-			self.hbox.pack_start(self.profiles, False, False, 0)
-			self.hbox.reorder_child(self.profiles, 5)
-			self.profiles.show()
+			self.profiles.set_property("visible", True)
+		else:
+			self.profiles.set_property("visible", False)
 
 class mpdevil(Gtk.Application):
 	def __init__(self, *args, **kwargs):
