@@ -2162,12 +2162,13 @@ class ClientControl(Gtk.ButtonBox):
 			self.remove(self.stop_button)
 
 class SeekBar(Gtk.Box):
-	def __init__(self, client):
+	def __init__(self, client, emitter):
 		Gtk.Box.__init__(self)
 		self.set_hexpand(True)
 
 		#adding vars
 		self.client=client
+		self.emitter=emitter
 		self.seek_time="10" #seek increment in seconds
 
 		#labels
@@ -2190,9 +2191,12 @@ class SeekBar(Gtk.Box):
 		self.rest_event_box.connect("button-press-event", self.on_rest_button_press_event)
 		self.scale.connect("change-value", self.seek)
 		self.scale.connect("scroll-event", self.dummy) #disable mouse wheel which caused some noise
+		self.emitter.connect("disconnected", self.on_disconnected)
+		self.emitter.connect("reconnected", self.on_reconnected)
+		self.emitter.connect("player", self.on_player)
 
 		#timeouts
-		GLib.timeout_add(100, self.refresh)
+		self.timeout_id=None
 
 		#packing
 		self.elapsed_event_box.add(self.elapsed)
@@ -2204,10 +2208,15 @@ class SeekBar(Gtk.Box):
 	def dummy(self, *args):
 		return True
 
-	def seek(self, range, scroll, value):
+	def seek(self, range, scroll, value): #value is inaccurate
 		status=self.client.status()
 		duration=float(status["duration"])
 		factor=(value/100)
+		if factor > 1: #fix error on seek
+			factor=1
+			#detach mouse from slider
+			self.scale.set_visible(False)
+			self.scale.set_visible(True)
 		pos=(duration*factor)
 		self.client.seekcur(pos)
 
@@ -2216,6 +2225,21 @@ class SeekBar(Gtk.Box):
 
 	def seek_backward(self):
 		self.client.seekcur("-"+self.seek_time)
+
+	def enable(self):
+		self.scale.set_sensitive(True)
+		self.scale.set_range(0, 100)
+		self.elapsed_event_box.set_sensitive(True)
+		self.rest_event_box.set_sensitive(True)
+
+	def disable(self):
+		self.scale.set_sensitive(False)
+		self.scale.set_value(0.0)
+		self.scale.set_range(0, 0)
+		self.elapsed_event_box.set_sensitive(False)
+		self.rest_event_box.set_sensitive(False)
+		self.elapsed.set_text("0:00:00")
+		self.rest.set_text("-0:00:00")
 
 	def on_elapsed_button_press_event(self, widget, event):
 		if event.button == 1:
@@ -2229,25 +2253,46 @@ class SeekBar(Gtk.Box):
 		elif event.button == 3:
 			self.seek_backward()
 
+	def on_reconnected(self, *args):
+		self.timeout_id=GLib.timeout_add(100, self.refresh)
+		self.enable()
+
+	def on_disconnected(self, *args):
+		if not self.timeout_id == None:
+			GLib.source_remove(self.timeout_id)
+			self.timeout_id=None
+		self.disable()
+
+	def on_player(self, *args):
+		status=self.client.status()
+		if status['state'] == "stop":
+			if not self.timeout_id == None:
+				GLib.source_remove(self.timeout_id)
+				self.timeout_id=None
+			self.disable()
+		elif status['state'] == "pause":
+			if not self.timeout_id == None:
+				GLib.source_remove(self.timeout_id)
+				self.timeout_id=None
+			self.refresh()
+		else:
+			if self.timeout_id == None:
+				self.timeout_id=GLib.timeout_add(100, self.refresh)
+			self.enable()
+
 	def refresh(self):
 		try:
 			status=self.client.status()
 			duration=float(status["duration"])
 			elapsed=float(status["elapsed"])
+			if elapsed > duration:
+				elapsed=duration
 			fraction=(elapsed/duration)*100
 			self.scale.set_value(fraction)
 			self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))))
 			self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))))
-			self.scale.set_sensitive(True)
-			self.elapsed_event_box.set_sensitive(True)
-			self.rest_event_box.set_sensitive(True)
 		except:
-			self.scale.set_value(0.0)
-			self.elapsed.set_text("0:00:00")
-			self.rest.set_text("-0:00:00")
-			self.scale.set_sensitive(False)
-			self.elapsed_event_box.set_sensitive(False)
-			self.rest_event_box.set_sensitive(False)
+			self.disable()
 		return True
 
 class PlaybackOptions(Gtk.Box):
@@ -2747,7 +2792,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.profiles=ProfileSelect(self.client, self.settings, self.emitter)
 		self.profiles.set_tooltip_text(_("Select profile"))
 		self.control=ClientControl(self.client, self.settings, self.emitter)
-		self.progress=SeekBar(self.client)
+		self.progress=SeekBar(self.client, self.emitter)
 		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
 		self.lyrics_button.set_can_focus(False)
 		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
