@@ -1071,7 +1071,8 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 		self.connect("motion-notify-event", self.on_move_event)
 
 	@GObject.Signal
-	def stopped(self):
+	def done(self):
+#		print("done")
 		pass
 
 	def tooltip_settings(self, *args):
@@ -1086,55 +1087,50 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 		else:
 			self.store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
 
-	def gen_tooltip(self, album, artist, year):
-		songs=self.client.find("album", album, "date", year, self.settings.get_artist_type(), artist)
-		length=float(0)
-		for song in songs:
-			try:
-				dura=float(song["duration"])
-			except:
-				dura=0.0
-			length=length+dura
-		length_human_readable=str(datetime.timedelta(seconds=int(length)))
-		tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": length_human_readable})
-		return tooltip
+	def add(self, row, cover, size):
+		row[0]=cover.get_pixbuf(size)
+		self.store.append(row)
+		return False
+
+	def display_albums(self, albums, music_lib, size):
+		for album in albums:
+			cover=Cover(lib_path=music_lib, song_file=album["songs"][0]["file"])
+			#tooltip
+			length=float(0)
+			for song in album["songs"]:
+				try:
+					dura=float(song["duration"])
+				except:
+					dura=0.0
+				length=length+dura
+			length_human_readable=str(datetime.timedelta(seconds=int(length)))
+			tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
+			if album["year"] == "":
+				GLib.idle_add(self.add, [None, album["album"], tooltip, album["album"], album["year"], album["artist"]], cover, size)
+			else:
+				GLib.idle_add(self.add, [None, album["album"]+" ("+album["year"]+")", tooltip, album["album"], album["year"], album["artist"]], cover, size)
+		GLib.idle_add(self.emit, "done")
+#		print("end")
 
 	def populate(self, artists):
-		self.stop_flag=False
-		size=self.settings.get_int("album-cover")
+		#prepare albmus list
+		self.store.clear()
 		albums=[]
 		genre=self.genre_select.get_value()
+		artist_type=self.settings.get_artist_type()
 		for artist in artists:
 			if genre == None:
-				album_candidates=self.client.list("album", self.settings.get_artist_type(), artist)
+				album_candidates=self.client.list("album", artist_type, artist)
 			else:
-				album_candidates=self.client.list("album", self.settings.get_artist_type(), artist, "genre", genre)
+				album_candidates=self.client.list("album", artist_type, artist, "genre", genre)
 			for album in album_candidates:
-				albums.append({"artist": artist, "album": album, "year": self.client.list("date", "album", album, self.settings.get_artist_type(), artist)[0]})
-		if self.settings.get_boolean("sort-albums-by-year"):
-			albums = sorted(albums, key=lambda k: k['year'])
-		else:
-			albums = sorted(albums, key=lambda k: k['album'])
-		for album in albums:
-			if self.client.connected() and not self.stop_flag: #self.get_visible() and self.client.connected() and 
-				songs=self.client.find("album", album["album"], "date", album["year"], self.settings.get_artist_type(), album["artist"])
-				if songs == []:
-					song_file=None
-				else:
-					song_file=songs[0]["file"]
-				cover=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
-				img=cover.get_pixbuf(size)
-				if album["year"] == "":
-					self.store.append([img, album["album"], self.gen_tooltip(album["album"], album["artist"], album["year"]), album["album"], album["year"], album["artist"]])
-				else:
-					self.store.append([img, album["album"]+" ("+album["year"]+")", self.gen_tooltip(album["album"], album["artist"], album["year"]), album["album"], album["year"], album["artist"]])
-				while Gtk.events_pending():
-					Gtk.main_iteration_do(True)
-			else:
-				self.store.clear()
-				self.emit("stopped")
-				break
-		self.stop_flag=True
+				years=self.client.list("date", "album", album, artist_type, artist)
+				for year in years:
+					songs=self.client.find("album", album, "date", year, artist_type, artist)
+					albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
+		#start thread
+		display_thread=threading.Thread(target=self.display_albums, kwargs={"albums": albums, "music_lib": self.settings.get_value("paths")[self.settings.get_int("active-profile")], "size": self.settings.get_int("album-cover")}, daemon=True)
+		display_thread.start()
 
 	def scroll_to_selected_album(self):
 		songid=self.client.status()["songid"]
@@ -1204,42 +1200,50 @@ class AlbumView(Gtk.ScrolledWindow):
 		self.genre_select=genre_select
 		self.window=window
 		self.artists=[]
+		self.done=False
+		self.pending=[]
 
 		self.iconview=AlbumIconView(self.client, self.settings, self.genre_select, self.window)
 
 		#connect
-		self.iconview.connect("stopped", self.on_iconview_stopped)
 		self.settings.connect("changed::album-cover", self.on_settings_changed)
+		self.iconview.connect("done", self.on_done)
 
 		self.add(self.iconview)
 
 	def clear(self):
 		self.artists=[]
-		if self.iconview.stop_flag:
-			self.iconview.store.clear()
-		else:
-			self.iconview.stop_flag=True
+		self.iconview.store.clear()
 
 	def refresh(self, artists):
-		if artists != self.artists:
-			self.artists=artists
-			if self.iconview.stop_flag:
-				self.iconview.store.clear()
-				self.iconview.emit("stopped")
-			else:
-				self.iconview.stop_flag=True
+		self.done=False
+		self.artists=artists
+		try:
+			self.iconview.populate(artists)
+		except:
+			pass
 
 	def scroll_to_selected_album(self):
-		self.iconview.scroll_to_selected_album()
+		if self.done:
+			self.iconview.scroll_to_selected_album()
+		elif not self.scroll_to_selected_album in self.pending:
+			self.pending.append(self.scroll_to_selected_album)
 
-	def on_iconview_stopped(self, *args):
-		if self.client.connected():
-			self.iconview.populate(self.artists)
+	def on_done(self, *args):
+		self.done=True
+		pending=self.pending
+		self.pending=[]
+		for p in pending:
+			try:
+				p()
+			except:
+				pass
 
 	def on_settings_changed(self, *args):
-		artists=self.artists
-		self.artists=[]
-		self.refresh(artists)
+		if self.done:
+			self.refresh(self.artists)
+		elif not self.on_settings_changed in self.pending:
+			self.pending.append(self.on_settings_changed)
 
 class MainCover(Gtk.EventBox):
 	def __init__(self, client, settings, emitter, window):
