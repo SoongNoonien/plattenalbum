@@ -1040,7 +1040,7 @@ class ArtistView(Gtk.ScrolledWindow):
 	def on_show_initials_settings_changed(self, *args):
 		self.column_initials.set_visible(self.settings.get_boolean("show-initials"))
 
-class AlbumIconView(Gtk.IconView):
+class AlbumIconView(Gtk.IconView): #TODO function/var names
 	def __init__(self, client, settings, genre_select, window):
 		Gtk.IconView.__init__(self)
 
@@ -1317,9 +1317,8 @@ class PlaylistView(Gtk.Box):
 		self.client=client
 		self.settings=settings
 		self.emitter=emitter
-		self.hovered_songpos=None
 		self.playlist_version=None
-		self.last_song_iter=None
+		self.last_song_path=None
 
 		#Store
 		#(track, disc, title, artist, album, duration, date, genre, file, weight)
@@ -1386,10 +1385,9 @@ class PlaylistView(Gtk.Box):
 
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
-		self.treeview.connect("motion-notify-event", self.on_move_event)
-		self.treeview.connect("leave-notify-event", self.on_focus_out_event)
-		self.treeview.connect("focus-out-event", self.on_focus_out_event)
+		self.treeview.connect("enter-notify-event", self.on_enter_event)
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
+		self.treeview.connect("button-press-event", self.on_button_press_event)
 
 		self.emitter.connect("playlist", self.on_playlist_changed)
 		self.emitter.connect("playing_file_changed", self.on_file_changed)
@@ -1450,15 +1448,17 @@ class PlaylistView(Gtk.Box):
 			song=self.client.status()["song"]
 			path = Gtk.TreePath(int(song))
 			self.selection.select_path(path)
-			if self.last_song_iter != None and self.store.iter_is_valid(self.last_song_iter):
-				self.store.set_value(self.last_song_iter, 9, Pango.Weight.BOOK)
-			treeiter=self.store.get_iter(path)
-			self.store.set_value(treeiter, 9, Pango.Weight.BOLD)
-			self.last_song_iter=treeiter
+			if self.last_song_path != None:
+				try:
+					self.store[self.last_song_path][9]=Pango.Weight.BOOK
+				except:
+					pass
+			self.store[path][9]=Pango.Weight.BOLD
+			self.last_song_path=path
 		except:
-			if self.last_song_iter != None:
-				self.store.set_value(self.last_song_iter, 9, Pango.Weight.BOOK)
-			self.last_song_iter=None
+			if self.last_song_path != None:
+				self.store[self.last_song_path][9]=Pango.Weight.BOOK
+			self.last_song_path=None
 			self.selection.unselect_all()
 
 	def clear(self, *args):
@@ -1466,31 +1466,33 @@ class PlaylistView(Gtk.Box):
 		self.store.clear()
 		self.playlist_version=None
 
+	def remove_song(self, path):
+		self.client.delete(path) #bad song index possible
+		self.store.remove(self.store.get_iter(path))
+		self.playlist_version=self.client.status()["playlist"]
+
 	def on_key_press_event(self, widget, event):
 		self.treeview.handler_block(self.key_press_event)
 		if event.keyval == 65535: #entf
-			if not self.hovered_songpos == None:
+			treeview, treeiter=self.selection.get_selected()
+			if not treeiter == None:
+				path=self.store.get_path(treeiter)
 				try:
-					self.client.delete(self.hovered_songpos) #bad song index possible
-					self.store.remove(self.store.get_iter(self.hovered_songpos))
-					self.playlist_version=self.client.status()["playlist"]
+					self.remove_song(path)
 				except:
-					self.hovered_songpos == None
+					pass
 		self.treeview.handler_unblock(self.key_press_event)
 
-	def on_move_event(self, widget, event):
-		treeiter=self.selection.get_selected()[1]
-		if not treeiter == None:
-			self.treeview.grab_focus()
-			return_tuple = self.treeview.get_path_at_pos(int(event.x), int(event.y))
-			if not return_tuple == None:
-				self.hovered_songpos=return_tuple[0]
-			else:
-				self.hovered_songpos=None
+	def on_button_press_event(self, widget, event):
+		if event.button == 2:
+			try:
+				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
+				self.remove_song(path)
+			except:
+				pass
 
-	def on_focus_out_event(self, widget, event):
-		self.refresh_selection()
-		self.hovered_songpos=None
+	def on_enter_event(self, widget, event):
+		self.treeview.grab_focus()
 
 	def on_row_activated(self, widget, path, view_column):
 		self.client.play(path)
@@ -1546,7 +1548,8 @@ class PlaylistView(Gtk.Box):
 			treeiter=self.store.get_iter(i)
 			self.store.remove(treeiter)
 		self.refresh_playlist_info()
-		self.refresh_selection()
+		if self.playlist_version == None or not songs == []:
+			self.refresh_selection()
 		self.playlist_version=self.client.status()["playlist"]
 
 	def on_file_changed(self, *args):
