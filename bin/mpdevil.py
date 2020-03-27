@@ -962,7 +962,6 @@ class ArtistView(Gtk.ScrolledWindow):
 		self.treeview.append_column(self.column_name)
 
 		#connect
-		self.treeview.connect("enter-notify-event", self.on_enter_event)
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.settings.connect("changed::show-all-artists", self.refresh)
 		self.settings.connect("changed::show-initials", self.on_show_initials_settings_changed)
@@ -1016,9 +1015,6 @@ class ArtistView(Gtk.ScrolledWindow):
 					break
 			return artists
 
-	def on_enter_event(self, widget, event):
-		self.treeview.grab_focus()
-
 	def on_row_activated(self, widget, path, view_column):
 		if self.last_artist_path != None:
 			try:
@@ -1060,7 +1056,6 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 		self.connect("button-press-event", self.on_album_view_button_press_event)
 		self.settings.connect("changed::show-album-view-tooltips", self.tooltip_settings)
 		self.settings.connect("changed::sort-albums-by-year", self.sort_settings)
-		self.connect("motion-notify-event", self.on_move_event)
 
 	@GObject.Signal
 	def done(self):
@@ -1177,9 +1172,6 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 		selected_album_year=self.store.get_value(treeiter, 4)
 		selected_artist=self.store.get_value(treeiter, 5)
 		self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
-
-	def on_move_event(self, widget, event):
-		self.grab_focus()
 
 class AlbumView(Gtk.ScrolledWindow):
 	def __init__(self, client, settings, emitter, genre_select, window):
@@ -1383,7 +1375,6 @@ class PlaylistView(Gtk.Box):
 
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
-		self.treeview.connect("enter-notify-event", self.on_enter_event)
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 		self.treeview.connect("button-press-event", self.on_button_press_event)
 
@@ -1488,9 +1479,6 @@ class PlaylistView(Gtk.Box):
 				self.remove_song(path)
 			except:
 				pass
-
-	def on_enter_event(self, widget, event):
-		self.treeview.grab_focus()
 
 	def on_row_activated(self, widget, path, view_column):
 		self.client.play(path)
