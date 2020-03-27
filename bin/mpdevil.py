@@ -880,54 +880,46 @@ class AlbumDialog(Gtk.Dialog):
 				duration=str(datetime.timedelta(seconds=int(dura)))
 				self.store.append([track, title, artist, duration, song["file"]] )
 
-class GenreSelect(Gtk.Box):
+class GenreSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings, emitter):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+		Gtk.ComboBoxText.__init__(self)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
 		self.emitter=emitter
 
-		self.combo=Gtk.ComboBoxText()
-
 		#connect
-		self.combo_changed=self.combo.connect("changed", self.on_combo_changed)
+		self.changed=self.connect("changed", self.on_changed)
 		self.update_signal=self.emitter.connect("update", self.refresh)
 
-		self.pack_start(self.combo, True, True, 0)
+	def deactivate(self):
+		self.set_active(0)
 
-	@GObject.Signal
-	def changed(self):
+	def refresh(self, *args):
+		self.handler_block(self.changed)
+		self.remove_all()
+		self.append_text(_("all genres"))
+		for genre in self.client.list("genre"):
+			self.append_text(genre)
+		self.set_active(0)
+		self.handler_unblock(self.changed)
+
+	def clear(self, *args):
+		self.handler_block(self.changed)
+		self.remove_all()
+		self.handler_unblock(self.changed)
+
+	def get_value(self):
+		if self.get_active() == 0:
+			return None
+		else:
+			return self.get_active_text()
+
+	def on_changed(self, *args):
 		self.emitter.handler_block(self.update_signal)
 		self.emitter.emit("update")
 		self.emitter.handler_unblock(self.update_signal)
-
-	def deactivate(self):
-		self.combo.set_active(0)
-
-	def refresh(self, *args):
-		self.combo.handler_block(self.combo_changed)
-		self.combo.remove_all()
-		self.combo.append_text(_("all genres"))
-		for genre in self.client.list("genre"):
-			self.combo.append_text(genre)
-		self.combo.set_active(0)
-		self.combo.handler_unblock(self.combo_changed)
-
-	def clear(self, *args):
-		self.combo.handler_block(self.combo_changed)
-		self.combo.remove_all()
-		self.combo.handler_unblock(self.combo_changed)
-
-	def get_value(self):
-		if self.combo.get_active() == 0:
-			return None
-		else:
-			return self.combo.get_active_text()
-
-	def on_combo_changed(self, *args):
-		self.emit("changed")
 
 class ArtistView(Gtk.ScrolledWindow):
 	def __init__(self, client, settings, emitter, genre_select):
@@ -1190,13 +1182,14 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 		self.grab_focus()
 
 class AlbumView(Gtk.ScrolledWindow):
-	def __init__(self, client, settings, genre_select, window):
+	def __init__(self, client, settings, emitter, genre_select, window):
 		Gtk.ScrolledWindow.__init__(self)
 		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		#adding vars
 		self.settings=settings
 		self.client=client
+		self.emitter=emitter
 		self.genre_select=genre_select
 		self.window=window
 		self.artists=[]
@@ -1208,10 +1201,11 @@ class AlbumView(Gtk.ScrolledWindow):
 		#connect
 		self.settings.connect("changed::album-cover", self.on_settings_changed)
 		self.iconview.connect("done", self.on_done)
+		self.emitter.connect("update", self.clear)
 
 		self.add(self.iconview)
 
-	def clear(self):
+	def clear(self, *args):
 		self.artists=[]
 		self.iconview.store.clear()
 
@@ -1573,7 +1567,7 @@ class PlaylistView(Gtk.Box):
 
 class Browser(Gtk.Box):
 	def __init__(self, client, settings, emitter, window):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=4)
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
 
 		#adding vars
 		self.client=client
@@ -1591,7 +1585,7 @@ class Browser(Gtk.Box):
 		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
 		self.artist_view=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
-		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
+		self.album_view=AlbumView(self.client, self.settings, self.emitter, self.genre_select, self.window)
 		self.main_cover=MainCover(self.client, self.settings, self.emitter, self.window)
 		self.main_cover.set_property("border-width", 6)
 		cover_frame=Gtk.Frame()
