@@ -2115,9 +2115,7 @@ class ClientControl(Gtk.ButtonBox):
 		self.stop_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", self.icon_size))
 		self.stop_button.set_can_focus(False)
 		self.prev_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward-symbolic", self.icon_size))
-		self.prev_button.set_can_focus(False)
 		self.next_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward-symbolic", self.icon_size))
-		self.next_button.set_can_focus(False)
 
 		#connect
 		self.play_button.connect("clicked", self.on_play_clicked)
@@ -2204,7 +2202,6 @@ class SeekBar(Gtk.Box):
 		#progress bar
 		self.scale=Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=0, max=100, step=0.001)
 		self.scale.set_draw_value(False)
-		self.scale.set_can_focus(False)
 
 		#event boxes
 		self.elapsed_event_box=Gtk.EventBox()
@@ -2233,16 +2230,21 @@ class SeekBar(Gtk.Box):
 		return True
 
 	def seek(self, range, scroll, value): #value is inaccurate
-		status=self.client.status()
-		duration=float(status["duration"])
-		factor=(value/100)
-		if factor > 1: #fix error on seek
-			factor=1
-			#detach mouse from slider
-			self.scale.set_visible(False)
-			self.scale.set_visible(True)
-		pos=(duration*factor)
-		self.client.seekcur(pos)
+		if scroll == Gtk.ScrollType.STEP_BACKWARD:
+			self.seek_backward()
+		elif scroll == Gtk.ScrollType.STEP_FORWARD:
+			self.seek_forward()
+		elif scroll == Gtk.ScrollType.JUMP:
+			status=self.client.status()
+			duration=float(status["duration"])
+			factor=(value/100)
+			if factor > 1: #fix error on seek
+				factor=1
+				#detach mouse from slider
+				self.scale.set_visible(False)
+				self.scale.set_visible(True)
+			pos=(duration*factor)
+			self.client.seekcur(pos)
 
 	def seek_forward(self):
 		self.client.seekcur("+"+self.seek_time)
@@ -2919,16 +2921,21 @@ class MainWindow(Gtk.ApplicationWindow):
 		if event.keyval == 32: #space
 			self.control.play_button.grab_focus()
 		if event.keyval == 269025044: #AudioPlay
+			self.control.play_button.grab_focus()
 			self.control.play_button.emit("clicked")
 		elif event.keyval == 269025047 or event.keyval == 43 or event.keyval == 65451: #AudioNext
+			self.control.next_button.grab_focus()
 			self.control.next_button.emit("clicked")
 		elif event.keyval == 269025046 or event.keyval == 45 or event.keyval == 65453: #AudioPrev
+			self.control.prev_button.grab_focus()
 			self.control.prev_button.emit("clicked")
 		elif event.keyval == 65307: #esc
 			self.browser.back()
 		elif event.keyval == 65450: #*
+			self.progress.scale.grab_focus()
 			self.progress.seek_forward()
 		elif event.keyval == 65455: #/
+			self.progress.scale.grab_focus()
 			self.progress.seek_backward()
 
 	def on_save(self, action, param):
