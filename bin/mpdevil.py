@@ -1586,10 +1586,8 @@ class Browser(Gtk.Box):
 
 		#widgets
 		self.back_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", self.icon_size))
-		self.back_button.set_can_focus(False)
 		self.back_button.set_tooltip_text(_("Back to current album"))
 		self.search_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
-		self.search_button.set_can_focus(False)
 		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
 		self.artist_view=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
@@ -2127,7 +2125,6 @@ class ClientControl(Gtk.ButtonBox):
 		#widgets
 		self.play_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start-symbolic", self.icon_size))
 		self.stop_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", self.icon_size))
-		self.stop_button.set_can_focus(False)
 		self.prev_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward-symbolic", self.icon_size))
 		self.next_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward-symbolic", self.icon_size))
 
@@ -2382,19 +2379,14 @@ class PlaybackOptions(Gtk.Box):
 
 		#widgets
 		self.random=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-playlist-shuffle-symbolic", self.icon_size))
-		self.random.set_can_focus(False)
 		self.random.set_tooltip_text(_("Random mode"))
 		self.repeat=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-playlist-repeat-symbolic", self.icon_size))
-		self.repeat.set_can_focus(False)
 		self.repeat.set_tooltip_text(_("Repeat mode"))
 		self.single=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("zoom-original-symbolic", self.icon_size))
-		self.single.set_can_focus(False)
 		self.single.set_tooltip_text(_("Single mode"))
 		self.consume=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("edit-cut-symbolic", self.icon_size))
-		self.consume.set_can_focus(False)
 		self.consume.set_tooltip_text(_("Consume mode"))
 		self.volume=Gtk.VolumeButton()
-		self.volume.set_can_focus(False)
 		self.volume.set_property("size", self.icon_size)
 
 		#connect
@@ -2869,7 +2861,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.control=ClientControl(self.client, self.settings, self.emitter)
 		self.progress=SeekBar(self.client, self.emitter)
 		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
-		self.lyrics_button.set_can_focus(False)
 		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
 		self.play_opts=PlaybackOptions(self.client, self.settings, self.emitter)
 
@@ -2883,7 +2874,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append(_("Quit"), "app.quit")
 
 		menu_button = Gtk.MenuButton.new()
-		menu_button.set_can_focus(False)
 		menu_popover = Gtk.Popover.new_from_model(menu_button, menu)
 		menu_button.set_popover(menu_popover)
 		menu_button.set_tooltip_text(_("Menu"))
