@@ -2180,6 +2180,8 @@ class SeekBar(Gtk.Box):
 		self.client=client
 		self.emitter=emitter
 		self.seek_time="10" #seek increment in seconds
+		self.update=True
+		self.jumped=False
 
 		#labels
 		self.elapsed=Gtk.Label()
@@ -2189,7 +2191,16 @@ class SeekBar(Gtk.Box):
 
 		#progress bar
 		self.scale=Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=0, max=100, step=0.001)
+		self.scale.set_show_fill_level(True)
+		self.scale.set_restrict_to_fill_level(False)
 		self.scale.set_draw_value(False)
+
+		#css (scale)
+		style_context=self.scale.get_style_context()
+		provider = Gtk.CssProvider()
+		css = b"""scale fill, scale fill:backdrop { background-color: @theme_selected_bg_color; }"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
 
 		#event boxes
 		self.elapsed_event_box=Gtk.EventBox()
@@ -2198,8 +2209,10 @@ class SeekBar(Gtk.Box):
 		#connect
 		self.elapsed_event_box.connect("button-press-event", self.on_elapsed_button_press_event)
 		self.rest_event_box.connect("button-press-event", self.on_rest_button_press_event)
-		self.scale.connect("change-value", self.seek)
-		self.scale.connect("scroll-event", self.dummy) #disable mouse wheel which caused some noise
+		self.scale.connect("change-value", self.on_change_value)
+		self.scale.connect("scroll-event", self.dummy) #disable mouse wheel
+		self.scale.connect("button-press-event", self.on_scale_button_press_event)
+		self.scale.connect("button-release-event", self.on_scale_button_release_event)
 		self.emitter.connect("disconnected", self.on_disconnected)
 		self.emitter.connect("reconnected", self.on_reconnected)
 		self.emitter.connect("player", self.on_player)
@@ -2217,7 +2230,26 @@ class SeekBar(Gtk.Box):
 	def dummy(self, *args):
 		return True
 
-	def seek(self, range, scroll, value): #value is inaccurate
+	def on_scale_button_press_event(self, widget, event):
+		if event.button == 1:
+			self.update=False
+			self.scale.set_has_origin(False)
+		if event.button == 3:
+			self.jumped=False
+
+	def on_scale_button_release_event(self, widget, event):
+		if event.button == 1:
+			if self.jumped: #actual seek
+				status=self.client.status()
+				duration=float(status["duration"])
+				factor=(self.scale.get_value()/100)
+				pos=(duration*factor)
+				self.client.seekcur(pos)
+				self.jumped=False
+			self.scale.set_has_origin(True)
+			self.update=True
+
+	def on_change_value(self, range, scroll, value): #value is inaccurate
 		if scroll == Gtk.ScrollType.STEP_BACKWARD:
 			self.seek_backward()
 		elif scroll == Gtk.ScrollType.STEP_FORWARD:
@@ -2226,13 +2258,12 @@ class SeekBar(Gtk.Box):
 			status=self.client.status()
 			duration=float(status["duration"])
 			factor=(value/100)
-			if factor > 1: #fix error on seek
+			if factor > 1: #fix display error
 				factor=1
-				#detach mouse from slider
-				self.scale.set_visible(False)
-				self.scale.set_visible(True)
-			pos=(duration*factor)
-			self.client.seekcur(pos)
+			elapsed=(factor*duration)
+			self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))))
+			self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))))
+			self.jumped=True
 
 	def seek_forward(self):
 		self.client.seekcur("+"+self.seek_time)
@@ -2299,12 +2330,14 @@ class SeekBar(Gtk.Box):
 			status=self.client.status()
 			duration=float(status["duration"])
 			elapsed=float(status["elapsed"])
-			if elapsed > duration:
+			if elapsed > duration: #fix display error
 				elapsed=duration
 			fraction=(elapsed/duration)*100
-			self.scale.set_value(fraction)
-			self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))))
-			self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))))
+			if self.update:
+				self.scale.set_value(fraction)
+				self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))))
+				self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))))
+			self.scale.set_fill_level(fraction)
 		except:
 			self.disable()
 		return True
