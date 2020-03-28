@@ -203,6 +203,26 @@ class IntEntry(Gtk.SpinButton):
 	def set_int(self, value):
 		self.set_value(value)
 
+class FocusFrame(Gtk.Frame):
+	def __init__(self, child):
+		Gtk.Frame.__init__(self)
+
+		#css
+		self.style_context=self.get_style_context()
+		self.provider = Gtk.CssProvider()
+		css = b"""* {border-color: @theme_selected_bg_color;}"""
+		self.provider.load_from_data(css)
+
+		#connect
+		child.connect("focus-in-event", self.on_focus_in_event)
+		child.connect("focus-out-event", self.on_focus_out_event)
+
+	def on_focus_in_event(self, *args):
+		self.style_context.add_provider(self.provider, 800)
+
+	def on_focus_out_event(self, *args):
+		self.style_context.remove_provider(self.provider)
+
 class Cover(object):
 	def __init__(self, lib_path, song_file):
 		self.lib_path=lib_path
@@ -1573,12 +1593,18 @@ class Browser(Gtk.Box):
 		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
 		self.artist_view=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
+		artist_frame=FocusFrame(self.artist_view.treeview)
+		artist_frame.add(self.artist_view)
 		self.album_view=AlbumView(self.client, self.settings, self.emitter, self.genre_select, self.window)
+		album_frame=FocusFrame(self.album_view.iconview)
+		album_frame.add(self.album_view)
 		self.main_cover=MainCover(self.client, self.settings, self.emitter, self.window)
 		self.main_cover.set_property("border-width", 6)
 		cover_frame=Gtk.Frame()
 		cover_frame.add(self.main_cover)
 		self.playlist_view=PlaylistView(self.client, self.settings, self.emitter)
+		playlist_frame=FocusFrame(self.playlist_view.treeview)
+		playlist_frame.add(self.playlist_view)
 
 		#connect
 		self.back_button.connect("clicked", self.back)
@@ -1598,11 +1624,11 @@ class Browser(Gtk.Box):
 		self.box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.box1.pack_start(hbox, False, False, 0)
 		self.box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		self.box1.pack_start(self.artist_view, True, True, 0)
+		self.box1.pack_start(artist_frame, True, True, 0)
 
 		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.box2.pack_start(cover_frame, False, False, 0)
-		self.box2.pack_start(self.playlist_view, True, True, 0)
+		self.box2.pack_start(playlist_frame, True, True, 0)
 
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
@@ -1611,7 +1637,7 @@ class Browser(Gtk.Box):
 		self.paned2.set_wide_handle(True)
 
 		self.paned1.pack1(self.box1, False, False)
-		self.paned1.pack2(self.album_view, True, False)
+		self.paned1.pack2(album_frame, True, False)
 
 		self.paned2.pack1(self.paned1, True, False)
 		self.paned2.pack2(self.box2, False, False)
