@@ -1451,7 +1451,7 @@ class PlaylistView(Gtk.Box):
 		treeview, treeiter=self.selection.get_selected()
 		if not treeiter == None:
 			path=treeview.get_path(treeiter)
-			self.treeview.scroll_to_cell(path)
+			self.treeview.scroll_to_cell(path, None, True, 0.25)
 
 	def refresh_playlist_info(self):
 		songs=self.client.playlistinfo()
@@ -1481,6 +1481,7 @@ class PlaylistView(Gtk.Box):
 					pass
 			self.store[path][9]=Pango.Weight.BOLD
 			self.last_song_path=path
+			self.scroll_to_selected_title()
 		except:
 			if self.last_song_path != None:
 				self.store[self.last_song_path][9]=Pango.Weight.BOOK
@@ -1602,8 +1603,8 @@ class Browser(Gtk.Box):
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#widgets
-		self.back_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", self.icon_size))
-		self.back_button.set_tooltip_text(_("Back to current album"))
+		self.back_to_album_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", self.icon_size))
+		self.back_to_album_button.set_tooltip_text(_("Back to current album"))
 		self.search_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
 		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
@@ -1622,7 +1623,7 @@ class Browser(Gtk.Box):
 		playlist_frame.add(self.playlist_view)
 
 		#connect
-		self.back_button.connect("clicked", self.back)
+		self.back_to_album_button.connect("clicked", self.back_to_album)
 		self.search_button.connect("toggled", self.on_search_toggled)
 		self.artist_view.connect("artists_changed", self.on_artists_changed)
 		self.settings.connect("changed::alt-layout", self.on_layout_settings_changed)
@@ -1632,7 +1633,7 @@ class Browser(Gtk.Box):
 		#packing
 		hbox=Gtk.Box(spacing=6)
 		hbox.set_property("border-width", 6)
-		hbox.pack_start(self.back_button, False, False, 0)
+		hbox.pack_start(self.back_to_album_button, False, False, 0)
 		hbox.pack_start(self.search_button, False, False, 0)
 		hbox.pack_start(self.genre_select, True, True, 0)
 
@@ -1677,7 +1678,7 @@ class Browser(Gtk.Box):
 		self.playlist_view.clear()
 		self.main_cover.clear()
 
-	def back(self, *args):
+	def back_to_album(self, *args):
 		try: #since this can still be running when the connection is lost, various exceptions can occur
 			song=self.client.currentsong()
 			try:
@@ -1696,7 +1697,6 @@ class Browser(Gtk.Box):
 			else:
 				self.artist_view.treeview.set_cursor(Gtk.TreePath(0), None, False) #set cursor to 'all artists'
 			self.album_view.scroll_to_selected_album()
-			self.playlist_view.scroll_to_selected_title()
 		except:
 			pass
 
@@ -1711,12 +1711,12 @@ class Browser(Gtk.Box):
 			self.search_win.destroy()
 
 	def on_reconnected(self, *args):
-		self.back_button.set_sensitive(True)
+		self.back_to_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
 		self.genre_select.set_sensitive(True)
 
 	def on_disconnected(self, *args):
-		self.back_button.set_sensitive(False)
+		self.back_to_album_button.set_sensitive(False)
 		self.search_button.set_active(False)
 		self.search_button.set_sensitive(False)
 		self.genre_select.clear()
@@ -2950,7 +2950,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.emitter.emit("options")
 		self.emitter.emit("mixer")
 		self.emitter.emit("update")
-		self.browser.back()
+		self.browser.back_to_album()
 
 	def on_disconnected(self, *args):
 		self.dbus_service.release_name()
@@ -2986,7 +2986,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.control.prev_button.grab_focus()
 			self.control.prev_button.emit("clicked")
 		elif event.keyval == 65307: #esc
-			self.browser.back()
+			self.browser.back_to_album()
 		elif event.keyval == 65450: #*
 			self.progress.scale.grab_focus()
 			self.progress.seek_forward()
