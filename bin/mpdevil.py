@@ -1132,19 +1132,23 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 		genre=self.genre_select.get_value()
 		artist_type=self.settings.get_artist_type()
 		for artist in artists:
-			if not self.stop_flag:
-				if genre == None:
-					album_candidates=self.client.list("album", artist_type, artist)
+			try: #client cloud meanwhile disconnect
+				if not self.stop_flag:
+					if genre == None:
+						album_candidates=self.client.list("album", artist_type, artist)
+					else:
+						album_candidates=self.client.list("album", artist_type, artist, "genre", genre)
+					for album in album_candidates:
+						years=self.client.list("date", "album", album, artist_type, artist)
+						for year in years:
+							songs=self.client.find("album", album, "date", year, artist_type, artist)
+							albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
+					while Gtk.events_pending():
+						Gtk.main_iteration_do(True)
 				else:
-					album_candidates=self.client.list("album", artist_type, artist, "genre", genre)
-				for album in album_candidates:
-					years=self.client.list("date", "album", album, artist_type, artist)
-					for year in years:
-						songs=self.client.find("album", album, "date", year, artist_type, artist)
-						albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
-				while Gtk.events_pending():
-					Gtk.main_iteration_do(True)
-			else:
+					GLib.idle_add(self.emit, "done")
+					return
+			except:
 				GLib.idle_add(self.emit, "done")
 				return
 		#display albums
@@ -1256,8 +1260,12 @@ class AlbumView(Gtk.ScrolledWindow):
 		self.add(self.iconview)
 
 	def clear(self, *args):
-		self.artists=[]
-		self.iconview.store.clear()
+		if self.done:
+			self.artists=[]
+			self.iconview.store.clear()
+		elif not self.clear in self.pending:
+			self.iconview.stop_flag=True
+			self.pending.append(self.clear)
 
 	def refresh(self, artists):
 		self.artists=artists
@@ -1684,6 +1692,7 @@ class Browser(Gtk.Box):
 		self.paned2.set_position(self.settings.get_int("paned2"))
 
 	def clear(self, *args):
+		self.genre_select.clear()
 		self.artist_view.clear()
 		self.album_view.clear()
 		self.playlist_view.clear()
@@ -1727,10 +1736,10 @@ class Browser(Gtk.Box):
 		self.genre_select.set_sensitive(True)
 
 	def on_disconnected(self, *args):
+		self.clear()
 		self.back_to_album_button.set_sensitive(False)
 		self.search_button.set_active(False)
 		self.search_button.set_sensitive(False)
-		self.genre_select.clear()
 		self.genre_select.set_sensitive(False)
 
 	def on_artists_changed(self, *args):
@@ -2958,7 +2967,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.lyrics_button.set_active(False)
 		self.set_title("mpdevil (not connected)")
 		self.songid_playing=None
-		self.browser.clear()
 		self.progress.set_sensitive(False)
 		self.control.set_sensitive(False)
 		self.play_opts.set_sensitive(False)
