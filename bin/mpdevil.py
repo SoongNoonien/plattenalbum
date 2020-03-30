@@ -889,6 +889,7 @@ class AlbumDialog(Gtk.Dialog):
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.treeview.connect("button-press-event", self.on_button_press_event)
+		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 
 		#packing
 		scroll.add(self.treeview)
@@ -908,6 +909,14 @@ class AlbumDialog(Gtk.Dialog):
 				self.client.add(self.store[path][4])
 			except:
 				pass
+
+	def on_key_press_event(self, widget, event):
+		self.treeview.handler_block(self.key_press_event)
+		if event.keyval == 43 or event.keyval == 65451: #+
+			treeview, treeiter=self.selection.get_selected()
+			if not treeiter == None:
+				self.client.add(self.store.get_value(treeiter, 4))
+		self.treeview.handler_unblock(self.key_press_event)
 
 	def populate_treeview(self, album, artist, year):
 		songs=self.client.find("album", album, "date", year, self.settings.get_artist_type(), artist)
@@ -2739,6 +2748,7 @@ class SearchWindow(Gtk.Window):
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.treeview.connect("button-press-event", self.on_button_press_event)
+		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 		self.search_entry.connect("search-changed", self.on_search_changed)
 
 		#packing
@@ -2765,6 +2775,14 @@ class SearchWindow(Gtk.Window):
 				self.client.add(self.store[path][5])
 			except:
 				pass
+
+	def on_key_press_event(self, widget, event):
+		self.treeview.handler_block(self.key_press_event)
+		if event.keyval == 43 or event.keyval == 65451: #+
+			treeview, treeiter=self.selection.get_selected()
+			if not treeiter == None:
+				self.client.add(self.store.get_value(treeiter, 5))
+		self.treeview.handler_unblock(self.key_press_event)
 
 	def on_search_changed(self, widget):
 		self.store.clear()
