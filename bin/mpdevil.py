@@ -845,6 +845,11 @@ class AlbumDialog(Gtk.Dialog):
 		self.client=client
 		self.settings=settings
 
+		#metadata
+		self.album=album
+		self.artist=artist
+		self.year=year
+
 		#scroll
 		scroll=Gtk.ScrolledWindow()
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
@@ -884,7 +889,7 @@ class AlbumDialog(Gtk.Dialog):
 		self.column_time.set_property("resizable", False)
 		self.treeview.append_column(self.column_time)
 
-		self.populate_treeview(album, artist, year)
+		self.populate_treeview()
 
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
@@ -918,8 +923,8 @@ class AlbumDialog(Gtk.Dialog):
 				self.client.add(self.store.get_value(treeiter, 4))
 		self.treeview.handler_unblock(self.key_press_event)
 
-	def populate_treeview(self, album, artist, year):
-		songs=self.client.find("album", album, "date", year, self.settings.get_artist_type(), artist)
+	def populate_treeview(self):
+		songs=self.client.find("album", self.album, "date", self.year, self.settings.get_artist_type(), self.artist)
 		if not songs == []:
 			for song in songs:
 				try:
@@ -940,6 +945,15 @@ class AlbumDialog(Gtk.Dialog):
 					dura=0.0
 				duration=str(datetime.timedelta(seconds=int(dura)))
 				self.store.append([track, title, artist, duration, song["file"]] )
+
+	def open(self):
+		response = self.run()
+		if response == Gtk.ResponseType.OK:
+			self.client.album_to_playlist(self.album, self.artist, self.year, False)
+		elif response == Gtk.ResponseType.ACCEPT:
+			self.client.album_to_playlist(self.album, self.artist, self.year, True)
+		elif response == Gtk.ResponseType.YES:
+			self.client.album_to_playlist(self.album, self.artist, self.year, False, True)
 
 class GenreSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings):
@@ -1087,7 +1101,7 @@ class ArtistView(Gtk.ScrolledWindow):
 	def on_show_initials_settings_changed(self, *args):
 		self.column_initials.set_visible(self.settings.get_boolean("show-initials"))
 
-class AlbumIconView(Gtk.IconView): #TODO function/var names
+class AlbumIconView(Gtk.IconView):
 	def __init__(self, client, settings, genre_select, window):
 		Gtk.IconView.__init__(self)
 
@@ -1110,9 +1124,9 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 		self.tooltip_settings()
 
 		#connect
-		self.album_change=self.connect("selection-changed", self.on_album_selection_change)
-		self.connect("item-activated", self.on_album_item_activated)
-		self.connect("button-press-event", self.on_album_view_button_press_event)
+		self.connect("item-activated", self.on_item_activated)
+		self.connect("button-press-event", self.on_button_press_event)
+		self.key_press_event=self.connect("key-press-event", self.on_key_press_event)
 		self.settings.connect("changed::show-album-view-tooltips", self.tooltip_settings)
 		self.settings.connect("changed::sort-albums-by-year", self.sort_settings)
 
@@ -1134,7 +1148,7 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 			self.store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
 		return False
 
-	def add(self, row, cover, size):
+	def add_row(self, row, cover, size):
 		row[0]=cover.get_pixbuf(size)
 		self.store.append(row)
 		return False
@@ -1185,9 +1199,9 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 				length_human_readable=str(datetime.timedelta(seconds=int(length)))
 				tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
 				if album["year"] == "":
-					GLib.idle_add(self.add, [None, album["album"], tooltip, album["album"], album["year"], album["artist"]], cover, size)
+					GLib.idle_add(self.add_row, [None, album["album"], tooltip, album["album"], album["year"], album["artist"]], cover, size)
 				else:
-					GLib.idle_add(self.add, [None, album["album"]+" ("+album["year"]+")", tooltip, album["album"], album["year"], album["artist"]], cover, size)
+					GLib.idle_add(self.add_row, [None, album["album"]+" ("+album["year"]+")", tooltip, album["album"], album["year"], album["artist"]], cover, size)
 				if z%16 == 0:
 					while Gtk.events_pending():
 						Gtk.main_iteration_do(True)
@@ -1200,7 +1214,6 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 	def scroll_to_selected_album(self):
 		songid=self.client.status()["songid"]
 		song=self.client.playlistid(songid)[0]
-		self.handler_block(self.album_change)
 		self.unselect_all()
 		row_num=len(self.store)
 		for i in range(0, row_num):
@@ -1211,40 +1224,49 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 				self.select_path(path)
 				self.scroll_to_path(path, True, 0, 0)
 				break
-		self.handler_unblock(self.album_change)
 
-	def on_album_view_button_press_event(self, widget, event):
+	def path_to_playlist(self, path, add, force=False):
+		album=self.store[path][3]
+		year=self.store[path][4]
+		artist=self.store[path][5]
+		self.client.album_to_playlist(album, artist, year, add, force)
+
+	def open_album_dialog(self, path):
+		if self.client.connected():
+			album=self.store[path][3]
+			year=self.store[path][4]
+			artist=self.store[path][5]
+			album_dialog = AlbumDialog(self.window, self.client, self.settings, album, artist, year)
+			album_dialog.open()
+			album_dialog.destroy()
+
+	def on_button_press_event(self, widget, event):
 		path = widget.get_path_at_pos(int(event.x), int(event.y))
 		if not path == None:
-			if not event.button == 1:
-				treeiter=self.store.get_iter(path)
-				selected_album=self.store.get_value(treeiter, 3)
-				selected_album_year=self.store.get_value(treeiter, 4)
-				selected_artist=self.store.get_value(treeiter, 5)
-			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
+			if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self.path_to_playlist(path, False)
+			elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self.path_to_playlist(path, True)
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-				if self.client.connected():
-					album = AlbumDialog(self.window, self.client, self.settings, selected_album, selected_artist, selected_album_year)
-					response = album.run()
-					if response == Gtk.ResponseType.OK:
-						self.select_path(path)
-					elif response == Gtk.ResponseType.ACCEPT:
-						self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
-					elif response == Gtk.ResponseType.YES:
-						self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
-					album.destroy()
+				self.open_album_dialog(path)
 
-	def on_album_selection_change(self, widget):
-		paths=widget.get_selected_items()
-		if not len(paths) == 0:
-			treeiter=self.store.get_iter(paths[0])
-			selected_album=self.store.get_value(treeiter, 3)
-			selected_album_year=self.store.get_value(treeiter, 4)
-			selected_artist=self.store.get_value(treeiter, 5)
-			self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False)
+	def on_key_press_event(self, widget, event):
+		self.handler_block(self.key_press_event)
+		if event.keyval == 112: #p
+			paths=self.get_selected_items()
+			if not len(paths) == 0:
+				self.path_to_playlist(paths[0], False)
+		elif event.keyval == 97: #a
+			paths=self.get_selected_items()
+			if not len(paths) == 0:
+				self.path_to_playlist(paths[0], True)
+		elif event.keyval == 65383: #menu key
+			paths=self.get_selected_items()
+			if not len(paths) == 0:
+				self.open_album_dialog(paths[0])
+		self.handler_unblock(self.key_press_event)
 
-	def on_album_item_activated(self, widget, path):
+	def on_item_activated(self, widget, path):
 		treeiter=self.store.get_iter(path)
 		selected_album=self.store.get_value(treeiter, 3)
 		selected_album_year=self.store.get_value(treeiter, 4)
@@ -1379,13 +1401,7 @@ class MainCover(Gtk.Frame):
 					self.client.album_to_playlist(album, artist, album_year, True)
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 					album_dialog = AlbumDialog(self.window, self.client, self.settings, album, artist, album_year)
-					response = album_dialog.run()
-					if response == Gtk.ResponseType.OK:
-						self.client.album_to_playlist(album, artist, album_year, False)
-					elif response == Gtk.ResponseType.ACCEPT:
-						self.client.album_to_playlist(album, artist, album_year, True)
-					elif response == Gtk.ResponseType.YES:
-						self.client.album_to_playlist(album, artist, album_year, False, True)
+					album_dialog.open()
 					album_dialog.destroy()
 
 	def on_settings_changed(self, *args):
