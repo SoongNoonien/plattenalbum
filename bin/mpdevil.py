@@ -855,6 +855,7 @@ class AlbumDialog(Gtk.Dialog):
 
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
+		self.treeview.connect("button-press-event", self.on_button_press_event)
 
 		#packing
 		scroll.add(self.treeview)
@@ -862,20 +863,18 @@ class AlbumDialog(Gtk.Dialog):
 		self.vbox.set_spacing(6)
 		self.show_all()
 
-		#selection workaround
-		self.selection.unselect_all()
-		self.selection.connect("changed", self.on_selection_change)
-
 	def on_row_activated(self, widget, path, view_column):
 		self.client.clear()
 		self.client.add(self.store[path][4])
 		self.client.play()
 
-	def on_selection_change(self, widget):
-		treeiter=widget.get_selected()[1]
-		if not treeiter == None:
-			selected_title=self.store.get_value(treeiter, 4)
-			self.client.add(selected_title)
+	def on_button_press_event(self, widget, event):
+		if event.button == 1:
+			try:
+				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
+				self.client.add(self.store[path][4])
+			except:
+				pass
 
 	def populate_treeview(self, album, artist, year):
 		songs=self.client.find("album", album, "date", year, self.settings.get_artist_type(), artist)
@@ -2707,7 +2706,7 @@ class SearchWindow(Gtk.Window):
 
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
-		self.selection.connect("changed", self.on_selection_change)
+		self.treeview.connect("button-press-event", self.on_button_press_event)
 		self.search_entry.connect("search-changed", self.on_search_changed)
 
 		#packing
@@ -2727,11 +2726,13 @@ class SearchWindow(Gtk.Window):
 		self.client.add(self.store[path][5])
 		self.client.play()
 
-	def on_selection_change(self, widget):
-		treeiter=widget.get_selected()[1]
-		if not treeiter == None:
-			selected_title=self.store.get_value(treeiter, 5)
-			self.client.add(selected_title)
+	def on_button_press_event(self, widget, event):
+		if event.button == 1:
+			try:
+				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
+				self.client.add(self.store[path][5])
+			except:
+				pass
 
 	def on_search_changed(self, widget):
 		self.store.clear()
