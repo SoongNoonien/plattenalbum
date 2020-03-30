@@ -272,7 +272,7 @@ class Client(MPDClient):
 				for song in songs:
 					self.add(song["file"])
 		else:
-			if self.settings.get_boolean("add-album") and not force and not self.status()["state"] == "stop":
+			if not self.settings.get_boolean("force-mode") and not force and not self.status()["state"] == "stop": #TODO invert
 				status=self.status()
 				self.moveid(status["songid"], 0)
 				self.song_to_delete=self.playlistinfo()[0]["file"]
@@ -1944,7 +1944,7 @@ class GeneralSettings(Gtk.Box):
 				(_("Use 'Artist' instead of 'Album Artist'"), "show-all-artists"), \
 				(_("Send notification on title change"), "send-notify"), \
 				(_("Stop playback on quit"), "stop-on-quit"), \
-				(_("Don't interrupt current title on album select"), "add-album")]
+				(_("Play selected albums immediately"), "force-mode")]
 
 		for data in settings_list:
 			check_buttons[data[1]]=Gtk.CheckButton(label=data[0])
@@ -1969,7 +1969,7 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(check_buttons["show-all-artists"], True, True, 0)
 		self.pack_start(check_buttons["send-notify"], True, True, 0)
 		self.pack_start(check_buttons["stop-on-quit"], True, True, 0)
-		self.pack_start(check_buttons["add-album"], True, True, 0)
+		self.pack_start(check_buttons["force-mode"], True, True, 0)
 
 
 	def on_int_changed(self, widget, key):

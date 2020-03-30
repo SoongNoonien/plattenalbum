@@ -66,9 +66,9 @@
       <summary>Stop playback on quit</summary>
       <description></description>
     </key>
-    <key type="b" name="add-album">
-      <default>false</default>
-      <summary>Add selected album instead of playing</summary>
+    <key type="b" name="force-mode">
+      <default>true</default>
+      <summary>Play selected albums directly</summary>
       <description></description>
     </key>
     <key type="b" name="show-all-artists">
