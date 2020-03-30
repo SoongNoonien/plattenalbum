@@ -240,11 +240,10 @@ class Cover(object):
 			self.path = Gtk.IconTheme.get_default().lookup_icon("mpdevil", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename() #fallback cover
 		return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
 
-class Client(MPDClient):
+class AutoSettingsClient(MPDClient):
 	def __init__(self, settings):
 		MPDClient.__init__(self)
 		self.settings = settings
-		self.song_to_delete=""
 		self.settings.connect("changed::active-profile", self.on_settings_changed)
 
 	def try_connect_default(self):
@@ -264,39 +263,6 @@ class Client(MPDClient):
 			return True
 		except:
 			return False
-
-	def album_to_playlist(self, album, artist, year, append, force=False):
-		if append:
-			songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
-			if not songs == []:
-				for song in songs:
-					self.add(song["file"])
-		else:
-			if not self.settings.get_boolean("force-mode") and not force and not self.status()["state"] == "stop": #TODO invert
-				status=self.status()
-				self.moveid(status["songid"], 0)
-				self.song_to_delete=self.playlistinfo()[0]["file"]
-				try:
-					self.delete((1,)) # delete all songs, but the first. #bad song index possible
-				except:
-					pass
-				songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
-				if not songs == []:
-					for song in songs:
-						if not song["file"] == self.song_to_delete:
-							self.add(song["file"])
-						else:
-							self.move(0, (len(self.playlist())-1))
-							self.song_to_delete=""
-			else:
-				self.song_to_delete=""
-				songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
-				if not songs == []:
-					self.stop()
-					self.clear()
-					for song in songs:
-						self.add(song["file"])
-					self.play()
 
 	def on_settings_changed(self, *args):
 		self.disconnect()
@@ -321,7 +287,7 @@ class MpdEventEmitter(GObject.Object):
 
 	def __init__(self, settings):
 		super().__init__()
-		self.client=Client(settings)
+		self.client=AutoSettingsClient(settings)
 		GLib.timeout_add(100, self.watch)
 		self.connected=True
 		self.current_file=None
@@ -396,11 +362,73 @@ class MpdEventEmitter(GObject.Object):
 	def do_playing_file_changed(self):
 		pass
 
+class Client(AutoSettingsClient):
+	def __init__(self, settings):
+		AutoSettingsClient.__init__(self, settings)
+
+		#adding vars
+		self.settings=settings
+		self.emitter=MpdEventEmitter(self.settings)
+		self.song_to_delete=""
+
+		#connect
+		self.emitter.connect("reconnected", self.on_reconnected)
+		self.emitter.connect("playing_file_changed", self.on_file_changed)
+
+	def album_to_playlist(self, album, artist, year, append, force=False):
+		if append:
+			songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
+			if not songs == []:
+				for song in songs:
+					self.add(song["file"])
+		else:
+			if self.settings.get_boolean("force-mode") or force or self.status()["state"] == "stop":
+				self.song_to_delete=""
+				songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
+				if not songs == []:
+					self.stop()
+					self.clear()
+					for song in songs:
+						self.add(song["file"])
+					self.play()
+			else:
+				status=self.status()
+				self.moveid(status["songid"], 0)
+				self.song_to_delete=self.playlistinfo()[0]["file"]
+				try:
+					self.delete((1,)) # delete all songs, but the first. #bad song index possible
+				except:
+					pass
+				songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
+				if not songs == []:
+					for song in songs:
+						if not song["file"] == self.song_to_delete:
+							self.add(song["file"])
+						else:
+							self.move(0, (len(self.playlist())-1))
+							self.song_to_delete=""
+
+	def on_reconnected(self, *args):
+		self.try_connect_default()
+		self.emitter.emit("playlist")
+		self.emitter.emit("player")
+		self.emitter.emit("options")
+		self.emitter.emit("mixer")
+		self.emitter.emit("update")
+
+	def on_file_changed(self, *args): #TODO
+		if not self.song_to_delete == "":
+			status=self.status()
+			if not status["song"] == "0":
+				if self.playlistinfo()[0]["file"] == self.song_to_delete:
+					self.delete(0)
+				self.song_to_delete=""
+
 class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 	__introspect_interface = "org.freedesktop.DBus.Introspectable"
 	__prop_interface = dbus.PROPERTIES_IFACE
 
-	def __init__(self, window, client, settings, emitter):
+	def __init__(self, window, client, settings):
 		dbus.service.Object.__init__(self, dbus.SessionBus(), "/org/mpris/MediaPlayer2")
 		self._name = "org.mpris.MediaPlayer2.mpdevil"
 
@@ -412,14 +440,13 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 		self.window=window
 		self.client=client
 		self.settings=settings
-		self.emitter=emitter
 		self.metadata={}
 
 		#connect
-		self.emitter.connect("player", self.on_player_changed)
-		self.emitter.connect("playing_file_changed", self.on_file_changed)
-		self.emitter.connect("mixer", self.on_volume_changed)
-		self.emitter.connect("options", self.on_options_changed)
+		self.client.emitter.connect("player", self.on_player_changed)
+		self.client.emitter.connect("playing_file_changed", self.on_file_changed)
+		self.client.emitter.connect("mixer", self.on_volume_changed)
+		self.client.emitter.connect("options", self.on_options_changed)
 
 	def on_player_changed(self, *args):
 		self.update_property('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
@@ -900,17 +927,16 @@ class AlbumDialog(Gtk.Dialog):
 				self.store.append([track, title, artist, duration, song["file"]] )
 
 class GenreSelect(Gtk.ComboBoxText):
-	def __init__(self, client, settings, emitter):
+	def __init__(self, client, settings):
 		Gtk.ComboBoxText.__init__(self)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
-		self.emitter=emitter
 
 		#connect
 		self.changed=self.connect("changed", self.on_changed)
-		self.update_signal=self.emitter.connect("update", self.refresh)
+		self.update_signal=self.client.emitter.connect("update", self.refresh)
 
 	def deactivate(self):
 		self.set_active(0)
@@ -936,19 +962,18 @@ class GenreSelect(Gtk.ComboBoxText):
 			return self.get_active_text()
 
 	def on_changed(self, *args):
-		self.emitter.handler_block(self.update_signal)
-		self.emitter.emit("update")
-		self.emitter.handler_unblock(self.update_signal)
+		self.client.emitter.handler_block(self.update_signal)
+		self.client.emitter.emit("update")
+		self.client.emitter.handler_unblock(self.update_signal)
 
 class ArtistView(Gtk.ScrolledWindow):
-	def __init__(self, client, settings, emitter, genre_select):
+	def __init__(self, client, settings, genre_select):
 		Gtk.ScrolledWindow.__init__(self)
 		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
-		self.emitter=emitter
 		self.genre_select=genre_select
 		self.last_artist_path=None
 
@@ -984,7 +1009,7 @@ class ArtistView(Gtk.ScrolledWindow):
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.settings.connect("changed::show-all-artists", self.refresh)
 		self.settings.connect("changed::show-initials", self.on_show_initials_settings_changed)
-		self.emitter.connect("update", self.refresh)
+		self.client.emitter.connect("update", self.refresh)
 
 		self.add(self.treeview)
 
@@ -1208,14 +1233,13 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 		self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
 
 class AlbumView(Gtk.ScrolledWindow):
-	def __init__(self, client, settings, emitter, genre_select, window):
+	def __init__(self, client, settings, genre_select, window):
 		Gtk.ScrolledWindow.__init__(self)
 		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		#adding vars
 		self.settings=settings
 		self.client=client
-		self.emitter=emitter
 		self.genre_select=genre_select
 		self.window=window
 		self.artists=[]
@@ -1227,7 +1251,7 @@ class AlbumView(Gtk.ScrolledWindow):
 		#connect
 		self.settings.connect("changed::album-cover", self.on_settings_changed)
 		self.iconview.connect("done", self.on_done)
-		self.emitter.connect("update", self.clear)
+		self.client.emitter.connect("update", self.clear)
 
 		self.add(self.iconview)
 
@@ -1268,13 +1292,12 @@ class AlbumView(Gtk.ScrolledWindow):
 			self.populate()
 
 class MainCover(Gtk.EventBox):
-	def __init__(self, client, settings, emitter, window):
+	def __init__(self, client, settings, window):
 		Gtk.EventBox.__init__(self)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
-		self.emitter=emitter
 		self.window=window
 
 		#cover
@@ -1283,7 +1306,7 @@ class MainCover(Gtk.EventBox):
 
 		#connect
 		self.connect("button-press-event", self.on_button_press_event)
-		self.emitter.connect("playing_file_changed", self.refresh)
+		self.client.emitter.connect("playing_file_changed", self.refresh)
 		self.settings.connect("changed::track-cover", self.on_settings_changed)
 
 		self.add(self.cover)
@@ -1336,13 +1359,12 @@ class MainCover(Gtk.EventBox):
 		self.refresh()
 
 class PlaylistView(Gtk.Box):
-	def __init__(self, client, settings, emitter):
+	def __init__(self, client, settings):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
-		self.emitter=emitter
 		self.playlist_version=None
 		self.last_song_path=None
 
@@ -1414,9 +1436,9 @@ class PlaylistView(Gtk.Box):
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 		self.treeview.connect("button-press-event", self.on_button_press_event)
 
-		self.emitter.connect("playlist", self.on_playlist_changed)
-		self.emitter.connect("playing_file_changed", self.on_file_changed)
-		self.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("playlist", self.on_playlist_changed)
+		self.client.emitter.connect("playing_file_changed", self.on_file_changed)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
 
 		self.settings.connect("changed::column-visibilities", self.load_settings)
 		self.settings.connect("changed::column-permutation", self.load_settings)
@@ -1576,27 +1598,17 @@ class PlaylistView(Gtk.Box):
 		self.playlist_version=self.client.status()["playlist"]
 
 	def on_file_changed(self, *args):
-		if not self.client.song_to_delete == "": #TODO should be in Client class
-			status=self.client.status()
-			if not status["song"] == "0":
-				if self.client.playlistinfo()[0]["file"] == self.client.song_to_delete:
-					self.client.delete(0)
-				self.client.song_to_delete=""
-			else:
-				self.refresh_selection()
-		else:
-			self.refresh_selection()
+		self.refresh_selection()
 
 	def on_disconnected(self, *args):
 		self.playlist_version=None
 
 class Browser(Gtk.Box):
-	def __init__(self, client, settings, emitter, window):
+	def __init__(self, client, settings, window):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
 
 		#adding vars
 		self.client=client
-		self.emitter=emitter
 		self.settings=settings
 		self.window=window
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
@@ -1606,18 +1618,18 @@ class Browser(Gtk.Box):
 		self.back_to_album_button.set_tooltip_text(_("Back to current album"))
 		self.search_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("system-search-symbolic", self.icon_size))
 		self.search_button.set_tooltip_text(_("Search"))
-		self.genre_select=GenreSelect(self.client, self.settings, self.emitter)
-		self.artist_view=ArtistView(self.client, self.settings, self.emitter, self.genre_select)
+		self.genre_select=GenreSelect(self.client, self.settings)
+		self.artist_view=ArtistView(self.client, self.settings, self.genre_select)
 		artist_frame=FocusFrame(self.artist_view.treeview)
 		artist_frame.add(self.artist_view)
-		self.album_view=AlbumView(self.client, self.settings, self.emitter, self.genre_select, self.window)
+		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
 		album_frame=FocusFrame(self.album_view.iconview)
 		album_frame.add(self.album_view)
-		self.main_cover=MainCover(self.client, self.settings, self.emitter, self.window)
+		self.main_cover=MainCover(self.client, self.settings, self.window)
 		self.main_cover.set_property("border-width", 6)
 		cover_frame=Gtk.Frame()
 		cover_frame.add(self.main_cover)
-		self.playlist_view=PlaylistView(self.client, self.settings, self.emitter)
+		self.playlist_view=PlaylistView(self.client, self.settings)
 		playlist_frame=FocusFrame(self.playlist_view.treeview)
 		playlist_frame.add(self.playlist_view)
 
@@ -1626,8 +1638,8 @@ class Browser(Gtk.Box):
 		self.search_button.connect("toggled", self.on_search_toggled)
 		self.artist_view.connect("artists_changed", self.on_artists_changed)
 		self.settings.connect("changed::alt-layout", self.on_layout_settings_changed)
-		self.emitter.connect("disconnected", self.on_disconnected)
-		self.emitter.connect("reconnected", self.on_reconnected)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
 
 		#packing
 		hbox=Gtk.Box(spacing=6)
@@ -2128,14 +2140,13 @@ class SettingsDialog(Gtk.Dialog):
 		self.show_all()
 
 class ClientControl(Gtk.ButtonBox):
-	def __init__(self, client, settings, emitter):
+	def __init__(self, client, settings):
 		Gtk.ButtonBox.__init__(self, spacing=6)
 		self.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
-		self.emitter=emitter
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#widgets
@@ -2150,7 +2161,7 @@ class ClientControl(Gtk.ButtonBox):
 		self.prev_button.connect("clicked", self.on_prev_clicked)
 		self.next_button.connect("clicked", self.on_next_clicked)
 		self.settings.connect("changed::show-stop", self.on_settings_changed)
-		self.emitter.connect("player", self.refresh)
+		self.client.emitter.connect("player", self.refresh)
 
 		#packing
 		self.pack_start(self.prev_button, True, True, 0)
@@ -2211,13 +2222,12 @@ class ClientControl(Gtk.ButtonBox):
 			self.remove(self.stop_button)
 
 class SeekBar(Gtk.Box):
-	def __init__(self, client, emitter):
+	def __init__(self, client):
 		Gtk.Box.__init__(self)
 		self.set_hexpand(True)
 
 		#adding vars
 		self.client=client
-		self.emitter=emitter
 		self.seek_time="10" #seek increment in seconds
 		self.update=True
 		self.jumped=False
@@ -2252,9 +2262,9 @@ class SeekBar(Gtk.Box):
 		self.scale.connect("scroll-event", self.dummy) #disable mouse wheel
 		self.scale.connect("button-press-event", self.on_scale_button_press_event)
 		self.scale.connect("button-release-event", self.on_scale_button_release_event)
-		self.emitter.connect("disconnected", self.on_disconnected)
-		self.emitter.connect("reconnected", self.on_reconnected)
-		self.emitter.connect("player", self.on_player)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
+		self.client.emitter.connect("player", self.on_player)
 
 		#timeouts
 		self.timeout_id=None
@@ -2384,13 +2394,12 @@ class SeekBar(Gtk.Box):
 		return True
 
 class PlaybackOptions(Gtk.Box):
-	def __init__(self, client, settings, emitter):
+	def __init__(self, client, settings):
 		Gtk.Box.__init__(self, spacing=6)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
-		self.emitter=emitter
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#widgets
@@ -2411,8 +2420,8 @@ class PlaybackOptions(Gtk.Box):
 		self.single_toggled=self.single.connect("toggled", self.set_single)
 		self.consume_toggled=self.consume.connect("toggled", self.set_consume)
 		self.volume_changed=self.volume.connect("value-changed", self.set_volume)
-		self.options_changed=self.emitter.connect("options", self.options_refresh)
-		self.mixer_changed=self.emitter.connect("mixer", self.mixer_refresh)
+		self.options_changed=self.client.emitter.connect("options", self.options_refresh)
+		self.mixer_changed=self.client.emitter.connect("mixer", self.mixer_refresh)
 
 		#packing
 		ButtonBox=Gtk.ButtonBox()
@@ -2567,13 +2576,12 @@ class AudioType(Gtk.EventBox):
 				pass
 
 class ProfileSelect(Gtk.ComboBoxText):
-	def __init__(self, client, settings, emitter):
+	def __init__(self, client, settings):
 		Gtk.ComboBoxText.__init__(self)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
-		self.emitter=emitter
 
 		#connect
 		self.changed=self.connect("changed", self.on_changed)
@@ -2762,7 +2770,7 @@ class SearchWindow(Gtk.Window):
 		self.label.set_text(_("hits: %i") % (len(self.store)))
 
 class LyricsWindow(Gtk.Window):
-	def __init__(self, client, settings, emitter):
+	def __init__(self, client, settings):
 		Gtk.Window.__init__(self, title=_("Lyrics"))
 		self.set_icon_name("mpdevil")
 		self.set_default_size(450, 800)
@@ -2770,7 +2778,6 @@ class LyricsWindow(Gtk.Window):
 		#adding vars
 		self.settings=settings
 		self.client=client
-		self.emitter=emitter
 
 		#widgets
 		self.scroll=Gtk.ScrolledWindow()
@@ -2781,7 +2788,7 @@ class LyricsWindow(Gtk.Window):
 		self.label.set_xalign(0)
 
 		#connect
-		self.file_changed=self.emitter.connect("playing_file_changed", self.refresh)
+		self.file_changed=self.client.emitter.connect("playing_file_changed", self.refresh)
 		self.connect("destroy", self.remove_handlers)
 
 		#packing
@@ -2793,7 +2800,7 @@ class LyricsWindow(Gtk.Window):
 		self.refresh()
 
 	def remove_handlers(self, *args):
-		self.emitter.disconnect(self.file_changed)
+		self.client.emitter.disconnect(self.file_changed)
 
 	def display_lyrics(self, current_song):
 		GLib.idle_add(self.label.set_text, _("searching..."))
@@ -2838,7 +2845,7 @@ class LyricsWindow(Gtk.Window):
 			return output.encode('utf-8')
 
 class MainWindow(Gtk.ApplicationWindow):
-	def __init__(self, app, client, settings, emitter):
+	def __init__(self, app, client, settings):
 		Gtk.ApplicationWindow.__init__(self, title=("mpdevil"), application=app)
 		Notify.init("mpdevil")
 		self.set_icon_name("mpdevil")
@@ -2848,12 +2855,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		#adding vars
 		self.app=app
 		self.client=client
-		self.emitter=emitter
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#MPRIS
 		DBusGMainLoop(set_as_default=True)
-		self.dbus_service = MPRISInterface(self, self.client, self.settings, self.emitter)
+		self.dbus_service = MPRISInterface(self, self.client, self.settings)
 
 		#actions
 		save_action = Gio.SimpleAction.new("save", None)
@@ -2873,14 +2879,14 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.add_action(update_action)
 
 		#widgets
-		self.browser=Browser(self.client, self.settings, self.emitter, self)
-		self.profiles=ProfileSelect(self.client, self.settings, self.emitter)
+		self.browser=Browser(self.client, self.settings, self)
+		self.profiles=ProfileSelect(self.client, self.settings)
 		self.profiles.set_tooltip_text(_("Select profile"))
-		self.control=ClientControl(self.client, self.settings, self.emitter)
-		self.progress=SeekBar(self.client, self.emitter)
+		self.control=ClientControl(self.client, self.settings)
+		self.progress=SeekBar(self.client)
 		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
 		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
-		self.play_opts=PlaybackOptions(self.client, self.settings, self.emitter)
+		self.play_opts=PlaybackOptions(self.client, self.settings)
 
 		#menu
 		menu = Gio.Menu()
@@ -2900,9 +2906,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		#connect
 		self.lyrics_button.connect("toggled", self.on_lyrics_toggled)
 		self.settings.connect("changed::profiles", self.on_settings_changed)
-		self.emitter.connect("playing_file_changed", self.on_file_changed)
-		self.emitter.connect("disconnected", self.on_disconnected)
-		self.emitter.connect("reconnected", self.on_reconnected)
+		self.client.emitter.connect("playing_file_changed", self.on_file_changed)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
 		#unmap space
 		binding_set=Gtk.binding_set_find('GtkTreeView')
 		Gtk.binding_entry_remove(binding_set, 32, Gdk.ModifierType.MOD2_MASK)
@@ -2940,17 +2946,11 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_title("mpdevil")
 
 	def on_reconnected(self, *args):
-		self.client.try_connect_default()
 		self.dbus_service.acquire_name()
 		self.progress.set_sensitive(True)
 		self.control.set_sensitive(True)
 		self.play_opts.set_sensitive(True)
 		self.lyrics_button.set_sensitive(True)
-		self.emitter.emit("playlist")
-		self.emitter.emit("player")
-		self.emitter.emit("options")
-		self.emitter.emit("mixer")
-		self.emitter.emit("update")
 		self.browser.back_to_album()
 
 	def on_disconnected(self, *args):
@@ -2969,7 +2969,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			if self.client.connected():
 				def set_active(*args):
 					self.lyrics_button.set_active(False)
-				self.lyrics_win = LyricsWindow(self.client, self.settings, self.emitter)
+				self.lyrics_win = LyricsWindow(self.client, self.settings)
 				self.lyrics_win.connect("destroy", set_active)
 		else:
 			self.lyrics_win.destroy()
@@ -3027,12 +3027,11 @@ class mpdevil(Gtk.Application):
 		super().__init__(*args, application_id="org.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
 		self.settings = Settings()
 		self.client=Client(self.settings)
-		self.emitter=MpdEventEmitter(self.settings)
 		self.window=None
 
 	def do_activate(self):
 		if not self.window: #allow just one instance
-			self.window = MainWindow(self, self.client, self.settings, self.emitter)
+			self.window = MainWindow(self, self.client, self.settings)
 			self.window.connect("delete-event", self.on_delete_event)
 		self.window.present()
 
