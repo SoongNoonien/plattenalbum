@@ -903,7 +903,7 @@ class AlbumDialog(Gtk.Dialog):
 		self.client.play()
 
 	def on_button_press_event(self, widget, event):
-		if event.button == 1:
+		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				self.client.add(self.store[path][4])
@@ -912,7 +912,7 @@ class AlbumDialog(Gtk.Dialog):
 
 	def on_key_press_event(self, widget, event):
 		self.treeview.handler_block(self.key_press_event)
-		if event.keyval == 43 or event.keyval == 65451: #+
+		if event.keyval == 112: #p
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
 				self.client.add(self.store.get_value(treeiter, 4))
@@ -1221,9 +1221,9 @@ class AlbumIconView(Gtk.IconView): #TODO function/var names
 				selected_album=self.store.get_value(treeiter, 3)
 				selected_album_year=self.store.get_value(treeiter, 4)
 				selected_artist=self.store.get_value(treeiter, 5)
-			if event.button == 2:
+			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 				self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, True)
-			elif event.button == 3:
+			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				if self.client.connected():
 					album = AlbumDialog(self.window, self.client, self.settings, selected_album, selected_artist, selected_album_year)
 					response = album.run()
@@ -1373,11 +1373,11 @@ class MainCover(Gtk.Frame):
 					album_year=song["date"]
 				except:
 					album_year=""
-				if event.button == 1:
+				if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 					self.client.album_to_playlist(album, artist, album_year, False)
-				elif event.button == 2:
+				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 					self.client.album_to_playlist(album, artist, album_year, True)
-				elif event.button == 3:
+				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 					album_dialog = AlbumDialog(self.window, self.client, self.settings, album, artist, album_year)
 					response = album_dialog.run()
 					if response == Gtk.ResponseType.OK:
@@ -1566,7 +1566,7 @@ class PlaylistView(Gtk.Box):
 		self.treeview.handler_unblock(self.key_press_event)
 
 	def on_button_press_event(self, widget, event):
-		if event.button == 2:
+		if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				self.remove_song(path)
@@ -2313,10 +2313,10 @@ class SeekBar(Gtk.Box):
 		return True
 
 	def on_scale_button_press_event(self, widget, event):
-		if event.button == 1:
+		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self.update=False
 			self.scale.set_has_origin(False)
-		if event.button == 3:
+		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self.jumped=False
 
 	def on_scale_button_release_event(self, widget, event):
@@ -2371,15 +2371,15 @@ class SeekBar(Gtk.Box):
 		self.rest.set_text("-0:00:00")
 
 	def on_elapsed_button_press_event(self, widget, event):
-		if event.button == 1:
+		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self.seek_backward()
-		elif event.button == 3:
+		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self.seek_forward()
 
 	def on_rest_button_press_event(self, widget, event):
-		if event.button == 1:
+		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self.seek_forward()
-		elif event.button == 3:
+		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self.seek_backward()
 
 	def on_reconnected(self, *args):
@@ -2769,7 +2769,7 @@ class SearchWindow(Gtk.Window):
 		self.client.play()
 
 	def on_button_press_event(self, widget, event):
-		if event.button == 1:
+		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				self.client.add(self.store[path][5])
@@ -2778,7 +2778,7 @@ class SearchWindow(Gtk.Window):
 
 	def on_key_press_event(self, widget, event):
 		self.treeview.handler_block(self.key_press_event)
-		if event.keyval == 43 or event.keyval == 65451: #+
+		if event.keyval == 112: #p
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
 				self.client.add(self.store.get_value(treeiter, 5))
