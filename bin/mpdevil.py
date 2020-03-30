@@ -213,6 +213,12 @@ class FocusFrame(Gtk.Frame):
 		css = b"""* {border-color: @theme_selected_bg_color;}"""
 		self.provider.load_from_data(css)
 
+		provider_start = Gtk.CssProvider()
+		css_start = b"""* {border-color: @theme_bg_color;}"""
+		provider_start.load_from_data(css_start)
+
+		self.style_context.add_provider(provider_start, 800)
+
 		#connect
 		child.connect("focus-in-event", self.on_focus_in_event)
 		child.connect("focus-out-event", self.on_focus_out_event)
@@ -1299,25 +1305,36 @@ class AlbumView(Gtk.ScrolledWindow):
 		if self.done:
 			self.populate()
 
-class MainCover(Gtk.EventBox):
+class MainCover(Gtk.Frame):
 	def __init__(self, client, settings, window):
-		Gtk.EventBox.__init__(self)
+		Gtk.Frame.__init__(self)
+		#css
+		style_context=self.get_style_context()
+		provider = Gtk.CssProvider()
+		css = b"""* {background-color: @theme_base_color; border-radius: 6px;}"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
 
 		#adding vars
 		self.client=client
 		self.settings=settings
 		self.window=window
 
+		#event box
+		event_box=Gtk.EventBox()
+		event_box.set_property("border-width", 6)
+
 		#cover
 		self.cover=Gtk.Image.new()
 		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover"))) #set to fallback cover
 
 		#connect
-		self.connect("button-press-event", self.on_button_press_event)
+		event_box.connect("button-press-event", self.on_button_press_event)
 		self.client.emitter.connect("playing_file_changed", self.refresh)
 		self.settings.connect("changed::track-cover", self.on_settings_changed)
 
-		self.add(self.cover)
+		event_box.add(self.cover)
+		self.add(event_box)
 
 	def refresh(self, *args):
 		try:
@@ -1634,9 +1651,7 @@ class Browser(Gtk.Box):
 		album_frame=FocusFrame(self.album_view.iconview)
 		album_frame.add(self.album_view)
 		self.main_cover=MainCover(self.client, self.settings, self.window)
-		self.main_cover.set_property("border-width", 6)
-		cover_frame=Gtk.Frame()
-		cover_frame.add(self.main_cover)
+		self.main_cover.set_property("border-width", 3)
 		self.playlist_view=PlaylistView(self.client, self.settings)
 		playlist_frame=FocusFrame(self.playlist_view.treeview)
 		playlist_frame.add(self.playlist_view)
@@ -1662,7 +1677,7 @@ class Browser(Gtk.Box):
 		self.box1.pack_start(artist_frame, True, True, 0)
 
 		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		self.box2.pack_start(cover_frame, False, False, 0)
+		self.box2.pack_start(self.main_cover, False, False, 0)
 		self.box2.pack_start(playlist_frame, True, True, 0)
 
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
@@ -2256,7 +2271,7 @@ class SeekBar(Gtk.Box):
 		#css (scale)
 		style_context=self.scale.get_style_context()
 		provider = Gtk.CssProvider()
-		css = b"""scale fill, scale fill:backdrop { background-color: @theme_selected_bg_color; }"""
+		css = b"""scale fill { background-color: @theme_selected_bg_color; }"""
 		provider.load_from_data(css)
 		style_context.add_provider(provider, 800)
 
