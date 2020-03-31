@@ -71,9 +71,9 @@
       <summary>Play selected albums directly</summary>
       <description></description>
     </key>
-    <key type="b" name="show-all-artists">
-      <default>false</default>
-      <summary>Show all artists instead of albumartists</summary>
+    <key type="b" name="use-album-artist">
+      <default>true</default>
+      <summary>Use 'Album Artist' tag to group albums</summary>
       <description></description>
     </key>
     <key type="ai" name="column-permutation">

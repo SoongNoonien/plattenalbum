@@ -828,10 +828,10 @@ class Settings(Gio.Settings):
 			raise ValueError
 
 	def get_artist_type(self):
-		if self.get_boolean("show-all-artists"):
-			return ("artist")
-		else:
+		if self.get_boolean("use-album-artist"):
 			return ("albumartist")
+		else:
+			return ("artist")
 
 class SongsView(Gtk.ScrolledWindow):
 	def __init__(self, client, show_album=True):
@@ -1070,7 +1070,7 @@ class ArtistView(Gtk.ScrolledWindow):
 
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
-		self.settings.connect("changed::show-all-artists", self.refresh)
+		self.settings.connect("changed::use-album-artist", self.refresh)
 		self.settings.connect("changed::show-initials", self.on_show_initials_settings_changed)
 		self.client.emitter.connect("update", self.refresh)
 
@@ -1327,6 +1327,7 @@ class AlbumView(Gtk.ScrolledWindow):
 		self.settings.connect("changed::album-cover", self.on_settings_changed)
 		self.iconview.connect("done", self.on_done)
 		self.client.emitter.connect("update", self.clear)
+		self.settings.connect("changed::use-album-artist", self.clear)
 
 		self.add(self.iconview)
 
@@ -1420,7 +1421,10 @@ class MainCover(Gtk.Frame):
 				try:
 					artist=song[self.settings.get_artist_type()]
 				except:
-					artist=""
+					try:
+						artist=song["artist"]
+					except:
+						artist=""
 				try:
 					album=song["album"]
 				except:
@@ -1776,6 +1780,13 @@ class Browser(Gtk.Box):
 		try: #since this can still be running when the connection is lost, various exceptions can occur
 			song=self.client.currentsong()
 			try:
+				artist=song[self.settings.get_artist_type()]
+			except:
+				try:
+					artist=song["artist"]
+				except:
+					artist=""
+			try:
 				if not song['genre'] == self.genre_select.get_value():
 					self.genre_select.deactivate() #deactivate genre filter to show all artists
 			except:
@@ -1784,7 +1795,7 @@ class Browser(Gtk.Box):
 				row_num=len(self.artist_view.store)
 				for i in range(0, row_num):
 					path=Gtk.TreePath(i)
-					if self.artist_view.store[path][0] == song[self.settings.get_artist_type()]:
+					if self.artist_view.store[path][0] == artist:
 						self.artist_view.treeview.set_cursor(path, None, False)
 						self.artist_view.treeview.row_activated(path, self.artist_view.column_name)
 						break
@@ -2036,7 +2047,7 @@ class GeneralSettings(Gtk.Box):
 				(_("Show initials in artist view"), "show-initials"), \
 				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
 				(_("Sort albums by year"), "sort-albums-by-year"), \
-				(_("Use 'Artist' instead of 'Album Artist'"), "show-all-artists"), \
+				(_("Use 'Album Artist' tag"), "use-album-artist"), \
 				(_("Send notification on title change"), "send-notify"), \
 				(_("Stop playback on quit"), "stop-on-quit"), \
 				(_("Play selected albums immediately"), "force-mode")]
@@ -2061,7 +2072,7 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(grid, True, True, 0)
 		self.pack_start(behavior_heading, True, True, 0)
 		self.pack_start(check_buttons["sort-albums-by-year"], True, True, 0)
-		self.pack_start(check_buttons["show-all-artists"], True, True, 0)
+		self.pack_start(check_buttons["use-album-artist"], True, True, 0)
 		self.pack_start(check_buttons["send-notify"], True, True, 0)
 		self.pack_start(check_buttons["stop-on-quit"], True, True, 0)
 		self.pack_start(check_buttons["force-mode"], True, True, 0)
