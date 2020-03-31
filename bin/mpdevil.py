@@ -204,7 +204,7 @@ class IntEntry(Gtk.SpinButton):
 		self.set_value(value)
 
 class FocusFrame(Gtk.Frame):
-	def __init__(self, child):
+	def __init__(self):
 		Gtk.Frame.__init__(self)
 
 		#css
@@ -219,9 +219,9 @@ class FocusFrame(Gtk.Frame):
 
 		self.style_context.add_provider(provider_start, 800)
 
-		#connect
-		child.connect("focus-in-event", self.on_focus_in_event)
-		child.connect("focus-out-event", self.on_focus_out_event)
+	def set_widget(self, widget):
+		widget.connect("focus-in-event", self.on_focus_in_event)
+		widget.connect("focus-out-event", self.on_focus_out_event)
 
 	def on_focus_in_event(self, *args):
 		self.style_context.add_provider(self.provider, 800)
@@ -1029,10 +1029,9 @@ class GenreSelect(Gtk.ComboBoxText):
 		self.client.emitter.emit("update")
 		self.client.emitter.handler_unblock(self.update_signal)
 
-class ArtistView(Gtk.ScrolledWindow):
+class ArtistView(FocusFrame):
 	def __init__(self, client, settings, genre_select):
-		Gtk.ScrolledWindow.__init__(self)
-		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		FocusFrame.__init__(self)
 
 		#adding vars
 		self.client=client
@@ -1068,13 +1067,19 @@ class ArtistView(Gtk.ScrolledWindow):
 		self.column_name.set_property("resizable", False)
 		self.treeview.append_column(self.column_name)
 
+		#scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		scroll.add(self.treeview)
+
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.settings.connect("changed::use-album-artist", self.refresh)
 		self.settings.connect("changed::show-initials", self.on_show_initials_settings_changed)
 		self.client.emitter.connect("update", self.refresh)
 
-		self.add(self.treeview)
+		self.set_widget(self.treeview)
+		self.add(scroll)
 
 	@GObject.Signal
 	def artists_changed(self):
@@ -1307,10 +1312,9 @@ class AlbumIconView(Gtk.IconView):
 		selected_artist=self.store.get_value(treeiter, 5)
 		self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
 
-class AlbumView(Gtk.ScrolledWindow):
+class AlbumView(FocusFrame):
 	def __init__(self, client, settings, genre_select, window):
-		Gtk.ScrolledWindow.__init__(self)
-		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		FocusFrame.__init__(self)
 
 		#adding vars
 		self.settings=settings
@@ -1321,7 +1325,13 @@ class AlbumView(Gtk.ScrolledWindow):
 		self.done=True
 		self.pending=[]
 
+		#iconview
 		self.iconview=AlbumIconView(self.client, self.settings, self.genre_select, self.window)
+
+		#scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		scroll.add(self.iconview)
 
 		#connect
 		self.settings.connect("changed::album-cover", self.on_settings_changed)
@@ -1329,7 +1339,8 @@ class AlbumView(Gtk.ScrolledWindow):
 		self.client.emitter.connect("update", self.clear)
 		self.settings.connect("changed::use-album-artist", self.clear)
 
-		self.add(self.iconview)
+		self.set_widget(self.iconview)
+		self.add(scroll)
 
 	def clear(self, *args):
 		if self.done:
@@ -1505,6 +1516,11 @@ class PlaylistView(Gtk.Box):
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scroll.add(self.treeview)
 
+		#frame
+		frame=FocusFrame()
+		frame.set_widget(self.treeview)
+		frame.add(scroll)
+
 		#audio infos
 		audio=AudioType(self.client)
 
@@ -1533,7 +1549,7 @@ class PlaylistView(Gtk.Box):
 		self.settings.connect("changed::column-permutation", self.load_settings)
 
 		#packing
-		self.pack_start(scroll, True, True, 0)
+		self.pack_start(frame, True, True, 0)
 		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.pack_end(status_bar, False, False, 0)
 
@@ -1709,16 +1725,10 @@ class Browser(Gtk.Box):
 		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings)
 		self.artist_view=ArtistView(self.client, self.settings, self.genre_select)
-		artist_frame=FocusFrame(self.artist_view.treeview)
-		artist_frame.add(self.artist_view)
 		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
-		album_frame=FocusFrame(self.album_view.iconview)
-		album_frame.add(self.album_view)
 		self.main_cover=MainCover(self.client, self.settings, self.window)
 		self.main_cover.set_property("border-width", 3)
 		self.playlist_view=PlaylistView(self.client, self.settings)
-		playlist_frame=FocusFrame(self.playlist_view.treeview)
-		playlist_frame.add(self.playlist_view)
 
 		#connect
 		self.back_to_album_button.connect("clicked", self.back_to_album)
@@ -1738,11 +1748,11 @@ class Browser(Gtk.Box):
 		self.box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.box1.pack_start(hbox, False, False, 0)
 		self.box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		self.box1.pack_start(artist_frame, True, True, 0)
+		self.box1.pack_start(self.artist_view, True, True, 0)
 
 		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.box2.pack_start(self.main_cover, False, False, 0)
-		self.box2.pack_start(playlist_frame, True, True, 0)
+		self.box2.pack_start(self.playlist_view, True, True, 0)
 
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
@@ -1751,7 +1761,7 @@ class Browser(Gtk.Box):
 		self.paned2.set_wide_handle(True)
 
 		self.paned1.pack1(self.box1, False, False)
-		self.paned1.pack2(album_frame, True, False)
+		self.paned1.pack2(self.album_view, True, False)
 
 		self.paned2.pack1(self.paned1, True, False)
 		self.paned2.pack2(self.box2, False, False)
