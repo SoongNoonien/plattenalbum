@@ -1510,12 +1510,13 @@ class PlaylistView(Gtk.Box):
 
 		#playlist info
 		self.playlist_info=Gtk.Label()
+		self.playlist_info.set_margin_start(5)
 		self.playlist_info.set_xalign(0)
 		self.playlist_info.set_ellipsize(Pango.EllipsizeMode.END)
 
 		#status bar
 		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-		status_bar.set_property("border-width", 6)
+		status_bar.set_property("border-width", 1)
 		status_bar.pack_start(self.playlist_info, True, True, 0)
 		status_bar.pack_end(audio, False, False, 0)
 
@@ -2590,10 +2591,11 @@ class PlaybackOptions(Gtk.Box):
 			self.volume.set_value(0)
 		self.volume.handler_unblock(self.volume_changed)
 
-class AudioType(Gtk.EventBox):
+class AudioType(Gtk.Button):
 	def __init__(self, client):
-		Gtk.EventBox.__init__(self)
-		self.set_tooltip_text(_("Click to show additional information"))
+		Gtk.Button.__init__(self)
+		self.set_relief(Gtk.ReliefStyle.NONE)
+		self.set_tooltip_text(_("Show additional information"))
 
 		#adding vars
 		self.client=client
@@ -2631,7 +2633,7 @@ class AudioType(Gtk.EventBox):
 		GLib.timeout_add(1000, self.refresh)
 
 		#connect
-		self.connect("button-press-event", self.on_button_press_event)
+		self.connect("clicked", self.on_clicked)
 
 		#packing
 		self.popover.add(self.treeview)
@@ -2653,21 +2655,20 @@ class AudioType(Gtk.EventBox):
 			self.label.set_text("-")
 		return True
 
-	def on_button_press_event(self, widget, event):
-		if event.button == 1 or event.button == 2 or event.button == 3:
-			try:
-				self.store.clear()
-				song=self.client.status()["song"]
-				tags=self.client.playlistinfo(song)[0]
-				for key in tags:
-					if key == "time":
-						self.store.append([key, str(datetime.timedelta(seconds=int(tags[key])))])
-					else:
-						self.store.append([key, tags[key]])
-				self.popover.show_all()
-				self.treeview.queue_resize()
-			except:
-				pass
+	def on_clicked(self, *args):
+		try:
+			self.store.clear()
+			song=self.client.status()["song"]
+			tags=self.client.playlistinfo(song)[0]
+			for key in tags:
+				if key == "time":
+					self.store.append([key, str(datetime.timedelta(seconds=int(tags[key])))])
+				else:
+					self.store.append([key, tags[key]])
+			self.popover.show_all()
+			self.treeview.queue_resize()
+		except:
+			pass
 
 class ProfileSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings):
