@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-04-01 12:50+0200\n"
-"PO-Revision-Date: 2020-04-01 12:51+0200\n"
+"POT-Creation-Date: 2020-04-01 13:21+0200\n"
+"PO-Revision-Date: 2020-04-01 13:22+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -180,8 +180,8 @@ msgid "Stop playback on quit"
 msgstr "Wiedergabe beim Beenden stoppen"
 
 #: mpdevil.py:2062
-msgid "Play selected albums immediately"
-msgstr "Ausgewählte Alben sofort abspielen"
+msgid "Play selected albums and titles immediately"
+msgstr "Ausgewählte Alben und Titel sofort abspielen"
 
 #: mpdevil.py:2138
 msgid "Choose the order of information to appear in the playlist:"

@@ -2059,7 +2059,7 @@ class GeneralSettings(Gtk.Box):
 				(_("Use 'Album Artist' tag"), "use-album-artist"), \
 				(_("Send notification on title change"), "send-notify"), \
 				(_("Stop playback on quit"), "stop-on-quit"), \
-				(_("Play selected albums immediately"), "force-mode")]
+				(_("Play selected albums and titles immediately"), "force-mode")]
 
 		for data in settings_list:
 			check_buttons[data[1]]=Gtk.CheckButton(label=data[0])
