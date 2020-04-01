@@ -1220,7 +1220,10 @@ class AlbumIconView(Gtk.IconView):
 				GLib.idle_add(self.emit, "done")
 				return
 		#display albums
-		self.store.set_sort_column_id(Gtk.TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID, Gtk.SortType.ASCENDING)
+		if self.settings.get_boolean("sort-albums-by-year"):
+			albums = sorted(albums, key=lambda k: k['year'])
+		else:
+			albums = sorted(albums, key=lambda k: k['album'])
 		music_lib=self.settings.get_value("paths")[self.settings.get_int("active-profile")]
 		size=self.settings.get_int("album-cover")
 		z=0
@@ -1247,7 +1250,6 @@ class AlbumIconView(Gtk.IconView):
 				z=z+1
 			else:
 				break
-		GLib.idle_add(self.sort_settings)
 		GLib.idle_add(self.emit, "done")
 
 	def scroll_to_selected_album(self):
