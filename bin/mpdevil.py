@@ -1879,7 +1879,14 @@ class ProfileSettings(Gtk.Grid):
 		address_entry.pack_start(self.port_entry, False, False, 0)
 		self.password_entry=Gtk.Entry()
 		self.password_entry.set_visibility(False)
-		self.path_select_button=Gtk.Button(label=_("Select"), image=Gtk.Image(stock=Gtk.STOCK_OPEN))
+		self.current_path_label=Gtk.Label()
+		self.current_path_label.set_sensitive(False)
+		self.current_path_label.set_xalign(0)
+		self.current_path_label.set_ellipsize(Pango.EllipsizeMode.START)
+		self.path_select_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_OPEN))
+		path_box=Gtk.Box(spacing=6)
+		path_box.pack_start(self.current_path_label, True, True, 0)
+		path_box.pack_start(self.path_select_button, False, False, 0)
 
 		profiles_label=Gtk.Label(label=_("Profile:"))
 		profiles_label.set_xalign(1)
@@ -1916,7 +1923,7 @@ class ProfileSettings(Gtk.Grid):
 		self.attach_next_to(self.profile_entry, profile_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(address_entry, host_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(self.password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(self.path_select_button, path_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(path_box, path_label, Gtk.PositionType.RIGHT, 2, 1)
 
 	def profiles_combo_reload(self, *args):
 		self.profiles_combo.handler_block(self.profiles_combo_changed)
@@ -1981,6 +1988,7 @@ class ProfileSettings(Gtk.Grid):
 		if response == Gtk.ResponseType.OK:
 			self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), dialog.get_filename())
 			self.path_select_button.set_tooltip_text(dialog.get_filename())
+			self.current_path_label.set_label(dialog.get_filename())
 		dialog.destroy()
 
 	def on_profiles_changed(self, *args):
@@ -1995,6 +2003,7 @@ class ProfileSettings(Gtk.Grid):
 		self.port_entry.set_int(self.settings.get_value("ports")[active])
 		self.password_entry.set_text(self.settings.get_value("passwords")[active])
 		self.path_select_button.set_tooltip_text(self.settings.get_value("paths")[active])
+		self.current_path_label.set_label(self.settings.get_value("paths")[active])
 
 		self.profile_entry.handler_unblock(self.profile_entry_changed)
 		self.host_entry.handler_unblock(self.host_entry_changed)
