@@ -2030,18 +2030,17 @@ class GeneralSettings(Gtk.Box):
 			icon_size_combo.append_text(str(i))
 		icon_size_combo.set_active(sizes.index(self.settings.get_int("icon-size")))
 
-		#grid
-		grid=Gtk.Grid()
-		grid.set_row_spacing(6)
-		grid.set_column_spacing(12)
-		grid.set_margin_start(12)
-		grid.add(track_cover_label)
-		grid.attach_next_to(album_cover_label, track_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
-		grid.attach_next_to(icon_size_label1, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
-		grid.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
-		grid.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
-		grid.attach_next_to(icon_size_combo, icon_size_label1, Gtk.PositionType.RIGHT, 1, 1)
-		grid.attach_next_to(icon_size_label2, icon_size_combo, Gtk.PositionType.RIGHT, 1, 1)
+		album_sort_label=Gtk.Label(label=_("Sort albums by:"))
+		album_sort_label.set_xalign(0)
+		album_sort_combo=Gtk.ComboBoxText()
+		album_sort_combo.set_entry_text_column(0)
+		sorts=[_("name"), _("year")]
+		for i in sorts:
+			album_sort_combo.append_text(str(i))
+		if self.settings.get_boolean("sort-albums-by-year"):
+			album_sort_combo.set_active(1)
+		else:
+			album_sort_combo.set_active(0)
 
 		#headings
 		view_heading=Gtk.Label()
@@ -2051,13 +2050,12 @@ class GeneralSettings(Gtk.Box):
 		behavior_heading.set_markup(_("<b>Behavior</b>"))
 		behavior_heading.set_xalign(0)
 
-		#fill store
+		#check buttons
 		check_buttons={}
 		settings_list=[(_("Use alternative layout"), "alt-layout"), \
 				(_("Show stop button"), "show-stop"), \
 				(_("Show initials in artist view"), "show-initials"), \
 				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
-				(_("Sort albums by year"), "sort-albums-by-year"), \
 				(_("Use 'Album Artist' tag"), "use-album-artist"), \
 				(_("Send notification on title change"), "send-notify"), \
 				(_("Stop playback on quit"), "stop-on-quit"), \
@@ -2069,10 +2067,32 @@ class GeneralSettings(Gtk.Box):
 			check_buttons[data[1]].connect("toggled", self.on_toggled, data[1])
 			check_buttons[data[1]].set_margin_start(12)
 
+		#view grid
+		view_grid=Gtk.Grid()
+		view_grid.set_row_spacing(6)
+		view_grid.set_column_spacing(12)
+		view_grid.set_margin_start(12)
+		view_grid.add(track_cover_label)
+		view_grid.attach_next_to(album_cover_label, track_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
+		view_grid.attach_next_to(icon_size_label1, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
+		view_grid.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.attach_next_to(icon_size_combo, icon_size_label1, Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.attach_next_to(icon_size_label2, icon_size_combo, Gtk.PositionType.RIGHT, 1, 1)
+
+		#behavior grid
+		behavior_grid=Gtk.Grid()
+		behavior_grid.set_row_spacing(6)
+		behavior_grid.set_column_spacing(12)
+		behavior_grid.set_margin_start(12)
+		behavior_grid.add(album_sort_label)
+		behavior_grid.attach_next_to(album_sort_combo, album_sort_label, Gtk.PositionType.RIGHT, 1, 1)
+
 		#connect
 		track_cover_size.connect("value-changed", self.on_int_changed, "track-cover")
 		album_cover_size.connect("value-changed", self.on_int_changed, "album-cover")
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
+		album_sort_combo.connect("changed", self.on_album_sort_changed)
 
 		#packing
 		self.pack_start(view_heading, True, True, 0)
@@ -2080,14 +2100,13 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(check_buttons["show-stop"], True, True, 0)
 		self.pack_start(check_buttons["show-initials"], True, True, 0)
 		self.pack_start(check_buttons["show-album-view-tooltips"], True, True, 0)
-		self.pack_start(grid, True, True, 0)
+		self.pack_start(view_grid, True, True, 0)
 		self.pack_start(behavior_heading, True, True, 0)
-		self.pack_start(check_buttons["sort-albums-by-year"], True, True, 0)
 		self.pack_start(check_buttons["use-album-artist"], True, True, 0)
 		self.pack_start(check_buttons["send-notify"], True, True, 0)
 		self.pack_start(check_buttons["stop-on-quit"], True, True, 0)
 		self.pack_start(check_buttons["force-mode"], True, True, 0)
-
+		self.pack_start(behavior_grid, True, True, 0)
 
 	def on_int_changed(self, widget, key):
 		self.settings.set_int(key, widget.get_int())
@@ -2095,6 +2114,13 @@ class GeneralSettings(Gtk.Box):
 	def on_icon_size_changed(self, box):
 		active_size=int(box.get_active_text())
 		self.settings.set_int("icon-size", active_size)
+
+	def on_album_sort_changed(self, box):
+		active=box.get_active()
+		if active == 0:
+			self.settings.set_boolean("sort-albums-by-year", False)
+		else:
+			self.settings.set_boolean("sort-albums-by-year", True)
 
 	def on_toggled(self, widget, key):
 		self.settings.set_boolean(key, widget.get_active())
