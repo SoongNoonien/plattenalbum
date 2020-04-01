@@ -91,9 +91,9 @@
       <summary>Sizes of columns in playlist</summary>
       <description></description>
     </key>
-    <key type="b" name="alt-layout">
+    <key type="b" name="playlist-right">
       <default>false</default>
-      <summary>Use alternative layout</summary>
+      <summary>Move playlist to the right</summary>
       <description></description>
     </key>
     <key type="i" name="active-profile">

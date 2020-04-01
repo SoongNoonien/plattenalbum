@@ -1736,7 +1736,7 @@ class Browser(Gtk.Box):
 		self.back_to_album_button.connect("clicked", self.back_to_album)
 		self.search_button.connect("toggled", self.on_search_toggled)
 		self.artist_view.connect("artists_changed", self.on_artists_changed)
-		self.settings.connect("changed::alt-layout", self.on_layout_settings_changed)
+		self.settings.connect("changed::playlist-right", self.on_playlist_pos_settings_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
 
@@ -1771,7 +1771,7 @@ class Browser(Gtk.Box):
 		self.load_settings()
 		self.pack_start(self.paned2, True, True, 0)
 
-		self.on_layout_settings_changed()
+		self.on_playlist_pos_settings_changed()
 
 	def save_settings(self):
 		self.settings.set_int("paned1", self.paned1.get_position())
@@ -1844,13 +1844,13 @@ class Browser(Gtk.Box):
 		artists=self.artist_view.get_selected_artists()
 		self.album_view.refresh(artists)
 
-	def on_layout_settings_changed(self, *args):
-		if self.settings.get_boolean("alt-layout"):
-			self.box2.set_orientation(Gtk.Orientation.HORIZONTAL)
-			self.paned2.set_orientation(Gtk.Orientation.VERTICAL)
-		else:
+	def on_playlist_pos_settings_changed(self, *args):
+		if self.settings.get_boolean("playlist-right"):
 			self.box2.set_orientation(Gtk.Orientation.VERTICAL)
 			self.paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
+		else:
+			self.box2.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self.paned2.set_orientation(Gtk.Orientation.VERTICAL)
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
@@ -2041,17 +2041,21 @@ class GeneralSettings(Gtk.Box):
 			icon_size_combo.append_text(str(i))
 		icon_size_combo.set_active(sizes.index(self.settings.get_int("icon-size")))
 
-		album_sort_label=Gtk.Label(label=_("Sort albums by:"))
-		album_sort_label.set_xalign(0)
-		album_sort_combo=Gtk.ComboBoxText()
-		album_sort_combo.set_entry_text_column(0)
-		sorts=[_("name"), _("year")]
-		for i in sorts:
-			album_sort_combo.append_text(str(i))
-		if self.settings.get_boolean("sort-albums-by-year"):
-			album_sort_combo.set_active(1)
-		else:
-			album_sort_combo.set_active(0)
+		combo_settings={}
+		combo_settings_data=[(_("Sort albums by:"), _("name"), _("year"), "sort-albums-by-year"), \
+					(_("Position of playlist:"), _("bottom"), _("right"), "playlist-right")]
+		for data in combo_settings_data:
+			combo_settings[data[3]]=(Gtk.Label(), Gtk.ComboBoxText())
+			combo_settings[data[3]][0].set_label(data[0])
+			combo_settings[data[3]][0].set_xalign(0)
+			combo_settings[data[3]][1].set_entry_text_column(0)
+			combo_settings[data[3]][1].append_text(data[1])
+			combo_settings[data[3]][1].append_text(data[2])
+			if self.settings.get_boolean(data[3]):
+				combo_settings[data[3]][1].set_active(1)
+			else:
+				combo_settings[data[3]][1].set_active(0)
+			combo_settings[data[3]][1].connect("changed", self.on_combo_changed, data[3])
 
 		#headings
 		view_heading=Gtk.Label()
@@ -2063,8 +2067,7 @@ class GeneralSettings(Gtk.Box):
 
 		#check buttons
 		check_buttons={}
-		settings_list=[(_("Use alternative layout"), "alt-layout"), \
-				(_("Show stop button"), "show-stop"), \
+		settings_list=[(_("Show stop button"), "show-stop"), \
 				(_("Show initials in artist view"), "show-initials"), \
 				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
 				(_("Use 'Album Artist' tag"), "use-album-artist"), \
@@ -2086,28 +2089,28 @@ class GeneralSettings(Gtk.Box):
 		view_grid.add(track_cover_label)
 		view_grid.attach_next_to(album_cover_label, track_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
 		view_grid.attach_next_to(icon_size_label1, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
+		view_grid.attach_next_to(combo_settings["playlist-right"][0], icon_size_label1, Gtk.PositionType.BOTTOM, 1, 1)
 		view_grid.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(icon_size_combo, icon_size_label1, Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(icon_size_label2, icon_size_combo, Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.attach_next_to(combo_settings["playlist-right"][1], combo_settings["playlist-right"][0], Gtk.PositionType.RIGHT, 1, 1)
 
 		#behavior grid
 		behavior_grid=Gtk.Grid()
 		behavior_grid.set_row_spacing(6)
 		behavior_grid.set_column_spacing(12)
 		behavior_grid.set_margin_start(12)
-		behavior_grid.add(album_sort_label)
-		behavior_grid.attach_next_to(album_sort_combo, album_sort_label, Gtk.PositionType.RIGHT, 1, 1)
+		behavior_grid.add(combo_settings["sort-albums-by-year"][0])
+		behavior_grid.attach_next_to(combo_settings["sort-albums-by-year"][1], combo_settings["sort-albums-by-year"][0], Gtk.PositionType.RIGHT, 1, 1)
 
 		#connect
 		track_cover_size.connect("value-changed", self.on_int_changed, "track-cover")
 		album_cover_size.connect("value-changed", self.on_int_changed, "album-cover")
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
-		album_sort_combo.connect("changed", self.on_album_sort_changed)
 
 		#packing
 		self.pack_start(view_heading, True, True, 0)
-		self.pack_start(check_buttons["alt-layout"], True, True, 0)
 		self.pack_start(check_buttons["show-stop"], True, True, 0)
 		self.pack_start(check_buttons["show-initials"], True, True, 0)
 		self.pack_start(check_buttons["show-album-view-tooltips"], True, True, 0)
@@ -2126,12 +2129,12 @@ class GeneralSettings(Gtk.Box):
 		active_size=int(box.get_active_text())
 		self.settings.set_int("icon-size", active_size)
 
-	def on_album_sort_changed(self, box):
+	def on_combo_changed(self, box, key):
 		active=box.get_active()
 		if active == 0:
-			self.settings.set_boolean("sort-albums-by-year", False)
+			self.settings.set_boolean(key, False)
 		else:
-			self.settings.set_boolean("sort-albums-by-year", True)
+			self.settings.set_boolean(key, True)
 
 	def on_toggled(self, widget, key):
 		self.settings.set_boolean(key, widget.get_active())
