@@ -837,7 +837,7 @@ class Settings(Gio.Settings):
 			return ("artist")
 
 class SongsView(Gtk.ScrolledWindow):
-	def __init__(self, client, show_album=True):
+	def __init__(self, client, show_album=True, sort_enable=True):
 		Gtk.ScrolledWindow.__init__(self)
 		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
@@ -859,37 +859,40 @@ class SongsView(Gtk.ScrolledWindow):
 
 		#columns
 		renderer_text = Gtk.CellRendererText()
+		renderer_text_ralign = Gtk.CellRendererText(xalign=1.0)
 
-		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text, text=0)
+		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
 		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_track.set_property("resizable", False)
-		self.column_track.set_sort_column_id(0)
 		self.treeview.append_column(self.column_track)
 
 		self.column_title = Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
 		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_title.set_property("resizable", False)
-		self.column_title.set_sort_column_id(1)
 		self.treeview.append_column(self.column_title)
 
 		self.column_artist = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
 		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_artist.set_property("resizable", False)
-		self.column_artist.set_sort_column_id(2)
 		self.treeview.append_column(self.column_artist)
 
+		self.column_album = Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
+		self.column_album.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_album.set_property("resizable", False)
 		if show_album:
-			self.column_album = Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
-			self.column_album.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-			self.column_album.set_property("resizable", False)
-			self.column_album.set_sort_column_id(3)
 			self.treeview.append_column(self.column_album)
 
 		self.column_time = Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
 		self.column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_time.set_property("resizable", False)
-		self.column_time.set_sort_column_id(4)
 		self.treeview.append_column(self.column_time)
+
+		if sort_enable:
+			self.column_track.set_sort_column_id(0)
+			self.column_title.set_sort_column_id(1)
+			self.column_artist.set_sort_column_id(2)
+			self.column_album.set_sort_column_id(3)
+			self.column_time.set_sort_column_id(4)
 
 		#connect
 		self.treeview.connect("row-activated", self.on_row_activated)
@@ -935,9 +938,9 @@ class SongsView(Gtk.ScrolledWindow):
 			except:
 				title=_("Unknown Title")
 			try:
-				track=song["track"].zfill(2)
+				track=song["track"]
 			except:
-				track="00"
+				track="0"
 			try:
 				artist=song["artist"]
 			except:
@@ -975,7 +978,7 @@ class AlbumDialog(Gtk.Dialog):
 		self.year=year
 
 		#songs view
-		self.songs_view=SongsView(self.client, False)
+		self.songs_view=SongsView(self.client, False, False)
 		self.songs_view.populate(self.client.find("album", self.album, "date", self.year, self.settings.get_artist_type(), self.artist))
 
 		#packing
