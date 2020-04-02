@@ -231,11 +231,14 @@ class FocusFrame(Gtk.Frame):
 
 class Cover(object):
 	def __init__(self, lib_path, song_file):
-		self.lib_path=lib_path
+		self.lib_path=lib_path or "/"
 		self.path=None
 		if not song_file == None:
 			head_tail=os.path.split(song_file)
-			path=(self.lib_path+"/"+head_tail[0]+"/")
+			if self.lib_path[-1] == "/":
+				path=(self.lib_path+head_tail[0]+"/")
+			else:
+				path=(self.lib_path+"/"+head_tail[0]+"/")
 			if os.path.exists(path):
 				filelist=[file for file in os.listdir(path) if file.endswith('.jpg') or file.endswith('.png') or file.endswith('.gif')]
 				if not filelist == []:
@@ -420,10 +423,10 @@ class Client(AutoSettingsClient):
 		self.emitter.emit("mixer")
 		self.emitter.emit("update")
 
-	def on_file_changed(self, *args): #TODO
+	def on_file_changed(self, *args):
 		if not self.song_to_delete == "":
 			status=self.status()
-			if not status["song"] == "0":
+			if not status["song"] == "0": #TODO
 				if self.playlistinfo()[0]["file"] == self.song_to_delete:
 					self.delete(0)
 				self.song_to_delete=""
