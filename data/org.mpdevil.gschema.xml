@@ -2,32 +2,32 @@
 <schemalist>
   <schema id="org.mpdevil" path="/org/mpdevil/">
     <key type="i" name="width">
-      <default>1080</default>
+      <default>1050</default>
       <summary>Default width of window</summary>
       <description></description>
     </key>
     <key type="i" name="height">
-      <default>840</default>
+      <default>1020</default>
       <summary>Default height of window</summary>
       <description></description>
     </key>
     <key type="i" name="paned1">
-      <default>170</default>
+      <default>246</default>
       <summary>Default position of artist/album separator</summary>
       <description></description>
     </key>
     <key type="i" name="paned2">
-      <default>680</default>
+      <default>598</default>
       <summary>Default position of browser/playlist separator</summary>
       <description></description>
     </key>
     <key type="i" name="album-cover">
-      <default>150</default>
+      <default>140</default>
       <summary>Size of covers in album view</summary>
       <description></description>
     </key>
     <key type="i" name="track-cover">
-      <default>400</default>
+      <default>350</default>
       <summary>Size of main cover</summary>
       <description></description>
     </key>
@@ -52,7 +52,7 @@
       <description></description>
     </key>
     <key type="b" name="sort-albums-by-year">
-      <default>true</default>
+      <default>false</default>
       <summary>Sort albums by year</summary>
       <description></description>
     </key>
@@ -67,7 +67,7 @@
       <description></description>
     </key>
     <key type="b" name="force-mode">
-      <default>true</default>
+      <default>false</default>
       <summary>Play selected albums directly</summary>
       <description></description>
     </key>
@@ -82,7 +82,7 @@
       <description></description>
     </key>
     <key type="ab" name="column-visibilities">
-      <default>[true, false, true, true, false, true, false, false]</default>
+      <default>[true, false, true, true, true, true, false, false]</default>
       <summary>Visibility of columns in playlist</summary>
       <description></description>
     </key>
