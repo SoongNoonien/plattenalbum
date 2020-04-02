@@ -964,9 +964,15 @@ class SongsView(Gtk.ScrolledWindow):
 
 class AlbumDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, album, artist, year):
-		Gtk.Dialog.__init__(self, title=(artist+" - "+album+" ("+year+")"), transient_for=parent)
+		Gtk.Dialog.__init__(self, transient_for=parent)
 		self.add_buttons(Gtk.STOCK_ADD, Gtk.ResponseType.ACCEPT, Gtk.STOCK_MEDIA_PLAY, Gtk.ResponseType.YES, Gtk.STOCK_OPEN, Gtk.ResponseType.OK, Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
 		self.set_default_size(800, 600)
+
+		#title
+		if year == "":
+			self.set_title(artist+" - "+album)
+		else:
+			self.set_title(artist+" - "+album+" ("+year+")")
 
 		#adding vars
 		self.client=client
