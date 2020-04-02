@@ -1884,13 +1884,10 @@ class ProfileSettings(Gtk.Grid):
 		address_entry.pack_start(self.port_entry, False, False, 0)
 		self.password_entry=Gtk.Entry()
 		self.password_entry.set_visibility(False)
-		self.current_path_label=Gtk.Label()
-		self.current_path_label.set_sensitive(False)
-		self.current_path_label.set_xalign(0)
-		self.current_path_label.set_ellipsize(Pango.EllipsizeMode.START)
+		self.path_entry=Gtk.Entry()
 		self.path_select_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_OPEN))
 		path_box=Gtk.Box(spacing=6)
-		path_box.pack_start(self.current_path_label, True, True, 0)
+		path_box.pack_start(self.path_entry, True, True, 0)
 		path_box.pack_start(self.path_select_button, False, False, 0)
 
 		profiles_label=Gtk.Label(label=_("Profile:"))
@@ -1909,6 +1906,7 @@ class ProfileSettings(Gtk.Grid):
 		self.host_entry_changed=self.host_entry.connect("changed", self.on_host_entry_changed)
 		self.port_entry_changed=self.port_entry.connect("value-changed", self.on_port_entry_changed)
 		self.password_entry_changed=self.password_entry.connect("changed", self.on_password_entry_changed)
+		self.path_entry_changed=self.path_entry.connect("changed", self.on_path_entry_changed)
 		self.path_select_button.connect("clicked", self.on_path_select_button_clicked, parent)
 		add_button.connect("clicked", self.on_add_button_clicked)
 		delete_button.connect("clicked", self.on_delete_button_clicked)
@@ -1983,6 +1981,9 @@ class ProfileSettings(Gtk.Grid):
 	def on_password_entry_changed(self, *args):
 		self.settings.array_modify('as', "passwords", self.profiles_combo.get_active(), self.password_entry.get_text())
 
+	def on_path_entry_changed(self, *args):
+		self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), self.path_entry.get_text())
+
 	def on_path_select_button_clicked(self, widget, parent):
 		dialog = Gtk.FileChooserDialog(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
 		dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
@@ -1992,8 +1993,7 @@ class ProfileSettings(Gtk.Grid):
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
 			self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), dialog.get_filename())
-			self.path_select_button.set_tooltip_text(dialog.get_filename())
-			self.current_path_label.set_label(dialog.get_filename())
+			self.path_entry.set_text(dialog.get_filename())
 		dialog.destroy()
 
 	def on_profiles_changed(self, *args):
@@ -2007,8 +2007,7 @@ class ProfileSettings(Gtk.Grid):
 		self.host_entry.set_text(self.settings.get_value("hosts")[active])
 		self.port_entry.set_int(self.settings.get_value("ports")[active])
 		self.password_entry.set_text(self.settings.get_value("passwords")[active])
-		self.path_select_button.set_tooltip_text(self.settings.get_value("paths")[active])
-		self.current_path_label.set_label(self.settings.get_value("paths")[active])
+		self.path_entry.set_text(self.settings.get_value("paths")[active])
 
 		self.profile_entry.handler_unblock(self.profile_entry_changed)
 		self.host_entry.handler_unblock(self.host_entry_changed)
