@@ -378,11 +378,9 @@ class Client(AutoSettingsClient):
 		#adding vars
 		self.settings=settings
 		self.emitter=MpdEventEmitter(self.settings)
-		self.song_to_delete=""
 
 		#connect
 		self.emitter.connect("reconnected", self.on_reconnected)
-		self.emitter.connect("playing_file_changed", self.on_file_changed)
 
 	def files_to_playlist(self, files, append, force=False):
 		if append:
@@ -390,7 +388,6 @@ class Client(AutoSettingsClient):
 				self.add(f)
 		else:
 			if self.settings.get_boolean("force-mode") or force or self.status()["state"] == "stop":
-				self.song_to_delete=""
 				if not files == []:
 					self.clear()
 					for f in files:
@@ -399,17 +396,16 @@ class Client(AutoSettingsClient):
 			else:
 				status=self.status()
 				self.moveid(status["songid"], 0)
-				self.song_to_delete=self.playlistinfo()[0]["file"]
+				current_song_file=self.playlistinfo()[0]["file"]
 				try:
 					self.delete((1,)) # delete all songs, but the first. #bad song index possible
 				except:
 					pass
 				for f in files:
-					if not f == self.song_to_delete:
+					if not f == current_song_file:
 						self.add(f)
 					else:
 						self.move(0, (len(self.playlist())-1))
-						self.song_to_delete=""
 
 	def album_to_playlist(self, album, artist, year, append, force=False):
 		songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
@@ -422,14 +418,6 @@ class Client(AutoSettingsClient):
 		self.emitter.emit("options")
 		self.emitter.emit("mixer")
 		self.emitter.emit("update")
-
-	def on_file_changed(self, *args):
-		if not self.song_to_delete == "":
-			status=self.status()
-			if not status["song"] == "0": #TODO
-				if self.playlistinfo()[0]["file"] == self.song_to_delete:
-					self.delete(0)
-				self.song_to_delete=""
 
 class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 	__introspect_interface = "org.freedesktop.DBus.Introspectable"
