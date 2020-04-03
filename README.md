@@ -14,7 +14,7 @@ Features
 - control with media keys
 - displays covers
 - sends notifications on title change
-- fetches lyrics form the web (based on PyLyrics)
+- fetches lyrics from the web (based on PyLyrics)
 - MPRIS interface (based on mpDris2)
 
 Building and installation
