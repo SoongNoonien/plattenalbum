@@ -1810,7 +1810,8 @@ class Browser(Gtk.Box):
 					path=Gtk.TreePath(i)
 					if self.artist_view.store[path][0] == artist:
 						self.artist_view.treeview.set_cursor(path, None, False)
-						self.artist_view.treeview.row_activated(path, self.artist_view.column_name)
+						if not self.artist_view.get_selected_artists() == [artist]:
+							self.artist_view.treeview.row_activated(path, self.artist_view.column_name)
 						break
 			else:
 				self.artist_view.treeview.set_cursor(Gtk.TreePath(0), None, False) #set cursor to 'all artists'
