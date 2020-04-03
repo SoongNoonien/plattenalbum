@@ -7,24 +7,29 @@ mpdevil is focused on playing your local music directly instead of managing play
 Features
 --------
 
-1. playing songs without doubleclicking
-2. displaying covers
-3. fetching lyrics form the web (based on PyLyrics 1.1.0)
-4. searching songs in your music library
-5. removing single tracks form playlist by hovering and pressing del
-6. appending albums by middleclick
-7. query albums by rightclick 
-8. sending notifications on title change
-9. managing multiple mpd servers
-10. filtering by genre
-
-TODO
-----
-1. Support media keys
-2. MPRIS interface
+- play songs without doubleclicking
+- search songs in your music library
+- manage multiple mpd servers
+- filter by genre
+- control with media keys
+- displays covers
+- sends notifications on title change
+- fetches lyrics form the web (based on PyLyrics)
+- MPRIS interface (based on mpDris2)
 
 Building and installation
 -------------------------
+
+Dependencies:
+- Gtk3
+- Python3
+
+Python modules:
+- mpd (python-mpd2)
+- gi (Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib, Notify)
+- requests
+- bs4 (beautifulsoup)
+- dbus
 
 To build from source, use:
 
