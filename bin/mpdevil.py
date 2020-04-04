@@ -1467,7 +1467,6 @@ class PlaylistView(Gtk.Box):
 		self.client=client
 		self.settings=settings
 		self.playlist_version=None
-		self.last_song_path=None
 
 		#Store
 		#(track, disc, title, artist, album, duration, date, genre, file, weight)
@@ -1598,22 +1597,15 @@ class PlaylistView(Gtk.Box):
 
 	def refresh_selection(self): #Gtk.TreePath(len(self.store) is used to generate an invalid TreePath (needed to unset cursor)
 		self.treeview.set_cursor(Gtk.TreePath(len(self.store)), None, False)
+		for row in self.store: #reset bold text
+			row[9]=Pango.Weight.BOOK
 		try:
 			song=self.client.status()["song"]
 			path = Gtk.TreePath(int(song))
 			self.selection.select_path(path)
-			if self.last_song_path != None:
-				try:
-					self.store[self.last_song_path][9]=Pango.Weight.BOOK
-				except:
-					pass
 			self.store[path][9]=Pango.Weight.BOLD
-			self.last_song_path=path
 			self.scroll_to_selected_title()
 		except:
-			if self.last_song_path != None:
-				self.store[self.last_song_path][9]=Pango.Weight.BOOK
-			self.last_song_path=None
 			self.selection.unselect_all()
 
 	def clear(self, *args):
