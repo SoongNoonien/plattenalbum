@@ -411,6 +411,20 @@ class Client(AutoSettingsClient):
 		songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
 		self.files_to_playlist([song['file'] for song in songs], append, force)
 
+	def song_to_str_dict(self, song): #converts tags with multiple values to comma separated strings
+		return_song=song
+		for tag, value in return_song.items():
+			if type(value) == list:
+				return_song[tag]=(', '.join(value))
+		return return_song
+
+	def song_to_first_str_dict(self, song): #extracts the first value of multiple value tags
+		return_song=song
+		for tag, value in return_song.items():
+			if type(value) == list:
+				return_song[tag]=value[0]
+		return return_song
+
 	def on_reconnected(self, *args):
 		self.try_connect_default()
 		self.emitter.emit("playlist")
@@ -920,7 +934,8 @@ class SongsView(Gtk.ScrolledWindow):
 		self.treeview.handler_unblock(self.key_press_event)
 
 	def populate(self, songs):
-		for song in songs:
+		for s in songs:
+			song=self.client.song_to_str_dict(s)
 			try:
 				title=song["title"]
 			except:
@@ -1252,7 +1267,7 @@ class AlbumIconView(Gtk.IconView):
 				break
 		GLib.idle_add(self.emit, "done")
 
-	def scroll_to_selected_album(self):
+	def scroll_to_selected_album(self): #TODO
 		songid=self.client.status()["songid"]
 		song=self.client.playlistid(songid)[0]
 		self.unselect_all()
@@ -1429,7 +1444,7 @@ class MainCover(Gtk.Frame):
 
 	def on_button_press_event(self, widget, event):
 		if self.client.connected():
-			song=self.client.currentsong()
+			song=self.client.song_to_first_str_dict(self.client.currentsong())
 			if not song == {}:
 				try:
 					artist=song[self.settings.get_artist_type()]
@@ -1649,7 +1664,8 @@ class PlaylistView(Gtk.Box):
 			songs=self.client.playlistinfo()
 		if not songs == []:
 			self.playlist_info.set_text("")
-			for song in songs:
+			for s in songs:
+				song=self.client.song_to_str_dict(s)
 				try:
 					title=song["title"]
 				except:
@@ -1783,7 +1799,7 @@ class Browser(Gtk.Box):
 
 	def back_to_album(self, *args):
 		try: #since this can still be running when the connection is lost, various exceptions can occur
-			song=self.client.currentsong()
+			song=self.client.song_to_first_str_dict(self.client.currentsong())
 			try:
 				artist=song[self.settings.get_artist_type()]
 			except:
@@ -1795,7 +1811,7 @@ class Browser(Gtk.Box):
 				if not song['genre'] == self.genre_select.get_value():
 					self.genre_select.deactivate() #deactivate genre filter to show all artists
 			except:
-				pass
+				pass #TODO
 			if len(self.artist_view.get_selected_artists()) <= 1:
 				row_num=len(self.artist_view.store)
 				for i in range(0, row_num):
@@ -2700,13 +2716,12 @@ class AudioType(Gtk.Button):
 	def on_clicked(self, *args):
 		try:
 			self.store.clear()
-			song=self.client.status()["song"]
-			tags=self.client.playlistinfo(song)[0]
-			for key in tags:
-				if key == "time":
-					self.store.append([key, str(datetime.timedelta(seconds=int(tags[key])))])
+			song=self.client.song_to_str_dict(self.client.currentsong())
+			for tag, value in song.items():
+				if tag == "time":
+					self.store.append([tag, str(datetime.timedelta(seconds=int(value)))])
 				else:
-					self.store.append([key, tags[key]])
+					self.store.append([tag, value])
 			self.popover.show_all()
 			self.treeview.queue_resize()
 		except:
@@ -2864,7 +2879,7 @@ class LyricsWindow(Gtk.Window):
 		GLib.idle_add(self.label.set_text, text)
 
 	def refresh(self, *args):
-		update_thread=threading.Thread(target=self.display_lyrics, kwargs={"current_song": self.client.currentsong()}, daemon=True)
+		update_thread=threading.Thread(target=self.display_lyrics, kwargs={"current_song": self.client.song_to_first_str_dict(self.client.currentsong())}, daemon=True)
 		update_thread.start()
 
 	def getLyrics(self, singer, song): #partially copied from PyLyrics 1.1.0
@@ -2987,7 +3002,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_file_changed(self, *args):
 		try:
-			song=self.client.currentsong()
+			song=self.client.song_to_str_dict(self.client.currentsong())
 			self.set_title(song["artist"]+" - "+song["title"]+" - "+song["album"])
 			if self.settings.get_boolean("send-notify"):
 				if not self.is_active() and self.client.status()["state"] == "play":
