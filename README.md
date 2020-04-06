@@ -17,6 +17,8 @@ Features
 - fetches lyrics from the web (based on PyLyrics)
 - MPRIS interface (based on mpDris2)
 
+See: https://github.com/SoongNoonien/mpdevil/wiki/Usage
+
 Building and installation
 -------------------------
 
