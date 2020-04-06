@@ -1267,9 +1267,8 @@ class AlbumIconView(Gtk.IconView):
 				break
 		GLib.idle_add(self.emit, "done")
 
-	def scroll_to_selected_album(self): #TODO
-		songid=self.client.status()["songid"]
-		song=self.client.playlistid(songid)[0]
+	def scroll_to_selected_album(self):
+		song=self.client.song_to_first_str_dict(self.client.currentsong())
 		self.unselect_all()
 		row_num=len(self.store)
 		for i in range(0, row_num):
@@ -1811,7 +1810,7 @@ class Browser(Gtk.Box):
 				if not song['genre'] == self.genre_select.get_value():
 					self.genre_select.deactivate() #deactivate genre filter to show all artists
 			except:
-				pass #TODO
+				self.genre_select.deactivate() #deactivate genre filter to show all artists
 			if len(self.artist_view.get_selected_artists()) <= 1:
 				row_num=len(self.artist_view.store)
 				for i in range(0, row_num):
