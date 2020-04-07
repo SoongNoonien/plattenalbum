@@ -230,19 +230,18 @@ class FocusFrame(Gtk.Frame):
 		self.style_context.remove_provider(self.provider)
 
 class Cover(object):
+	regex=re.compile(r'^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$', flags=re.IGNORECASE)
 	def __init__(self, lib_path, song_file):
 		self.lib_path=lib_path or "/"
 		self.path=None
 		if not song_file == None:
-			head_tail=os.path.split(song_file)
-			if self.lib_path[-1] == "/":
-				path=(self.lib_path+head_tail[0]+"/")
-			else:
-				path=(self.lib_path+"/"+head_tail[0]+"/")
-			if os.path.exists(path):
-				filelist=[file for file in os.listdir(path) if file.endswith('.jpg') or file.endswith('.png') or file.endswith('.gif')]
-				if not filelist == []:
-					self.path=(path+filelist[0])
+			head, tail=os.path.split(song_file)
+			song_dir=os.path.join(self.lib_path, head)
+			if os.path.exists(song_dir):
+				for f in os.listdir(song_dir):
+					if self.regex.match(f):
+						self.path=os.path.join(song_dir, f)
+						break
 
 	def get_pixbuf(self, size):
 		if self.path == None:
