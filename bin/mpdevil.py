@@ -425,6 +425,11 @@ class Client(AutoSettingsClient):
 				return_song[tag]=value[0]
 		return return_song
 
+	def extend_song_for_display(self, song):
+		base_song={"title": _("Unknown Title"), "track": "0", "disc": "", "artist": _("Unknown Artist"), "album": _("Unknown Album"), "duration": "0.0", "date": "", "genre": ""}
+		base_song.update(song)
+		return base_song
+
 	def on_reconnected(self, *args):
 		self.try_connect_default()
 		self.emitter.emit("playlist")
@@ -935,29 +940,10 @@ class SongsView(Gtk.ScrolledWindow):
 
 	def populate(self, songs):
 		for s in songs:
-			song=self.client.song_to_str_dict(s)
-			try:
-				title=song["title"]
-			except:
-				title=_("Unknown Title")
-			try:
-				track=song["track"]
-			except:
-				track="0"
-			try:
-				artist=song["artist"]
-			except:
-				artist=_("Unknown Artist")
-			try:
-				album=song["album"]
-			except:
-				album=_("Unknown Album")
-			try:
-				dura=float(song["duration"])
-			except:
-				dura=0.0
+			song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
+			dura=float(song["duration"])
 			duration=str(datetime.timedelta(seconds=int(dura)))
-			self.store.append([track, title, artist, album, duration, song["file"]])
+			self.store.append([song["track"], song["title"], song["artist"], song["album"], duration, song["file"]])
 
 	def clear(self):
 		self.store.clear()
@@ -1664,45 +1650,14 @@ class PlaylistView(Gtk.Box):
 		if not songs == []:
 			self.playlist_info.set_text("")
 			for s in songs:
-				song=self.client.song_to_str_dict(s)
-				try:
-					title=song["title"]
-				except:
-					title=_("Unknown Title")
-				try:
-					track=song["track"]
-				except:
-					track="0"
-				try:
-					disc=song["disc"]
-				except:
-					disc=""
-				try:
-					artist=song["artist"]
-				except:
-					artist=_("Unknown Artist")
-				try:
-					album=song["album"]
-				except:
-					album=_("Unknown Album")
-				try:
-					dura=float(song["duration"])
-				except:
-					dura=0.0
-				try:
-					year=song["date"]
-				except:
-					year=""
-				try:
-					genre=song["genre"]
-				except:
-					genre=""
+				song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
+				dura=float(song["duration"])
 				duration=str(datetime.timedelta(seconds=int(dura )))
 				try:
 					treeiter=self.store.get_iter(song["pos"])
-					self.store.set(treeiter, 0, track, 1, disc, 2, title, 3, artist, 4, album, 5, duration, 6, year, 7, genre, 8, song["file"], 9, Pango.Weight.BOOK)
+					self.store.set(treeiter, 0, song["track"], 1, song["disc"], 2, song["title"], 3, song["artist"], 4, song["album"], 5, duration, 6, song["date"], 7, song["genre"], 8, song["file"], 9, Pango.Weight.BOOK)
 				except:
-					self.store.append([track, disc, title, artist, album, duration, year, genre, song["file"], Pango.Weight.BOOK])
+					self.store.append([song["track"], song["disc"], song["title"], song["artist"], song["album"], duration, song["date"], song["genre"], song["file"], Pango.Weight.BOOK])
 		for i in reversed(range(int(self.client.status()["playlistlength"]), len(self.store))):
 			treeiter=self.store.get_iter(i)
 			self.store.remove(treeiter)
