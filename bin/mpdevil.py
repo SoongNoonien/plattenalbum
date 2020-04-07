@@ -99,7 +99,7 @@ class FocusFrame(Gtk.Frame):
 class Cover(object):
 	regex=re.compile(r'^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$', flags=re.IGNORECASE)
 	def __init__(self, lib_path, song_file):
-		self.lib_path=lib_path or "/"
+		self.lib_path=lib_path or ""
 		self.path=None
 		if not song_file == None:
 			head, tail=os.path.split(song_file)
