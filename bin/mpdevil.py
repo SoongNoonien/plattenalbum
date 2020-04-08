@@ -41,10 +41,10 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 import base64
 
-DATADIR = '@datadir@'
-NAME = 'mpdevil'
-VERSION = '@version@'
-PACKAGE = NAME.lower()
+DATADIR='@datadir@'
+NAME='mpdevil'
+VERSION='@version@'
+PACKAGE=NAME.lower()
 
 try:
 	locale.setlocale(locale.LC_ALL, '')
@@ -61,7 +61,7 @@ except locale.Error:
 class IntEntry(Gtk.SpinButton):
 	def __init__(self, default, lower, upper, step):
 		Gtk.SpinButton.__init__(self)
-		adj = Gtk.Adjustment(value=default, lower=lower, upper=upper, step_increment=step)
+		adj=Gtk.Adjustment(value=default, lower=lower, upper=upper, step_increment=step)
 		self.set_adjustment(adj)
 
 	def get_int(self):
@@ -76,12 +76,12 @@ class FocusFrame(Gtk.Frame):
 
 		#css
 		self.style_context=self.get_style_context()
-		self.provider = Gtk.CssProvider()
-		css = b"""* {border-color: @theme_selected_bg_color;}"""
+		self.provider=Gtk.CssProvider()
+		css=b"""* {border-color: @theme_selected_bg_color;}"""
 		self.provider.load_from_data(css)
 
-		provider_start = Gtk.CssProvider()
-		css_start = b"""* {border-color: @theme_bg_color;}"""
+		provider_start=Gtk.CssProvider()
+		css_start=b"""* {border-color: @theme_bg_color;}"""
 		provider_start.load_from_data(css_start)
 
 		self.style_context.add_provider(provider_start, 800)
@@ -112,13 +112,13 @@ class Cover(object):
 
 	def get_pixbuf(self, size):
 		if self.path == None:
-			self.path = Gtk.IconTheme.get_default().lookup_icon("mpdevil", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename() #fallback cover
+			self.path=Gtk.IconTheme.get_default().lookup_icon("mpdevil", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename() #fallback cover
 		return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
 
 class AutoSettingsClient(MPDClient):
 	def __init__(self, settings):
 		MPDClient.__init__(self)
-		self.settings = settings
+		self.settings=settings
 		self.settings.connect("changed::active-profile", self.on_settings_changed)
 
 	def try_connect_default(self):
@@ -143,7 +143,7 @@ class AutoSettingsClient(MPDClient):
 		self.disconnect()
 
 class MpdEventEmitter(GObject.Object):
-	__gsignals__ = {
+	__gsignals__={
 		'database': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'update': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'stored_playlist': (GObject.SignalFlags.RUN_FIRST, None, ()),
@@ -305,11 +305,11 @@ class Client(AutoSettingsClient):
 		self.emitter.emit("update")
 
 class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
-	__introspect_interface = "org.freedesktop.DBus.Introspectable"
-	__prop_interface = dbus.PROPERTIES_IFACE
+	__introspect_interface="org.freedesktop.DBus.Introspectable"
+	__prop_interface=dbus.PROPERTIES_IFACE
 
 	# python dbus bindings don't include annotations and properties
-	MPRIS2_INTROSPECTION = """<node name="/org/mpris/MediaPlayer2">
+	MPRIS2_INTROSPECTION="""<node name="/org/mpris/MediaPlayer2">
 	  <interface name="org.freedesktop.DBus.Introspectable">
 	    <method name="Introspect">
 	      <arg direction="out" name="xml_data" type="s"/>
@@ -417,7 +417,7 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 	</node>"""
 
 	# MPRIS allowed metadata tags
-	allowed_tags = {
+	allowed_tags={
 		'mpris:trackid': dbus.ObjectPath,
 		'mpris:length': dbus.Int64,
 		'mpris:artUrl': str,
@@ -443,11 +443,11 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 
 	def __init__(self, window, client, settings):
 		dbus.service.Object.__init__(self, dbus.SessionBus(), "/org/mpris/MediaPlayer2")
-		self._name = "org.mpris.MediaPlayer2.mpdevil"
+		self._name="org.mpris.MediaPlayer2.mpdevil"
 
-		self._bus = dbus.SessionBus()
-		self._uname = self._bus.get_unique_name()
-		self._dbus_obj = self._bus.get_object("org.freedesktop.DBus", "/org/freedesktop/DBus")
+		self._bus=dbus.SessionBus()
+		self._uname=self._bus.get_unique_name()
+		self._dbus_obj=self._bus.get_object("org.freedesktop.DBus", "/org/freedesktop/DBus")
 		self._dbus_obj.connect_to_signal("NameOwnerChanged", self._name_owner_changed_callback, arg0=self._name)
 
 		self.window=window
@@ -483,101 +483,101 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
 		"""
 
-		mpd_meta = self.client.currentsong()
-		self.metadata = {}
+		mpd_meta=self.client.currentsong()
+		self.metadata={}
 
 		for tag in ('album', 'title'):
 			if tag in mpd_meta:
-				self.metadata['xesam:%s' % tag] = mpd_meta[tag]
+				self.metadata['xesam:%s' % tag]=mpd_meta[tag]
 
 		if 'id' in mpd_meta:
-			self.metadata['mpris:trackid'] = "/org/mpris/MediaPlayer2/Track/%s" % mpd_meta['id']
+			self.metadata['mpris:trackid']="/org/mpris/MediaPlayer2/Track/%s" % mpd_meta['id']
 
 		if 'time' in mpd_meta:
-			self.metadata['mpris:length'] = int(mpd_meta['time']) * 1000000
+			self.metadata['mpris:length']=int(mpd_meta['time']) * 1000000
 
 		if 'date' in mpd_meta:
-			self.metadata['xesam:contentCreated'] = mpd_meta['date'][0:4]
+			self.metadata['xesam:contentCreated']=mpd_meta['date'][0:4]
 
 		if 'track' in mpd_meta:
 			# TODO: Is it even *possible* for mpd_meta['track'] to be a list?
 			if type(mpd_meta['track']) == list and len(mpd_meta['track']) > 0:
-				track = str(mpd_meta['track'][0])
+				track=str(mpd_meta['track'][0])
 			else:
-				track = str(mpd_meta['track'])
+				track=str(mpd_meta['track'])
 
-			m = re.match('^([0-9]+)', track)
+			m=re.match('^([0-9]+)', track)
 			if m:
-				self.metadata['xesam:trackNumber'] = int(m.group(1))
+				self.metadata['xesam:trackNumber']=int(m.group(1))
 				# Ensure the integer is signed 32bit
 				if self.metadata['xesam:trackNumber'] & 0x80000000:
 					self.metadata['xesam:trackNumber'] += -0x100000000
 			else:
-				self.metadata['xesam:trackNumber'] = 0
+				self.metadata['xesam:trackNumber']=0
 
 		if 'disc' in mpd_meta:
 			# TODO: Same as above. When is it a list?
 			if type(mpd_meta['disc']) == list and len(mpd_meta['disc']) > 0:
-				disc = str(mpd_meta['disc'][0])
+				disc=str(mpd_meta['disc'][0])
 			else:
-				disc = str(mpd_meta['disc'])
+				disc=str(mpd_meta['disc'])
 
-			m = re.match('^([0-9]+)', disc)
+			m=re.match('^([0-9]+)', disc)
 			if m:
-				self.metadata['xesam:discNumber'] = int(m.group(1))
+				self.metadata['xesam:discNumber']=int(m.group(1))
 
 		if 'artist' in mpd_meta:
 			if type(mpd_meta['artist']) == list:
-				self.metadata['xesam:artist'] = mpd_meta['artist']
+				self.metadata['xesam:artist']=mpd_meta['artist']
 			else:
-				self.metadata['xesam:artist'] = [mpd_meta['artist']]
+				self.metadata['xesam:artist']=[mpd_meta['artist']]
 
 		if 'composer' in mpd_meta:
 			if type(mpd_meta['composer']) == list:
-				self.metadata['xesam:composer'] = mpd_meta['composer']
+				self.metadata['xesam:composer']=mpd_meta['composer']
 			else:
-				self.metadata['xesam:composer'] = [mpd_meta['composer']]
+				self.metadata['xesam:composer']=[mpd_meta['composer']]
 
 		# Stream: populate some missings tags with stream's name
 		if 'name' in mpd_meta:
 			if 'xesam:title' not in self.metadata:
-				self.metadata['xesam:title'] = mpd_meta['name']
+				self.metadata['xesam:title']=mpd_meta['name']
 			elif 'xesam:album' not in self.metadata:
-				self.metadata['xesam:album'] = mpd_meta['name']
+				self.metadata['xesam:album']=mpd_meta['name']
 
 		if 'file' in mpd_meta:
-			song_file = mpd_meta['file']
-			self.metadata['xesam:url'] = "file://"+os.path.join(self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file)
+			song_file=mpd_meta['file']
+			self.metadata['xesam:url']="file://"+os.path.join(self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file)
 			cover=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
 			if not cover.path == None:
-				self.metadata['mpris:artUrl'] = "file://"+cover.path
+				self.metadata['mpris:artUrl']="file://"+cover.path
 			else:
-				self.metadata['mpris:artUrl'] = None
+				self.metadata['mpris:artUrl']=None
 
 		# Cast self.metadata to the correct type, or discard it
 		for key, value in self.metadata.items():
 			try:
-				self.metadata[key] = self.allowed_tags[key](value)
+				self.metadata[key]=self.allowed_tags[key](value)
 			except ValueError:
 				del self.metadata[key]
 
 	def _name_owner_changed_callback(self, name, old_owner, new_owner):
 		if name == self._name and old_owner == self._uname and new_owner != "":
 			try:
-				pid = self._dbus_obj.GetConnectionUnixProcessID(new_owner)
+				pid=self._dbus_obj.GetConnectionUnixProcessID(new_owner)
 			except:
-				pid = None
+				pid=None
 			loop.quit()
 
 	def acquire_name(self):
-		self._bus_name = dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)
+		self._bus_name=dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)
 
 	def release_name(self):
 		if hasattr(self, "_bus_name"):
 			del self._bus_name
 
-	__root_interface = "org.mpris.MediaPlayer2"
-	__root_props = {
+	__root_interface="org.mpris.MediaPlayer2"
+	__root_props={
 		"CanQuit": (False, None),
 		"CanRaise": (True, None),
 		"DesktopEntry": ("mpdevil", None),
@@ -588,7 +588,7 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 	}
 
 	def __get_playback_status(self):
-		status = self.client.status()
+		status=self.client.status()
 		return {'play': 'Playing', 'pause': 'Paused', 'stop': 'Stopped'}[status['state']]
 
 	def __set_loop_status(self, value):
@@ -606,7 +606,7 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 		return
 
 	def __get_loop_status(self):
-		status = self.client.status()
+		status=self.client.status()
 		if int(status['repeat']) == 1:
 			if int(status.get('single', 0)) == 1:
 				return "Track"
@@ -629,7 +629,7 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 		return dbus.Dictionary(self.metadata, signature='sv')
 
 	def __get_volume(self):
-		vol = float(self.client.status().get('volume', 0))
+		vol=float(self.client.status().get('volume', 0))
 		if vol > 0:
 			return vol / 100.0
 		else:
@@ -641,22 +641,22 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 		return
 
 	def __get_position(self):
-		status = self.client.status()
+		status=self.client.status()
 		if 'time' in status:
-			current, end = status['time'].split(':')
+			current, end=status['time'].split(':')
 			return dbus.Int64((int(current) * 1000000))
 		else:
 			return dbus.Int64(0)
 
 	def __get_can_next_prev(self):
-		status = self.client.status()
+		status=self.client.status()
 		if status['state'] == "stop":
 			return False
 		else:
 			return True
 
-	__player_interface = "org.mpris.MediaPlayer2.Player"
-	__player_props = {
+	__player_interface="org.mpris.MediaPlayer2.Player"
+	__player_props={
 		"PlaybackStatus": (__get_playback_status, None),
 		"LoopStatus": (__get_loop_status, __set_loop_status),
 		"Rate": (1.0, None),
@@ -674,7 +674,7 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 		"CanControl": (True, None),
 	}
 
-	__prop_mapping = {
+	__prop_mapping={
 		__player_interface: __player_props,
 		__root_interface: __root_props,
 	}
@@ -689,33 +689,33 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 
 	@dbus.service.method(__prop_interface, in_signature="ss", out_signature="v")
 	def Get(self, interface, prop):
-		getter, setter = self.__prop_mapping[interface][prop]
+		getter, setter=self.__prop_mapping[interface][prop]
 		if callable(getter):
 			return getter(self)
 		return getter
 
 	@dbus.service.method(__prop_interface, in_signature="ssv", out_signature="")
 	def Set(self, interface, prop, value):
-		getter, setter = self.__prop_mapping[interface][prop]
+		getter, setter=self.__prop_mapping[interface][prop]
 		if setter is not None:
 			setter(self, value)
 
 	@dbus.service.method(__prop_interface, in_signature="s", out_signature="a{sv}")
 	def GetAll(self, interface):
-		read_props = {}
-		props = self.__prop_mapping[interface]
+		read_props={}
+		props=self.__prop_mapping[interface]
 		for key, (getter, setter) in props.items():
 			if callable(getter):
-				getter = getter(self)
-			read_props[key] = getter
+				getter=getter(self)
+			read_props[key]=getter
 		return read_props
 
 	def update_property(self, interface, prop):
-		getter, setter = self.__prop_mapping[interface][prop]
+		getter, setter=self.__prop_mapping[interface][prop]
 		if callable(getter):
-			value = getter(self)
+			value=getter(self)
 		else:
-			value = getter
+			value=getter
 		self.PropertiesChanged(interface, {prop: value}, [])
 		return value
 
@@ -747,7 +747,7 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 
 	@dbus.service.method(__player_interface, in_signature='', out_signature='')
 	def PlayPause(self):
-		status = self.client.status()
+		status=self.client.status()
 		if status['state'] == 'play':
 			self.client.pause(1)
 		else:
@@ -766,27 +766,27 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 
 	@dbus.service.method(__player_interface, in_signature='x', out_signature='')
 	def Seek(self, offset): #TODO
-		status = self.client.status()
-		current, end = status['time'].split(':')
-		current = int(current)
-		end = int(end)
-		offset = int(offset) / 1000000
+		status=self.client.status()
+		current, end=status['time'].split(':')
+		current=int(current)
+		end=int(end)
+		offset=int(offset) / 1000000
 		if current + offset <= end:
-			position = current + offset
+			position=current + offset
 			if position < 0:
-				position = 0
+				position=0
 			self.client.seekid(int(status['songid']), position)
 			self.Seeked(position * 1000000)
 		return
 
 	@dbus.service.method(__player_interface, in_signature='ox', out_signature='')
 	def SetPosition(self, trackid, position):
-		song = self.client.currentsong()
+		song=self.client.currentsong()
 		# FIXME: use real dbus objects
 		if str(trackid) != '/org/mpris/MediaPlayer2/Track/%s' % song['id']:
 			return
 		# Convert position to seconds
-		position = int(position) / 1000000
+		position=int(position) / 1000000
 		if position <= int(song['time']):
 			self.client.seekid(int(song['id']), position)
 			self.Seeked(position * 1000000)
@@ -801,7 +801,7 @@ class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 		return
 
 class Settings(Gio.Settings):
-	BASE_KEY = "org.mpdevil"
+	BASE_KEY="org.mpdevil"
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
 		if len(self.get_value("profiles")) < (self.get_int("active-profile")+1):
@@ -852,43 +852,43 @@ class SongsView(Gtk.ScrolledWindow):
 
 		#store
 		#(track, title, artist, album, duration, file)
-		self.store = Gtk.ListStore(str, str, str, str, str, str)
+		self.store=Gtk.ListStore(str, str, str, str, str, str)
 
 		#TreeView
-		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview=Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
 		self.treeview.columns_autosize()
 
 		#selection
-		self.selection = self.treeview.get_selection()
+		self.selection=self.treeview.get_selection()
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		#columns
-		renderer_text = Gtk.CellRendererText()
-		renderer_text_ralign = Gtk.CellRendererText(xalign=1.0)
+		renderer_text=Gtk.CellRendererText()
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 
-		self.column_track = Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
+		self.column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
 		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_track.set_property("resizable", False)
 		self.treeview.append_column(self.column_track)
 
-		self.column_title = Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
+		self.column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
 		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_title.set_property("resizable", False)
 		self.treeview.append_column(self.column_title)
 
-		self.column_artist = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
+		self.column_artist=Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
 		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_artist.set_property("resizable", False)
 		self.treeview.append_column(self.column_artist)
 
-		self.column_album = Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
+		self.column_album=Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
 		self.column_album.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_album.set_property("resizable", False)
 		if show_album:
 			self.treeview.append_column(self.column_album)
 
-		self.column_time = Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
+		self.column_time=Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
 		self.column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_time.set_property("resizable", False)
 		self.treeview.append_column(self.column_time)
@@ -913,13 +913,13 @@ class SongsView(Gtk.ScrolledWindow):
 	def on_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
-				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
+				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				self.client.files_to_playlist([self.store[path][5]], False)
 			except:
 				pass
 		elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
-				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
+				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				self.client.files_to_playlist([self.store[path][5]], True)
 			except:
 				pass
@@ -981,7 +981,7 @@ class AlbumDialog(Gtk.Dialog):
 		self.show_all()
 
 	def open(self):
-		response = self.run()
+		response=self.run()
 		if response == Gtk.ResponseType.OK:
 			self.client.album_to_playlist(self.album, self.artist, self.year, False)
 		elif response == Gtk.ResponseType.ACCEPT:
@@ -1041,28 +1041,28 @@ class ArtistView(FocusFrame):
 
 		#artistStore
 		#(name, weight, initial-letter, weight-initials)
-		self.store = Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
+		self.store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
 
 		#TreeView
-		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview=Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(0)
 		self.treeview.columns_autosize()
 		self.treeview.set_property("activate-on-single-click", True)
 
 		#artistSelection
-		self.selection = self.treeview.get_selection()
+		self.selection=self.treeview.get_selection()
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		#Columns
-		renderer_text_malign = Gtk.CellRendererText(xalign=0.5)
-		self.column_initials = Gtk.TreeViewColumn("", renderer_text_malign, text=2, weight=3)
+		renderer_text_malign=Gtk.CellRendererText(xalign=0.5)
+		self.column_initials=Gtk.TreeViewColumn("", renderer_text_malign, text=2, weight=3)
 		self.column_initials.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_initials.set_property("resizable", False)
 		self.column_initials.set_visible(self.settings.get_boolean("show-initials"))
 		self.treeview.append_column(self.column_initials)
 
-		renderer_text = Gtk.CellRendererText()
-		self.column_name = Gtk.TreeViewColumn("", renderer_text, text=0, weight=1)
+		renderer_text=Gtk.CellRendererText()
+		self.column_name=Gtk.TreeViewColumn("", renderer_text, text=0, weight=1)
 		self.column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_name.set_property("resizable", False)
 		self.treeview.append_column(self.column_name)
@@ -1128,7 +1128,7 @@ class ArtistView(FocusFrame):
 			return artists
 
 	def on_row_activated(self, widget, path, view_column):
-		if self.last_artist_path != None:
+		if not self.last_artist_path == None:
 			try:
 				self.store[self.last_artist_path][1]=Pango.Weight.BOOK
 			except:
@@ -1152,7 +1152,7 @@ class AlbumIconView(Gtk.IconView):
 		self.stop_flag=True
 
 		#cover, display_label, tooltip(titles), album, year, artist
-		self.store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str)
+		self.store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str)
 		self.sort_settings()
 
 		#iconview
@@ -1221,9 +1221,9 @@ class AlbumIconView(Gtk.IconView):
 				return
 		#display albums
 		if self.settings.get_boolean("sort-albums-by-year"):
-			albums = sorted(albums, key=lambda k: k['year'])
+			albums=sorted(albums, key=lambda k: k['year'])
 		else:
-			albums = sorted(albums, key=lambda k: k['album'])
+			albums=sorted(albums, key=lambda k: k['album'])
 		music_lib=self.settings.get_value("paths")[self.settings.get_int("active-profile")]
 		size=self.settings.get_int("album-cover")
 		z=0
@@ -1258,7 +1258,7 @@ class AlbumIconView(Gtk.IconView):
 		row_num=len(self.store)
 		for i in range(0, row_num):
 			path=Gtk.TreePath(i)
-			treeiter = self.store.get_iter(path)
+			treeiter=self.store.get_iter(path)
 			if self.store.get_value(treeiter, 3) == song["album"]:
 				self.set_cursor(path, None, False)
 				self.select_path(path)
@@ -1276,12 +1276,12 @@ class AlbumIconView(Gtk.IconView):
 			album=self.store[path][3]
 			year=self.store[path][4]
 			artist=self.store[path][5]
-			album_dialog = AlbumDialog(self.window, self.client, self.settings, album, artist, year)
+			album_dialog=AlbumDialog(self.window, self.client, self.settings, album, artist, year)
 			album_dialog.open()
 			album_dialog.destroy()
 
 	def on_button_press_event(self, widget, event):
-		path = widget.get_path_at_pos(int(event.x), int(event.y))
+		path=widget.get_path_at_pos(int(event.x), int(event.y))
 		if not path == None:
 			if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 				self.path_to_playlist(path, False)
@@ -1388,8 +1388,8 @@ class MainCover(Gtk.Frame):
 		Gtk.Frame.__init__(self)
 		#css
 		style_context=self.get_style_context()
-		provider = Gtk.CssProvider()
-		css = b"""* {background-color: @theme_base_color; border-radius: 6px;}"""
+		provider=Gtk.CssProvider()
+		css=b"""* {background-color: @theme_base_color; border-radius: 6px;}"""
 		provider.load_from_data(css)
 		style_context.add_provider(provider, 800)
 
@@ -1450,7 +1450,7 @@ class MainCover(Gtk.Frame):
 				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 					self.client.album_to_playlist(album, artist, album_year, True)
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-					album_dialog = AlbumDialog(self.window, self.client, self.settings, album, artist, album_year)
+					album_dialog=AlbumDialog(self.window, self.client, self.settings, album, artist, album_year)
 					album_dialog.open()
 					album_dialog.destroy()
 
@@ -1469,44 +1469,44 @@ class PlaylistView(Gtk.Box):
 
 		#Store
 		#(track, disc, title, artist, album, duration, date, genre, file, weight)
-		self.store = Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
+		self.store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
 
 		#TreeView
-		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview=Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(2)
 		self.treeview.set_property("activate-on-single-click", True)
 
 		#selection
-		self.selection = self.treeview.get_selection()
+		self.selection=self.treeview.get_selection()
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		#Column
-		renderer_text = Gtk.CellRendererText()
-		renderer_text_ralign = Gtk.CellRendererText(xalign=1.0)
+		renderer_text=Gtk.CellRendererText()
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 		self.columns=[None, None, None, None, None, None, None, None]
 
-		self.columns[0] = Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=9)
+		self.columns[0]=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=9)
 		self.columns[0].set_property("resizable", True)
 
-		self.columns[1] = Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9)
+		self.columns[1]=Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9)
 		self.columns[1].set_property("resizable", True)
 
-		self.columns[2] = Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9)
+		self.columns[2]=Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9)
 		self.columns[2].set_property("resizable", True)
 
-		self.columns[3] = Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9)
+		self.columns[3]=Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9)
 		self.columns[3].set_property("resizable", True)
 
-		self.columns[4] = Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9)
+		self.columns[4]=Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9)
 		self.columns[4].set_property("resizable", True)
 
-		self.columns[5] = Gtk.TreeViewColumn(_("Length"), renderer_text, text=5, weight=9)
+		self.columns[5]=Gtk.TreeViewColumn(_("Length"), renderer_text, text=5, weight=9)
 		self.columns[5].set_property("resizable", True)
 
-		self.columns[6] = Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9)
+		self.columns[6]=Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9)
 		self.columns[6].set_property("resizable", True)
 
-		self.columns[7] = Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
+		self.columns[7]=Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
 		self.columns[7].set_property("resizable", True)
 
 		self.load_settings()
@@ -1600,7 +1600,7 @@ class PlaylistView(Gtk.Box):
 			row[9]=Pango.Weight.BOOK
 		try:
 			song=self.client.status()["song"]
-			path = Gtk.TreePath(int(song))
+			path=Gtk.TreePath(int(song))
 			self.selection.select_path(path)
 			self.store[path][9]=Pango.Weight.BOLD
 			self.scroll_to_selected_title()
@@ -1632,7 +1632,7 @@ class PlaylistView(Gtk.Box):
 	def on_button_press_event(self, widget, event):
 		if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
-				path = widget.get_path_at_pos(int(event.x), int(event.y))[0]
+				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				self.remove_song(path)
 			except:
 				pass
@@ -1785,7 +1785,7 @@ class Browser(Gtk.Box):
 			if self.client.connected():
 				def set_active(*args):
 					self.search_button.set_active(False)
-				self.search_win = SearchWindow(self.client)
+				self.search_win=SearchWindow(self.client)
 				self.search_win.connect("destroy", set_active)
 		else:
 			self.search_win.destroy()
@@ -1822,7 +1822,7 @@ class ProfileSettings(Gtk.Grid):
 		self.set_property("border-width", 18)
 
 		#adding vars
-		self.settings = settings
+		self.settings=settings
 
 		#widgets
 		self.profiles_combo=Gtk.ComboBoxText()
@@ -1944,12 +1944,12 @@ class ProfileSettings(Gtk.Grid):
 		self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), self.path_entry.get_text())
 
 	def on_path_select_button_clicked(self, widget, parent):
-		dialog = Gtk.FileChooserDialog(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
+		dialog=Gtk.FileChooserDialog(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
 		dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
 		dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 		dialog.set_default_size(800, 400)
 		dialog.set_current_folder(self.settings.get_value("paths")[self.profiles_combo.get_active()])
-		response = dialog.run()
+		response=dialog.run()
 		if response == Gtk.ResponseType.OK:
 			self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), dialog.get_filename())
 			self.path_entry.set_text(dialog.get_filename())
@@ -1979,7 +1979,7 @@ class GeneralSettings(Gtk.Box):
 		self.set_property("border-width", 18)
 
 		#adding vars
-		self.settings = settings
+		self.settings=settings
 
 		#widgets
 		track_cover_label=Gtk.Label(label=_("Main cover size:"))
@@ -2107,7 +2107,7 @@ class PlaylistSettings(Gtk.Box):
 		self.set_property("border-width", 18)
 
 		#adding vars
-		self.settings = settings
+		self.settings=settings
 
 		#label
 		label=Gtk.Label(label=_("Choose the order of information to appear in the playlist:"))
@@ -2116,20 +2116,20 @@ class PlaylistSettings(Gtk.Box):
 
 		#Store
 		#(toggle, header, index)
-		self.store = Gtk.ListStore(bool, str, int)
+		self.store=Gtk.ListStore(bool, str, int)
 
 		#TreeView
-		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview=Gtk.TreeView(model=self.store)
 		self.treeview.set_search_column(-1)
 		self.treeview.set_reorderable(True)
 		self.treeview.set_headers_visible(False)
 
 		#selection
-		self.selection = self.treeview.get_selection()
+		self.selection=self.treeview.get_selection()
 
 		#Column
-		renderer_text = Gtk.CellRendererText()
-		renderer_toggle = Gtk.CellRendererToggle()
+		renderer_text=Gtk.CellRendererText()
+		renderer_toggle=Gtk.CellRendererToggle()
 
 		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
 		self.treeview.append_column(column_toggle)
@@ -2179,7 +2179,7 @@ class PlaylistSettings(Gtk.Box):
 		self.pack_start(column_chooser, True, True, 0)
 
 	def on_cell_toggled(self, widget, path):
-		self.store[path][0] = not self.store[path][0]
+		self.store[path][0]=not self.store[path][0]
 		self.settings.array_modify('ab', "column-visibilities", self.store[path][2], self.store[path][0])
 
 	def save_permutation(self, *args):
@@ -2228,7 +2228,7 @@ class SettingsDialog(Gtk.Dialog):
 		self.set_default_size(500, 400)
 
 		#adding vars
-		self.settings = settings
+		self.settings=settings
 
 		#widgets
 		general=GeneralSettings(self.settings)
@@ -2236,7 +2236,7 @@ class SettingsDialog(Gtk.Dialog):
 		playlist=PlaylistSettings(self.settings)
 
 		#packing
-		tabs = Gtk.Notebook()
+		tabs=Gtk.Notebook()
 		tabs.append_page(general, Gtk.Label(label=_("General")))
 		tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 		tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
@@ -2256,10 +2256,10 @@ class ClientControl(Gtk.ButtonBox):
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#widgets
-		self.play_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start-symbolic", self.icon_size))
-		self.stop_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", self.icon_size))
-		self.prev_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward-symbolic", self.icon_size))
-		self.next_button = Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward-symbolic", self.icon_size))
+		self.play_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start-symbolic", self.icon_size))
+		self.stop_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", self.icon_size))
+		self.prev_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-backward-symbolic", self.icon_size))
+		self.next_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-skip-forward-symbolic", self.icon_size))
 
 		#connect
 		self.play_button.connect("clicked", self.on_play_clicked)
@@ -2352,8 +2352,8 @@ class SeekBar(Gtk.Box):
 
 		#css (scale)
 		style_context=self.scale.get_style_context()
-		provider = Gtk.CssProvider()
-		css = b"""scale fill { background-color: @theme_selected_bg_color; }"""
+		provider=Gtk.CssProvider()
+		css=b"""scale fill { background-color: @theme_selected_bg_color; }"""
 		provider.load_from_data(css)
 		style_context.add_provider(provider, 800)
 
@@ -2620,23 +2620,23 @@ class AudioType(Gtk.Button):
 
 		#Store
 		#(tag, value)
-		self.store = Gtk.ListStore(str, str)
+		self.store=Gtk.ListStore(str, str)
 
 		#TreeView
-		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview=Gtk.TreeView(model=self.store)
 		self.treeview.set_can_focus(False)
 		self.treeview.set_search_column(-1)
-		sel = self.treeview.get_selection()
+		sel=self.treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
 
 		#Column
-		renderer_text = Gtk.CellRendererText()
+		renderer_text=Gtk.CellRendererText()
 
-		self.column_tag = Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text, text=0)
+		self.column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text, text=0)
 		self.column_tag.set_property("resizable", False)
 		self.treeview.append_column(self.column_tag)
 
-		self.column_value = Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
+		self.column_value=Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
 		self.column_value.set_property("resizable", False)
 		self.treeview.append_column(self.column_value)
 
@@ -2655,9 +2655,9 @@ class AudioType(Gtk.Button):
 			status=self.client.status()
 			try:
 				file_type=self.client.playlistinfo(status["song"])[0]["file"].split('.')[-1]
-				freq, res, chan = status["audio"].split(':')
+				freq, res, chan=status["audio"].split(':')
 				freq=str(float(freq)/1000)
-				brate = status["bitrate"]
+				brate=status["bitrate"]
 				string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": brate, "frequency": freq, "resolution": res, "channels": chan, "file_type": file_type}
 				self.label.set_text(string)
 			except:
@@ -2719,22 +2719,22 @@ class ServerStats(Gtk.Dialog):
 
 		#Store
 		#(tag, value)
-		self.store = Gtk.ListStore(str, str)
+		self.store=Gtk.ListStore(str, str)
 
 		#TreeView
-		self.treeview = Gtk.TreeView(model=self.store)
+		self.treeview=Gtk.TreeView(model=self.store)
 		self.treeview.set_can_focus(False)
 		self.treeview.set_search_column(-1)
-		sel = self.treeview.get_selection()
+		sel=self.treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
 
 		#Column
-		renderer_text = Gtk.CellRendererText()
+		renderer_text=Gtk.CellRendererText()
 
-		self.column_tag = Gtk.TreeViewColumn(_("Tag"), renderer_text, text=0)
+		self.column_tag=Gtk.TreeViewColumn(_("Tag"), renderer_text, text=0)
 		self.treeview.append_column(self.column_tag)
 
-		self.column_value = Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
+		self.column_value=Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
 		self.treeview.append_column(self.column_value)
 
 		stats=self.client.stats()
@@ -2837,19 +2837,19 @@ class LyricsWindow(Gtk.Window):
 
 	def getLyrics(self, singer, song): #partially copied from PyLyrics 1.1.0
 		#Replace spaces with _
-		singer = singer.replace(' ', '_')
-		song = song.replace(' ', '_')
-		r = requests.get('http://lyrics.wikia.com/{0}:{1}'.format(singer,song))
-		s = BeautifulSoup(r.text)
+		singer=singer.replace(' ', '_')
+		song=song.replace(' ', '_')
+		r=requests.get('http://lyrics.wikia.com/{0}:{1}'.format(singer,song))
+		s=BeautifulSoup(r.text)
 		#Get main lyrics holder
-		lyrics = s.find("div",{'class':'lyricbox'})
+		lyrics=s.find("div",{'class':'lyricbox'})
 		if lyrics is None:
 			raise ValueError("Song or Singer does not exist or the API does not have Lyrics")
 			return None
 		#Remove Scripts
 		[s.extract() for s in lyrics('script')]
 		#Remove Comments
-		comments = lyrics.findAll(text=lambda text:isinstance(text, Comment))
+		comments=lyrics.findAll(text=lambda text:isinstance(text, Comment))
 		[comment.extract() for comment in comments]
 		#Remove span tag (Needed for instrumantal)
 		if not lyrics.span == None:
@@ -2859,7 +2859,7 @@ class LyricsWindow(Gtk.Window):
 			for match in lyrics.findAll(tag):
 				match.replaceWithChildren()
 		#Get output as a string and remove non unicode characters and replace <br> with newlines
-		output = str(lyrics).encode('utf-8', errors='replace')[22:-6:].decode("utf-8").replace('\n','').replace('<br/>','\n')
+		output=str(lyrics).encode('utf-8', errors='replace')[22:-6:].decode("utf-8").replace('\n','').replace('<br/>','\n')
 		try:
 			return output
 		except:
@@ -2870,7 +2870,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		Gtk.ApplicationWindow.__init__(self, title=("mpdevil"), application=app)
 		Notify.init("mpdevil")
 		self.set_icon_name("mpdevil")
-		self.settings = settings
+		self.settings=settings
 		self.set_default_size(self.settings.get_int("width"), self.settings.get_int("height"))
 
 		#adding vars
@@ -2880,22 +2880,22 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		#MPRIS
 		DBusGMainLoop(set_as_default=True)
-		self.dbus_service = MPRISInterface(self, self.client, self.settings)
+		self.dbus_service=MPRISInterface(self, self.client, self.settings)
 
 		#actions
-		save_action = Gio.SimpleAction.new("save", None)
+		save_action=Gio.SimpleAction.new("save", None)
 		save_action.connect("activate", self.on_save)
 		self.add_action(save_action)
 
-		settings_action = Gio.SimpleAction.new("settings", None)
+		settings_action=Gio.SimpleAction.new("settings", None)
 		settings_action.connect("activate", self.on_settings)
 		self.add_action(settings_action)
 
-		stats_action = Gio.SimpleAction.new("stats", None)
+		stats_action=Gio.SimpleAction.new("stats", None)
 		stats_action.connect("activate", self.on_stats)
 		self.add_action(stats_action)
 
-		update_action = Gio.SimpleAction.new("update", None)
+		update_action=Gio.SimpleAction.new("update", None)
 		update_action.connect("activate", self.on_update)
 		self.add_action(update_action)
 
@@ -2910,7 +2910,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.play_opts=PlaybackOptions(self.client, self.settings)
 
 		#menu
-		menu = Gio.Menu()
+		menu=Gio.Menu()
 		menu.append(_("Save window layout"), "win.save")
 		menu.append(_("Settings"), "win.settings")
 		menu.append(_("Update database"), "win.update")
@@ -2918,8 +2918,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append(_("About"), "app.about")
 		menu.append(_("Quit"), "app.quit")
 
-		menu_button = Gtk.MenuButton.new()
-		menu_popover = Gtk.Popover.new_from_model(menu_button, menu)
+		menu_button=Gtk.MenuButton.new()
+		menu_popover=Gtk.Popover.new_from_model(menu_button, menu)
 		menu_button.set_popover(menu_popover)
 		menu_button.set_tooltip_text(_("Menu"))
 		menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", self.icon_size))
@@ -2989,7 +2989,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			if self.client.connected():
 				def set_active(*args):
 					self.lyrics_button.set_active(False)
-				self.lyrics_win = LyricsWindow(self.client, self.settings)
+				self.lyrics_win=LyricsWindow(self.client, self.settings)
 				self.lyrics_win.connect("destroy", set_active)
 		else:
 			self.lyrics_win.destroy()
@@ -3022,13 +3022,13 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.browser.save_settings()
 
 	def on_settings(self, action, param):
-		settings = SettingsDialog(self, self.settings)
+		settings=SettingsDialog(self, self.settings)
 		settings.run()
 		settings.destroy()
 
 	def on_stats(self, action, param):
 		if self.client.connected():
-			stats = ServerStats(self, self.client)
+			stats=ServerStats(self, self.client)
 			stats.run()
 			stats.destroy()
 
@@ -3045,24 +3045,24 @@ class MainWindow(Gtk.ApplicationWindow):
 class mpdevil(Gtk.Application):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, application_id="org.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
-		self.settings = Settings()
+		self.settings=Settings()
 		self.client=Client(self.settings)
 		self.window=None
 
 	def do_activate(self):
 		if not self.window: #allow just one instance
-			self.window = MainWindow(self, self.client, self.settings)
+			self.window=MainWindow(self, self.client, self.settings)
 			self.window.connect("delete-event", self.on_delete_event)
 		self.window.present()
 
 	def do_startup(self):
 		Gtk.Application.do_startup(self)
 
-		action = Gio.SimpleAction.new("about", None)
+		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self.on_about)
 		self.add_action(action)
 
-		action = Gio.SimpleAction.new("quit", None)
+		action=Gio.SimpleAction.new("quit", None)
 		action.connect("activate", self.on_quit)
 		self.add_action(action)
 
@@ -3089,6 +3089,6 @@ class mpdevil(Gtk.Application):
 		self.quit()
 
 if __name__ == '__main__':
-	app = mpdevil()
+	app=mpdevil()
 	app.run(sys.argv)
 
