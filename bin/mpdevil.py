@@ -1037,7 +1037,6 @@ class ArtistView(FocusFrame):
 		self.client=client
 		self.settings=settings
 		self.genre_select=genre_select
-		self.last_artist_path=None
 
 		#artistStore
 		#(name, weight, initial-letter, weight-initials)
@@ -1087,7 +1086,6 @@ class ArtistView(FocusFrame):
 
 	def clear(self):
 		self.store.clear()
-		self.last_artist_iter=None
 
 	def refresh(self, *args):
 		self.selection.set_mode(Gtk.SelectionMode.NONE)
@@ -1128,12 +1126,8 @@ class ArtistView(FocusFrame):
 			return artists
 
 	def on_row_activated(self, widget, path, view_column):
-		if not self.last_artist_path == None:
-			try:
-				self.store[self.last_artist_path][1]=Pango.Weight.BOOK
-			except:
-				pass
-		self.last_artist_path=path
+		for row in self.store: #reset bold text
+			row[1]=Pango.Weight.BOOK
 		self.store[path][1]=Pango.Weight.BOLD
 		self.emit("artists_changed")
 
