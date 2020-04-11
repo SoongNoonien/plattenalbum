@@ -271,7 +271,7 @@ class Client(AutoSettingsClient):
 					if not f == current_song_file:
 						self.add(f)
 					else:
-						self.move(0, (len(self.playlist())-1))
+						self.move(0, (len(self.playlistinfo())-1))
 
 	def album_to_playlist(self, album, artist, year, append, force=False):
 		songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
