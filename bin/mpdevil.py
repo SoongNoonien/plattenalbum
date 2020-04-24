@@ -1220,8 +1220,7 @@ class AlbumIconView(Gtk.IconView):
 			albums=sorted(albums, key=lambda k: k['album'])
 		music_lib=self.settings.get_value("paths")[self.settings.get_int("active-profile")]
 		size=self.settings.get_int("album-cover")
-		z=0
-		for album in albums:
+		for i, album in enumerate(albums):
 			if not self.stop_flag:
 				cover=Cover(lib_path=music_lib, song_file=album["songs"][0]["file"])
 				#tooltip
@@ -1238,10 +1237,9 @@ class AlbumIconView(Gtk.IconView):
 					GLib.idle_add(self.add_row, [None, album["album"], tooltip, album["album"], album["year"], album["artist"]], cover, size)
 				else:
 					GLib.idle_add(self.add_row, [None, album["album"]+" ("+album["year"]+")", tooltip, album["album"], album["year"], album["artist"]], cover, size)
-				if z%16 == 0:
+				if i%16 == 0:
 					while Gtk.events_pending():
 						Gtk.main_iteration_do(True)
-				z=z+1
 			else:
 				break
 		GLib.idle_add(self.emit, "done")
