@@ -2705,6 +2705,7 @@ class ProfileSelect(Gtk.ComboBoxText):
 class ServerStats(Gtk.Dialog):
 	def __init__(self, parent, client):
 		Gtk.Dialog.__init__(self, title=_("Stats"), transient_for=parent)
+		self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 
 		#adding vars
 		self.client=client
@@ -2717,29 +2718,39 @@ class ServerStats(Gtk.Dialog):
 		self.treeview=Gtk.TreeView(model=self.store)
 		self.treeview.set_can_focus(False)
 		self.treeview.set_search_column(-1)
+		self.treeview.set_headers_visible(False)
+
+		#selection
 		sel=self.treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
 
 		#Column
 		renderer_text=Gtk.CellRendererText()
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 
-		self.column_tag=Gtk.TreeViewColumn(_("Tag"), renderer_text, text=0)
+		self.column_tag=Gtk.TreeViewColumn("", renderer_text_ralign, text=0)
 		self.treeview.append_column(self.column_tag)
 
-		self.column_value=Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
+		self.column_value=Gtk.TreeViewColumn("", renderer_text, text=1)
 		self.treeview.append_column(self.column_value)
+
+		self.store.append(["protocol:", str(self.client.mpd_version)])
 
 		stats=self.client.stats()
 		for key in stats:
+			print_key=key+":"
 			if key == "uptime" or key == "playtime" or key == "db_playtime":
-				self.store.append([key, str(datetime.timedelta(seconds=int(stats[key])))])
+				self.store.append([print_key, str(datetime.timedelta(seconds=int(stats[key])))])
 			elif key == "db_update":
-				self.store.append([key, str(datetime.datetime.fromtimestamp(int(stats[key])))])
+				self.store.append([print_key, str(datetime.datetime.fromtimestamp(int(stats[key])))])
 			else:
-				self.store.append([key, stats[key]])
-
-		self.vbox.pack_start(self.treeview, True, True, 0)
+				self.store.append([print_key, stats[key]])
+		frame=Gtk.Frame()
+		frame.add(self.treeview)
+		self.vbox.pack_start(frame, True, True, 0)
+		self.vbox.set_spacing(6)
 		self.show_all()
+		self.run()
 
 class SearchWindow(Gtk.Window):
 	def __init__(self, client):
@@ -3021,7 +3032,6 @@ class MainWindow(Gtk.ApplicationWindow):
 	def on_stats(self, action, param):
 		if self.client.connected():
 			stats=ServerStats(self, self.client)
-			stats.run()
 			stats.destroy()
 
 	def on_update(self, action, param):
