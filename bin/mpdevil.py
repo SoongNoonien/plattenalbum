@@ -296,6 +296,18 @@ class Client(AutoSettingsClient):
 		base_song.update(song)
 		return base_song
 
+	def comp_list(self, *args): #simulates listing behavior of python-mpd2 1.0
+		if "group" in args:
+			raise ValueError("'group' is not supported")
+		native_list=self.list(*args)
+		if len(native_list) > 0:
+			if type(native_list[0]) == dict:
+				return ([l[args[0]] for l in native_list])
+			else:
+				return native_list
+		else:
+			return([])
+
 	def on_reconnected(self, *args):
 		self.try_connect_default()
 		self.emitter.emit("playlist")
@@ -1008,7 +1020,7 @@ class GenreSelect(Gtk.ComboBoxText):
 		self.handler_block(self.changed)
 		self.remove_all()
 		self.append_text(_("all genres"))
-		for genre in self.client.list("genre"):
+		for genre in self.client.comp_list("genre"):
 			self.append_text(genre)
 		self.set_active(0)
 		self.handler_unblock(self.changed)
@@ -1097,9 +1109,9 @@ class ArtistView(FocusFrame):
 		self.store.append([_("all artists"), Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		genre=self.genre_select.get_value()
 		if genre == None:
-			artists=self.client.list(self.settings.get_artist_type())
+			artists=self.client.comp_list(self.settings.get_artist_type())
 		else:
-			artists=self.client.list(self.settings.get_artist_type(), "genre", genre)
+			artists=self.client.comp_list(self.settings.get_artist_type(), "genre", genre)
 		current_char=""
 		for artist in artists:
 			try:
@@ -1197,11 +1209,11 @@ class AlbumIconView(Gtk.IconView):
 			try: #client cloud meanwhile disconnect
 				if not self.stop_flag:
 					if genre == None:
-						album_candidates=self.client.list("album", artist_type, artist)
+						album_candidates=self.client.comp_list("album", artist_type, artist)
 					else:
-						album_candidates=self.client.list("album", artist_type, artist, "genre", genre)
+						album_candidates=self.client.comp_list("album", artist_type, artist, "genre", genre)
 					for album in album_candidates:
-						years=self.client.list("date", "album", album, artist_type, artist)
+						years=self.client.comp_list("date", "album", album, artist_type, artist)
 						for year in years:
 							songs=self.client.find("album", album, "date", year, artist_type, artist)
 							albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
