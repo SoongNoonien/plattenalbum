@@ -2970,11 +2970,15 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_file_changed(self, *args):
 		try:
-			song=self.client.song_to_str_dict(self.client.currentsong())
-			self.set_title(song["artist"]+" - "+song["title"]+" - "+song["album"])
+			song=self.client.extend_song_for_display(self.client.song_to_str_dict(self.client.currentsong()))
+			if song["date"] != "":
+				date=" ("+song["date"]+")"
+			else:
+				date=""
+			self.set_title(song["artist"]+" - "+song["title"]+" - "+song["album"]+date)
 			if self.settings.get_boolean("send-notify"):
 				if not self.is_active() and self.client.status()["state"] == "play":
-					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"])
+					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"]+date)
 					pixbuf=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song["file"]).get_pixbuf(400)
 					notify.set_image_from_pixbuf(pixbuf)
 					notify.show()
