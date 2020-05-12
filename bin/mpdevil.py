@@ -1244,7 +1244,14 @@ class AlbumIconView(Gtk.IconView):
 						dura=0.0
 					length=length+dura
 				length_human_readable=str(datetime.timedelta(seconds=int(length)))
-				tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
+				try:
+					discs=int(album["songs"][-1]["disc"])
+				except:
+					discs=1
+				if discs > 1:
+					tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)") % {"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
+				else:
+					tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
 				if album["year"] == "":
 					GLib.idle_add(self.add_row, [None, album["album"], tooltip, album["album"], album["year"], album["artist"]], cover, size)
 				else:
