@@ -294,6 +294,7 @@ class Client(AutoSettingsClient):
 	def extend_song_for_display(self, song):
 		base_song={"title": _("Unknown Title"), "track": "0", "disc": "", "artist": _("Unknown Artist"), "album": _("Unknown Album"), "duration": "0.0", "date": "", "genre": ""}
 		base_song.update(song)
+		base_song["human_duration"]=str(datetime.timedelta(seconds=int(float(base_song["duration"])))).lstrip("0").lstrip(":")
 		return base_song
 
 	def comp_list(self, *args): #simulates listing behavior of python-mpd2 1.0
@@ -952,9 +953,7 @@ class SongsView(Gtk.ScrolledWindow):
 	def populate(self, songs):
 		for s in songs:
 			song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
-			dura=float(song["duration"])
-			duration=str(datetime.timedelta(seconds=int(dura)))
-			self.store.append([song["track"], song["title"], song["artist"], song["album"], duration, song["file"]])
+			self.store.append([song["track"], song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
 
 	def clear(self):
 		self.store.clear()
@@ -1243,7 +1242,7 @@ class AlbumIconView(Gtk.IconView):
 					except:
 						dura=0.0
 					length=length+dura
-				length_human_readable=str(datetime.timedelta(seconds=int(length)))
+				length_human_readable=str(datetime.timedelta(seconds=int(length))).lstrip("0").lstrip(":")
 				try:
 					discs=int(album["songs"][-1]["disc"])
 				except:
@@ -1600,7 +1599,7 @@ class PlaylistView(Gtk.Box):
 				except:
 					dura=0.0
 				whole_length=whole_length+dura
-			whole_length_human_readable=str(datetime.timedelta(seconds=int(whole_length)))
+			whole_length_human_readable=str(datetime.timedelta(seconds=int(whole_length))).lstrip("0").lstrip(":")
 			self.playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
 		else:
 			self.playlist_info.set_text("")
@@ -1661,13 +1660,11 @@ class PlaylistView(Gtk.Box):
 			self.playlist_info.set_text("")
 			for s in songs:
 				song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
-				dura=float(song["duration"])
-				duration=str(datetime.timedelta(seconds=int(dura )))
 				try:
 					treeiter=self.store.get_iter(song["pos"])
-					self.store.set(treeiter, 0, song["track"], 1, song["disc"], 2, song["title"], 3, song["artist"], 4, song["album"], 5, duration, 6, song["date"], 7, song["genre"], 8, song["file"], 9, Pango.Weight.BOOK)
+					self.store.set(treeiter, 0, song["track"], 1, song["disc"], 2, song["title"], 3, song["artist"], 4, song["album"], 5, song["human_duration"], 6, song["date"], 7, song["genre"], 8, song["file"], 9, Pango.Weight.BOOK)
 				except:
-					self.store.append([song["track"], song["disc"], song["title"], song["artist"], song["album"], duration, song["date"], song["genre"], song["file"], Pango.Weight.BOOK])
+					self.store.append([song["track"], song["disc"], song["title"], song["artist"], song["album"], song["human_duration"], song["date"], song["genre"], song["file"], Pango.Weight.BOOK])
 		for i in reversed(range(int(self.client.status()["playlistlength"]), len(self.store))):
 			treeiter=self.store.get_iter(i)
 			self.store.remove(treeiter)
