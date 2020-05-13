@@ -2977,7 +2977,10 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_file_changed(self, *args):
 		try:
-			song=self.client.extend_song_for_display(self.client.song_to_str_dict(self.client.currentsong()))
+			song=self.client.currentsong()
+			if song == {}:
+				raise ValueError("Song out of range")
+			song=self.client.extend_song_for_display(self.client.song_to_str_dict(song))
 			if song["date"] != "":
 				date=" ("+song["date"]+")"
 			else:
