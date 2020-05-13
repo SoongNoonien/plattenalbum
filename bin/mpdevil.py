@@ -2649,75 +2649,44 @@ class AudioType(Gtk.Button):
 		self.treeview.append_column(self.column_value)
 
 		#timeouts
-		self.timeout_id=None
+		GLib.timeout_add(1000, self.refresh)
 
 		#connect
 		self.connect("clicked", self.on_clicked)
-		self.client.emitter.connect("disconnected", self.on_disconnected)
-		self.client.emitter.connect("reconnected", self.on_reconnected)
-		self.client.emitter.connect("player", self.on_player)
 
 		#packing
 		self.popover.add(self.treeview)
 		self.add(self.label)
 
 	def refresh(self):
-		try:
+		if self.client.connected():
 			status=self.client.status()
-			file_type=self.client.playlistinfo(status["song"])[0]["file"].split('.')[-1]
-			freq, res, chan=status["audio"].split(':')
-			freq=str(float(freq)/1000)
-			brate=status["bitrate"]
-			string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": brate, "frequency": freq, "resolution": res, "channels": chan, "file_type": file_type}
-			self.label.set_text(string)
-		except:
+			try:
+				file_type=self.client.playlistinfo(status["song"])[0]["file"].split('.')[-1]
+				freq, res, chan=status["audio"].split(':')
+				freq=str(float(freq)/1000)
+				brate=status["bitrate"]
+				string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": brate, "frequency": freq, "resolution": res, "channels": chan, "file_type": file_type}
+				self.label.set_text(string)
+			except:
+				self.label.set_text("-")
+		else:
 			self.label.set_text("-")
 		return True
 
 	def on_clicked(self, *args):
-		self.store.clear()
-		song=self.client.song_to_str_dict(self.client.currentsong())
-		for tag, value in song.items():
-			if tag == "time":
-				self.store.append([tag, str(datetime.timedelta(seconds=int(value)))])
-			else:
-				self.store.append([tag, value])
-		self.popover.show_all()
-		self.treeview.queue_resize()
-
-	def enable(self):
-		self.set_sensitive(True)
-
-	def disable(self):
-		self.label.set_text("-")
-		self.set_sensitive(False)
-
-	def on_reconnected(self, *args):
-		self.timeout_id=GLib.timeout_add(1000, self.refresh)
-		self.enable()
-
-	def on_disconnected(self, *args):
-		if not self.timeout_id == None:
-			GLib.source_remove(self.timeout_id)
-			self.timeout_id=None
-		self.disable()
-
-	def on_player(self, *args):
-		status=self.client.status()
-		if status['state'] == "stop":
-			if not self.timeout_id == None:
-				GLib.source_remove(self.timeout_id)
-				self.timeout_id=None
-			self.disable()
-		elif status['state'] == "pause":
-			if not self.timeout_id == None:
-				GLib.source_remove(self.timeout_id)
-				self.timeout_id=None
-			self.refresh()
-		else:
-			if self.timeout_id == None:
-				self.timeout_id=GLib.timeout_add(1000, self.refresh)
-			self.enable()
+		try:
+			self.store.clear()
+			song=self.client.song_to_str_dict(self.client.currentsong())
+			for tag, value in song.items():
+				if tag == "time":
+					self.store.append([tag, str(datetime.timedelta(seconds=int(value)))])
+				else:
+					self.store.append([tag, value])
+			self.popover.show_all()
+			self.treeview.queue_resize()
+		except:
+			pass
 
 class ProfileSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings):
