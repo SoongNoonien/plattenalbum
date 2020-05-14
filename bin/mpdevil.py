@@ -2348,9 +2348,9 @@ class SeekBar(Gtk.Box):
 
 		#labels
 		self.elapsed=Gtk.Label()
-		self.elapsed.set_width_chars(7)
+		self.elapsed.set_width_chars(5)
 		self.rest=Gtk.Label()
-		self.rest.set_width_chars(8)
+		self.rest.set_width_chars(6)
 
 		#progress bar
 		self.scale=Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=0, max=100, step=0.001)
@@ -2426,8 +2426,8 @@ class SeekBar(Gtk.Box):
 			if factor > 1: #fix display error
 				factor=1
 			elapsed=(factor*duration)
-			self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))))
-			self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))))
+			self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
+			self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
 			self.jumped=True
 
 	def seek_forward(self):
@@ -2448,8 +2448,8 @@ class SeekBar(Gtk.Box):
 		self.scale.set_range(0, 0)
 		self.elapsed_event_box.set_sensitive(False)
 		self.rest_event_box.set_sensitive(False)
-		self.elapsed.set_text("0:00:00")
-		self.rest.set_text("-0:00:00")
+		self.elapsed.set_text("00:00")
+		self.rest.set_text("-00:00")
 
 	def on_elapsed_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -2500,8 +2500,8 @@ class SeekBar(Gtk.Box):
 			fraction=(elapsed/duration)*100
 			if self.update:
 				self.scale.set_value(fraction)
-				self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))))
-				self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))))
+				self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
+				self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
 			self.scale.set_fill_level(fraction)
 		except:
 			self.disable()
