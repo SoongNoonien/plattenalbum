@@ -2436,6 +2436,7 @@ class SeekBar(Gtk.Box):
 				self.jumped=False
 			self.scale.set_has_origin(True)
 			self.update=True
+			self.refresh()
 
 	def on_change_value(self, range, scroll, value): #value is inaccurate
 		if scroll == Gtk.ScrollType.STEP_BACKWARD:
