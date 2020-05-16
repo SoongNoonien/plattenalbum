@@ -2932,9 +2932,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		stats_action.connect("activate", self.on_stats)
 		self.add_action(stats_action)
 
-		update_action=Gio.SimpleAction.new("update", None)
-		update_action.connect("activate", self.on_update)
-		self.add_action(update_action)
+		self.update_action=Gio.SimpleAction.new("update", None)
+		self.update_action.connect("activate", self.on_update)
+		self.add_action(self.update_action)
 
 		#widgets
 		self.browser=Browser(self.client, self.settings, self)
@@ -3059,6 +3059,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		elif event.keyval == 65455: #/
 			self.progress.scale.grab_focus()
 			self.progress.seek_backward()
+		elif event.keyval == 65474: #F5
+			self.update_action.emit("activate", None)
 
 	def on_save(self, action, param):
 		size=self.get_size()
