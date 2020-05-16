@@ -115,33 +115,6 @@ class Cover(object):
 			self.path=Gtk.IconTheme.get_default().lookup_icon("mpdevil", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename() #fallback cover
 		return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
 
-class AutoSettingsClient(MPDClient):
-	def __init__(self, settings):
-		MPDClient.__init__(self)
-		self.settings=settings
-		self.settings.connect("changed::active-profile", self.on_settings_changed)
-
-	def try_connect_default(self):
-		active=self.settings.get_int("active-profile")
-		try:
-			self.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
-			if self.settings.get_value("passwords")[active] == "":
-				self.password(None)
-			else:
-				self.password(self.settings.get_value("passwords")[active])
-		except:
-			pass
-
-	def connected(self):
-		try:
-			self.ping()
-			return True
-		except:
-			return False
-
-	def on_settings_changed(self, *args):
-		self.disconnect()
-
 class MpdEventEmitter(GObject.Object):
 	__gsignals__={
 		'database': (GObject.SignalFlags.RUN_FIRST, None, ()),
@@ -157,33 +130,12 @@ class MpdEventEmitter(GObject.Object):
 		'message': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'disconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'reconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'playing_file_changed': (GObject.SignalFlags.RUN_FIRST, None, ())
+		'playing_file_changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'periodic_signal': (GObject.SignalFlags.RUN_FIRST, None, ())
 	}
 
-	def __init__(self, settings):
+	def __init__(self):
 		super().__init__()
-		self.client=AutoSettingsClient(settings)
-		GLib.timeout_add(100, self.watch)
-		self.connected=True
-		self.current_file=None
-
-	def watch(self, *args):
-		try:
-			a=self.client.noidle()
-			for i in a:
-				self.emit(i)
-		except:
-			pass
-		try:
-			self.client.send_idle()
-		except:
-			self.client.try_connect_default()
-			if self.client.connected():
-				self.emit("disconnected")
-				self.emit("reconnected")
-			elif self.connected:
-				self.emit("disconnected")
-		return True
 
 	#mpd signals
 	def do_database(self):
@@ -199,14 +151,7 @@ class MpdEventEmitter(GObject.Object):
 		pass
 
 	def do_player(self):
-		current_song=self.client.currentsong()
-		if not current_song == {}:
-			if not current_song['file'] == self.current_file:
-				self.emit("playing_file_changed")
-				self.current_file=current_song['file']
-		else:
-			self.emit("playing_file_changed")
-			self.current_file=None
+		pass
 
 	def do_mixer(self):
 		pass
@@ -228,25 +173,46 @@ class MpdEventEmitter(GObject.Object):
 
 	#custom signals
 	def do_disconnected(self):
-		self.connected=False
-		self.current_file=None
+		pass
 
 	def do_reconnected(self):
-		self.connected=True
+		pass
 
 	def do_playing_file_changed(self):
 		pass
 
-class Client(AutoSettingsClient):
+	def do_periodic_signal(self):
+		pass
+
+class Client(MPDClient):
 	def __init__(self, settings):
-		AutoSettingsClient.__init__(self, settings)
+		MPDClient.__init__(self)
+		self.settings=settings
+		self.settings.connect("changed::active-profile", self.on_settings_changed)
+
+		#idle client
+		self.idle_client=MPDClient()
 
 		#adding vars
 		self.settings=settings
-		self.emitter=MpdEventEmitter(self.settings)
+		self.emitter=MpdEventEmitter()
 
-		#connect
-		self.emitter.connect("reconnected", self.on_reconnected)
+		self.current_file=None
+
+	def start(self):
+		if self.disconnected_loop():
+			self.disconnected_timeout_id=GLib.timeout_add(1000, self.disconnected_loop)
+
+	def connected(self):
+		try:
+			self.ping()
+			return True
+		except:
+			return False
+
+	def on_settings_changed(self, *args):
+		self.disconnect()
+		self.idle_client.disconnect()
 
 	def files_to_playlist(self, files, append, force=False):
 		if append:
@@ -309,13 +275,76 @@ class Client(AutoSettingsClient):
 		else:
 			return([])
 
-	def on_reconnected(self, *args):
-		self.try_connect_default()
+	def loop(self, *args):
+		#idle
+		try:
+			try:
+				idle_return=self.idle_client.noidle()
+				for i in idle_return:
+					self.emitter.emit(i)
+				if "player" in idle_return:
+					current_song=self.idle_client.currentsong()
+					if not current_song == {}:
+						if not current_song['file'] == self.current_file:
+							self.emitter.emit("playing_file_changed")
+							self.current_file=current_song['file']
+					else:
+						self.emitter.emit("playing_file_changed")
+						self.current_file=None
+			except:
+				pass
+			self.idle_client.send_idle()
+			#heartbeat
+			status=self.status()
+			if status['state'] == "stop" or status['state'] == "pause":
+				self.ping()
+			else:
+				self.emitter.emit("periodic_signal")
+		except:
+			try:
+				self.idle_client.disconnect()
+			except:
+				pass
+			try:
+				self.disconnect()
+			except:
+				pass
+			self.emitter.emit("disconnected")
+			if self.disconnected_loop():
+				self.disconnected_timeout_id=GLib.timeout_add(1000, self.disconnected_loop)
+			return False
+		return True
+
+	def disconnected_loop(self, *args):
+		self.current_file=None
+		active=self.settings.get_int("active-profile")
+		try:
+			self.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
+			if self.settings.get_value("passwords")[active] != "":
+				self.password(self.settings.get_value("passwords")[active])
+		except:
+			print("connect failed")
+			return True
+		try:
+			self.idle_client.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
+			if self.settings.get_value("passwords")[active] != "":
+				self.idle_client.password(self.settings.get_value("passwords")[active])
+		except:
+			print("connect failed")
+			print("max clients could be too small")
+			self.diconnect()
+			return True
+		#connect successful
+		self.main_timeout_id=GLib.timeout_add(100, self.loop)
 		self.emitter.emit("playlist")
 		self.emitter.emit("player")
+		self.emitter.emit("playing_file_changed")
 		self.emitter.emit("options")
 		self.emitter.emit("mixer")
 		self.emitter.emit("update")
+		self.emitter.emit("reconnected")
+#		self.emitter.emit("periodic_signal")
+		return False
 
 class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
 	__introspect_interface="org.freedesktop.DBus.Introspectable"
@@ -1355,7 +1384,6 @@ class AlbumView(FocusFrame):
 
 	def clear(self, *args):
 		if self.done:
-			self.artists=[]
 			self.iconview.store.clear()
 		elif not self.clear in self.pending:
 			self.iconview.stop_flag=True
@@ -2379,9 +2407,8 @@ class SeekBar(Gtk.Box):
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
 		self.client.emitter.connect("player", self.on_player)
-
-		#timeouts
-		self.timeout_id=None
+		#periodic_signal
+		self.periodic_signal=self.client.emitter.connect("periodic_signal", self.refresh)
 
 		#packing
 		self.elapsed_event_box.add(self.elapsed)
@@ -2389,6 +2416,8 @@ class SeekBar(Gtk.Box):
 		self.pack_start(self.elapsed_event_box, False, False, 0)
 		self.pack_start(self.scale, True, True, 0)
 		self.pack_end(self.rest_event_box, False, False, 0)
+
+		self.disable()
 
 	def dummy(self, *args):
 		return True
@@ -2411,8 +2440,6 @@ class SeekBar(Gtk.Box):
 				self.jumped=False
 			self.scale.set_has_origin(True)
 			self.update=True
-			if self.timeout_id == None:
-				self.refresh()
 
 	def on_change_value(self, range, scroll, value): #value is inaccurate
 		if scroll == Gtk.ScrollType.STEP_BACKWARD:
@@ -2444,7 +2471,6 @@ class SeekBar(Gtk.Box):
 
 	def disable(self):
 		self.scale.set_sensitive(False)
-		self.scale.set_value(0.0)
 		self.scale.set_range(0, 0)
 		self.elapsed_event_box.set_sensitive(False)
 		self.rest_event_box.set_sensitive(False)
@@ -2464,33 +2490,22 @@ class SeekBar(Gtk.Box):
 			self.seek_backward()
 
 	def on_reconnected(self, *args):
-		self.timeout_id=GLib.timeout_add(100, self.refresh)
 		self.enable()
 
 	def on_disconnected(self, *args):
-		if not self.timeout_id == None:
-			GLib.source_remove(self.timeout_id)
-			self.timeout_id=None
 		self.disable()
 
 	def on_player(self, *args):
 		status=self.client.status()
 		if status['state'] == "stop":
-			if not self.timeout_id == None:
-				GLib.source_remove(self.timeout_id)
-				self.timeout_id=None
 			self.disable()
-		elif status['state'] == "pause":
-			if not self.timeout_id == None:
-				GLib.source_remove(self.timeout_id)
-				self.timeout_id=None
+		elif status['state'] == "pause": #needed for seeking in paused state
+			self.enable()
 			self.refresh()
 		else:
-			if self.timeout_id == None:
-				self.timeout_id=GLib.timeout_add(100, self.refresh)
 			self.enable()
 
-	def refresh(self):
+	def refresh(self, *args):
 		try:
 			status=self.client.status()
 			duration=float(status["duration"])
@@ -2505,7 +2520,6 @@ class SeekBar(Gtk.Box):
 			self.scale.set_fill_level(fraction)
 		except:
 			self.disable()
-		return True
 
 class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings):
@@ -2648,43 +2662,39 @@ class AudioType(Gtk.Button):
 		self.column_value.set_property("resizable", False)
 		self.treeview.append_column(self.column_value)
 
-		#timeouts
-		GLib.timeout_add(1000, self.refresh)
-
 		#connect
 		self.connect("clicked", self.on_clicked)
+		#periodic_signal
+		self.client.emitter.connect("periodic_signal", self.refresh)
 
 		#packing
 		self.popover.add(self.treeview)
 		self.add(self.label)
 
-	def refresh(self):
-		if self.client.connected():
+	def refresh(self, *args):
+		try:
 			status=self.client.status()
-			try:
-				file_type=self.client.playlistinfo(status["song"])[0]["file"].split('.')[-1]
-				freq, res, chan=status["audio"].split(':')
-				freq=str(float(freq)/1000)
-				brate=status["bitrate"]
-				string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": brate, "frequency": freq, "resolution": res, "channels": chan, "file_type": file_type}
-				self.label.set_text(string)
-			except:
-				self.label.set_text("-")
-		else:
+			file_type=self.client.playlistinfo(status["song"])[0]["file"].split('.')[-1]
+			freq, res, chan=status["audio"].split(':')
+			freq=str(float(freq)/1000)
+			brate=status["bitrate"]
+			string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": brate, "frequency": freq, "resolution": res, "channels": chan, "file_type": file_type}
+			self.label.set_text(string)
+		except:
 			self.label.set_text("-")
-		return True
 
 	def on_clicked(self, *args):
 		try:
 			self.store.clear()
 			song=self.client.song_to_str_dict(self.client.currentsong())
-			for tag, value in song.items():
-				if tag == "time":
-					self.store.append([tag, str(datetime.timedelta(seconds=int(value)))])
-				else:
-					self.store.append([tag, value])
-			self.popover.show_all()
-			self.treeview.queue_resize()
+			if song != {}:
+				for tag, value in song.items():
+					if tag == "time":
+						self.store.append([tag, str(datetime.timedelta(seconds=int(value)))])
+					else:
+						self.store.append([tag, value])
+				self.popover.show_all()
+				self.treeview.queue_resize()
 		except:
 			pass
 
@@ -2971,6 +2981,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		self.show_all()
 		self.on_settings_changed() #hide profiles button
+		self.client.start() #connect client
 
 	def on_file_changed(self, *args):
 		try:
