@@ -2404,8 +2404,8 @@ class SeekBar(Gtk.Box):
 		self.scale.connect("scroll-event", self.dummy) #disable mouse wheel
 		self.scale.connect("button-press-event", self.on_scale_button_press_event)
 		self.scale.connect("button-release-event", self.on_scale_button_release_event)
-		self.client.emitter.connect("disconnected", self.on_disconnected)
-		self.client.emitter.connect("reconnected", self.on_reconnected)
+		self.client.emitter.connect("disconnected", self.disable)
+		self.client.emitter.connect("reconnected", self.enable)
 		self.client.emitter.connect("player", self.on_player)
 		#periodic_signal
 		self.periodic_signal=self.client.emitter.connect("periodic_signal", self.refresh)
@@ -2463,13 +2463,13 @@ class SeekBar(Gtk.Box):
 	def seek_backward(self):
 		self.client.seekcur("-"+self.seek_time)
 
-	def enable(self):
+	def enable(self, *args):
 		self.scale.set_sensitive(True)
 		self.scale.set_range(0, 100)
 		self.elapsed_event_box.set_sensitive(True)
 		self.rest_event_box.set_sensitive(True)
 
-	def disable(self):
+	def disable(self, *args):
 		self.scale.set_sensitive(False)
 		self.scale.set_range(0, 0)
 		self.elapsed_event_box.set_sensitive(False)
@@ -2488,12 +2488,6 @@ class SeekBar(Gtk.Box):
 			self.seek_forward()
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self.seek_backward()
-
-	def on_reconnected(self, *args):
-		self.enable()
-
-	def on_disconnected(self, *args):
-		self.disable()
 
 	def on_player(self, *args):
 		status=self.client.status()
@@ -2666,13 +2660,25 @@ class AudioType(Gtk.Button):
 		self.connect("clicked", self.on_clicked)
 		#periodic_signal
 		self.client.emitter.connect("periodic_signal", self.refresh)
+		self.client.emitter.connect("disconnected", self.disable)
+		self.client.emitter.connect("reconnected", self.enable)
 
 		#packing
 		self.popover.add(self.treeview)
 		self.add(self.label)
 
+		self.disable()
+
+	def enable(self, *args):
+		self.set_sensitive(True)
+
+	def disable(self, *args):
+		self.set_sensitive(False)
+		self.label.set_text("-")
+
 	def refresh(self, *args):
 		try:
+			self.enable()
 			status=self.client.status()
 			file_type=self.client.playlistinfo(status["song"])[0]["file"].split('.')[-1]
 			freq, res, chan=status["audio"].split(':')
@@ -2681,7 +2687,7 @@ class AudioType(Gtk.Button):
 			string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": brate, "frequency": freq, "resolution": res, "channels": chan, "file_type": file_type}
 			self.label.set_text(string)
 		except:
-			self.label.set_text("-")
+			pass
 
 	def on_clicked(self, *args):
 		try:
@@ -2695,8 +2701,10 @@ class AudioType(Gtk.Button):
 						self.store.append([tag, value])
 				self.popover.show_all()
 				self.treeview.queue_resize()
+			else:
+				self.disable()
 		except:
-			pass
+			self.disable()
 
 class ProfileSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings):
