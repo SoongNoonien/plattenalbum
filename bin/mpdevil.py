@@ -336,6 +336,7 @@ class Client(MPDClient):
 			return True
 		#connect successful
 		self.main_timeout_id=GLib.timeout_add(100, self.loop)
+		self.emitter.emit("periodic_signal")
 		self.emitter.emit("playlist")
 		self.emitter.emit("player")
 		self.emitter.emit("playing_file_changed")
@@ -343,7 +344,6 @@ class Client(MPDClient):
 		self.emitter.emit("mixer")
 		self.emitter.emit("update")
 		self.emitter.emit("reconnected")
-#		self.emitter.emit("periodic_signal")
 		return False
 
 class MPRISInterface(dbus.service.Object): #TODO emit Seeked if needed
