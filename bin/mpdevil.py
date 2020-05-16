@@ -263,6 +263,16 @@ class Client(MPDClient):
 		base_song["human_duration"]=str(datetime.timedelta(seconds=int(float(base_song["duration"])))).lstrip("0").lstrip(":")
 		return base_song
 
+	def calc_display_length(self, songs):
+		length=float(0)
+		for song in songs:
+			try:
+				dura=float(song["duration"])
+			except:
+				dura=0.0
+			length=length+dura
+		return str(datetime.timedelta(seconds=int(length))).lstrip("0").lstrip(":")
+
 	def comp_list(self, *args): #simulates listing behavior of python-mpd2 1.0
 		if "group" in args:
 			raise ValueError("'group' is not supported")
@@ -1264,14 +1274,7 @@ class AlbumIconView(Gtk.IconView):
 			if not self.stop_flag:
 				cover=Cover(lib_path=music_lib, song_file=album["songs"][0]["file"])
 				#tooltip
-				length=float(0)
-				for song in album["songs"]:
-					try:
-						dura=float(song["duration"])
-					except:
-						dura=0.0
-					length=length+dura
-				length_human_readable=str(datetime.timedelta(seconds=int(length))).lstrip("0").lstrip(":")
+				length_human_readable=self.client.calc_display_length(album["songs"])
 				try:
 					discs=int(album["songs"][-1]["disc"])
 				except:
@@ -1620,14 +1623,7 @@ class PlaylistView(Gtk.Box):
 	def refresh_playlist_info(self):
 		songs=self.client.playlistinfo()
 		if not songs == []:
-			whole_length=float(0)
-			for song in songs:
-				try:
-					dura=float(song["duration"])
-				except:
-					dura=0.0
-				whole_length=whole_length+dura
-			whole_length_human_readable=str(datetime.timedelta(seconds=int(whole_length))).lstrip("0").lstrip(":")
+			whole_length_human_readable=self.client.calc_display_length(songs)
 			self.playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
 		else:
 			self.playlist_info.set_text("")
