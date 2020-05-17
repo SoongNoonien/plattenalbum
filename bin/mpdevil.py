@@ -1720,6 +1720,7 @@ class Browser(Gtk.Box):
 		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings)
 		self.artist_view=ArtistView(self.client, self.settings, self.genre_select)
+		self.search=SearchWindow(self.client)
 		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
 		self.main_cover=MainCover(self.client, self.settings, self.window)
 		self.main_cover.set_property("border-width", 3)
@@ -1737,8 +1738,13 @@ class Browser(Gtk.Box):
 		hbox=Gtk.Box(spacing=6)
 		hbox.set_property("border-width", 6)
 		hbox.pack_start(self.back_to_album_button, False, False, 0)
-		hbox.pack_start(self.search_button, False, False, 0)
 		hbox.pack_start(self.genre_select, True, True, 0)
+		hbox.pack_start(self.search_button, False, False, 0)
+
+		self.stack=Gtk.Stack()
+		self.stack.set_transition_type(1)
+		self.stack.add_named(self.album_view, "albums")
+		self.stack.add_named(self.search, "search")
 
 		self.box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.box1.pack_start(hbox, False, False, 0)
@@ -1756,7 +1762,7 @@ class Browser(Gtk.Box):
 		self.paned2.set_wide_handle(True)
 
 		self.paned1.pack1(self.box1, False, False)
-		self.paned1.pack2(self.album_view, True, False)
+		self.paned1.pack2(self.stack, True, False)
 
 		self.paned2.pack1(self.paned1, True, False)
 		self.paned2.pack2(self.box2, False, False)
@@ -1805,6 +1811,8 @@ class Browser(Gtk.Box):
 						self.artist_view.treeview.set_cursor(path, None, False)
 						if not self.artist_view.get_selected_artists() == [artist]:
 							self.artist_view.treeview.row_activated(path, self.artist_view.column_name)
+						else:
+							self.search_button.set_active(False)
 						break
 			else:
 				self.artist_view.treeview.set_cursor(Gtk.TreePath(0), None, False) #set cursor to 'all artists'
@@ -1814,13 +1822,10 @@ class Browser(Gtk.Box):
 
 	def on_search_toggled(self, widget):
 		if widget.get_active():
-			if self.client.connected():
-				def set_active(*args):
-					self.search_button.set_active(False)
-				self.search_win=SearchWindow(self.client)
-				self.search_win.connect("destroy", set_active)
+			self.stack.set_visible_child_name("search")
+			self.search.start()
 		else:
-			self.search_win.destroy()
+			self.stack.set_visible_child_name("albums")
 
 	def on_reconnected(self, *args):
 		self.back_to_album_button.set_sensitive(True)
@@ -1835,6 +1840,7 @@ class Browser(Gtk.Box):
 		self.genre_select.set_sensitive(False)
 
 	def on_artists_changed(self, *args):
+		self.search_button.set_active(False)
 		artists=self.artist_view.get_selected_artists()
 		self.album_view.refresh(artists)
 
@@ -2782,11 +2788,9 @@ class ServerStats(Gtk.Dialog):
 		self.show_all()
 		self.run()
 
-class SearchWindow(Gtk.Window):
+class SearchWindow(FocusFrame):
 	def __init__(self, client):
-		Gtk.Window.__init__(self, title=_("Search"))
-		self.set_icon_name("mpdevil")
-		self.set_default_size(800, 600)
+		FocusFrame.__init__(self)
 
 		#adding vars
 		self.client=client
@@ -2814,14 +2818,19 @@ class SearchWindow(Gtk.Window):
 		vbox.pack_start(self.songs_view, True, True, 0)
 		vbox.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		vbox.pack_start(self.label, False, False, 6)
+
+		self.set_widget(self.songs_view.treeview)
 		self.add(vbox)
 
-		self.show_all()
+	def start(self):
+		self.search_entry.grab_focus()
 
 	def on_search_changed(self, widget):
 		self.songs_view.clear()
-		self.songs_view.populate(self.client.search("any", self.search_entry.get_text()))
-		self.label.set_text(_("hits: %i") % (self.songs_view.count()))
+		self.label.set_text("")
+		if len(self.search_entry.get_text()) > 1:
+			self.songs_view.populate(self.client.search("any", self.search_entry.get_text()))
+			self.label.set_text(_("hits: %i") % (self.songs_view.count()))
 
 class LyricsWindow(Gtk.Window):
 	def __init__(self, client, settings):
