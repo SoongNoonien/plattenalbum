@@ -1788,6 +1788,9 @@ class Browser(Gtk.Box):
 		self.playlist_view.clear()
 		self.main_cover.clear()
 
+	def search_started(self):
+		return self.search.started()
+
 	def back_to_album(self, *args):
 		try: #since this can still be running when the connection is lost, various exceptions can occur
 			song=self.client.song_to_first_str_dict(self.client.currentsong())
@@ -2825,6 +2828,9 @@ class SearchWindow(FocusFrame):
 	def start(self):
 		self.search_entry.grab_focus()
 
+	def started(self):
+		return self.search_entry.has_focus()
+
 	def on_search_changed(self, widget):
 		self.songs_view.clear()
 		self.label.set_text("")
@@ -3046,7 +3052,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_key_press_event(self, widget, event):
 		if event.keyval == 32: #space
-			self.control.play_button.grab_focus()
+			if not self.browser.search_started():
+				self.control.play_button.grab_focus()
 		if event.keyval == 269025044: #AudioPlay
 			self.control.play_button.grab_focus()
 			self.control.play_button.emit("clicked")
