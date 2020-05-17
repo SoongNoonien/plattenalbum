@@ -2401,7 +2401,6 @@ class SeekBar(Gtk.Box):
 		self.scale.connect("button-press-event", self.on_scale_button_press_event)
 		self.scale.connect("button-release-event", self.on_scale_button_release_event)
 		self.client.emitter.connect("disconnected", self.disable)
-		self.client.emitter.connect("reconnected", self.enable)
 		self.client.emitter.connect("player", self.on_player)
 		#periodic_signal
 		self.periodic_signal=self.client.emitter.connect("periodic_signal", self.refresh)
