@@ -1445,7 +1445,11 @@ class MainCover(Gtk.Frame):
 
 		#cover
 		self.cover=Gtk.Image.new()
-		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover"))) #set to fallback cover
+		size=self.settings.get_int("track-cover")
+		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(size)) #set to fallback cover
+		#set default size
+		self.cover.set_size_request(size, size)
+
 
 		#connect
 		event_box.connect("button-press-event", self.on_button_press_event)
@@ -1496,6 +1500,8 @@ class MainCover(Gtk.Frame):
 					album_dialog.destroy()
 
 	def on_settings_changed(self, *args):
+		size=self.settings.get_int("track-cover")
+		self.cover.set_size_request(size, size)
 		self.song_file=None
 		self.refresh()
 
