@@ -905,7 +905,7 @@ class SongsView(Gtk.TreeView):
 
 		#store
 		#(track, title, artist, album, duration, file)
-		self.store=Gtk.ListStore(str, str, str, str, str, str)
+		self.store=Gtk.ListStore(int, str, str, str, str, str)
 		self.set_model(self.store)
 
 		#selection
@@ -987,7 +987,7 @@ class SongsView(Gtk.TreeView):
 	def populate(self, songs):
 		for s in songs:
 			song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
-			self.store.append([song["track"], song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
+			self.store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
 
 	def clear(self):
 		self.store.clear()
