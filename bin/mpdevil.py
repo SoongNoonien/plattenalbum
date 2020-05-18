@@ -995,6 +995,12 @@ class SongsView(Gtk.TreeView):
 	def count(self):
 		return len(self.store)
 
+	def get_files(self):
+		return_list=[]
+		for row in self.store:
+			return_list.append(row[5])
+		return return_list
+
 class AlbumDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, album, artist, year):
 		Gtk.Dialog.__init__(self, transient_for=parent)
@@ -2856,19 +2862,40 @@ class SearchWindow(Gtk.Box):
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scroll.add(self.songs_view)
 
+		#buttons
+		self.add_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_ADD), label=_("Add"))
+		self.add_button.set_sensitive(False)
+		self.add_button.set_relief(Gtk.ReliefStyle.NONE)
+		self.play_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_MEDIA_PLAY), label=_("Play"))
+		self.play_button.set_sensitive(False)
+		self.play_button.set_relief(Gtk.ReliefStyle.NONE)
+		self.open_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_OPEN), label=_("Open"))
+		self.open_button.set_sensitive(False)
+		self.open_button.set_relief(Gtk.ReliefStyle.NONE)
+
 		#connect
 		self.search_entry.connect("search-changed", self.on_search_changed)
+		self.add_button.connect("clicked", self.on_add_clicked)
+		self.play_button.connect("clicked", self.on_play_clicked)
+		self.open_button.connect("clicked", self.on_open_clicked)
 
 		#packing
 		frame=FocusFrame()
 		frame.set_widget(self.songs_view)
 		frame.add(scroll)
-
+		ButtonBox=Gtk.ButtonBox(spacing=1)
+		ButtonBox.set_property("border-width", 1)
+		ButtonBox.pack_start(self.add_button, True, True, 0)
+		ButtonBox.pack_start(self.play_button, True, True, 0)
+		ButtonBox.pack_start(self.open_button, True, True, 0)
+		hbox=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+		hbox.pack_start(ButtonBox, 0, False, False)
+		hbox.pack_end(self.label, 0, False, False)
 		self.pack_start(self.search_entry, False, False, 6)
 		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.pack_start(frame, True, True, 0)
 		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		self.pack_start(self.label, False, False, 6)
+		self.pack_start(hbox, False, False, 0)
 
 	def start(self):
 		self.search_entry.grab_focus()
@@ -2882,6 +2909,23 @@ class SearchWindow(Gtk.Box):
 		if len(self.search_entry.get_text()) > 1:
 			self.songs_view.populate(self.client.search("any", self.search_entry.get_text()))
 			self.label.set_text(_("hits: %i") % (self.songs_view.count()))
+		if self.songs_view.count() == 0:
+			self.add_button.set_sensitive(False)
+			self.play_button.set_sensitive(False)
+			self.open_button.set_sensitive(False)
+		else:
+			self.add_button.set_sensitive(True)
+			self.play_button.set_sensitive(True)
+			self.open_button.set_sensitive(True)
+
+	def on_add_clicked(self, *args):
+		self.client.files_to_playlist(self.songs_view.get_files(), True)
+
+	def on_play_clicked(self, *args):
+		self.client.files_to_playlist(self.songs_view.get_files(), False, True)
+
+	def on_open_clicked(self, *args):
+		self.client.files_to_playlist(self.songs_view.get_files(), self.year, False)
 
 class LyricsWindow(Gtk.Frame):
 	def __init__(self, client, settings, width, height):
