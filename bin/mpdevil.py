@@ -2925,7 +2925,7 @@ class SearchWindow(Gtk.Box):
 		self.client.files_to_playlist(self.songs_view.get_files(), False, True)
 
 	def on_open_clicked(self, *args):
-		self.client.files_to_playlist(self.songs_view.get_files(), self.year, False)
+		self.client.files_to_playlist(self.songs_view.get_files(), False)
 
 class LyricsWindow(Gtk.Frame):
 	def __init__(self, client, settings, width, height):
