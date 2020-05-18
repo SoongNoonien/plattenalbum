@@ -1734,6 +1734,22 @@ class Browser(Gtk.Box):
 		self.main_cover.set_property("border-width", 3)
 		self.playlist_view=PlaylistView(self.client, self.settings)
 
+		#lyrics button
+		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.LARGE_TOOLBAR))
+		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
+		self.lyrics_button.set_halign(2)
+		self.lyrics_button.set_valign(1)
+		style_context=self.lyrics_button.get_style_context()
+		provider=Gtk.CssProvider()
+		css=b"""* {opacity: 0.7;}"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
+
+		#lyrics cover overlay
+		self.overlay=Gtk.Overlay()
+		self.overlay.add(self.main_cover)
+		self.overlay.add_overlay(self.lyrics_button)
+
 		#connect
 		self.back_to_album_button.connect("clicked", self.back_to_album)
 		self.search_button.connect("toggled", self.on_search_toggled)
@@ -1741,6 +1757,7 @@ class Browser(Gtk.Box):
 		self.settings.connect("changed::playlist-right", self.on_playlist_pos_settings_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
+		self.lyrics_button.connect("toggled", self.on_lyrics_toggled)
 
 		#packing
 		hbox=Gtk.Box(spacing=6)
@@ -1759,9 +1776,10 @@ class Browser(Gtk.Box):
 		self.box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.box1.pack_start(self.artist_view, True, True, 0)
 
-		self.box2=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		self.box2.pack_start(self.main_cover, False, False, 0)
-		self.box2.pack_start(self.playlist_view, True, True, 0)
+		self.paned0=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
+		self.paned0.set_wide_handle(True)
+		self.paned0.pack1(self.overlay, False, False)
+		self.paned0.pack2(self.playlist_view, True, False)
 
 		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 		self.paned1.set_wide_handle(True)
@@ -1773,7 +1791,7 @@ class Browser(Gtk.Box):
 		self.paned1.pack2(self.stack, True, False)
 
 		self.paned2.pack1(self.paned1, True, False)
-		self.paned2.pack2(self.box2, False, False)
+		self.paned2.pack2(self.paned0, False, False)
 
 		self.load_settings()
 		self.pack_start(self.paned2, True, True, 0)
@@ -1781,11 +1799,13 @@ class Browser(Gtk.Box):
 		self.on_playlist_pos_settings_changed()
 
 	def save_settings(self):
+		self.settings.set_int("paned0", self.paned0.get_position())
 		self.settings.set_int("paned1", self.paned1.get_position())
 		self.settings.set_int("paned2", self.paned2.get_position())
 		self.playlist_view.save_settings()
 
 	def load_settings(self):
+		self.paned0.set_position(self.settings.get_int("paned0"))
 		self.paned1.set_position(self.settings.get_int("paned1"))
 		self.paned2.set_position(self.settings.get_int("paned2"))
 
@@ -1841,6 +1861,7 @@ class Browser(Gtk.Box):
 	def on_reconnected(self, *args):
 		self.back_to_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
+		self.lyrics_button.set_sensitive(True)
 		self.genre_select.set_sensitive(True)
 
 	def on_disconnected(self, *args):
@@ -1848,6 +1869,8 @@ class Browser(Gtk.Box):
 		self.back_to_album_button.set_sensitive(False)
 		self.search_button.set_active(False)
 		self.search_button.set_sensitive(False)
+		self.lyrics_button.set_active(False)
+		self.lyrics_button.set_sensitive(False)
 		self.genre_select.set_sensitive(False)
 
 	def on_artists_changed(self, *args):
@@ -1857,11 +1880,20 @@ class Browser(Gtk.Box):
 
 	def on_playlist_pos_settings_changed(self, *args):
 		if self.settings.get_boolean("playlist-right"):
-			self.box2.set_orientation(Gtk.Orientation.VERTICAL)
+			self.paned0.set_orientation(Gtk.Orientation.VERTICAL)
 			self.paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
 		else:
-			self.box2.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self.paned0.set_orientation(Gtk.Orientation.HORIZONTAL)
 			self.paned2.set_orientation(Gtk.Orientation.VERTICAL)
+
+	def on_lyrics_toggled(self, widget):
+		if widget.get_active():
+			size=self.settings.get_int("track-cover")
+			self.lyrics_win=LyricsWindow(self.client, self.settings, size, size)
+			self.overlay.add_overlay(self.lyrics_win)
+			self.overlay.reorder_overlay(self.lyrics_win, 0)
+		else:
+			self.lyrics_win.destroy()
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
@@ -2846,19 +2878,21 @@ class SearchWindow(FocusFrame):
 			self.songs_view.populate(self.client.search("any", self.search_entry.get_text()))
 			self.label.set_text(_("hits: %i") % (self.songs_view.count()))
 
-class LyricsWindow(Gtk.Window):
-	def __init__(self, client, settings):
-		Gtk.Window.__init__(self, title=_("Lyrics"))
-		self.set_icon_name("mpdevil")
-		self.set_default_size(450, 800)
+class LyricsWindow(Gtk.Frame):
+	def __init__(self, client, settings, width, height):
+		Gtk.Frame.__init__(self)
+
+		style_context=self.get_style_context()
+		provider=Gtk.CssProvider()
+		css=b"""* {border: 0px; background-color: @theme_base_color; opacity: 0.9;}"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
 
 		#adding vars
 		self.settings=settings
 		self.client=client
 
 		#widgets
-		self.scroll=Gtk.ScrolledWindow()
-		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		self.label=Gtk.Label()
 		self.label.set_selectable(True)
 		self.label.set_yalign(0)
@@ -2869,7 +2903,10 @@ class LyricsWindow(Gtk.Window):
 		self.connect("destroy", self.remove_handlers)
 
 		#packing
+		self.scroll=Gtk.ScrolledWindow()
+		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		self.scroll.add(self.label)
+		self.scroll.set_margin_start(5)
 		self.add(self.scroll)
 
 		self.show_all()
@@ -2884,7 +2921,7 @@ class LyricsWindow(Gtk.Window):
 		try:
 			text=self.getLyrics(current_song["artist"], current_song["title"])
 		except:
-			text=_("not found")
+			text=_("lyrics not found")
 		GLib.idle_add(self.label.set_text, text)
 
 	def refresh(self, *args):
@@ -2961,8 +2998,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.profiles.set_tooltip_text(_("Select profile"))
 		self.control=ClientControl(self.client, self.settings)
 		self.progress=SeekBar(self.client)
-		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", self.icon_size))
-		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
 		self.play_opts=PlaybackOptions(self.client, self.settings)
 
 		#menu
@@ -2981,7 +3016,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", self.icon_size))
 
 		#connect
-		self.lyrics_button.connect("toggled", self.on_lyrics_toggled)
 		self.settings.connect("changed::profiles", self.on_settings_changed)
 		self.client.emitter.connect("playing_file_changed", self.on_file_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
@@ -2999,7 +3033,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.vbox.pack_start(self.action_bar, False, False, 0)
 		self.action_bar.pack_start(self.control)
 		self.action_bar.pack_start(self.progress)
-		self.action_bar.pack_start(self.lyrics_button)
 		self.action_bar.pack_start(self.profiles)
 		self.action_bar.pack_start(self.play_opts)
 		self.action_bar.pack_end(menu_button)
@@ -3035,28 +3068,15 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.progress.set_sensitive(True)
 		self.control.set_sensitive(True)
 		self.play_opts.set_sensitive(True)
-		self.lyrics_button.set_sensitive(True)
 		self.browser.back_to_album()
 
 	def on_disconnected(self, *args):
 		self.dbus_service.release_name()
-		self.lyrics_button.set_active(False)
 		self.set_title("mpdevil (not connected)")
 		self.songid_playing=None
 		self.progress.set_sensitive(False)
 		self.control.set_sensitive(False)
 		self.play_opts.set_sensitive(False)
-		self.lyrics_button.set_sensitive(False)
-
-	def on_lyrics_toggled(self, widget):
-		if widget.get_active():
-			if self.client.connected():
-				def set_active(*args):
-					self.lyrics_button.set_active(False)
-				self.lyrics_win=LyricsWindow(self.client, self.settings)
-				self.lyrics_win.connect("destroy", set_active)
-		else:
-			self.lyrics_win.destroy()
 
 	def on_key_press_event(self, widget, event):
 		if event.keyval == 32: #space

@@ -11,14 +11,19 @@
       <summary>Default height of window</summary>
       <description></description>
     </key>
+    <key type="i" name="paned0">
+      <default>350</default>
+      <summary>Default position of cover/playlist separator</summary>
+      <description></description>
+    </key>
     <key type="i" name="paned1">
       <default>246</default>
-      <summary>Default position of artist/album separator</summary>
+      <summary>Default position of artist/albums separator</summary>
       <description></description>
     </key>
     <key type="i" name="paned2">
       <default>598</default>
-      <summary>Default position of browser/playlist separator</summary>
+      <summary>Default position of paned1/paned0 separator</summary>
       <description></description>
     </key>
     <key type="i" name="album-cover">
