@@ -1427,6 +1427,9 @@ class AlbumView(FocusFrame):
 class MainCover(Gtk.Frame):
 	def __init__(self, client, settings, window):
 		Gtk.Frame.__init__(self)
+		#diable auto resize
+		self.set_halign(3)
+		self.set_valign(3)
 		#css
 		style_context=self.get_style_context()
 		provider=Gtk.CssProvider()
@@ -1449,7 +1452,6 @@ class MainCover(Gtk.Frame):
 		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(size)) #set to fallback cover
 		#set default size
 		self.cover.set_size_request(size, size)
-
 
 		#connect
 		event_box.connect("button-press-event", self.on_button_press_event)
