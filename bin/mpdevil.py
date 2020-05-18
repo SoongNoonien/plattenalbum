@@ -894,10 +894,11 @@ class Settings(Gio.Settings):
 		else:
 			return ("artist")
 
-class SongsView(Gtk.ScrolledWindow):
+class SongsView(Gtk.TreeView):
 	def __init__(self, client, show_album=True, sort_enable=True):
-		Gtk.ScrolledWindow.__init__(self)
-		self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		Gtk.TreeView.__init__(self)
+		self.set_search_column(-1)
+		self.columns_autosize()
 
 		#add vars
 		self.client=client
@@ -905,14 +906,10 @@ class SongsView(Gtk.ScrolledWindow):
 		#store
 		#(track, title, artist, album, duration, file)
 		self.store=Gtk.ListStore(str, str, str, str, str, str)
-
-		#TreeView
-		self.treeview=Gtk.TreeView(model=self.store)
-		self.treeview.set_search_column(-1)
-		self.treeview.columns_autosize()
+		self.set_model(self.store)
 
 		#selection
-		self.selection=self.treeview.get_selection()
+		self.selection=self.get_selection()
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		#columns
@@ -922,28 +919,28 @@ class SongsView(Gtk.ScrolledWindow):
 		self.column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
 		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_track.set_property("resizable", False)
-		self.treeview.append_column(self.column_track)
+		self.append_column(self.column_track)
 
 		self.column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
 		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_title.set_property("resizable", False)
-		self.treeview.append_column(self.column_title)
+		self.append_column(self.column_title)
 
 		self.column_artist=Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
 		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_artist.set_property("resizable", False)
-		self.treeview.append_column(self.column_artist)
+		self.append_column(self.column_artist)
 
 		self.column_album=Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
 		self.column_album.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_album.set_property("resizable", False)
 		if show_album:
-			self.treeview.append_column(self.column_album)
+			self.append_column(self.column_album)
 
 		self.column_time=Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
 		self.column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_time.set_property("resizable", False)
-		self.treeview.append_column(self.column_time)
+		self.append_column(self.column_time)
 
 		if sort_enable:
 			self.column_track.set_sort_column_id(0)
@@ -953,11 +950,9 @@ class SongsView(Gtk.ScrolledWindow):
 			self.column_time.set_sort_column_id(4)
 
 		#connect
-		self.treeview.connect("row-activated", self.on_row_activated)
-		self.treeview.connect("button-press-event", self.on_button_press_event)
-		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
-
-		self.add(self.treeview)
+		self.connect("row-activated", self.on_row_activated)
+		self.connect("button-press-event", self.on_button_press_event)
+		self.key_press_event=self.connect("key-press-event", self.on_key_press_event)
 
 	def on_row_activated(self, widget, path, view_column):
 		self.client.files_to_playlist([self.store[path][5]], False, True)
@@ -977,7 +972,7 @@ class SongsView(Gtk.ScrolledWindow):
 				pass
 
 	def on_key_press_event(self, widget, event):
-		self.treeview.handler_block(self.key_press_event)
+		self.handler_block(self.key_press_event)
 		if event.keyval == 112: #p
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
@@ -987,7 +982,7 @@ class SongsView(Gtk.ScrolledWindow):
 			if not treeiter == None:
 				self.client.files_to_playlist([self.store.get_value(treeiter, 5)], True)
 #		elif event.keyval == 65383: #menu key
-		self.treeview.handler_unblock(self.key_press_event)
+		self.handler_unblock(self.key_press_event)
 
 	def populate(self, songs):
 		for s in songs:
@@ -1025,8 +1020,13 @@ class AlbumDialog(Gtk.Dialog):
 		self.songs_view=SongsView(self.client, False, False)
 		self.songs_view.populate(self.client.find("album", self.album, "date", self.year, self.settings.get_artist_type(), self.artist))
 
+		#scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		scroll.add(self.songs_view)
+
 		#packing
-		self.vbox.pack_start(self.songs_view, True, True, 0) #vbox default widget of dialogs
+		self.vbox.pack_start(scroll, True, True, 0) #vbox default widget of dialogs
 		self.vbox.set_spacing(6)
 		self.show_all()
 
@@ -2831,9 +2831,9 @@ class ServerStats(Gtk.Dialog):
 		self.show_all()
 		self.run()
 
-class SearchWindow(FocusFrame):
+class SearchWindow(Gtk.Box):
 	def __init__(self, client):
-		FocusFrame.__init__(self)
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
 
 		#adding vars
 		self.client=client
@@ -2851,19 +2851,24 @@ class SearchWindow(FocusFrame):
 		#songs view
 		self.songs_view=SongsView(self.client)
 
+		#scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		scroll.add(self.songs_view)
+
 		#connect
 		self.search_entry.connect("search-changed", self.on_search_changed)
 
 		#packing
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		vbox.pack_start(self.search_entry, False, False, 6)
-		vbox.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		vbox.pack_start(self.songs_view, True, True, 0)
-		vbox.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		vbox.pack_start(self.label, False, False, 6)
+		frame=FocusFrame()
+		frame.set_widget(self.songs_view)
+		frame.add(scroll)
 
-		self.set_widget(self.songs_view.treeview)
-		self.add(vbox)
+		self.pack_start(self.search_entry, False, False, 6)
+		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		self.pack_start(frame, True, True, 0)
+		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		self.pack_start(self.label, False, False, 6)
 
 	def start(self):
 		self.search_entry.grab_focus()
