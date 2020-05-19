@@ -1181,6 +1181,12 @@ class ArtistView(FocusFrame):
 					break
 			return artists
 
+	def highlight_selected(self):
+		for path, row in enumerate(self.store):
+			if row[1] == Pango.Weight.BOLD:
+				self.treeview.set_cursor(path, None, False)
+				break
+
 	def on_row_activated(self, widget, path, view_column):
 		for row in self.store: #reset bold text
 			row[1]=Pango.Weight.BOOK
@@ -1850,6 +1856,7 @@ class Browser(Gtk.Box):
 							self.artist_view.treeview.row_activated(path, self.artist_view.column_name)
 						else:
 							self.search_button.set_active(False)
+							self.artist_view.highlight_selected()
 						break
 			else:
 				self.artist_view.treeview.set_cursor(Gtk.TreePath(0), None, False) #set cursor to 'all artists'
