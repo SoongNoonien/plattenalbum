@@ -3134,20 +3134,30 @@ class MainWindow(Gtk.ApplicationWindow):
 		if event.keyval == 269025044: #AudioPlay
 			self.control.play_button.grab_focus()
 			self.control.play_button.emit("clicked")
-		elif event.keyval == 269025047 or event.keyval == 43 or event.keyval == 65451: #AudioNext
+		elif event.keyval == 269025047: #AudioNext
 			self.control.next_button.grab_focus()
 			self.control.next_button.emit("clicked")
-		elif event.keyval == 269025046 or event.keyval == 45 or event.keyval == 65453: #AudioPrev
+		elif event.keyval == 43 or event.keyval == 65451: #+
+			if not self.browser.search_started():
+				self.control.next_button.grab_focus()
+				self.control.next_button.emit("clicked")
+		elif event.keyval == 269025046: #AudioPrev
 			self.control.prev_button.grab_focus()
 			self.control.prev_button.emit("clicked")
+		elif event.keyval == 45 or event.keyval == 65453: #-
+			if not self.browser.search_started():
+				self.control.prev_button.grab_focus()
+				self.control.prev_button.emit("clicked")
 		elif event.keyval == 65307: #esc
 			self.browser.back_to_album()
 		elif event.keyval == 65450: #*
-			self.progress.scale.grab_focus()
-			self.progress.seek_forward()
+			if not self.browser.search_started():
+				self.progress.scale.grab_focus()
+				self.progress.seek_forward()
 		elif event.keyval == 65455: #/
-			self.progress.scale.grab_focus()
-			self.progress.seek_backward()
+			if not self.browser.search_started():
+				self.progress.scale.grab_focus()
+				self.progress.seek_backward()
 		elif event.keyval == 65474: #F5
 			self.update_action.emit("activate", None)
 
