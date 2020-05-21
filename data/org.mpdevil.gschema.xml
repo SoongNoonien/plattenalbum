@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
   <schema id="org.mpdevil" path="/org/mpdevil/">
+    <key type="b" name="maximize">
+      <default>false</default>
+      <summary>Maximize mpdevil on startup</summary>
+      <description></description>
+    </key>
     <key type="i" name="width">
       <default>1050</default>
       <summary>Default width of window</summary>

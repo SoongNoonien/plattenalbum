@@ -3192,6 +3192,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.add(self.vbox)
 
 		self.show_all()
+		if self.settings.get_boolean("maximize"):
+			self.maximize()
 		self.on_settings_changed() #hide profiles button
 		self.client.start() #connect client
 
@@ -3280,6 +3282,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		size=self.get_size()
 		self.settings.set_int("width", size[0])
 		self.settings.set_int("height", size[1])
+		self.settings.set_boolean("maximize", self.is_maximized())
 		self.browser.save_settings()
 
 	def on_settings(self, action, param):
