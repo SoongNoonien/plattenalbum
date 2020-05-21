@@ -2223,8 +2223,14 @@ class GeneralSettings(Gtk.Box):
 		icon_size_combo.connect("changed", self.on_icon_size_changed)
 
 		#packing
+		restart_label=Gtk.Label(label=_("(restart required)"))
+		restart_label.set_xalign(0)
+		restart_label.set_sensitive(False)
+		box=Gtk.Box(spacing=12)
+		box.pack_start(check_buttons["use-csd"], False, False, 0)
+		box.pack_start(restart_label, False, False, 0)
 		self.pack_start(view_heading, True, True, 0)
-		self.pack_start(check_buttons["use-csd"], True, True, 0)
+		self.pack_start(box, True, True, 0)
 		self.pack_start(check_buttons["show-stop"], True, True, 0)
 		self.pack_start(check_buttons["show-initials"], True, True, 0)
 		self.pack_start(check_buttons["show-album-view-tooltips"], True, True, 0)
