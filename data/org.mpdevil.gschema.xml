@@ -41,6 +41,11 @@
       <summary>Size of button icons in control bar</summary>
       <description></description>
     </key>
+    <key type="b" name="use-csd">
+      <default>false</default>
+      <summary>Use CSD for main window</summary>
+      <description></description>
+    </key>
     <key type="b" name="show-stop">
       <default>false</default>
       <summary>Show stop button</summary>

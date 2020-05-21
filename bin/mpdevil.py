@@ -1033,7 +1033,7 @@ class AlbumDialog(Gtk.Dialog):
 
 		#packing
 		self.vbox.pack_start(scroll, True, True, 0) #vbox default widget of dialogs
-		self.vbox.set_spacing(6)
+		self.vbox.set_spacing(3)
 		self.show_all()
 
 	def open(self):
@@ -1723,6 +1723,89 @@ class PlaylistView(Gtk.Box):
 	def on_disconnected(self, *args):
 		self.playlist_version=None
 
+class CoverLyricsOSD(Gtk.Overlay):
+	def __init__(self, client, settings, window):
+		Gtk.Overlay.__init__(self)
+
+		#adding vars
+		self.client=client
+		self.settings=settings
+		self.window=window
+		self.hide_timeout_id=None
+
+		#cover
+		self.cover=MainCover(self.client, self.settings, self.window)
+		self.cover.set_property("border-width", 3)
+
+		#lyrics button
+		self.lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.LARGE_TOOLBAR))
+		self.lyrics_button.set_label(_("Show lyrics"))
+		self.lyrics_button.set_margin_top(12)
+		style_context=self.lyrics_button.get_style_context()
+		style_context.add_class("osd")
+
+		#revealer
+		self.revealer=Gtk.Revealer()
+		self.revealer.set_halign(3)
+		self.revealer.set_valign(1)
+		self.revealer.add(self.lyrics_button)
+
+		#event box
+		self.event_box=Gtk.EventBox()
+		self.event_box.set_events(Gdk.EventMask.POINTER_MOTION_MASK)
+		self.event_box.add(self.cover)
+
+		#packing
+		self.add(self.event_box)
+		self.add_overlay(self.revealer)
+
+		#connect
+		self.lyrics_button.connect("clicked", self.on_lyrics_clicked)
+		self.motion_notify_event=self.event_box.connect("motion-notify-event", self.on_motion_notify_event)
+		self.lyrics_button.connect("enter-notify-event", self.on_enter_notify_event)
+		self.lyrics_button.connect("leave-notify-event", self.on_leave_notify_event)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
+		self.event_box.handler_block(self.motion_notify_event)
+
+	def on_reconnected(self, *args):
+		self.event_box.handler_unblock(self.motion_notify_event)
+
+	def on_disconnected(self, *args):
+		self.cover.clear()
+		self.event_box.handler_block(self.motion_notify_event)
+		self.hide_lyrics_button()
+		try:
+			self.lyrics_win.destroy()
+		except:
+			pass
+
+	def hide_lyrics_button(self, *args):
+		self.revealer.set_reveal_child(False)
+		self.hide_timeout_id=None
+		return False
+
+	def on_motion_notify_event(self, *args):
+		self.revealer.set_reveal_child(True)
+		if not self.hide_timeout_id == None:
+			GLib.source_remove(self.hide_timeout_id)
+		self.hide_timeout_id=GLib.timeout_add(1000, self.hide_lyrics_button)
+
+	def on_enter_notify_event(self, *args):
+		if not self.hide_timeout_id == None:
+			GLib.source_remove(self.hide_timeout_id)
+			self.hide_timeout_id=None
+
+	def on_leave_notify_event(self, *args):
+		if not self.hide_timeout_id == None:
+			GLib.source_remove(self.hide_timeout_id)
+		self.hide_timeout_id=GLib.timeout_add(1000, self.hide_lyrics_button)
+
+	def on_lyrics_clicked(self, widget):
+		self.hide_lyrics_button()
+		self.lyrics_win=LyricsWindow(self.client, self.settings)
+		self.add_overlay(self.lyrics_win)
+
 class Browser(Gtk.Box):
 	def __init__(self, client, settings, window):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
@@ -1731,7 +1814,12 @@ class Browser(Gtk.Box):
 		self.client=client
 		self.settings=settings
 		self.window=window
-		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
+		self.use_csd=self.settings.get_boolean("use-csd")
+
+		if self.use_csd:
+			self.icon_size=Gtk.IconSize.BUTTON
+		else:
+			self.icon_size=self.settings.get_gtk_icon_size("icon-size")
 
 		#widgets
 		self.back_to_album_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", self.icon_size))
@@ -1742,25 +1830,8 @@ class Browser(Gtk.Box):
 		self.artist_view=ArtistView(self.client, self.settings, self.genre_select)
 		self.search=SearchWindow(self.client)
 		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
-		self.main_cover=MainCover(self.client, self.settings, self.window)
-		self.main_cover.set_property("border-width", 3)
+		self.cover=CoverLyricsOSD(self.client, self.settings, self.window)
 		self.playlist_view=PlaylistView(self.client, self.settings)
-
-		#lyrics button
-		self.lyrics_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.LARGE_TOOLBAR))
-		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
-		self.lyrics_button.set_halign(2)
-		self.lyrics_button.set_valign(1)
-		style_context=self.lyrics_button.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""* {opacity: 0.7;}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
-
-		#lyrics cover overlay
-		self.overlay=Gtk.Overlay()
-		self.overlay.add(self.main_cover)
-		self.overlay.add_overlay(self.lyrics_button)
 
 		#connect
 		self.back_to_album_button.connect("clicked", self.back_to_album)
@@ -1769,37 +1840,35 @@ class Browser(Gtk.Box):
 		self.settings.connect("changed::playlist-right", self.on_playlist_pos_settings_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
-		self.lyrics_button.connect("toggled", self.on_lyrics_toggled)
+
 
 		#packing
-		hbox=Gtk.Box(spacing=6)
-		hbox.set_property("border-width", 6)
-		hbox.pack_start(self.back_to_album_button, False, False, 0)
-		hbox.pack_start(self.genre_select, True, True, 0)
-		hbox.pack_start(self.search_button, False, False, 0)
-
 		self.stack=Gtk.Stack()
 		self.stack.set_transition_type(1)
 		self.stack.add_named(self.album_view, "albums")
 		self.stack.add_named(self.search, "search")
 
-		self.box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		self.box1.pack_start(hbox, False, False, 0)
-		self.box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		self.box1.pack_start(self.artist_view, True, True, 0)
-
 		self.paned0=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-		self.paned0.set_wide_handle(True)
-		self.paned0.pack1(self.overlay, False, False)
+		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
+		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
+
+		self.paned0.pack1(self.cover, False, False)
 		self.paned0.pack2(self.playlist_view, True, False)
 
-		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-		self.paned1.set_wide_handle(True)
 
-		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-		self.paned2.set_wide_handle(True)
-
-		self.paned1.pack1(self.box1, False, False)
+		if self.use_csd:
+			self.paned1.pack1(self.artist_view, False, False)
+		else:
+			hbox=Gtk.Box(spacing=6)
+			hbox.set_property("border-width", 6)
+			hbox.pack_start(self.back_to_album_button, False, False, 0)
+			hbox.pack_start(self.genre_select, True, True, 0)
+			hbox.pack_start(self.search_button, False, False, 0)
+			box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+			box1.pack_start(hbox, False, False, 0)
+			box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+			box1.pack_start(self.artist_view, True, True, 0)
+			self.paned1.pack1(box1, False, False)
 		self.paned1.pack2(self.stack, True, False)
 
 		self.paned2.pack1(self.paned1, True, False)
@@ -1825,8 +1894,8 @@ class Browser(Gtk.Box):
 		self.genre_select.clear()
 		self.artist_view.clear()
 		self.album_view.clear()
+		self.search.clear()
 		self.playlist_view.clear()
-		self.main_cover.clear()
 
 	def search_started(self):
 		return self.search.started()
@@ -1874,7 +1943,6 @@ class Browser(Gtk.Box):
 	def on_reconnected(self, *args):
 		self.back_to_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
-		self.lyrics_button.set_sensitive(True)
 		self.genre_select.set_sensitive(True)
 
 	def on_disconnected(self, *args):
@@ -1882,8 +1950,6 @@ class Browser(Gtk.Box):
 		self.back_to_album_button.set_sensitive(False)
 		self.search_button.set_active(False)
 		self.search_button.set_sensitive(False)
-		self.lyrics_button.set_active(False)
-		self.lyrics_button.set_sensitive(False)
 		self.genre_select.set_sensitive(False)
 
 	def on_artists_changed(self, *args):
@@ -1898,15 +1964,6 @@ class Browser(Gtk.Box):
 		else:
 			self.paned0.set_orientation(Gtk.Orientation.HORIZONTAL)
 			self.paned2.set_orientation(Gtk.Orientation.VERTICAL)
-
-	def on_lyrics_toggled(self, widget):
-		if widget.get_active():
-			size=self.settings.get_int("track-cover")
-			self.lyrics_win=LyricsWindow(self.client, self.settings, size, size)
-			self.overlay.add_overlay(self.lyrics_win)
-			self.overlay.reorder_overlay(self.lyrics_win, 0)
-		else:
-			self.lyrics_win.destroy()
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
@@ -2122,7 +2179,8 @@ class GeneralSettings(Gtk.Box):
 
 		#check buttons
 		check_buttons={}
-		settings_list=[(_("Show stop button"), "show-stop"), \
+		settings_list=[(_("Use Client-side decoration"), "use-csd"), \
+				(_("Show stop button"), "show-stop"), \
 				(_("Show initials in artist view"), "show-initials"), \
 				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
 				(_("Use 'Album Artist' tag"), "use-album-artist"), \
@@ -2166,6 +2224,7 @@ class GeneralSettings(Gtk.Box):
 
 		#packing
 		self.pack_start(view_heading, True, True, 0)
+		self.pack_start(check_buttons["use-csd"], True, True, 0)
 		self.pack_start(check_buttons["show-stop"], True, True, 0)
 		self.pack_start(check_buttons["show-initials"], True, True, 0)
 		self.pack_start(check_buttons["show-album-view-tooltips"], True, True, 0)
@@ -2335,7 +2394,7 @@ class SettingsDialog(Gtk.Dialog):
 		tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 		tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
 		self.vbox.pack_start(tabs, True, True, 0) #vbox default widget of dialogs
-		self.vbox.set_spacing(6)
+		self.vbox.set_spacing(3)
 
 		self.show_all()
 
@@ -2840,7 +2899,7 @@ class ServerStats(Gtk.Dialog):
 		frame=Gtk.Frame()
 		frame.add(self.treeview)
 		self.vbox.pack_start(frame, True, True, 0)
-		self.vbox.set_spacing(6)
+		self.vbox.set_spacing(3)
 		self.show_all()
 		self.run()
 
@@ -2910,6 +2969,10 @@ class SearchWindow(Gtk.Box):
 	def started(self):
 		return self.search_entry.has_focus()
 
+	def clear(self, *args):
+		self.songs_view.clear()
+		self.search_entry.set_text("")
+
 	def on_search_changed(self, widget):
 		self.songs_view.clear()
 		self.label.set_text("")
@@ -2934,15 +2997,9 @@ class SearchWindow(Gtk.Box):
 	def on_open_clicked(self, *args):
 		self.client.files_to_playlist(self.songs_view.get_files(), False)
 
-class LyricsWindow(Gtk.Frame):
-	def __init__(self, client, settings, width, height):
-		Gtk.Frame.__init__(self)
-
-		style_context=self.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""* {border: 0px; background-color: @theme_base_color; opacity: 0.9;}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
+class LyricsWindow(Gtk.Overlay):
+	def __init__(self, client, settings):
+		Gtk.Overlay.__init__(self)
 
 		#adding vars
 		self.settings=settings
@@ -2954,19 +3011,40 @@ class LyricsWindow(Gtk.Frame):
 		self.label.set_yalign(0)
 		self.label.set_xalign(0)
 
-		#connect
-		self.file_changed=self.client.emitter.connect("playing_file_changed", self.refresh)
-		self.connect("destroy", self.remove_handlers)
-
-		#packing
+		#scroll
 		self.scroll=Gtk.ScrolledWindow()
 		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		self.scroll.add(self.label)
 		self.scroll.set_margin_start(5)
-		self.add(self.scroll)
+
+		#frame
+		frame=Gtk.Frame()
+		style_context=frame.get_style_context()
+		provider=Gtk.CssProvider()
+		css=b"""* {border: 0px; background-color: @theme_base_color; opacity: 0.9;}"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
+
+		#close button
+		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.LARGE_TOOLBAR))
+		close_button.set_margin_top(12)
+		close_button.set_margin_end(12)
+		style_context=close_button.get_style_context()
+		style_context.add_class("osd")
+		close_button.set_halign(2)
+		close_button.set_valign(1)
+
+		#connect
+		self.file_changed=self.client.emitter.connect("playing_file_changed", self.refresh)
+		self.connect("destroy", self.remove_handlers)
+		close_button.connect("clicked", self.on_close_button_clicked)
+
+		#packing
+		frame.add(self.scroll)
+		self.add(frame)
+		self.add_overlay(close_button)
 
 		self.show_all()
-
 		self.refresh()
 
 	def remove_handlers(self, *args):
@@ -3014,6 +3092,9 @@ class LyricsWindow(Gtk.Frame):
 		except:
 			return output.encode('utf-8')
 
+	def on_close_button_clicked(self, *args):
+		self.destroy()
+
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings):
 		Gtk.ApplicationWindow.__init__(self, title=("mpdevil"), application=app)
@@ -3026,6 +3107,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.app=app
 		self.client=client
 		self.icon_size=self.settings.get_gtk_icon_size("icon-size")
+		self.use_csd=self.settings.get_boolean("use-csd")
 
 		#MPRIS
 		DBusGMainLoop(set_as_default=True)
@@ -3069,7 +3151,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu_popover=Gtk.Popover.new_from_model(menu_button, menu)
 		menu_button.set_popover(menu_popover)
 		menu_button.set_tooltip_text(_("Menu"))
-		menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", self.icon_size))
 
 		#connect
 		self.settings.connect("changed::profiles", self.on_settings_changed)
@@ -3089,9 +3170,24 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.vbox.pack_start(self.action_bar, False, False, 0)
 		self.action_bar.pack_start(self.control)
 		self.action_bar.pack_start(self.progress)
-		self.action_bar.pack_start(self.profiles)
-		self.action_bar.pack_start(self.play_opts)
-		self.action_bar.pack_end(menu_button)
+
+		if self.use_csd:
+			menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.BUTTON))
+			self.header_bar=Gtk.HeaderBar()
+			self.header_bar.set_show_close_button(True)
+			self.header_bar.set_title("mpdevil")
+			self.set_titlebar(self.header_bar)
+			self.header_bar.pack_start(self.browser.back_to_album_button)
+			self.header_bar.pack_start(self.browser.genre_select)
+			self.header_bar.pack_end(menu_button)
+			self.header_bar.pack_end(self.profiles)
+			self.header_bar.pack_end(self.browser.search_button)
+			self.action_bar.pack_end(self.play_opts)
+		else:
+			menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", self.icon_size))
+			self.action_bar.pack_start(self.profiles)
+			self.action_bar.pack_start(self.play_opts)
+			self.action_bar.pack_end(menu_button)
 
 		self.add(self.vbox)
 
@@ -3109,7 +3205,11 @@ class MainWindow(Gtk.ApplicationWindow):
 				date=" ("+song["date"]+")"
 			else:
 				date=""
-			self.set_title(song["artist"]+" - "+song["title"]+" - "+song["album"]+date)
+			if self.use_csd:
+				self.header_bar.set_title(song["title"]+" - "+song["artist"])
+				self.header_bar.set_subtitle(song["album"]+date)
+			else:
+				self.set_title(song["title"]+""+song["artist"]+" - "+song["album"]+date)
 			if self.settings.get_boolean("send-notify"):
 				if not self.is_active() and self.client.status()["state"] == "play":
 					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"]+date)
@@ -3117,7 +3217,11 @@ class MainWindow(Gtk.ApplicationWindow):
 					notify.set_image_from_pixbuf(pixbuf)
 					notify.show()
 		except:
-			self.set_title("mpdevil")
+			if self.use_csd:
+				self.header_bar.set_title("mpdevil")
+				self.header_bar.set_subtitle("")
+			else:
+				self.set_title("mpdevil")
 
 	def on_reconnected(self, *args):
 		self.dbus_service.acquire_name()
@@ -3128,7 +3232,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_disconnected(self, *args):
 		self.dbus_service.release_name()
-		self.set_title("mpdevil (not connected)")
+		if self.use_csd:
+			self.header_bar.set_title("mpdevil")
+			self.header_bar.set_subtitle("(not connected)")
+		else:
+			self.set_title("mpdevil (not connected)")
 		self.songid_playing=None
 		self.progress.set_sensitive(False)
 		self.control.set_sensitive(False)
