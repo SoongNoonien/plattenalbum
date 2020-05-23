@@ -1738,7 +1738,7 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self.cover.set_property("border-width", 3)
 
 		#lyrics button
-		self.lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.LARGE_TOOLBAR))
+		self.lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON))
 		self.lyrics_button.set_label(_("Show lyrics"))
 		self.lyrics_button.set_margin_top(12)
 		style_context=self.lyrics_button.get_style_context()
@@ -3032,7 +3032,7 @@ class LyricsWindow(Gtk.Overlay):
 		style_context.add_provider(provider, 800)
 
 		#close button
-		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.LARGE_TOOLBAR))
+		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
 		close_button.set_margin_top(12)
 		close_button.set_margin_end(12)
 		style_context=close_button.get_style_context()
