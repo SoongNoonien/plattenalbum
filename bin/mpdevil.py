@@ -3033,10 +3033,11 @@ class LyricsWindow(Gtk.Overlay):
 
 		#close button
 		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
-		close_button.set_margin_top(12)
-		close_button.set_margin_end(12)
+		close_button.set_margin_top(6)
+		close_button.set_margin_end(6)
 		style_context=close_button.get_style_context()
-		style_context.add_class("osd")
+		style_context.add_class("circular")
+
 		close_button.set_halign(2)
 		close_button.set_valign(1)
 
