@@ -3221,7 +3221,7 @@ class MainWindow(Gtk.ApplicationWindow):
 				self.header_bar.set_title(song["title"]+" - "+song["artist"])
 				self.header_bar.set_subtitle(song["album"]+date)
 			else:
-				self.set_title(song["title"]+""+song["artist"]+" - "+song["album"]+date)
+				self.set_title(song["title"]+" - "+song["artist"]+" - "+song["album"]+date)
 			if self.settings.get_boolean("send-notify"):
 				if not self.is_active() and self.client.status()["state"] == "play":
 					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"]+date)
