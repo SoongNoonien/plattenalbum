@@ -3012,16 +3012,19 @@ class LyricsWindow(Gtk.Overlay):
 		self.client=client
 
 		#widgets
-		self.label=Gtk.Label()
-		self.label.set_selectable(True)
-		self.label.set_yalign(0)
-		self.label.set_xalign(0)
+		self.text_view=Gtk.TextView()
+		self.text_view.set_editable(False)
+		self.text_view.set_left_margin(5)
+		self.text_view.set_bottom_margin(5)
+		self.text_view.set_cursor_visible(False)
+		self.text_view.set_wrap_mode(Gtk.WrapMode.WORD)
+		self.text_view.set_justification(Gtk.Justification.CENTER)
+		self.text_buffer=self.text_view.get_buffer()
 
 		#scroll
 		self.scroll=Gtk.ScrolledWindow()
 		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		self.scroll.add(self.label)
-		self.scroll.set_margin_start(5)
+		self.scroll.add(self.text_view)
 
 		#frame
 		frame=Gtk.Frame()
@@ -3058,12 +3061,12 @@ class LyricsWindow(Gtk.Overlay):
 		self.client.emitter.disconnect(self.file_changed)
 
 	def display_lyrics(self, current_song):
-		GLib.idle_add(self.label.set_text, _("searching..."))
+		GLib.idle_add(self.text_buffer.set_text, _("searching..."), -1)
 		try:
 			text=self.getLyrics(current_song["artist"], current_song["title"])
 		except:
 			text=_("lyrics not found")
-		GLib.idle_add(self.label.set_text, text)
+		GLib.idle_add(self.text_buffer.set_text, text, -1)
 
 	def refresh(self, *args):
 		update_thread=threading.Thread(target=self.display_lyrics, kwargs={"current_song": self.client.song_to_first_str_dict(self.client.currentsong())}, daemon=True)
