@@ -2807,8 +2807,8 @@ class AudioType(Gtk.Button):
 	def refresh(self, *args):
 		try:
 			self.enable()
+			file_type=self.client.currentsong()["file"].split('.')[-1]
 			status=self.client.status()
-			file_type=self.client.playlistinfo(status["song"])[0]["file"].split('.')[-1]
 			freq, res, chan=status["audio"].split(':')
 			freq=str(float(freq)/1000)
 			brate=status["bitrate"]
