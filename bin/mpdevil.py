@@ -2822,7 +2822,8 @@ class AudioType(Gtk.Button):
 						self.store.append([tag, str(datetime.timedelta(seconds=int(value)))])
 					else:
 						self.store.append([tag, value])
-				self.popover.show_all()
+				self.treeview.show()
+				self.popover.popup()
 				self.treeview.queue_resize()
 			else:
 				self.disable()
