@@ -913,7 +913,7 @@ class SongsView(Gtk.TreeView):
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		#columns
-		renderer_text=Gtk.CellRendererText()
+		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 
 		self.column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
@@ -924,16 +924,19 @@ class SongsView(Gtk.TreeView):
 		self.column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
 		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_title.set_property("resizable", False)
+		self.column_title.set_property("expand", True)
 		self.append_column(self.column_title)
 
 		self.column_artist=Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
 		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_artist.set_property("resizable", False)
+		self.column_artist.set_property("expand", True)
 		self.append_column(self.column_artist)
 
 		self.column_album=Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
 		self.column_album.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_album.set_property("resizable", False)
+		self.column_album.set_property("expand", True)
 		if show_album:
 			self.append_column(self.column_album)
 
