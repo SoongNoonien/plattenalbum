@@ -2825,6 +2825,9 @@ class AudioType(Gtk.Button):
 				for tag, value in song.items():
 					if tag == "time":
 						self.store.append([tag+":", str(datetime.timedelta(seconds=int(value)))])
+					elif tag == "last-modified":
+						time=datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
+						self.store.append([tag+":", time.strftime('%a %d %B %Y, %H:%M')])
 					else:
 						self.store.append([tag+":", value])
 				self.treeview.show()
