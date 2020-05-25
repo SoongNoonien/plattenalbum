@@ -1119,7 +1119,7 @@ class ArtistView(FocusFrame):
 		self.column_initials.set_visible(self.settings.get_boolean("show-initials"))
 		self.treeview.append_column(self.column_initials)
 
-		renderer_text=Gtk.CellRendererText()
+		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		self.column_name=Gtk.TreeViewColumn("", renderer_text, text=0, weight=1)
 		self.column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self.column_name.set_property("resizable", False)
@@ -1545,7 +1545,7 @@ class PlaylistView(Gtk.Box):
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		#Column
-		renderer_text=Gtk.CellRendererText()
+		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 		self.columns=[None, None, None, None, None, None, None, None]
 
@@ -2768,13 +2768,15 @@ class AudioType(Gtk.Button):
 		self.treeview=Gtk.TreeView(model=self.store)
 		self.treeview.set_can_focus(False)
 		self.treeview.set_search_column(-1)
+		self.treeview.set_tooltip_column(1)
 		sel=self.treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
 
 		#Column
-		renderer_text=Gtk.CellRendererText()
+		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 
-		self.column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text, text=0)
+		self.column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text_ralign, text=0)
 		self.column_tag.set_property("resizable", False)
 		self.treeview.append_column(self.column_tag)
 
@@ -2822,9 +2824,9 @@ class AudioType(Gtk.Button):
 			if song != {}:
 				for tag, value in song.items():
 					if tag == "time":
-						self.store.append([tag, str(datetime.timedelta(seconds=int(value)))])
+						self.store.append([tag+":", str(datetime.timedelta(seconds=int(value)))])
 					else:
-						self.store.append([tag, value])
+						self.store.append([tag+":", value])
 				self.treeview.show()
 				self.popover.popup()
 				self.treeview.queue_resize()
