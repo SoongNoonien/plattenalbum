@@ -3169,6 +3169,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.update_action.connect("activate", self.on_update)
 		self.add_action(self.update_action)
 
+		self.help_action=Gio.SimpleAction.new("help", None)
+		self.help_action.connect("activate", self.on_help)
+		self.add_action(self.help_action)
+
 		#widgets
 		self.browser=Browser(self.client, self.settings, self)
 		self.profiles=ProfileSelect(self.client, self.settings)
@@ -3183,7 +3187,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append(_("Settings"), "win.settings")
 		menu.append(_("Update database"), "win.update")
 		menu.append(_("Server stats"), "win.stats")
-		menu.append(_("Help"), "app.help")
+		menu.append(_("Help"), "win.help")
 		menu.append(_("About"), "app.about")
 		menu.append(_("Quit"), "app.quit")
 
@@ -3288,7 +3292,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		if event.keyval == 32: #space
 			if not self.browser.search_started():
 				self.control.play_button.grab_focus()
-		if event.keyval == 269025044: #AudioPlay
+		elif event.keyval == 269025044: #AudioPlay
 			self.control.play_button.grab_focus()
 			self.control.play_button.emit("clicked")
 		elif event.keyval == 269025047: #AudioNext
@@ -3317,6 +3321,8 @@ class MainWindow(Gtk.ApplicationWindow):
 				self.progress.seek_backward()
 		elif event.keyval == 65474: #F5
 			self.update_action.emit("activate", None)
+		elif event.keyval == 65470: #F1
+			self.help_action.emit("activate", None)
 
 	def on_save(self, action, param):
 		size=self.get_size()
@@ -3338,6 +3344,9 @@ class MainWindow(Gtk.ApplicationWindow):
 	def on_update(self, action, param):
 		if self.client.connected():
 			self.client.update()
+
+	def on_help(self, action, param):
+		Gtk.show_uri_on_window(self, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
 
 	def on_settings_changed(self, *args):
 		if len(self.settings.get_value("profiles")) > 1:
@@ -3361,10 +3370,6 @@ class mpdevil(Gtk.Application):
 	def do_startup(self):
 		Gtk.Application.do_startup(self)
 
-		action=Gio.SimpleAction.new("help", None)
-		action.connect("activate", self.on_help)
-		self.add_action(action)
-
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self.on_about)
 		self.add_action(action)
@@ -3377,9 +3382,6 @@ class mpdevil(Gtk.Application):
 		if self.settings.get_boolean("stop-on-quit") and self.client.connected():
 			self.client.stop()
 		self.quit()
-
-	def on_help(self, action, param):
-		Gtk.show_uri_on_window(self.window, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
 
 	def on_about(self, action, param):
 		dialog=Gtk.AboutDialog(transient_for=self.window, modal=True)
