@@ -894,6 +894,55 @@ class Settings(Gio.Settings):
 		else:
 			return ("artist")
 
+class SongPopover(Gtk.Popover):
+	def __init__(self, song, rect, relative):
+		Gtk.Popover.__init__(self)
+		rect.y=rect.y+25
+		self.set_pointing_to(rect)
+		self.set_relative_to(relative)
+#		self.set_property("position", Gtk.PositionType.BOTTOM)
+
+		#Store
+		#(tag, display-value, tooltip)
+		self.store=Gtk.ListStore(str, str, str)
+
+		#TreeView
+		self.treeview=Gtk.TreeView(model=self.store)
+		self.treeview.set_can_focus(False)
+		self.treeview.set_search_column(-1)
+		self.treeview.set_tooltip_column(2)
+		self.treeview.set_headers_visible(False)
+		sel=self.treeview.get_selection()
+		sel.set_mode(Gtk.SelectionMode.NONE)
+
+		#Column
+		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
+
+		self.column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text_ralign, text=0)
+		self.column_tag.set_property("resizable", False)
+		self.treeview.append_column(self.column_tag)
+
+		self.column_value=Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
+		self.column_value.set_property("resizable", False)
+		self.treeview.append_column(self.column_value)
+
+		#packing
+		self.add(self.treeview)
+
+		for tag, value in song.items():
+			tooltip=value.replace("&", "&amp;")
+			if tag == "time":
+				self.store.append([tag+":", str(datetime.timedelta(seconds=int(value))), tooltip])
+			elif tag == "last-modified":
+				time=datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
+				self.store.append([tag+":", time.strftime('%a %d %B %Y, %H:%M UTC'), tooltip])
+			else:
+				self.store.append([tag+":", value, tooltip])
+		self.treeview.show()
+#		self.popup()
+#		self.treeview.queue_resize()
+
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, show_album=True, sort_enable=True):
 		Gtk.TreeView.__init__(self)
@@ -902,6 +951,7 @@ class SongsView(Gtk.TreeView):
 
 		#add vars
 		self.client=client
+		self.songs=[]
 
 		#store
 		#(track, title, artist, album, duration, file)
@@ -973,6 +1023,17 @@ class SongsView(Gtk.TreeView):
 				self.client.files_to_playlist([self.store[path][5]], True)
 			except:
 				pass
+		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+			try:
+				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
+				rect=Gdk.Rectangle()
+				rect.x=event.x
+				rect.y=event.y
+				rect.width = rect.height = 0
+				pop=SongPopover(self.songs[int(str(path))], rect, widget)
+				pop.popup()
+			except:
+				pass
 
 	def on_key_press_event(self, widget, event):
 		self.handler_block(self.key_press_event)
@@ -988,11 +1049,13 @@ class SongsView(Gtk.TreeView):
 		self.handler_unblock(self.key_press_event)
 
 	def populate(self, songs):
+		self.songs=songs
 		for s in songs:
 			song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
 			self.store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
 
 	def clear(self):
+		self.songs=[]
 		self.store.clear()
 
 	def count(self):
@@ -1587,16 +1650,19 @@ class PlaylistView(Gtk.Box):
 
 		#audio infos
 		audio=AudioType(self.client)
+		audio.set_margin_end(3)
+		audio.set_xalign(1)
+		audio.set_ellipsize(Pango.EllipsizeMode.END)
 
 		#playlist info
 		self.playlist_info=Gtk.Label()
-		self.playlist_info.set_margin_start(5)
+		self.playlist_info.set_margin_start(3)
 		self.playlist_info.set_xalign(0)
 		self.playlist_info.set_ellipsize(Pango.EllipsizeMode.END)
 
 		#status bar
 		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-		status_bar.set_property("border-width", 1)
+		status_bar.set_property("border-width", 3)
 		status_bar.pack_start(self.playlist_info, True, True, 0)
 		status_bar.pack_end(audio, False, False, 0)
 
@@ -1691,6 +1757,17 @@ class PlaylistView(Gtk.Box):
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				self.remove_song(path)
+			except:
+				pass
+		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+			try:
+				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
+				rect=Gdk.Rectangle()
+				rect.x=event.x
+				rect.y=event.y
+				rect.width=rect.height = 0
+				pop=SongPopover(self.client.playlistinfo(path)[0], rect, widget)
+				pop.popup()
 			except:
 				pass
 
@@ -2744,99 +2821,37 @@ class PlaybackOptions(Gtk.Box):
 			self.volume.set_value(0)
 		self.volume.handler_unblock(self.volume_changed)
 
-class AudioType(Gtk.Button):
+class AudioType(Gtk.Label):
 	def __init__(self, client):
-		Gtk.Button.__init__(self)
-		self.set_relief(Gtk.ReliefStyle.NONE)
-		self.set_tooltip_text(_("Show additional information"))
+		Gtk.Label.__init__(self)
 
 		#adding vars
 		self.client=client
 
-		#widgets
-		self.label=Gtk.Label()
-		self.label.set_xalign(1)
-		self.label.set_ellipsize(Pango.EllipsizeMode.END)
-		self.popover=Gtk.Popover()
-		self.popover.set_relative_to(self)
-
-		#Store
-		#(tag, value)
-		self.store=Gtk.ListStore(str, str)
-
-		#TreeView
-		self.treeview=Gtk.TreeView(model=self.store)
-		self.treeview.set_can_focus(False)
-		self.treeview.set_search_column(-1)
-		self.treeview.set_tooltip_column(1)
-		sel=self.treeview.get_selection()
-		sel.set_mode(Gtk.SelectionMode.NONE)
-
-		#Column
-		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-
-		self.column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text_ralign, text=0)
-		self.column_tag.set_property("resizable", False)
-		self.treeview.append_column(self.column_tag)
-
-		self.column_value=Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
-		self.column_value.set_property("resizable", False)
-		self.treeview.append_column(self.column_value)
-
 		#connect
-		self.connect("clicked", self.on_clicked)
-		#periodic_signal
-		self.client.emitter.connect("periodic_signal", self.refresh)
-		self.client.emitter.connect("disconnected", self.disable)
-		self.client.emitter.connect("reconnected", self.enable)
+		self.client.emitter.connect("periodic_signal", self.refresh)  # periodic_signal
+		self.client.emitter.connect("disconnected", self.clear)
+		self.client.emitter.connect("player", self.on_player)
 
-		#packing
-		self.popover.add(self.treeview)
-		self.add(self.label)
-
-		self.disable()
-
-	def enable(self, *args):
-		self.set_sensitive(True)
-
-	def disable(self, *args):
-		self.set_sensitive(False)
-		self.label.set_text("-")
+	def clear(self, *args):
+		self.set_text("")
 
 	def refresh(self, *args):
 		try:
-			self.enable()
 			file_type=self.client.currentsong()["file"].split('.')[-1]
 			status=self.client.status()
 			freq, res, chan=status["audio"].split(':')
 			freq=str(float(freq)/1000)
 			brate=status["bitrate"]
 			string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": brate, "frequency": freq, "resolution": res, "channels": chan, "file_type": file_type}
-			self.label.set_text(string)
+			self.set_text(string)
 		except:
-			pass
+			self.clear()
 
-	def on_clicked(self, *args):
-		try:
-			self.store.clear()
-			song=self.client.song_to_str_dict(self.client.currentsong())
-			if song != {}:
-				for tag, value in song.items():
-					if tag == "time":
-						self.store.append([tag+":", str(datetime.timedelta(seconds=int(value)))])
-					elif tag == "last-modified":
-						time=datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
-						self.store.append([tag+":", time.strftime('%a %d %B %Y, %H:%M UTC')])
-					else:
-						self.store.append([tag+":", value])
-				self.treeview.show()
-				self.popover.popup()
-				self.treeview.queue_resize()
-			else:
-				self.disable()
-		except:
-			self.disable()
+	def on_player(self, *args):
+		status=self.client.status()
+		if status['state'] == "stop":
+			self.clear()
 
 class ProfileSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings):
