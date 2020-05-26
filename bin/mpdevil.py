@@ -1070,7 +1070,13 @@ class AlbumDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, album, artist, year):
 		Gtk.Dialog.__init__(self, transient_for=parent)
 		self.add_buttons(Gtk.STOCK_ADD, Gtk.ResponseType.ACCEPT, Gtk.STOCK_MEDIA_PLAY, Gtk.ResponseType.YES, Gtk.STOCK_OPEN, Gtk.ResponseType.OK, Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
-		self.set_default_size(800, 600)
+
+		#determine size
+		size=parent.get_size()
+		diagonal=(size[0]**2+size[1]**2)**(0.5)
+		h=diagonal//4
+		w=h*5//4
+		self.set_default_size(w, h)
 
 		#title
 		if year == "":
