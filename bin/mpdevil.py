@@ -70,31 +70,30 @@ class IntEntry(Gtk.SpinButton):
 	def set_int(self, value):
 		self.set_value(value)
 
-class FocusFrame(Gtk.Frame):
+class FocusFrame(Gtk.Overlay):
 	def __init__(self):
-		Gtk.Frame.__init__(self)
+		Gtk.Overlay.__init__(self)
 
-		#css
-		self.style_context=self.get_style_context()
+		self.frame=Gtk.Frame()
+		self.frame.set_no_show_all(True)
+		self.style_context=self.frame.get_style_context()
 		self.provider=Gtk.CssProvider()
-		css=b"""* {border-color: @theme_selected_bg_color;}"""
+		css=b"""* {border-color: @theme_selected_bg_color; border-width: 2px;}"""
 		self.provider.load_from_data(css)
+		self.style_context.add_provider(self.provider, 800)
 
-		provider_start=Gtk.CssProvider()
-		css_start=b"""* {border-color: @theme_bg_color;}"""
-		provider_start.load_from_data(css_start)
-
-		self.style_context.add_provider(provider_start, 800)
+		self.add_overlay(self.frame)
+		self.set_overlay_pass_through(self.frame, True)
 
 	def set_widget(self, widget):
 		widget.connect("focus-in-event", self.on_focus_in_event)
 		widget.connect("focus-out-event", self.on_focus_out_event)
 
 	def on_focus_in_event(self, *args):
-		self.style_context.add_provider(self.provider, 800)
+		self.frame.show()
 
 	def on_focus_out_event(self, *args):
-		self.style_context.remove_provider(self.provider)
+		self.frame.hide()
 
 class Cover(object):
 	regex=re.compile(r'^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$', flags=re.IGNORECASE)
