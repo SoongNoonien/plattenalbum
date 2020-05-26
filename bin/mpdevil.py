@@ -3183,6 +3183,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append(_("Settings"), "win.settings")
 		menu.append(_("Update database"), "win.update")
 		menu.append(_("Server stats"), "win.stats")
+		menu.append(_("Help"), "app.help")
 		menu.append(_("About"), "app.about")
 		menu.append(_("Quit"), "app.quit")
 
@@ -3360,6 +3361,10 @@ class mpdevil(Gtk.Application):
 	def do_startup(self):
 		Gtk.Application.do_startup(self)
 
+		action=Gio.SimpleAction.new("help", None)
+		action.connect("activate", self.on_help)
+		self.add_action(action)
+
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self.on_about)
 		self.add_action(action)
@@ -3372,6 +3377,9 @@ class mpdevil(Gtk.Application):
 		if self.settings.get_boolean("stop-on-quit") and self.client.connected():
 			self.client.stop()
 		self.quit()
+
+	def on_help(self, action, param):
+		Gtk.show_uri_on_window(self.window, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
 
 	def on_about(self, action, param):
 		dialog=Gtk.AboutDialog(transient_for=self.window, modal=True)
