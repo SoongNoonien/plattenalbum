@@ -894,12 +894,14 @@ class Settings(Gio.Settings):
 			return ("artist")
 
 class SongPopover(Gtk.Popover):
-	def __init__(self, song, rect, relative):
+	def __init__(self, song, relative, x, y):
 		Gtk.Popover.__init__(self)
-		rect.y=rect.y+25
+		rect=Gdk.Rectangle()
+		rect.x=x
+		rect.y=y
+		rect.width = rect.height = 0
 		self.set_pointing_to(rect)
 		self.set_relative_to(relative)
-#		self.set_property("position", Gtk.PositionType.BOTTOM)
 
 		#Store
 		#(tag, display-value, tooltip)
@@ -914,6 +916,10 @@ class SongPopover(Gtk.Popover):
 		sel=self.treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
 
+		frame=Gtk.Frame()
+		frame.add(self.treeview)
+		frame.set_property("border-width", 3)
+
 		#Column
 		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
@@ -927,7 +933,7 @@ class SongPopover(Gtk.Popover):
 		self.treeview.append_column(self.column_value)
 
 		#packing
-		self.add(self.treeview)
+		self.add(frame)
 
 		for tag, value in song.items():
 			tooltip=value.replace("&", "&amp;")
@@ -938,7 +944,7 @@ class SongPopover(Gtk.Popover):
 				self.store.append([tag+":", time.strftime('%a %d %B %Y, %H:%M UTC'), tooltip])
 			else:
 				self.store.append([tag+":", value, tooltip])
-		self.treeview.show()
+		frame.show_all()
 #		self.popup()
 #		self.treeview.queue_resize()
 
@@ -1025,12 +1031,9 @@ class SongsView(Gtk.TreeView):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				rect=Gdk.Rectangle()
-				rect.x=event.x
-				rect.y=event.y
-				rect.width = rect.height = 0
-				pop=SongPopover(self.songs[int(str(path))], rect, widget)
+				pop=SongPopover(self.songs[int(str(path))], widget, int(event.x), int(event.y))
 				pop.popup()
+				pop.show_all()
 			except:
 				pass
 
@@ -1767,11 +1770,7 @@ class PlaylistView(Gtk.Box):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				rect=Gdk.Rectangle()
-				rect.x=event.x
-				rect.y=event.y
-				rect.width=rect.height = 0
-				pop=SongPopover(self.client.playlistinfo(path)[0], rect, widget)
+				pop=SongPopover(self.client.playlistinfo(path)[0], widget, int(event.x), int(event.y))
 				pop.popup()
 			except:
 				pass
