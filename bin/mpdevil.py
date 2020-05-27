@@ -898,8 +898,10 @@ class SongPopover(Gtk.Popover):
 		Gtk.Popover.__init__(self)
 		rect=Gdk.Rectangle()
 		rect.x=x
-		rect.y=y
-		rect.width = rect.height = 0
+		#Gtk places popovers 26px above the given position for no obvious reasons, so I move them 26px
+		rect.y=y+26
+		rect.width = 1
+		rect.height = 1
 		self.set_pointing_to(rect)
 		self.set_relative_to(relative)
 
