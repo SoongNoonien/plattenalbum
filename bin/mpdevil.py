@@ -1281,14 +1281,14 @@ class AlbumIconView(Gtk.IconView):
 		self.window=window
 		self.stop_flag=True
 
-		#cover, display_label, tooltip(titles), album, year, artist
-		self.store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str)
+		#cover, display_label, display_label_artist, tooltip(titles), album, year, artist
+		self.store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str)
 		self.sort_settings()
 
 		#iconview
 		self.set_model(self.store)
 		self.set_pixbuf_column(0)
-		self.set_text_column(1)
+		self.set_markup_column(1)
 		self.set_item_width(0)
 		self.tooltip_settings()
 
@@ -1306,13 +1306,13 @@ class AlbumIconView(Gtk.IconView):
 
 	def tooltip_settings(self, *args):
 		if self.settings.get_boolean("show-album-view-tooltips"):
-			self.set_tooltip_column(2)
+			self.set_tooltip_column(3)
 		else:
 			self.set_tooltip_column(-1)
 
 	def sort_settings(self, *args):
 		if self.settings.get_boolean("sort-albums-by-year"):
-			self.store.set_sort_column_id(4, Gtk.SortType.ASCENDING)
+			self.store.set_sort_column_id(5, Gtk.SortType.ASCENDING)
 		else:
 			self.store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
 		return False
@@ -1326,6 +1326,10 @@ class AlbumIconView(Gtk.IconView):
 		self.stop_flag=False
 		#prepare albmus list
 		self.store.clear()
+		if len(artists) > 1:
+			self.set_markup_column(2)
+		else:
+			self.set_markup_column(1)
 		albums=[]
 		genre=self.genre_select.get_value()
 		artist_type=self.settings.get_artist_type()
@@ -1369,10 +1373,13 @@ class AlbumIconView(Gtk.IconView):
 					tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)") % {"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
 				else:
 					tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
-				if album["year"] == "":
-					GLib.idle_add(self.add_row, [None, album["album"], tooltip, album["album"], album["year"], album["artist"]], cover, size)
-				else:
-					GLib.idle_add(self.add_row, [None, album["album"]+" ("+album["year"]+")", tooltip, album["album"], album["year"], album["artist"]], cover, size)
+				display_label="<b>"+album["album"]+"</b>"
+				if album["year"] != "":
+					display_label=display_label+" ("+album["year"]+")"
+				display_label_artist=display_label+"\n"+album["artist"]
+				display_label=display_label.replace("&", "&amp;")
+				display_label_artist=display_label_artist.replace("&", "&amp;")
+				GLib.idle_add(self.add_row, [None, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]], cover, size)
 				if i%16 == 0:
 					while Gtk.events_pending():
 						Gtk.main_iteration_do(True)
@@ -1387,23 +1394,23 @@ class AlbumIconView(Gtk.IconView):
 		for i in range(0, row_num):
 			path=Gtk.TreePath(i)
 			treeiter=self.store.get_iter(path)
-			if self.store.get_value(treeiter, 3) == song["album"]:
+			if self.store.get_value(treeiter, 4) == song["album"]:
 				self.set_cursor(path, None, False)
 				self.select_path(path)
 				self.scroll_to_path(path, True, 0, 0)
 				break
 
 	def path_to_playlist(self, path, add, force=False):
-		album=self.store[path][3]
-		year=self.store[path][4]
-		artist=self.store[path][5]
+		album=self.store[path][4]
+		year=self.store[path][5]
+		artist=self.store[path][6]
 		self.client.album_to_playlist(album, artist, year, add, force)
 
 	def open_album_dialog(self, path):
 		if self.client.connected():
-			album=self.store[path][3]
-			year=self.store[path][4]
-			artist=self.store[path][5]
+			album=self.store[path][4]
+			year=self.store[path][5]
+			artist=self.store[path][6]
 			album_dialog=AlbumDialog(self.window, self.client, self.settings, album, artist, year)
 			album_dialog.open()
 			album_dialog.destroy()
@@ -1436,9 +1443,9 @@ class AlbumIconView(Gtk.IconView):
 
 	def on_item_activated(self, widget, path):
 		treeiter=self.store.get_iter(path)
-		selected_album=self.store.get_value(treeiter, 3)
-		selected_album_year=self.store.get_value(treeiter, 4)
-		selected_artist=self.store.get_value(treeiter, 5)
+		selected_album=self.store.get_value(treeiter, 4)
+		selected_album_year=self.store.get_value(treeiter, 5)
+		selected_artist=self.store.get_value(treeiter, 6)
 		self.client.album_to_playlist(selected_album, selected_artist, selected_album_year, False, True)
 
 class AlbumView(FocusFrame):
