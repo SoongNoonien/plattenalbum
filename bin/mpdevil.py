@@ -3214,6 +3214,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.vbox.pack_start(self.action_bar, False, False, 0)
 		self.action_bar.pack_start(self.control)
 		self.action_bar.pack_start(self.progress)
+		self.action_bar.pack_start(self.play_opts)
 
 		if self.use_csd:
 			menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.BUTTON))
@@ -3226,12 +3227,11 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.header_bar.pack_end(menu_button)
 			self.header_bar.pack_end(self.profiles)
 			self.header_bar.pack_end(self.browser.search_button)
-			self.action_bar.pack_end(self.play_opts)
 		else:
 			menu_button.set_image(image=Gtk.Image.new_from_icon_name("open-menu-symbolic", self.icon_size))
+			self.action_bar.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.VERTICAL))
 			self.action_bar.pack_start(self.profiles)
-			self.action_bar.pack_start(self.play_opts)
-			self.action_bar.pack_end(menu_button)
+			self.action_bar.pack_start(menu_button)
 
 		self.add(self.vbox)
 
