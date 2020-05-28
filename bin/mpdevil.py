@@ -3190,14 +3190,17 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.play_opts=PlaybackOptions(self.client, self.settings)
 
 		#menu
+		subsection=Gio.Menu()
+		subsection.append(_("Settings"), "win.settings")
+		subsection.append(_("Help"), "win.help")
+		subsection.append(_("About"), "app.about")
+		subsection.append(_("Quit"), "app.quit")
+
 		menu=Gio.Menu()
 		menu.append(_("Save window layout"), "win.save")
-		menu.append(_("Settings"), "win.settings")
 		menu.append(_("Update database"), "win.update")
 		menu.append(_("Server stats"), "win.stats")
-		menu.append(_("Help"), "win.help")
-		menu.append(_("About"), "app.about")
-		menu.append(_("Quit"), "app.quit")
+		menu.append_section(None, subsection)
 
 		menu_button=Gtk.MenuButton.new()
 		menu_popover=Gtk.Popover.new_from_model(menu_button, menu)
