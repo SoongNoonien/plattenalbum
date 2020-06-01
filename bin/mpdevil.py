@@ -2021,6 +2021,7 @@ class Browser(Gtk.Box):
 							self.artist_view.highlight_selected()
 						break
 			else:
+				self.search_button.set_active(False)
 				self.artist_view.treeview.set_cursor(Gtk.TreePath(0), None, False) #set cursor to 'all artists'
 			self.album_view.scroll_to_selected_album()
 		except:
