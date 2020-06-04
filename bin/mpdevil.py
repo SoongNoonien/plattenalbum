@@ -991,7 +991,7 @@ class SongsView(Gtk.TreeView):
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				file_name=self.store[path][self.file_column_id]
-				pop=SongPopover(self.client.lsinfo(file_name)[0], widget, int(event.x), int(event.y))
+				pop=SongPopover(self.client.song_to_str_dict(self.client.lsinfo(file_name)[0]), widget, int(event.x), int(event.y))
 				pop.popup()
 				pop.show_all()
 			except:
@@ -1774,7 +1774,7 @@ class PlaylistView(Gtk.Box):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				pop=SongPopover(self.client.playlistinfo(path)[0], widget, int(event.x), int(event.y))
+				pop=SongPopover(self.client.song_to_str_dict(self.client.playlistinfo(path)[0]), widget, int(event.x), int(event.y))
 				pop.popup()
 			except:
 				pass
