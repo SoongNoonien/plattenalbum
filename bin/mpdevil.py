@@ -1063,7 +1063,10 @@ class AlbumDialog(Gtk.Dialog):
 			else:
 				title=song["title"]
 			if type(song["artist"]) == list:
-				song["artist"].remove(self.artist)
+				try:
+					song["artist"].remove(self.artist)
+				except:
+					pass
 				artist=(', '.join(song["artist"]))
 			else:
 				artist=song["artist"]
