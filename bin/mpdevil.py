@@ -183,6 +183,37 @@ class MpdEventEmitter(GObject.Object):
 	def do_periodic_signal(self):
 		pass
 
+class ClientHelper():
+	def song_to_str_dict(song): #converts tags with multiple values to comma separated strings
+		return_song=song
+		for tag, value in return_song.items():
+			if type(value) == list:
+				return_song[tag]=(', '.join(value))
+		return return_song
+
+	def song_to_first_str_dict(song): #extracts the first value of multiple value tags
+		return_song=song
+		for tag, value in return_song.items():
+			if type(value) == list:
+				return_song[tag]=value[0]
+		return return_song
+
+	def extend_song_for_display(song):
+		base_song={"title": _("Unknown Title"), "track": "0", "disc": "", "artist": _("Unknown Artist"), "album": _("Unknown Album"), "duration": "0.0", "date": "", "genre": ""}
+		base_song.update(song)
+		base_song["human_duration"]=str(datetime.timedelta(seconds=int(float(base_song["duration"])))).lstrip("0").lstrip(":")
+		return base_song
+
+	def calc_display_length(songs):
+		length=float(0)
+		for song in songs:
+			try:
+				dura=float(song["duration"])
+			except:
+				dura=0.0
+			length=length+dura
+		return str(datetime.timedelta(seconds=int(length))).lstrip("0").lstrip(":")
+
 class Client(MPDClient):
 	def __init__(self, settings):
 		MPDClient.__init__(self)
@@ -241,36 +272,6 @@ class Client(MPDClient):
 	def album_to_playlist(self, album, artist, year, append, force=False):
 		songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
 		self.files_to_playlist([song['file'] for song in songs], append, force)
-
-	def song_to_str_dict(self, song): #converts tags with multiple values to comma separated strings
-		return_song=song
-		for tag, value in return_song.items():
-			if type(value) == list:
-				return_song[tag]=(', '.join(value))
-		return return_song
-
-	def song_to_first_str_dict(self, song): #extracts the first value of multiple value tags
-		return_song=song
-		for tag, value in return_song.items():
-			if type(value) == list:
-				return_song[tag]=value[0]
-		return return_song
-
-	def extend_song_for_display(self, song):
-		base_song={"title": _("Unknown Title"), "track": "0", "disc": "", "artist": _("Unknown Artist"), "album": _("Unknown Album"), "duration": "0.0", "date": "", "genre": ""}
-		base_song.update(song)
-		base_song["human_duration"]=str(datetime.timedelta(seconds=int(float(base_song["duration"])))).lstrip("0").lstrip(":")
-		return base_song
-
-	def calc_display_length(self, songs):
-		length=float(0)
-		for song in songs:
-			try:
-				dura=float(song["duration"])
-			except:
-				dura=0.0
-			length=length+dura
-		return str(datetime.timedelta(seconds=int(length))).lstrip("0").lstrip(":")
 
 	def comp_list(self, *args): #simulates listing behavior of python-mpd2 1.0
 		if "group" in args:
@@ -937,6 +938,7 @@ class SongPopover(Gtk.Popover):
 		#packing
 		self.add(frame)
 
+		song=ClientHelper.song_to_str_dict(song)
 		for tag, value in song.items():
 			tooltip=value.replace("&", "&amp;")
 			if tag == "time":
@@ -991,7 +993,7 @@ class SongsView(Gtk.TreeView):
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				file_name=self.store[path][self.file_column_id]
-				pop=SongPopover(self.client.song_to_str_dict(self.client.lsinfo(file_name)[0]), widget, int(event.x), int(event.y))
+				pop=SongPopover(self.client.lsinfo(file_name)[0], widget, int(event.x), int(event.y))
 				pop.popup()
 				pop.show_all()
 			except:
@@ -1057,7 +1059,7 @@ class AlbumDialog(Gtk.Dialog):
 		self.songs_view=SongsView(self.client, self.store, 3)
 		songs=self.client.find("album", self.album, "date", self.year, self.settings.get_artist_type(), self.artist)
 		for s in songs:
-			song=self.client.extend_song_for_display(s)
+			song=ClientHelper.extend_song_for_display(s)
 			if type(song["title"]) == list:  # could be impossible
 				title=(', '.join(song["title"]))
 			else:
@@ -1361,7 +1363,7 @@ class AlbumIconView(Gtk.IconView):
 			if not self.stop_flag:
 				cover=Cover(lib_path=music_lib, song_file=album["songs"][0]["file"])
 				#tooltip
-				length_human_readable=self.client.calc_display_length(album["songs"])
+				length_human_readable=ClientHelper.calc_display_length(album["songs"])
 				try:
 					discs=int(album["songs"][-1]["disc"])
 				except:
@@ -1385,7 +1387,7 @@ class AlbumIconView(Gtk.IconView):
 		GLib.idle_add(self.emit, "done")
 
 	def scroll_to_selected_album(self):
-		song=self.client.song_to_first_str_dict(self.client.currentsong())
+		song=ClientHelper.song_to_first_str_dict(self.client.currentsong())
 		self.unselect_all()
 		row_num=len(self.store)
 		for i in range(0, row_num):
@@ -1565,7 +1567,7 @@ class MainCover(Gtk.Frame):
 
 	def on_button_press_event(self, widget, event):
 		if self.client.connected():
-			song=self.client.song_to_first_str_dict(self.client.currentsong())
+			song=ClientHelper.song_to_first_str_dict(self.client.currentsong())
 			if not song == {}:
 				try:
 					artist=song[self.settings.get_artist_type()]
@@ -1724,7 +1726,7 @@ class PlaylistView(Gtk.Box):
 	def refresh_playlist_info(self):
 		songs=self.client.playlistinfo()
 		if not songs == []:
-			whole_length_human_readable=self.client.calc_display_length(songs)
+			whole_length_human_readable=ClientHelper.calc_display_length(songs)
 			self.playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
 		else:
 			self.playlist_info.set_text("")
@@ -1774,7 +1776,7 @@ class PlaylistView(Gtk.Box):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				pop=SongPopover(self.client.song_to_str_dict(self.client.playlistinfo(path)[0]), widget, int(event.x), int(event.y))
+				pop=SongPopover(self.client.playlistinfo(path)[0], widget, int(event.x), int(event.y))
 				pop.popup()
 			except:
 				pass
@@ -1791,7 +1793,7 @@ class PlaylistView(Gtk.Box):
 		if not songs == []:
 			self.playlist_info.set_text("")
 			for s in songs:
-				song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
+				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
 				try:
 					treeiter=self.store.get_iter(song["pos"])
 					self.store.set(treeiter, 0, song["track"], 1, song["disc"], 2, song["title"], 3, song["artist"], 4, song["album"], 5, song["human_duration"], 6, song["date"], 7, song["genre"], 8, song["file"], 9, Pango.Weight.BOOK)
@@ -1990,7 +1992,7 @@ class Browser(Gtk.Box):
 
 	def back_to_album(self, *args):
 		try: #since this can still be running when the connection is lost, various exceptions can occur
-			song=self.client.song_to_first_str_dict(self.client.currentsong())
+			song=ClientHelper.song_to_first_str_dict(self.client.currentsong())
 			try:
 				artist=song[self.settings.get_artist_type()]
 			except:
@@ -3060,7 +3062,7 @@ class SearchWindow(Gtk.Box):
 		if len(self.search_entry.get_text()) > 1:
 			songs=self.client.search("any", self.search_entry.get_text())
 			for s in songs:
-				song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
+				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
 				self.store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
 			self.label.set_text(_("hits: %i") % (self.songs_view.count()))
 		if self.songs_view.count() == 0:
@@ -3147,7 +3149,7 @@ class LyricsWindow(Gtk.Overlay):
 		GLib.idle_add(self.text_buffer.set_text, text, -1)
 
 	def refresh(self, *args):
-		update_thread=threading.Thread(target=self.display_lyrics, kwargs={"current_song": self.client.song_to_first_str_dict(self.client.currentsong())}, daemon=True)
+		update_thread=threading.Thread(target=self.display_lyrics, kwargs={"current_song": ClientHelper.song_to_first_str_dict(self.client.currentsong())}, daemon=True)
 		update_thread.start()
 
 	def getLyrics(self, singer, song): #partially copied from PyLyrics 1.1.0
@@ -3298,7 +3300,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			song=self.client.currentsong()
 			if song == {}:
 				raise ValueError("Song out of range")
-			song=self.client.extend_song_for_display(self.client.song_to_str_dict(song))
+			song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(song))
 			if song["date"] != "":
 				date=" ("+song["date"]+")"
 			else:
