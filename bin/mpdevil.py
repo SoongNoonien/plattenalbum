@@ -951,63 +951,20 @@ class SongPopover(Gtk.Popover):
 #		self.treeview.queue_resize()
 
 class SongsView(Gtk.TreeView):
-	def __init__(self, client, show_album=True, sort_enable=True):
+	def __init__(self, client, store, file_column_id):
 		Gtk.TreeView.__init__(self)
+		self.set_model(store)
 		self.set_search_column(-1)
 		self.columns_autosize()
 
 		#add vars
 		self.client=client
-		self.songs=[]
-
-		#store
-		#(track, title, artist, album, duration, file)
-		self.store=Gtk.ListStore(int, str, str, str, str, str)
-		self.set_model(self.store)
+		self.store=store
+		self.file_column_id=file_column_id
 
 		#selection
 		self.selection=self.get_selection()
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
-
-		#columns
-		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-
-		self.column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
-		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_track.set_property("resizable", False)
-		self.append_column(self.column_track)
-
-		self.column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
-		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_title.set_property("resizable", False)
-		self.column_title.set_property("expand", True)
-		self.append_column(self.column_title)
-
-		self.column_artist=Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
-		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_artist.set_property("resizable", False)
-		self.column_artist.set_property("expand", True)
-		self.append_column(self.column_artist)
-
-		self.column_album=Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
-		self.column_album.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_album.set_property("resizable", False)
-		self.column_album.set_property("expand", True)
-		if show_album:
-			self.append_column(self.column_album)
-
-		self.column_time=Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
-		self.column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self.column_time.set_property("resizable", False)
-		self.append_column(self.column_time)
-
-		if sort_enable:
-			self.column_track.set_sort_column_id(0)
-			self.column_title.set_sort_column_id(1)
-			self.column_artist.set_sort_column_id(2)
-			self.column_album.set_sort_column_id(3)
-			self.column_time.set_sort_column_id(4)
 
 		#connect
 		self.connect("row-activated", self.on_row_activated)
@@ -1021,19 +978,20 @@ class SongsView(Gtk.TreeView):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				self.client.files_to_playlist([self.store[path][5]], False)
+				self.client.files_to_playlist([self.store[path][self.file_column_id]], False)
 			except:
 				pass
 		elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				self.client.files_to_playlist([self.store[path][5]], True)
+				self.client.files_to_playlist([self.store[path][self.file_column_id]], True)
 			except:
 				pass
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				pop=SongPopover(self.songs[int(str(path))], widget, int(event.x), int(event.y))
+				file_name=self.store[path][self.file_column_id]
+				pop=SongPopover(self.client.lsinfo(file_name)[0], widget, int(event.x), int(event.y))
 				pop.popup()
 				pop.show_all()
 			except:
@@ -1044,22 +1002,15 @@ class SongsView(Gtk.TreeView):
 		if event.keyval == 112: #p
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
-				self.client.files_to_playlist([self.store.get_value(treeiter, 5)], False)
+				self.client.files_to_playlist([self.store.get_value(treeiter, self.file_column_id)], False)
 		elif event.keyval == 97: #a
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
-				self.client.files_to_playlist([self.store.get_value(treeiter, 5)], True)
+				self.client.files_to_playlist([self.store.get_value(treeiter, self.file_column_id)], True)
 #		elif event.keyval == 65383: #menu key
 		self.handler_unblock(self.key_press_event)
 
-	def populate(self, songs):
-		self.songs=songs
-		for s in songs:
-			song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
-			self.store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
-
 	def clear(self):
-		self.songs=[]
 		self.store.clear()
 
 	def count(self):
@@ -1068,7 +1019,7 @@ class SongsView(Gtk.TreeView):
 	def get_files(self):
 		return_list=[]
 		for row in self.store:
-			return_list.append(row[5])
+			return_list.append(row[self.file_column_id])
 		return return_list
 
 class AlbumDialog(Gtk.Dialog):
@@ -1098,9 +1049,50 @@ class AlbumDialog(Gtk.Dialog):
 		self.artist=artist
 		self.year=year
 
+		#store
+		#(track, title (artist), duration, file)
+		self.store=Gtk.ListStore(int, str, str, str)
+
 		#songs view
-		self.songs_view=SongsView(self.client, False, False)
-		self.songs_view.populate(self.client.find("album", self.album, "date", self.year, self.settings.get_artist_type(), self.artist))
+		self.songs_view=SongsView(self.client, self.store, 3)
+		songs=self.client.find("album", self.album, "date", self.year, self.settings.get_artist_type(), self.artist)
+		for s in songs:
+			song=self.client.extend_song_for_display(s)
+			if type(song["title"]) == list:  # could be impossible
+				title=(', '.join(song["title"]))
+			else:
+				title=song["title"]
+			if type(song["artist"]) == list:
+				song["artist"].remove(self.artist)
+				artist=(', '.join(song["artist"]))
+			else:
+				artist=song["artist"]
+			if artist != self.artist:
+				title_artist="<b>"+title+"</b> - "+artist
+			else:
+				title_artist="<b>"+title+"</b>"
+			title_artist=title_artist.replace("&", "&amp;")
+			self.store.append([int(song["track"]), title_artist, song["human_duration"], song["file"]])
+
+		#columns
+		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
+
+		self.column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
+		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_track.set_property("resizable", False)
+		self.songs_view.append_column(self.column_track)
+
+		self.column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
+		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_title.set_property("resizable", False)
+		self.column_title.set_property("expand", True)
+		self.songs_view.append_column(self.column_title)
+
+		self.column_time=Gtk.TreeViewColumn(_("Length"), renderer_text, text=2)
+		self.column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_time.set_property("resizable", False)
+		self.songs_view.append_column(self.column_time)
 
 		#scroll
 		scroll=Gtk.ScrolledWindow()
@@ -2964,8 +2956,50 @@ class SearchWindow(Gtk.Box):
 		self.label.set_xalign(1)
 		self.label.set_margin_end(6)
 
+		#store
+		#(track, title, artist, album, duration, file)
+		self.store=Gtk.ListStore(int, str, str, str, str, str)
+
 		#songs view
-		self.songs_view=SongsView(self.client)
+		self.songs_view=SongsView(self.client, self.store, 5)
+
+		#columns
+		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
+
+		self.column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
+		self.column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_track.set_property("resizable", False)
+		self.songs_view.append_column(self.column_track)
+
+		self.column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, text=1)
+		self.column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_title.set_property("resizable", False)
+		self.column_title.set_property("expand", True)
+		self.songs_view.append_column(self.column_title)
+
+		self.column_artist=Gtk.TreeViewColumn(_("Artist"), renderer_text, text=2)
+		self.column_artist.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_artist.set_property("resizable", False)
+		self.column_artist.set_property("expand", True)
+		self.songs_view.append_column(self.column_artist)
+
+		self.column_album=Gtk.TreeViewColumn(_("Album"), renderer_text, text=3)
+		self.column_album.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_album.set_property("resizable", False)
+		self.column_album.set_property("expand", True)
+		self.songs_view.append_column(self.column_album)
+
+		self.column_time=Gtk.TreeViewColumn(_("Length"), renderer_text, text=4)
+		self.column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		self.column_time.set_property("resizable", False)
+		self.songs_view.append_column(self.column_time)
+
+		self.column_track.set_sort_column_id(0)
+		self.column_title.set_sort_column_id(1)
+		self.column_artist.set_sort_column_id(2)
+		self.column_album.set_sort_column_id(3)
+		self.column_time.set_sort_column_id(4)
 
 		#scroll
 		scroll=Gtk.ScrolledWindow()
@@ -3021,7 +3055,10 @@ class SearchWindow(Gtk.Box):
 		self.songs_view.clear()
 		self.label.set_text("")
 		if len(self.search_entry.get_text()) > 1:
-			self.songs_view.populate(self.client.search("any", self.search_entry.get_text()))
+			songs=self.client.search("any", self.search_entry.get_text())
+			for s in songs:
+				song=self.client.extend_song_for_display(self.client.song_to_str_dict(s))
+				self.store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
 			self.label.set_text(_("hits: %i") % (self.songs_view.count()))
 		if self.songs_view.count() == 0:
 			self.add_button.set_sensitive(False)
