@@ -2951,10 +2951,11 @@ class SearchWindow(Gtk.Box):
 		#adding vars
 		self.client=client
 
+		#tag switcher
+		self.tags=Gtk.ComboBoxText()
+
 		#search entry
 		self.search_entry=Gtk.SearchEntry()
-		self.search_entry.set_margin_end(6)
-		self.search_entry.set_margin_start(6)
 
 		#label
 		self.label=Gtk.Label()
@@ -3024,11 +3025,17 @@ class SearchWindow(Gtk.Box):
 
 		#connect
 		self.search_entry.connect("search-changed", self.on_search_changed)
+		self.tags.connect("changed", self.on_search_changed)
 		self.add_button.connect("clicked", self.on_add_clicked)
 		self.play_button.connect("clicked", self.on_play_clicked)
 		self.open_button.connect("clicked", self.on_open_clicked)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
 
 		#packing
+		vbox=Gtk.Box(spacing=6)
+		vbox.set_property("border-width", 6)
+		vbox.pack_start(self.search_entry, True, True, 0)
+		vbox.pack_end(self.tags, False, False, 0)
 		frame=FocusFrame()
 		frame.set_widget(self.songs_view)
 		frame.add(scroll)
@@ -3040,7 +3047,7 @@ class SearchWindow(Gtk.Box):
 		hbox=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
 		hbox.pack_start(ButtonBox, 0, False, False)
 		hbox.pack_end(self.label, 0, False, False)
-		self.pack_start(self.search_entry, False, False, 6)
+		self.pack_start(vbox, False, False, 0)
 		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.pack_start(frame, True, True, 0)
 		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
@@ -3055,12 +3062,20 @@ class SearchWindow(Gtk.Box):
 	def clear(self, *args):
 		self.songs_view.clear()
 		self.search_entry.set_text("")
+		self.tags.remove_all()
+
+	def on_reconnected(self, *args):
+		self.tags.append_text("any")
+		for tag in self.client.tagtypes():
+			if not tag.startswith("MUSICBRAINZ"):
+				self.tags.append_text(tag)
+		self.tags.set_active(0)
 
 	def on_search_changed(self, widget):
 		self.songs_view.clear()
 		self.label.set_text("")
 		if len(self.search_entry.get_text()) > 1:
-			songs=self.client.search("any", self.search_entry.get_text())
+			songs=self.client.search(self.tags.get_active_text(), self.search_entry.get_text())
 			for s in songs:
 				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
 				self.store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
