@@ -3122,7 +3122,8 @@ class LyricsWindow(Gtk.Overlay):
 		self.scroll.add(self.text_view)
 
 		#frame
-		frame=Gtk.Frame()
+		frame=FocusFrame()
+		frame.set_widget(self.text_view)
 		style_context=frame.get_style_context()
 		provider=Gtk.CssProvider()
 		css=b"""* {border: 0px; background-color: @theme_base_color; opacity: 0.9;}"""
