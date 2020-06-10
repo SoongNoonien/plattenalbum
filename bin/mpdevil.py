@@ -1821,7 +1821,6 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self.client=client
 		self.settings=settings
 		self.window=window
-		self.hide_timeout_id=None
 
 		#cover
 		self.cover=MainCover(self.client, self.settings, self.window)
@@ -1829,70 +1828,45 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 		#lyrics button
 		self.lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON))
-		self.lyrics_button.set_label(_("Show lyrics"))
-		self.lyrics_button.set_margin_top(12)
+		self.lyrics_button.set_tooltip_text(_("Show lyrics"))
 		style_context=self.lyrics_button.get_style_context()
-		style_context.add_class("osd")
+		style_context.add_class("circular")
 
 		#revealer
-		self.revealer=Gtk.Revealer()
-		self.revealer.set_halign(3)
-		self.revealer.set_valign(1)
-		self.revealer.add(self.lyrics_button)
+		#workaround to get tooltips in overlay
+		revealer=Gtk.Revealer()
+		revealer.set_halign(2)
+		revealer.set_valign(1)
+		revealer.set_margin_top(6)
+		revealer.set_margin_end(6)
+		revealer.add(self.lyrics_button)
+		revealer.set_reveal_child(True)
 
 		#event box
 		self.event_box=Gtk.EventBox()
-		self.event_box.set_events(Gdk.EventMask.POINTER_MOTION_MASK)
 		self.event_box.add(self.cover)
 
 		#packing
 		self.add(self.event_box)
-		self.add_overlay(self.revealer)
+		self.add_overlay(revealer)
 
 		#connect
 		self.lyrics_button.connect("clicked", self.on_lyrics_clicked)
-		self.motion_notify_event=self.event_box.connect("motion-notify-event", self.on_motion_notify_event)
-		self.lyrics_button.connect("enter-notify-event", self.on_enter_notify_event)
-		self.lyrics_button.connect("leave-notify-event", self.on_leave_notify_event)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
-		self.event_box.handler_block(self.motion_notify_event)
 
 	def on_reconnected(self, *args):
-		self.event_box.handler_unblock(self.motion_notify_event)
+		self.lyrics_button.set_sensitive(True)
 
 	def on_disconnected(self, *args):
+		self.lyrics_button.set_sensitive(False)
 		self.cover.clear()
-		self.event_box.handler_block(self.motion_notify_event)
-		self.hide_lyrics_button()
 		try:
 			self.lyrics_win.destroy()
 		except:
 			pass
 
-	def hide_lyrics_button(self, *args):
-		self.revealer.set_reveal_child(False)
-		self.hide_timeout_id=None
-		return False
-
-	def on_motion_notify_event(self, *args):
-		self.revealer.set_reveal_child(True)
-		if not self.hide_timeout_id == None:
-			GLib.source_remove(self.hide_timeout_id)
-		self.hide_timeout_id=GLib.timeout_add(1000, self.hide_lyrics_button)
-
-	def on_enter_notify_event(self, *args):
-		if not self.hide_timeout_id == None:
-			GLib.source_remove(self.hide_timeout_id)
-			self.hide_timeout_id=None
-
-	def on_leave_notify_event(self, *args):
-		if not self.hide_timeout_id == None:
-			GLib.source_remove(self.hide_timeout_id)
-		self.hide_timeout_id=GLib.timeout_add(1000, self.hide_lyrics_button)
-
 	def on_lyrics_clicked(self, widget):
-		self.hide_lyrics_button()
 		self.lyrics_win=LyricsWindow(self.client, self.settings)
 		self.add_overlay(self.lyrics_win)
 
