@@ -1867,7 +1867,11 @@ class CoverLyricsOSD(Gtk.Overlay):
 			pass
 
 	def on_lyrics_clicked(self, widget):
+		self.lyrics_button.set_sensitive(False)
 		self.lyrics_win=LyricsWindow(self.client, self.settings)
+		def on_destroy(*args):
+			self.lyrics_button.set_sensitive(True)
+		self.lyrics_win.connect("destroy", on_destroy)
 		self.add_overlay(self.lyrics_win)
 
 class Browser(Gtk.Box):
