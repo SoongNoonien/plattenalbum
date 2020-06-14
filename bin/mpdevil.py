@@ -974,7 +974,7 @@ class SongsView(Gtk.TreeView):
 		self.key_press_event=self.connect("key-press-event", self.on_key_press_event)
 
 	def on_row_activated(self, widget, path, view_column):
-		self.client.files_to_playlist([self.store[path][5]], False, True)
+		self.client.files_to_playlist([self.store[path][self.file_column_id]], False, True)
 
 	def on_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
