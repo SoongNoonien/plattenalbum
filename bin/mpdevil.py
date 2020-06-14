@@ -1029,6 +1029,16 @@ class AlbumDialog(Gtk.Dialog):
 		Gtk.Dialog.__init__(self, transient_for=parent)
 		self.add_buttons(Gtk.STOCK_ADD, Gtk.ResponseType.ACCEPT, Gtk.STOCK_MEDIA_PLAY, Gtk.ResponseType.YES, Gtk.STOCK_OPEN, Gtk.ResponseType.OK, Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
 
+		#metadata
+		self.album=album
+		self.artist=artist
+		self.year=year
+
+		#adding vars
+		self.client=client
+		self.settings=settings
+		songs=self.client.find("album", self.album, "date", self.year, self.settings.get_artist_type(), self.artist)
+
 		#determine size
 		size=parent.get_size()
 		diagonal=(size[0]**2+size[1]**2)**(0.5)
@@ -1037,19 +1047,11 @@ class AlbumDialog(Gtk.Dialog):
 		self.set_default_size(w, h)
 
 		#title
+		album_duration=ClientHelper.calc_display_length(songs)
 		if year == "":
-			self.set_title(artist+" - "+album)
+			self.set_title(artist+" - "+album+" ("+album_duration+")")
 		else:
-			self.set_title(artist+" - "+album+" ("+year+")")
-
-		#adding vars
-		self.client=client
-		self.settings=settings
-
-		#metadata
-		self.album=album
-		self.artist=artist
-		self.year=year
+			self.set_title(artist+" - "+album+" ("+year+") ("+album_duration+")")
 
 		#store
 		#(track, title (artist), duration, file)
@@ -1057,7 +1059,6 @@ class AlbumDialog(Gtk.Dialog):
 
 		#songs view
 		self.songs_view=SongsView(self.client, self.store, 3)
-		songs=self.client.find("album", self.album, "date", self.year, self.settings.get_artist_type(), self.artist)
 		for s in songs:
 			song=ClientHelper.extend_song_for_display(s)
 			if type(song["title"]) == list:  # could be impossible
