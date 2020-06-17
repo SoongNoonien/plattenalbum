@@ -1280,6 +1280,7 @@ class AlbumIconView(Gtk.IconView):
 		self.genre_select=genre_select
 		self.window=window
 		self.stop_flag=True
+		self.button_event=(None, None)
 
 		#cover, display_label, display_label_artist, tooltip(titles), album, year, artist
 		self.store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str)
@@ -1294,6 +1295,7 @@ class AlbumIconView(Gtk.IconView):
 
 		#connect
 		self.connect("item-activated", self.on_item_activated)
+		self.connect("button-release-event", self.on_button_release_event)
 		self.connect("button-press-event", self.on_button_press_event)
 		self.key_press_event=self.connect("key-press-event", self.on_key_press_event)
 		self.settings.connect("changed::show-album-view-tooltips", self.tooltip_settings)
@@ -1417,13 +1419,19 @@ class AlbumIconView(Gtk.IconView):
 
 	def on_button_press_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
+		if event.type == Gdk.EventType.BUTTON_PRESS:
+			self.button_event=(event.button, path)
+
+	def on_button_release_event(self, widget, event):
+		path=widget.get_path_at_pos(int(event.x), int(event.y))
 		if not path == None:
-			if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self.path_to_playlist(path, False)
-			elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self.path_to_playlist(path, True)
-			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self.open_album_dialog(path)
+			if self.button_event == (event.button, path):
+				if event.button == 1 and event.type == Gdk.EventType.BUTTON_RELEASE:
+					self.path_to_playlist(path, False)
+				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
+					self.path_to_playlist(path, True)
+				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
+					self.open_album_dialog(path)
 
 	def on_key_press_event(self, widget, event):
 		self.handler_block(self.key_press_event)
