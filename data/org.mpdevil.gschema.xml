@@ -7,17 +7,17 @@
       <description></description>
     </key>
     <key type="i" name="width">
-      <default>1050</default>
+      <default>1000</default>
       <summary>Default width of window</summary>
       <description></description>
     </key>
     <key type="i" name="height">
-      <default>1020</default>
+      <default>990</default>
       <summary>Default height of window</summary>
       <description></description>
     </key>
     <key type="i" name="paned0">
-      <default>350</default>
+      <default>370</default>
       <summary>Default position of cover/playlist separator</summary>
       <description></description>
     </key>
@@ -27,12 +27,12 @@
       <description></description>
     </key>
     <key type="i" name="paned2">
-      <default>598</default>
+      <default>572</default>
       <summary>Default position of paned1/paned0 separator</summary>
       <description></description>
     </key>
     <key type="i" name="album-cover">
-      <default>140</default>
+      <default>130</default>
       <summary>Size of covers in album view</summary>
       <description></description>
     </key>
@@ -52,7 +52,7 @@
       <description></description>
     </key>
     <key type="b" name="show-stop">
-      <default>false</default>
+      <default>true</default>
       <summary>Show stop button</summary>
       <description></description>
     </key>
@@ -67,7 +67,7 @@
       <description></description>
     </key>
     <key type="b" name="sort-albums-by-year">
-      <default>false</default>
+      <default>true</default>
       <summary>Sort albums by year</summary>
       <description></description>
     </key>
@@ -102,7 +102,7 @@
       <description></description>
     </key>
     <key type="ai" name="column-sizes">
-      <default>[0, 0, 0, 0, 0, 0, 0, 0]</default>
+      <default>[33, 0, 203, 153, 180, 62, 0, 0]</default>
       <summary>Sizes of columns in playlist</summary>
       <description></description>
     </key>
