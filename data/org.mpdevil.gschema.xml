@@ -102,7 +102,7 @@
       <description></description>
     </key>
     <key type="ai" name="column-sizes">
-      <default>[33, 0, 203, 153, 180, 62, 0, 0]</default>
+      <default>[33, 0, 203, 153, 174, 0, 0, 0]</default>
       <summary>Sizes of columns in playlist</summary>
       <description></description>
     </key>
