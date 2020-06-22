@@ -1843,13 +1843,12 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 		#revealer
 		#workaround to get tooltips in overlay
-		revealer=Gtk.Revealer()
-		revealer.set_halign(2)
-		revealer.set_valign(1)
-		revealer.set_margin_top(6)
-		revealer.set_margin_end(6)
-		revealer.add(self.lyrics_button)
-		revealer.set_reveal_child(True)
+		self.revealer=Gtk.Revealer()
+		self.revealer.set_halign(2)
+		self.revealer.set_valign(1)
+		self.revealer.set_margin_top(6)
+		self.revealer.set_margin_end(6)
+		self.revealer.add(self.lyrics_button)
 
 		#event box
 		self.event_box=Gtk.EventBox()
@@ -1857,12 +1856,15 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 		#packing
 		self.add(self.event_box)
-		self.add_overlay(revealer)
+		self.add_overlay(self.revealer)
 
 		#connect
 		self.lyrics_button.connect("clicked", self.on_lyrics_clicked)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
+		self.settings.connect("changed::show-lyrics-button", self.on_settings_changed)
+
+		self.on_settings_changed() #hide lyrics button
 
 	def show_lyrics(self, *args):
 		if self.lyrics_button.get_sensitive():
@@ -1886,6 +1888,12 @@ class CoverLyricsOSD(Gtk.Overlay):
 			self.lyrics_button.set_sensitive(True)
 		self.lyrics_win.connect("destroy", on_destroy)
 		self.add_overlay(self.lyrics_win)
+
+	def on_settings_changed(self, *args):
+		if self.settings.get_boolean("show-lyrics-button"):
+			self.revealer.set_reveal_child(True)
+		else:
+			self.revealer.set_reveal_child(False)
 
 class Browser(Gtk.Box):
 	def __init__(self, client, settings, window):
@@ -2266,6 +2274,7 @@ class GeneralSettings(Gtk.Box):
 		check_buttons={}
 		settings_list=[(_("Use Client-side decoration"), "use-csd"), \
 				(_("Show stop button"), "show-stop"), \
+				(_("Show lyrics button"), "show-lyrics-button"), \
 				(_("Show initials in artist view"), "show-initials"), \
 				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
 				(_("Use 'Album Artist' tag"), "use-album-artist"), \
@@ -2317,6 +2326,7 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(view_heading, True, True, 0)
 		self.pack_start(box, True, True, 0)
 		self.pack_start(check_buttons["show-stop"], True, True, 0)
+		self.pack_start(check_buttons["show-lyrics-button"], True, True, 0)
 		self.pack_start(check_buttons["show-initials"], True, True, 0)
 		self.pack_start(check_buttons["show-album-view-tooltips"], True, True, 0)
 		self.pack_start(view_grid, True, True, 0)
