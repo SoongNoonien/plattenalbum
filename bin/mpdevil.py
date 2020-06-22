@@ -1864,6 +1864,10 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
 
+	def show_lyrics(self, *args):
+		if self.lyrics_button.get_sensitive():
+			self.lyrics_button.emit("clicked")
+
 	def on_reconnected(self, *args):
 		self.lyrics_button.set_sensitive(True)
 
@@ -1976,6 +1980,9 @@ class Browser(Gtk.Box):
 
 	def search_started(self):
 		return self.search.started()
+
+	def show_lyrics(self, *args):
+		self.cover.show_lyrics()
 
 	def back_to_album(self, *args):
 		try: #since this can still be running when the connection is lost, various exceptions can occur
@@ -3346,40 +3353,45 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.play_opts.set_sensitive(False)
 
 	def on_key_press_event(self, widget, event):
-		if event.keyval == 32: #space
-			if not self.browser.search_started():
+		ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK)
+		if ctrl:
+			if event.keyval == 108: #ctrl + l
+				self.browser.show_lyrics()
+		else:
+			if event.keyval == 32: #space
+				if not self.browser.search_started():
+					self.control.play_button.grab_focus()
+			elif event.keyval == 269025044: #AudioPlay
 				self.control.play_button.grab_focus()
-		elif event.keyval == 269025044: #AudioPlay
-			self.control.play_button.grab_focus()
-			self.control.play_button.emit("clicked")
-		elif event.keyval == 269025047: #AudioNext
-			self.control.next_button.grab_focus()
-			self.control.next_button.emit("clicked")
-		elif event.keyval == 43 or event.keyval == 65451: #+
-			if not self.browser.search_started():
+				self.control.play_button.emit("clicked")
+			elif event.keyval == 269025047: #AudioNext
 				self.control.next_button.grab_focus()
 				self.control.next_button.emit("clicked")
-		elif event.keyval == 269025046: #AudioPrev
-			self.control.prev_button.grab_focus()
-			self.control.prev_button.emit("clicked")
-		elif event.keyval == 45 or event.keyval == 65453: #-
-			if not self.browser.search_started():
+			elif event.keyval == 43 or event.keyval == 65451: #+
+				if not self.browser.search_started():
+					self.control.next_button.grab_focus()
+					self.control.next_button.emit("clicked")
+			elif event.keyval == 269025046: #AudioPrev
 				self.control.prev_button.grab_focus()
 				self.control.prev_button.emit("clicked")
-		elif event.keyval == 65307: #esc
-			self.browser.back_to_album()
-		elif event.keyval == 65450: #*
-			if not self.browser.search_started():
-				self.progress.scale.grab_focus()
-				self.progress.seek_forward()
-		elif event.keyval == 65455: #/
-			if not self.browser.search_started():
-				self.progress.scale.grab_focus()
-				self.progress.seek_backward()
-		elif event.keyval == 65474: #F5
-			self.update_action.emit("activate", None)
-		elif event.keyval == 65470: #F1
-			self.help_action.emit("activate", None)
+			elif event.keyval == 45 or event.keyval == 65453: #-
+				if not self.browser.search_started():
+					self.control.prev_button.grab_focus()
+					self.control.prev_button.emit("clicked")
+			elif event.keyval == 65307: #esc
+				self.browser.back_to_album()
+			elif event.keyval == 65450: #*
+				if not self.browser.search_started():
+					self.progress.scale.grab_focus()
+					self.progress.seek_forward()
+			elif event.keyval == 65455: #/
+				if not self.browser.search_started():
+					self.progress.scale.grab_focus()
+					self.progress.seek_backward()
+			elif event.keyval == 65474: #F5
+				self.update_action.emit("activate", None)
+			elif event.keyval == 65470: #F1
+				self.help_action.emit("activate", None)
 
 	def on_save(self, action, param):
 		size=self.get_size()
