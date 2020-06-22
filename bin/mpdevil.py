@@ -3156,6 +3156,7 @@ class LyricsWindow(Gtk.Overlay):
 
 		self.show_all()
 		self.refresh()
+		GLib.idle_add(self.text_view.grab_focus)  # focus textview
 
 	def remove_handlers(self, *args):
 		self.client.emitter.disconnect(self.file_changed)
