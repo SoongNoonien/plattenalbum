@@ -882,11 +882,8 @@ class Settings(Gio.Settings):
 			return Gtk.IconSize.LARGE_TOOLBAR
 		elif icon_size == 32:
 			return Gtk.IconSize.DND
-		elif icon_size == 48:
-			return Gtk.IconSize.DIALOG
 		else:
-#			return Gtk.IconSize.INVALID
-			raise ValueError
+			return Gtk.IconSize.INVALID
 
 	def get_artist_type(self):
 		if self.get_boolean("use-album-artist"):
@@ -2105,15 +2102,23 @@ class ProfileSettings(Gtk.Grid):
 		path_label.set_xalign(1)
 
 		#connect
-		self.profile_entry_changed=self.profile_entry.connect("changed", self.on_profile_entry_changed)
-		self.host_entry_changed=self.host_entry.connect("changed", self.on_host_entry_changed)
-		self.port_entry_changed=self.port_entry.connect("value-changed", self.on_port_entry_changed)
-		self.password_entry_changed=self.password_entry.connect("changed", self.on_password_entry_changed)
-		self.path_entry_changed=self.path_entry.connect("changed", self.on_path_entry_changed)
-		self.path_select_button.connect("clicked", self.on_path_select_button_clicked, parent)
 		add_button.connect("clicked", self.on_add_button_clicked)
 		delete_button.connect("clicked", self.on_delete_button_clicked)
+		self.path_select_button.connect("clicked", self.on_path_select_button_clicked, parent)
 		self.profiles_combo_changed=self.profiles_combo.connect("changed", self.on_profiles_changed)
+		self.entry_changed_handlers=[]
+		self.entry_changed_handlers.append((self.profile_entry, self.profile_entry.connect("changed", self.on_profile_entry_changed)))
+		self.entry_changed_handlers.append((self.host_entry, self.host_entry.connect("changed", self.on_host_entry_changed)))
+		self.entry_changed_handlers.append((self.port_entry, self.port_entry.connect("value-changed", self.on_port_entry_changed)))
+		self.entry_changed_handlers.append((self.password_entry, self.password_entry.connect("changed", self.on_password_entry_changed)))
+		self.entry_changed_handlers.append((self.path_entry, self.path_entry.connect("changed", self.on_path_entry_changed)))
+		self.settings_handlers=[]
+		self.settings_handlers.append(self.settings.connect("changed::profiles", self.on_settings_changed))
+		self.settings_handlers.append(self.settings.connect("changed::hosts", self.on_settings_changed))
+		self.settings_handlers.append(self.settings.connect("changed::ports", self.on_settings_changed))
+		self.settings_handlers.append(self.settings.connect("changed::passwords", self.on_settings_changed))
+		self.settings_handlers.append(self.settings.connect("changed::paths", self.on_settings_changed))
+		self.connect("destroy", self.remove_handlers)
 
 		self.profiles_combo_reload()
 		self.profiles_combo.set_active(0)
@@ -2131,20 +2136,30 @@ class ProfileSettings(Gtk.Grid):
 		self.attach_next_to(self.password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(path_box, path_label, Gtk.PositionType.RIGHT, 2, 1)
 
+	def remove_handlers(self, *args):
+		for handler in self.settings_handlers:
+			self.settings.disconnect(handler)
+
+	def on_settings_changed(self, *args):
+		self.profiles_combo_reload()
+		self.profiles_combo.set_active(0)
+
+	def block_entry_changed_handlers(self, *args):
+		for obj, handler in self.entry_changed_handlers:
+			obj.handler_block(handler)
+
+	def unblock_entry_changed_handlers(self, *args):
+		for obj, handler in self.entry_changed_handlers:
+			obj.handler_unblock(handler)
+
 	def profiles_combo_reload(self, *args):
-		self.profiles_combo.handler_block(self.profiles_combo_changed)
-		self.profile_entry.handler_block(self.profile_entry_changed)
-		self.host_entry.handler_block(self.host_entry_changed)
-		self.port_entry.handler_block(self.port_entry_changed)
+		self.block_entry_changed_handlers()
 
 		self.profiles_combo.remove_all()
 		for profile in self.settings.get_value("profiles"):
 			self.profiles_combo.append_text(profile)
 
-		self.profiles_combo.handler_unblock(self.profiles_combo_changed)
-		self.profile_entry.handler_unblock(self.profile_entry_changed)
-		self.host_entry.handler_unblock(self.host_entry_changed)
-		self.port_entry.handler_unblock(self.port_entry_changed)
+		self.unblock_entry_changed_handlers()
 
 	def on_add_button_clicked(self, *args):
 		pos=self.profiles_combo.get_active()
@@ -2201,10 +2216,7 @@ class ProfileSettings(Gtk.Grid):
 
 	def on_profiles_changed(self, *args):
 		active=self.profiles_combo.get_active()
-		self.profile_entry.handler_block(self.profile_entry_changed)
-		self.host_entry.handler_block(self.host_entry_changed)
-		self.port_entry.handler_block(self.port_entry_changed)
-		self.password_entry.handler_block(self.password_entry_changed)
+		self.block_entry_changed_handlers()
 
 		self.profile_entry.set_text(self.settings.get_value("profiles")[active])
 		self.host_entry.set_text(self.settings.get_value("hosts")[active])
@@ -2212,10 +2224,7 @@ class ProfileSettings(Gtk.Grid):
 		self.password_entry.set_text(self.settings.get_value("passwords")[active])
 		self.path_entry.set_text(self.settings.get_value("paths")[active])
 
-		self.profile_entry.handler_unblock(self.profile_entry_changed)
-		self.host_entry.handler_unblock(self.host_entry_changed)
-		self.port_entry.handler_unblock(self.port_entry_changed)
-		self.password_entry.handler_unblock(self.password_entry_changed)
+		self.unblock_entry_changed_handlers()
 
 class GeneralSettings(Gtk.Box):
 	def __init__(self, settings):
@@ -2224,28 +2233,21 @@ class GeneralSettings(Gtk.Box):
 
 		#adding vars
 		self.settings=settings
+		self.settings_handlers=[]
 
-		#widgets
-		track_cover_label=Gtk.Label(label=_("Main cover size:"))
-		track_cover_label.set_xalign(0)
-		track_cover_size=IntEntry(self.settings.get_int("track-cover"), 100, 1200, 10)
+		#int_settings
+		int_settings={}
+		int_settings_data=[(_("Main cover size:"), (100, 1200, 10), "track-cover"),\
+				(_("Album view cover size:"), (50, 600, 10), "album-cover"),\
+				(_("Button icon size:"), (16, 32, 8), "icon-size")]
+		for data in int_settings_data:
+			int_settings[data[2]]=(Gtk.Label(), IntEntry(self.settings.get_int(data[2]), data[1][0], data[1][1], data[1][2]))
+			int_settings[data[2]][0].set_label(data[0])
+			int_settings[data[2]][0].set_xalign(0)
+			int_settings[data[2]][1].connect("value-changed", self.on_int_changed, data[2])
+			self.settings_handlers.append(self.settings.connect("changed::"+data[2], self.on_int_settings_changed, int_settings[data[2]][1]))
 
-		album_cover_label=Gtk.Label(label=_("Album view cover size:"))
-		album_cover_label.set_xalign(0)
-		album_cover_size=IntEntry(self.settings.get_int("album-cover"), 50, 600, 10)
-
-		icon_size_label1=Gtk.Label(label=_("Button icon size:"))
-		icon_size_label1.set_xalign(0)
-		icon_size_label2=Gtk.Label(label=_("(restart required)"))
-		icon_size_label2.set_xalign(0)
-		icon_size_label2.set_sensitive(False)
-		icon_size_combo=Gtk.ComboBoxText()
-		icon_size_combo.set_entry_text_column(0)
-		sizes=[16, 24, 32, 48]
-		for i in sizes:
-			icon_size_combo.append_text(str(i))
-		icon_size_combo.set_active(sizes.index(self.settings.get_int("icon-size")))
-
+		#combo_settings
 		combo_settings={}
 		combo_settings_data=[(_("Sort albums by:"), _("name"), _("year"), "sort-albums-by-year"), \
 					(_("Position of playlist:"), _("bottom"), _("right"), "playlist-right")]
@@ -2261,18 +2263,11 @@ class GeneralSettings(Gtk.Box):
 			else:
 				combo_settings[data[3]][1].set_active(0)
 			combo_settings[data[3]][1].connect("changed", self.on_combo_changed, data[3])
-
-		#headings
-		view_heading=Gtk.Label()
-		view_heading.set_markup(_("<b>View</b>"))
-		view_heading.set_xalign(0)
-		behavior_heading=Gtk.Label()
-		behavior_heading.set_markup(_("<b>Behavior</b>"))
-		behavior_heading.set_xalign(0)
+			self.settings_handlers.append(self.settings.connect("changed::"+data[3], self.on_combo_settings_changed, combo_settings[data[3]][1]))
 
 		#check buttons
 		check_buttons={}
-		settings_list=[(_("Use Client-side decoration"), "use-csd"), \
+		check_buttons_data=[(_("Use Client-side decoration"), "use-csd"), \
 				(_("Show stop button"), "show-stop"), \
 				(_("Show lyrics button"), "show-lyrics-button"), \
 				(_("Show initials in artist view"), "show-initials"), \
@@ -2282,25 +2277,34 @@ class GeneralSettings(Gtk.Box):
 				(_("Stop playback on quit"), "stop-on-quit"), \
 				(_("Play selected albums and titles immediately"), "force-mode")]
 
-		for data in settings_list:
+		for data in check_buttons_data:
 			check_buttons[data[1]]=Gtk.CheckButton(label=data[0])
 			check_buttons[data[1]].set_active(self.settings.get_boolean(data[1]))
-			check_buttons[data[1]].connect("toggled", self.on_toggled, data[1])
 			check_buttons[data[1]].set_margin_start(12)
+			check_buttons[data[1]].connect("toggled", self.on_toggled, data[1])
+			self.settings_handlers.append(self.settings.connect("changed::"+data[1], self.on_check_settings_changed, check_buttons[data[1]]))
+
+		#headings
+		view_heading=Gtk.Label()
+		view_heading.set_markup(_("<b>View</b>"))
+		view_heading.set_xalign(0)
+		behavior_heading=Gtk.Label()
+		behavior_heading.set_markup(_("<b>Behavior</b>"))
+		behavior_heading.set_xalign(0)
 
 		#view grid
 		view_grid=Gtk.Grid()
 		view_grid.set_row_spacing(6)
 		view_grid.set_column_spacing(12)
 		view_grid.set_margin_start(12)
-		view_grid.add(track_cover_label)
-		view_grid.attach_next_to(album_cover_label, track_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
-		view_grid.attach_next_to(icon_size_label1, album_cover_label, Gtk.PositionType.BOTTOM, 1, 1)
-		view_grid.attach_next_to(combo_settings["playlist-right"][0], icon_size_label1, Gtk.PositionType.BOTTOM, 1, 1)
-		view_grid.attach_next_to(track_cover_size, track_cover_label, Gtk.PositionType.RIGHT, 1, 1)
-		view_grid.attach_next_to(album_cover_size, album_cover_label, Gtk.PositionType.RIGHT, 1, 1)
-		view_grid.attach_next_to(icon_size_combo, icon_size_label1, Gtk.PositionType.RIGHT, 1, 1)
-		view_grid.attach_next_to(icon_size_label2, icon_size_combo, Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.add(int_settings["track-cover"][0])
+		view_grid.attach_next_to(int_settings["album-cover"][0], int_settings["track-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
+		view_grid.attach_next_to(int_settings["icon-size"][0], int_settings["album-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
+		view_grid.attach_next_to(combo_settings["playlist-right"][0], int_settings["icon-size"][0], Gtk.PositionType.BOTTOM, 1, 1)
+		view_grid.attach_next_to(int_settings["track-cover"][1], int_settings["track-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.attach_next_to(int_settings["album-cover"][1], int_settings["album-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.attach_next_to(int_settings["icon-size"][1], int_settings["icon-size"][0], Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.attach_next_to(Gtk.Label(label=_("(restart required)"), sensitive=False), int_settings["icon-size"][1], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(combo_settings["playlist-right"][1], combo_settings["playlist-right"][0], Gtk.PositionType.RIGHT, 1, 1)
 
 		#behavior grid
@@ -2312,17 +2316,12 @@ class GeneralSettings(Gtk.Box):
 		behavior_grid.attach_next_to(combo_settings["sort-albums-by-year"][1], combo_settings["sort-albums-by-year"][0], Gtk.PositionType.RIGHT, 1, 1)
 
 		#connect
-		track_cover_size.connect("value-changed", self.on_int_changed, "track-cover")
-		album_cover_size.connect("value-changed", self.on_int_changed, "album-cover")
-		icon_size_combo.connect("changed", self.on_icon_size_changed)
+		self.connect("destroy", self.remove_handlers)
 
 		#packing
-		restart_label=Gtk.Label(label=_("(restart required)"))
-		restart_label.set_xalign(0)
-		restart_label.set_sensitive(False)
 		box=Gtk.Box(spacing=12)
 		box.pack_start(check_buttons["use-csd"], False, False, 0)
-		box.pack_start(restart_label, False, False, 0)
+		box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
 		self.pack_start(view_heading, True, True, 0)
 		self.pack_start(box, True, True, 0)
 		self.pack_start(check_buttons["show-stop"], True, True, 0)
@@ -2337,12 +2336,24 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(check_buttons["force-mode"], True, True, 0)
 		self.pack_start(behavior_grid, True, True, 0)
 
+	def remove_handlers(self, *args):
+		for handler in self.settings_handlers:
+			self.settings.disconnect(handler)
+
+	def on_int_settings_changed(self, settings, key, entry):
+		entry.set_value(settings.get_int(key))
+
+	def on_combo_settings_changed(self, settings, key, combo):
+		if settings.get_boolean(key):
+			combo.set_active(1)
+		else:
+			combo.set_active(0)
+
+	def on_check_settings_changed(self, settings, key, button):
+		button.set_active(settings.get_boolean(key))
+
 	def on_int_changed(self, widget, key):
 		self.settings.set_int(key, widget.get_int())
-
-	def on_icon_size_changed(self, box):
-		active_size=int(box.get_active_text())
-		self.settings.set_int("icon-size", active_size)
 
 	def on_combo_changed(self, box, key):
 		active=box.get_active()
@@ -2353,7 +2364,6 @@ class GeneralSettings(Gtk.Box):
 
 	def on_toggled(self, widget, key):
 		self.settings.set_boolean(key, widget.get_active())
-
 
 class PlaylistSettings(Gtk.Box):
 	def __init__(self, settings):
@@ -2369,7 +2379,7 @@ class PlaylistSettings(Gtk.Box):
 		label.set_xalign(0)
 
 		#Store
-		#(toggle, header, index)
+		#(toggle, header, actual_index)
 		self.store=Gtk.ListStore(bool, str, int)
 
 		#TreeView
@@ -2393,10 +2403,7 @@ class PlaylistSettings(Gtk.Box):
 
 		#fill store
 		self.headers=[_("No"), _("Disc"), _("Title"), _("Artist"), _("Album"), _("Length"), _("Year"), _("Genre")]
-		visibilities=self.settings.get_value("column-visibilities").unpack()
-
-		for index in self.settings.get_value("column-permutation"):
-			self.store.append([visibilities[index], self.headers[index], index])
+		self.fill()
 
 		#scroll
 		scroll=Gtk.ScrolledWindow()
@@ -2422,25 +2429,55 @@ class PlaylistSettings(Gtk.Box):
 		column_chooser.pack_start(toolbar, False, False, 0)
 
 		#connect
-		self.store.connect("row-deleted", self.save_permutation)
+		self.row_deleted=self.store.connect("row-deleted", self.save_permutation)
 		renderer_toggle.connect("toggled", self.on_cell_toggled)
 		self.up_button.connect("clicked", self.on_up_button_clicked)
 		self.down_button.connect("clicked", self.on_down_button_clicked)
 		self.selection.connect("changed", self.set_button_sensitivity)
+		self.settings_handlers=[]
+		self.settings_handlers.append(self.settings.connect("changed::column-visibilities", self.on_visibilities_changed))
+		self.settings_handlers.append(self.settings.connect("changed::column-permutation", self.on_permutation_changed))
+		self.connect("destroy", self.remove_handlers)
 
 		#packing
 		self.pack_start(label, False, False, 0)
 		self.pack_start(column_chooser, True, True, 0)
 
-	def on_cell_toggled(self, widget, path):
-		self.store[path][0]=not self.store[path][0]
-		self.settings.array_modify('ab', "column-visibilities", self.store[path][2], self.store[path][0])
+	def remove_handlers(self, *args):
+		for handler in self.settings_handlers:
+			self.settings.disconnect(handler)
+
+	def fill(self, *args):
+		visibilities=self.settings.get_value("column-visibilities").unpack()
+		for actual_index in self.settings.get_value("column-permutation"):
+			self.store.append([visibilities[actual_index], self.headers[actual_index], actual_index])
 
 	def save_permutation(self, *args):
 		permutation=[]
 		for row in self.store:
 			permutation.append(row[2])
 		self.settings.set_value("column-permutation", GLib.Variant("ai", permutation))
+
+	def set_button_sensitivity(self, *args):
+		treeiter=self.selection.get_selected()[1]
+		if treeiter == None:
+			self.up_button.set_sensitive(False)
+			self.down_button.set_sensitive(False)
+		else:
+			path=self.store.get_path(treeiter)
+			if self.store.iter_next(treeiter) == None:
+				self.up_button.set_sensitive(True)
+				self.down_button.set_sensitive(False)
+			elif not path.prev():
+				self.up_button.set_sensitive(False)
+				self.down_button.set_sensitive(True)
+			else:
+				self.up_button.set_sensitive(True)
+				self.down_button.set_sensitive(True)
+
+	def on_cell_toggled(self, widget, path):
+		self.store[path][0]=not self.store[path][0]
+		self.settings.array_modify('ab', "column-visibilities", self.store[path][2], self.store[path][0])
 
 	def on_up_button_clicked(self, *args):
 		treeiter=self.selection.get_selected()[1]
@@ -2459,21 +2496,23 @@ class PlaylistSettings(Gtk.Box):
 		self.set_button_sensitivity()
 		self.save_permutation()
 
-	def set_button_sensitivity(self, *args):
-		treeiter=self.selection.get_selected()[1]
-		path=self.store.get_path(treeiter)
-		if treeiter == None:
-			self.up_button.set_sensitive(False)
-			self.down_button.set_sensitive(False)
-		elif self.store.iter_next(treeiter) == None:
-			self.up_button.set_sensitive(True)
-			self.down_button.set_sensitive(False)
-		elif not path.prev():
-			self.up_button.set_sensitive(False)
-			self.down_button.set_sensitive(True)
-		else:
-			self.up_button.set_sensitive(True)
-			self.down_button.set_sensitive(True)
+	def on_visibilities_changed(self, *args):
+		visibilities=self.settings.get_value("column-visibilities").unpack()
+		for i, actual_index in enumerate(self.settings.get_value("column-permutation")):
+			self.store[i][0]=visibilities[actual_index]
+
+	def on_permutation_changed(self, *args):
+		equal=True
+		perm=self.settings.get_value("column-permutation")
+		for i, e in enumerate(self.store):
+			if e[2] != perm[i]:
+				equal=False
+				break
+		if not equal:
+			self.store.handler_block(self.row_deleted)
+			self.store.clear()
+			self.fill()
+			self.store.handler_unblock(self.row_deleted)
 
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, settings):
