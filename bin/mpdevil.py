@@ -1010,7 +1010,15 @@ class SongsView(Gtk.TreeView):
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
 				self.client.files_to_playlist([self.store.get_value(treeiter, self.file_column_id)], True)
-#		elif event.keyval == 65383: #menu key
+		elif event.keyval == 65383: #menu key
+			treeview, treeiter=self.selection.get_selected()
+			if not treeiter == None:
+				path=self.store.get_path(treeiter)
+				cell=self.get_cell_area(path, None)
+				file_name=self.store[path][self.file_column_id]
+				pop=SongPopover(self.client.lsinfo(file_name)[0], widget, int(cell.x), int(cell.y))
+				pop.popup()
+				pop.show_all()
 		self.handler_unblock(self.key_press_event)
 
 	def clear(self):
@@ -1774,6 +1782,15 @@ class PlaylistView(Gtk.Box):
 					self.remove_song(path)
 				except:
 					pass
+		elif event.keyval == 65383: #menu key
+			treeview, treeiter=self.selection.get_selected()
+			if not treeiter == None:
+				path=self.store.get_path(treeiter)
+				cell=self.treeview.get_cell_area(path, None)
+				file_name=self.store[path][8]
+				pop=SongPopover(self.client.lsinfo(file_name)[0], widget, int(cell.x), int(cell.y))
+				pop.popup()
+				pop.show_all()
 		self.treeview.handler_unblock(self.key_press_event)
 
 	def on_button_press_event(self, widget, event):
