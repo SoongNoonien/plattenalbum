@@ -2086,6 +2086,7 @@ class ProfileSettings(Gtk.Grid):
 
 		#adding vars
 		self.settings=settings
+		self.gui_modification=False #indicates whether the settings where changed from the settings dialog
 
 		#widgets
 		self.profiles_combo=Gtk.ComboBoxText()
@@ -2163,8 +2164,11 @@ class ProfileSettings(Gtk.Grid):
 			self.settings.disconnect(handler)
 
 	def on_settings_changed(self, *args):
-		self.profiles_combo_reload()
-		self.profiles_combo.set_active(0)
+		if self.gui_modification:
+			self.gui_modification=False
+		else:
+			self.profiles_combo_reload()
+			self.profiles_combo.set_active(0)
 
 	def block_entry_changed_handlers(self, *args):
 		for obj, handler in self.entry_changed_handlers:
@@ -2207,21 +2211,26 @@ class ProfileSettings(Gtk.Grid):
 			self.profiles_combo.set_active(0)	
 
 	def on_profile_entry_changed(self, *args):
+		self.gui_modification=True
 		pos=self.profiles_combo.get_active()
 		self.settings.array_modify('as', "profiles", pos, self.profile_entry.get_text())
 		self.profiles_combo_reload()
 		self.profiles_combo.set_active(pos)
 
 	def on_host_entry_changed(self, *args):
+		self.gui_modification=True
 		self.settings.array_modify('as', "hosts", self.profiles_combo.get_active(), self.host_entry.get_text())
 
 	def on_port_entry_changed(self, *args):
+		self.gui_modification=True
 		self.settings.array_modify('ai', "ports", self.profiles_combo.get_active(), self.port_entry.get_int())
 
 	def on_password_entry_changed(self, *args):
+		self.gui_modification=True
 		self.settings.array_modify('as', "passwords", self.profiles_combo.get_active(), self.password_entry.get_text())
 
 	def on_path_entry_changed(self, *args):
+		self.gui_modification=True
 		self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), self.path_entry.get_text())
 
 	def on_path_select_button_clicked(self, widget, parent):
@@ -2232,6 +2241,7 @@ class ProfileSettings(Gtk.Grid):
 		dialog.set_current_folder(self.settings.get_value("paths")[self.profiles_combo.get_active()])
 		response=dialog.run()
 		if response == Gtk.ResponseType.OK:
+			self.gui_modification=True
 			self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), dialog.get_filename())
 			self.path_entry.set_text(dialog.get_filename())
 		dialog.destroy()
