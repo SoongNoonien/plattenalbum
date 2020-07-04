@@ -1326,8 +1326,7 @@ class AlbumIconView(Gtk.IconView):
 			self.store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
 		return False
 
-	def add_row(self, row, cover, size):
-		row[0]=cover.get_pixbuf(size)
+	def add_row(self, row):
 		self.store.append(row)
 		return False
 
@@ -1371,7 +1370,7 @@ class AlbumIconView(Gtk.IconView):
 		size=self.settings.get_int("album-cover")
 		for i, album in enumerate(albums):
 			if not self.stop_flag:
-				cover=Cover(lib_path=music_lib, song_file=album["songs"][0]["file"])
+				cover=Cover(lib_path=music_lib, song_file=album["songs"][0]["file"]).get_pixbuf(size)
 				# tooltip
 				length_human_readable=ClientHelper.calc_display_length(album["songs"])
 				try:
@@ -1388,7 +1387,7 @@ class AlbumIconView(Gtk.IconView):
 				display_label_artist=display_label+"\n"+album["artist"]
 				display_label=display_label.replace("&", "&amp;")
 				display_label_artist=display_label_artist.replace("&", "&amp;")
-				GLib.idle_add(self.add_row, [None, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]], cover, size)
+				GLib.idle_add(self.add_row, [cover, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]])
 				if i%16 == 0:
 					while Gtk.events_pending():
 						Gtk.main_iteration_do(True)
