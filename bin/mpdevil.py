@@ -1838,7 +1838,7 @@ class PlaylistView(Gtk.Box):
 		self.refresh_selection()
 
 	def on_disconnected(self, *args):
-		self.playlist_version=None
+		self.clear()
 
 class CoverLyricsOSD(Gtk.Overlay):
 	def __init__(self, client, settings, window):
@@ -1913,9 +1913,36 @@ class CoverLyricsOSD(Gtk.Overlay):
 		else:
 			self.revealer.set_reveal_child(False)
 
-class Browser(Gtk.Box):
+class CoverPlaylistView(Gtk.Paned):
 	def __init__(self, client, settings, window):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
+		Gtk.Paned.__init__(self) #paned0
+
+		#adding vars
+		self.client=client
+		self.settings=settings
+		self.window=window
+
+		#widgets
+		self.cover=CoverLyricsOSD(self.client, self.settings, self.window)
+		self.playlist_view=PlaylistView(self.client, self.settings)
+
+		#packing
+		self.pack1(self.cover, False, False)
+		self.pack2(self.playlist_view, True, False)
+
+		self.set_position(self.settings.get_int("paned0"))
+
+	def show_lyrics(self, *args):
+		self.cover.show_lyrics()
+
+	def save_settings(self):
+		self.settings.set_int("paned0", self.get_position())
+		self.playlist_view.save_settings()
+
+class Browser(Gtk.Paned):
+	def __init__(self, client, settings, window):
+		Gtk.Paned.__init__(self) #paned1
+		self.set_orientation(Gtk.Orientation.HORIZONTAL)
 
 		#adding vars
 		self.client=client
@@ -1942,14 +1969,11 @@ class Browser(Gtk.Box):
 		self.artist_view=ArtistView(self.client, self.settings, self.genre_select)
 		self.search=SearchWindow(self.client)
 		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
-		self.cover=CoverLyricsOSD(self.client, self.settings, self.window)
-		self.playlist_view=PlaylistView(self.client, self.settings)
 
 		#connect
 		self.back_to_album_button.connect("clicked", self.back_to_album)
 		self.search_button.connect("toggled", self.on_search_toggled)
 		self.artist_view.connect("artists_changed", self.on_artists_changed)
-		self.settings.connect("changed::playlist-right", self.on_playlist_pos_settings_changed)
 		if not self.use_csd:
 			self.settings.connect("changed::icon-size", self.on_icon_size_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
@@ -1961,16 +1985,8 @@ class Browser(Gtk.Box):
 		self.stack.add_named(self.album_view, "albums")
 		self.stack.add_named(self.search, "search")
 
-		self.paned0=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-		self.paned1=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-		self.paned2=Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-
-		self.paned0.pack1(self.cover, False, False)
-		self.paned0.pack2(self.playlist_view, True, False)
-
-
 		if self.use_csd:
-			self.paned1.pack1(self.artist_view, False, False)
+			self.pack1(self.artist_view, False, False)
 		else:
 			hbox=Gtk.Box(spacing=6)
 			hbox.set_property("border-width", 6)
@@ -1981,40 +1997,22 @@ class Browser(Gtk.Box):
 			box1.pack_start(hbox, False, False, 0)
 			box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 			box1.pack_start(self.artist_view, True, True, 0)
-			self.paned1.pack1(box1, False, False)
-		self.paned1.pack2(self.stack, True, False)
+			self.pack1(box1, False, False)
+		self.pack2(self.stack, True, False)
 
-		self.paned2.pack1(self.paned1, True, False)
-		self.paned2.pack2(self.paned0, False, False)
-
-		self.load_settings()
-		self.pack_start(self.paned2, True, True, 0)
-
-		self.on_playlist_pos_settings_changed()
+		self.set_position(self.settings.get_int("paned1"))
 
 	def save_settings(self):
-		self.settings.set_int("paned0", self.paned0.get_position())
-		self.settings.set_int("paned1", self.paned1.get_position())
-		self.settings.set_int("paned2", self.paned2.get_position())
-		self.playlist_view.save_settings()
-
-	def load_settings(self):
-		self.paned0.set_position(self.settings.get_int("paned0"))
-		self.paned1.set_position(self.settings.get_int("paned1"))
-		self.paned2.set_position(self.settings.get_int("paned2"))
+		self.settings.set_int("paned1", self.get_position())
 
 	def clear(self, *args):
 		self.genre_select.clear()
 		self.artist_view.clear()
 		self.album_view.clear()
 		self.search.clear()
-		self.playlist_view.clear()
 
 	def search_started(self):
 		return self.search.started()
-
-	def show_lyrics(self, *args):
-		self.cover.show_lyrics()
 
 	def back_to_album(self, *args):
 		try: #since this can still be running when the connection is lost, various exceptions can occur
@@ -2073,14 +2071,6 @@ class Browser(Gtk.Box):
 		self.search_button.set_active(False)
 		artists=self.artist_view.get_selected_artists()
 		self.album_view.refresh(artists)
-
-	def on_playlist_pos_settings_changed(self, *args):
-		if self.settings.get_boolean("playlist-right"):
-			self.paned0.set_orientation(Gtk.Orientation.VERTICAL)
-			self.paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
-		else:
-			self.paned0.set_orientation(Gtk.Orientation.HORIZONTAL)
-			self.paned2.set_orientation(Gtk.Orientation.VERTICAL)
 
 	def on_icon_size_changed(self, *args):
 		pixel_size=self.settings.get_int("icon-size")
@@ -3350,6 +3340,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.icons[data]=PixelSizedIcon(data, self.icon_size)
 
 		self.browser=Browser(self.client, self.settings, self)
+		self.cover_playlist_view=CoverPlaylistView(self.client, self.settings, self)
 		self.profiles=ProfileSelect(self.client, self.settings)
 		self.profiles.set_tooltip_text(_("Select profile"))
 		self.control=ClientControl(self.client, self.settings)
@@ -3377,6 +3368,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		#connect
 		self.settings.connect("changed::profiles", self.on_settings_changed)
+		self.settings.connect("changed::playlist-right", self.on_playlist_pos_settings_changed)
 		if not self.use_csd:
 			self.settings.connect("changed::icon-size", self.on_icon_size_changed)
 		self.client.emitter.connect("playing_file_changed", self.on_file_changed)
@@ -3389,9 +3381,14 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.connect("key-press-event", self.on_key_press_event)
 
 		#packing
+		self.paned2=Gtk.Paned()
+		self.paned2.set_position(self.settings.get_int("paned2"))
+		self.on_playlist_pos_settings_changed() #set orientation
+		self.paned2.pack1(self.browser, True, False)
+		self.paned2.pack2(self.cover_playlist_view, False, False)
 		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.action_bar=Gtk.ActionBar()
-		self.vbox.pack_start(self.browser, True, True, 0)
+		self.vbox.pack_start(self.paned2, True, True, 0)
 		self.vbox.pack_start(self.action_bar, False, False, 0)
 		self.action_bar.pack_start(self.control)
 		self.action_bar.pack_start(self.progress)
@@ -3471,7 +3468,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK)
 		if ctrl:
 			if event.keyval == 108: #ctrl + l
-				self.browser.show_lyrics()
+				self.cover_playlist_view.show_lyrics()
 		else:
 			if event.keyval == 32: #space
 				if not self.browser.search_started():
@@ -3514,6 +3511,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.settings.set_int("height", size[1])
 		self.settings.set_boolean("maximize", self.is_maximized())
 		self.browser.save_settings()
+		self.cover_playlist_view.save_settings()
+		self.settings.set_int("paned2", self.paned2.get_position())
 
 	def on_settings(self, action, param):
 		settings=SettingsDialog(self, self.settings)
@@ -3537,6 +3536,14 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.profiles.set_property("visible", True)
 		else:
 			self.profiles.set_property("visible", False)
+
+	def on_playlist_pos_settings_changed(self, *args):
+		if self.settings.get_boolean("playlist-right"):
+			self.cover_playlist_view.set_orientation(Gtk.Orientation.VERTICAL)
+			self.paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
+		else:
+			self.cover_playlist_view.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self.paned2.set_orientation(Gtk.Orientation.VERTICAL)
 
 	def on_icon_size_changed(self, *args):
 		pixel_size=self.settings.get_int("icon-size")
