@@ -2543,7 +2543,7 @@ class ProfileSettings(Gtk.Grid):
 
 		# adding vars
 		self.settings=settings
-		self.gui_modification=False  # indicates whether the settings where changed from the settings dialog
+		self.gui_modification=False  # indicates whether the settings were changed from the settings dialog
 
 		# widgets
 		self.profiles_combo=Gtk.ComboBoxText()
