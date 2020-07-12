@@ -795,12 +795,10 @@ class Client(MPDClient):
 		self.settings=settings
 		self.settings.connect("changed::active-profile", self.on_settings_changed)
 
-		# idle client
-		self.idle_client=MPDClient()
-
 		# adding vars
 		self.settings=settings
 		self.emitter=MpdEventEmitter()
+		self.last_status={}
 
 		self.current_file=None
 
@@ -824,7 +822,6 @@ class Client(MPDClient):
 
 	def on_settings_changed(self, *args):
 		self.disconnect()
-		self.idle_client.disconnect()
 
 	def files_to_playlist(self, files, append, force=False):
 		if append:
@@ -870,33 +867,27 @@ class Client(MPDClient):
 	def loop(self, *args):
 		# idle
 		try:
-			try:
-				idle_return=self.idle_client.noidle()
-				for i in idle_return:
-					self.emitter.emit(i)
-				if "player" in idle_return:
-					current_song=self.idle_client.currentsong()
-					if not current_song == {}:
-						if not current_song['file'] == self.current_file:
-							self.emitter.emit("playing_file_changed")
-							self.current_file=current_song['file']
-					else:
-						self.emitter.emit("playing_file_changed")
-						self.current_file=None
-			except:
-				pass
-			self.idle_client.send_idle()
 			# heartbeat
 			status=self.status()
-			if status['state'] == "stop" or status['state'] == "pause":
-				self.ping()
-			else:
+			diff=set(status.items())-set(self.last_status.items())
+			for key, val in diff:
+				if key == "state":
+					self.emitter.emit("player")
+				elif key == "songid":
+					self.emitter.emit("playing_file_changed")
+				elif key == "volume":
+					self.emitter.emit("mixer")
+				elif key in ["repeat", "random", "single", "consume"]:
+					self.emitter.emit("options")
+				elif key == "updating_db":
+					self.emitter.emit("update")
+				elif key == "playlist":
+					self.emitter.emit("playlist")
+			self.last_status=status
+			if status['state'] != "stop" and status['state'] != "pause":
 				self.emitter.emit("periodic_signal")
 		except:
-			try:
-				self.idle_client.disconnect()
-			except:
-				pass
+			self.last_status={}
 			try:
 				self.disconnect()
 			except:
@@ -917,27 +908,11 @@ class Client(MPDClient):
 		except:
 			print("connect failed")
 			return True
-		try:
-			self.idle_client.connect(self.settings.get_value("hosts")[active], self.settings.get_value("ports")[active])
-			if self.settings.get_value("passwords")[active] != "":
-				self.idle_client.password(self.settings.get_value("passwords")[active])
-		except:
-			print("connect failed")
-			print("max clients could be too small")
-			self.diconnect()
-			return True
 		# connect successful
 		self.main_timeout_id=GLib.timeout_add(100, self.loop)
 		self.emitter.emit("periodic_signal")
-		self.emitter.emit("playlist")
-		self.emitter.emit("player")
-		self.emitter.emit("playing_file_changed")
-		self.emitter.emit("options")
-		self.emitter.emit("mixer")
-		self.emitter.emit("update")
 		self.emitter.emit("reconnected")
 		return False
-
 
 ########################
 # gio settings wrapper #
