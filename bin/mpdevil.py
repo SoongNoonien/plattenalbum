@@ -3124,17 +3124,14 @@ class SeekBar(Gtk.Box):
 			self.enable()
 
 	def refresh(self, emitter, elapsed, duration):
-		try:
-			if elapsed > duration:  # fix display error
-				elapsed=duration
-			fraction=(elapsed/duration)*100
-			if self.update:
-				self.scale.set_value(fraction)
-				self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
-				self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
-			self.scale.set_fill_level(fraction)
-		except:
-			self.disable()
+		if elapsed > duration:  # fix display error
+			elapsed=duration
+		fraction=(elapsed/duration)*100
+		if self.update:
+			self.scale.set_value(fraction)
+			self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
+			self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
+		self.scale.set_fill_level(fraction)
 
 class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings):
