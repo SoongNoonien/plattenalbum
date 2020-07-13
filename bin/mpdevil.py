@@ -24,7 +24,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib, Notify
-from mpd import MPDClient
+from mpd import MPDClient, base as MPDBase
 import requests
 from bs4 import BeautifulSoup, Comment
 import threading
@@ -218,25 +218,29 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		self.metadata={}
 
 		# connect
-		self.client.emitter.connect("player", self.on_player_changed)
-		self.client.emitter.connect("playing_file_changed", self.on_file_changed)
-		self.client.emitter.connect("mixer", self.on_volume_changed)
-		self.client.emitter.connect("options", self.on_options_changed)
+		self.client.emitter.connect("state", self.on_state_changed)
+		self.client.emitter.connect("current_song_changed", self.on_song_changed)
+		self.client.emitter.connect("volume_changed", self.on_volume_changed)
+		self.client.emitter.connect("repeat", self.on_loop_changed)
+		self.client.emitter.connect("single", self.on_loop_changed)
+		self.client.emitter.connect("random", self.on_random_changed)
 
-	def on_player_changed(self, *args):
+	def on_state_changed(self, *args):
 		self.update_property('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
 		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoNext')
 		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoPrevious')
 
-	def on_file_changed(self, *args):
+	def on_song_changed(self, *args):
 		self.update_metadata()
 		self.update_property('org.mpris.MediaPlayer2.Player', 'Metadata')
 
 	def on_volume_changed(self, *args):
 		self.update_property('org.mpris.MediaPlayer2.Player', 'Volume')
 
-	def on_options_changed(self, *args):
+	def on_loop_changed(self, *args):
 		self.update_property('org.mpris.MediaPlayer2.Player', 'LoopStatus')
+
+	def on_random_changed(self, *args):
 		self.update_property('org.mpris.MediaPlayer2.Player', 'Shuffle')
 
 	def update_metadata(self):  # TODO
@@ -722,71 +726,54 @@ class ClientHelper():
 
 class MpdEventEmitter(GObject.Object):
 	__gsignals__={
-		'database': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'update': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'stored_playlist': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'playlist': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'player': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'mixer': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'output': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'options': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'sticker': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'subscription': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'message': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'disconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'reconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'playing_file_changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'periodic_signal': (GObject.SignalFlags.RUN_FIRST, None, ())
+		'current_song_changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'state': (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+		'elapsed_changed': (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
+		'volume_changed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
+		'playlist_changed': (GObject.SignalFlags.RUN_FIRST, None, (int,)),
+		'repeat': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		'random': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		'single': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		'consume': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		'audio': (GObject.SignalFlags.RUN_FIRST, None, (float,int,int,)),
+		'bitrate': (GObject.SignalFlags.RUN_FIRST, None, (float,))
 	}
 
 	def __init__(self):
 		super().__init__()
 
-	# mpd signals
-	def do_database(self):
-		pass
-
+	# gsignals
 	def do_update(self):
 		pass
 
-	def do_stored_playlist(self):
-		pass
-
-	def do_playlist(self):
-		pass
-
-	def do_player(self):
-		pass
-
-	def do_mixer(self):
-		pass
-
-	def do_output(self):
-		pass
-
-	def do_options(self):
-		pass
-
-	def do_sticker(self):
-		pass
-
-	def do_subscription(self):
-		pass
-
-	def do_message(self):
-		pass
-
-	# custom signals
 	def do_disconnected(self):
 		pass
 
 	def do_reconnected(self):
 		pass
 
-	def do_playing_file_changed(self):
+	def do_current_file_changed(self):
 		pass
 
-	def do_periodic_signal(self):
+	def do_state(self, state):
+		pass
+
+	def do_elapsed_changed(self, elapsed, duration):
+		pass
+
+	def do_volume_changed(self, volume):
+		pass
+
+	def do_playlist_changed(self, version):
+		pass
+
+	def do_audio(self, sampelrate, bits, channels):
+		pass
+
+	def do_bitrate(self, rate):
 		pass
 
 class Client(MPDClient):
@@ -865,28 +852,41 @@ class Client(MPDClient):
 			return([])
 
 	def loop(self, *args):
-		# idle
 		try:
-			# heartbeat
 			status=self.status()
 			diff=set(status.items())-set(self.last_status.items())
 			for key, val in diff:
-				if key == "state":
-					self.emitter.emit("player")
+				if key == "elapsed":
+					self.emitter.emit("elapsed_changed", float(val), float(status["duration"]))
+				elif key == "bitrate":
+					self.emitter.emit("bitrate", float(val))
 				elif key == "songid":
-					self.emitter.emit("playing_file_changed")
+					self.emitter.emit("current_song_changed")
+				elif key == "state":
+					self.emitter.emit("state", val)
+				elif key == "audio":
+					samplerate, bits, channels=val.split(':')
+					self.emitter.emit("audio", float(samplerate), int(bits), int(channels))
 				elif key == "volume":
-					self.emitter.emit("mixer")
-				elif key in ["repeat", "random", "single", "consume"]:
-					self.emitter.emit("options")
-				elif key == "updating_db":
-					self.emitter.emit("update")
+					self.emitter.emit("volume_changed", float(val))
 				elif key == "playlist":
-					self.emitter.emit("playlist")
+					self.emitter.emit("playlist_changed", int(val))
+				elif key in ["repeat", "random", "single", "consume"]:
+					if val == "1":
+						self.emitter.emit(key, True)
+					else:
+						self.emitter.emit(key, False)
+
+			diff=set(self.last_status)-set(status)
+			if "songid" in diff:
+				self.emitter.emit("current_song_changed")
+			if "volume" in diff:
+				self.emitter.emit("volume_changed", 0)
+			if "updating_db" in diff:
+				self.emitter.emit("update")
+
 			self.last_status=status
-			if status['state'] != "stop" and status['state'] != "pause":
-				self.emitter.emit("periodic_signal")
-		except:
+		except MPDBase.ConnectionError:
 			self.last_status={}
 			try:
 				self.disconnect()
@@ -910,7 +910,6 @@ class Client(MPDClient):
 			return True
 		# connect successful
 		self.main_timeout_id=GLib.timeout_add(100, self.loop)
-		self.emitter.emit("periodic_signal")
 		self.emitter.emit("reconnected")
 		return False
 
@@ -1155,7 +1154,7 @@ class LyricsWindow(Gtk.Overlay):
 		close_button.set_valign(1)
 
 		# connect
-		self.file_changed=self.client.emitter.connect("playing_file_changed", self.refresh)
+		self.song_changed=self.client.emitter.connect("current_song_changed", self.refresh)
 		self.connect("destroy", self.remove_handlers)
 		close_button.connect("clicked", self.on_close_button_clicked)
 
@@ -1169,7 +1168,7 @@ class LyricsWindow(Gtk.Overlay):
 		GLib.idle_add(self.text_view.grab_focus)  # focus textview
 
 	def remove_handlers(self, *args):
-		self.client.emitter.disconnect(self.file_changed)
+		self.client.emitter.disconnect(self.song_changed)
 
 	def display_lyrics(self, current_song):
 		GLib.idle_add(self.text_buffer.set_text, _("searching..."), -1)
@@ -1401,6 +1400,7 @@ class GenreSelect(Gtk.ComboBoxText):
 
 		# connect
 		self.changed=self.connect("changed", self.on_changed)
+		self.client.emitter.connect("reconnected", self.refresh)
 		self.update_signal=self.client.emitter.connect("update", self.refresh)
 
 	def deactivate(self):
@@ -1426,10 +1426,12 @@ class GenreSelect(Gtk.ComboBoxText):
 		else:
 			return self.get_active_text()
 
+	@GObject.Signal
+	def genre_changed(self):
+		pass
+
 	def on_changed(self, *args):
-		self.client.emitter.handler_block(self.update_signal)
-		self.client.emitter.emit("update")
-		self.client.emitter.handler_unblock(self.update_signal)
+		self.emit("genre_changed")
 
 class ArtistView(FocusFrame):
 	def __init__(self, client, settings, genre_select):
@@ -1477,7 +1479,9 @@ class ArtistView(FocusFrame):
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.settings.connect("changed::use-album-artist", self.refresh)
 		self.settings.connect("changed::show-initials", self.on_show_initials_settings_changed)
+		self.client.emitter.connect("reconnected", self.refresh)
 		self.client.emitter.connect("update", self.refresh)
+		self.genre_select.connect("genre_changed", self.refresh)
 
 		self.set_widget(self.treeview)
 		self.add(scroll)
@@ -1752,6 +1756,7 @@ class AlbumView(FocusFrame):
 		self.settings.connect("changed::album-cover", self.on_settings_changed)
 		self.iconview.connect("done", self.on_done)
 		self.client.emitter.connect("update", self.clear)
+		self.genre_select.connect("genre_changed", self.clear)
 		self.settings.connect("changed::use-album-artist", self.clear)
 
 		self.set_widget(self.iconview)
@@ -1944,30 +1949,50 @@ class AudioType(Gtk.Label):
 
 		# adding vars
 		self.client=client
+		self.freq=0
+		self.res=0
+		self.chan=0
+		self.brate=0
+		self.file_type=""
 
 		# connect
-		self.client.emitter.connect("periodic_signal", self.refresh)  # periodic_signal
+		self.client.emitter.connect("audio", self.on_audio)
+		self.client.emitter.connect("bitrate", self.on_bitrate)
+		self.client.emitter.connect("current_song_changed", self.on_song_changed)
 		self.client.emitter.connect("disconnected", self.clear)
-		self.client.emitter.connect("player", self.on_player)
+		self.client.emitter.connect("state", self.on_state)
 
 	def clear(self, *args):
 		self.set_text("")
+		self.freq=0
+		self.res=0
+		self.chan=0
+		self.brate=0
+		self.file_type=""
 
 	def refresh(self, *args):
-		try:
-			file_type=self.client.wrapped_call("currentsong")["file"].split('.')[-1]
-			status=self.client.wrapped_call("status")
-			freq, res, chan=status["audio"].split(':')
-			freq=str(float(freq)/1000)
-			brate=status["bitrate"]
-			string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": brate, "frequency": freq, "resolution": res, "channels": chan, "file_type": file_type}
-			self.set_text(string)
-		except:
-			self.clear()
+		string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)i bit, %(channels)i channels, %(file_type)s") % {"bitrate": str(self.brate), "frequency": str(self.freq), "resolution": self.res, "channels": self.chan, "file_type": self.file_type}
+		self.set_text(string)
 
-	def on_player(self, *args):
-		status=self.client.wrapped_call("status")
-		if status['state'] == "stop":
+	def on_audio(self, emitter, freq, res, chan):
+		self.freq=freq/1000
+		self.res=res
+		self.chan=chan
+		self.refresh()
+
+	def on_bitrate(self, emitter, brate):
+		self.brate=brate
+		self.refresh()
+
+	def on_song_changed(self, *args):
+		try:
+			self.file_type=self.client.wrapped_call("currentsong")["file"].split('.')[-1]
+			self.refresh()
+		except:
+			pass
+
+	def on_state(self, emitter, state):
+		if state == "stop":
 			self.clear()
 
 class MainCover(Gtk.Frame):
@@ -2001,7 +2026,7 @@ class MainCover(Gtk.Frame):
 
 		# connect
 		event_box.connect("button-press-event", self.on_button_press_event)
-		self.client.emitter.connect("playing_file_changed", self.refresh)
+		self.client.emitter.connect("current_song_changed", self.refresh)
 		self.settings.connect("changed::track-cover", self.on_settings_changed)
 
 		event_box.add(self.cover)
@@ -2139,8 +2164,8 @@ class PlaylistView(Gtk.Box):
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 		self.treeview.connect("button-press-event", self.on_button_press_event)
 
-		self.client.emitter.connect("playlist", self.on_playlist_changed)
-		self.client.emitter.connect("playing_file_changed", self.on_file_changed)
+		self.client.emitter.connect("playlist_changed", self.on_playlist_changed)
+		self.client.emitter.connect("current_song_changed", self.on_song_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 
 		self.settings.connect("changed::column-visibilities", self.load_settings)
@@ -2247,7 +2272,7 @@ class PlaylistView(Gtk.Box):
 	def on_row_activated(self, widget, path, view_column):
 		self.client.wrapped_call("play", path)
 
-	def on_playlist_changed(self, *args):
+	def on_playlist_changed(self, emitter, version):
 		songs=[]
 		if not self.playlist_version == None:
 			songs=self.client.wrapped_call("plchanges", self.playlist_version)
@@ -2268,9 +2293,9 @@ class PlaylistView(Gtk.Box):
 		self.refresh_playlist_info()
 		if self.playlist_version == None or not songs == []:
 			self.refresh_selection()
-		self.playlist_version=self.client.wrapped_call("status")["playlist"]
+		self.playlist_version=version
 
-	def on_file_changed(self, *args):
+	def on_song_changed(self, *args):
 		self.refresh_selection()
 
 	def on_disconnected(self, *args):
@@ -2904,7 +2929,7 @@ class ClientControl(Gtk.ButtonBox):
 		self.next_button.connect("clicked", self.on_next_clicked)
 		self.settings.connect("changed::show-stop", self.on_settings_changed)
 		self.settings.connect("changed::icon-size", self.on_icon_size_changed)
-		self.client.emitter.connect("player", self.refresh)
+		self.client.emitter.connect("state", self.on_state)
 
 		# packing
 		self.pack_start(self.prev_button, True, True, 0)
@@ -2913,13 +2938,12 @@ class ClientControl(Gtk.ButtonBox):
 			self.pack_start(self.stop_button, True, True, 0)
 		self.pack_start(self.next_button, True, True, 0)
 
-	def refresh(self, *args):
-		status=self.client.wrapped_call("status")
-		if status["state"] == "play":
+	def on_state(self, emitter, state):
+		if state == "play":
 			self.play_button.set_image(self.icons["media-playback-pause-symbolic"])
 			self.prev_button.set_sensitive(True)
 			self.next_button.set_sensitive(True)
-		elif status["state"] == "pause":
+		elif state == "pause":
 			self.play_button.set_image(self.icons["media-playback-start-symbolic"])
 			self.prev_button.set_sensitive(True)
 			self.next_button.set_sensitive(True)
@@ -3011,9 +3035,8 @@ class SeekBar(Gtk.Box):
 		self.scale.connect("button-press-event", self.on_scale_button_press_event)
 		self.scale.connect("button-release-event", self.on_scale_button_release_event)
 		self.client.emitter.connect("disconnected", self.disable)
-		self.client.emitter.connect("player", self.on_player)
-		# periodic_signal
-		self.periodic_signal=self.client.emitter.connect("periodic_signal", self.refresh)
+		self.client.emitter.connect("state", self.on_state)
+		self.client.emitter.connect("elapsed_changed", self.refresh)
 
 		# packing
 		self.elapsed_event_box.add(self.elapsed)
@@ -3021,8 +3044,6 @@ class SeekBar(Gtk.Box):
 		self.pack_start(self.elapsed_event_box, False, False, 0)
 		self.pack_start(self.scale, True, True, 0)
 		self.pack_end(self.rest_event_box, False, False, 0)
-
-		self.disable()
 
 	def dummy(self, *args):
 		return True
@@ -3036,16 +3057,17 @@ class SeekBar(Gtk.Box):
 
 	def on_scale_button_release_event(self, widget, event):
 		if event.button == 1:
+			self.update=True
+			self.scale.set_has_origin(True)
+			status=self.client.wrapped_call("status")
 			if self.jumped:  # actual seek
-				status=self.client.wrapped_call("status")
 				duration=float(status["duration"])
 				factor=(self.scale.get_value()/100)
 				pos=(duration*factor)
 				self.client.wrapped_call("seekcur", pos)
 				self.jumped=False
-			self.scale.set_has_origin(True)
-			self.update=True
-			self.refresh()
+			else:
+				self.refresh(None, float(status["elapsed"]), float(status["duration"]))
 
 	def on_change_value(self, range, scroll, value):  # value is inaccurate
 		if scroll == Gtk.ScrollType.STEP_BACKWARD:
@@ -3095,21 +3117,14 @@ class SeekBar(Gtk.Box):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self.seek_backward()
 
-	def on_player(self, *args):
-		status=self.client.wrapped_call("status")
-		if status['state'] == "stop":
+	def on_state(self, emitter, state):
+		if state == "stop":
 			self.disable()
-		elif status['state'] == "pause":  # needed for seeking in paused state
-			self.enable()
-			self.refresh()
 		else:
 			self.enable()
 
-	def refresh(self, *args):
+	def refresh(self, emitter, elapsed, duration):
 		try:
-			status=self.client.wrapped_call("status")
-			duration=float(status["duration"])
-			elapsed=float(status["elapsed"])
 			if elapsed > duration:  # fix display error
 				elapsed=duration
 			fraction=(elapsed/duration)*100
@@ -3144,18 +3159,21 @@ class PlaybackOptions(Gtk.Box):
 		self.single.set_tooltip_text(_("Single mode"))
 		self.consume=Gtk.ToggleButton(image=self.icons["edit-cut-symbolic"])
 		self.consume.set_tooltip_text(_("Consume mode"))
-		self.volume=Gtk.VolumeButton()
-		self.volume.set_property("use-symbolic", True)
-		self.volume.set_property("size", self.settings.get_gtk_icon_size("icon-size"))
+		self.volume_button=Gtk.VolumeButton()
+		self.volume_button.set_property("use-symbolic", True)
+		self.volume_button.set_property("size", self.settings.get_gtk_icon_size("icon-size"))
 
 		# connect
-		self.random_toggled=self.random.connect("toggled", self.set_random)
-		self.repeat_toggled=self.repeat.connect("toggled", self.set_repeat)
-		self.single_toggled=self.single.connect("toggled", self.set_single)
-		self.consume_toggled=self.consume.connect("toggled", self.set_consume)
-		self.volume_changed=self.volume.connect("value-changed", self.set_volume)
-		self.options_changed=self.client.emitter.connect("options", self.options_refresh)
-		self.mixer_changed=self.client.emitter.connect("mixer", self.mixer_refresh)
+		self.random_toggled=self.random.connect("toggled", self.set_option, "random")
+		self.repeat_toggled=self.repeat.connect("toggled", self.set_option, "repeat")
+		self.single_toggled=self.single.connect("toggled", self.set_option, "single")
+		self.consume_toggled=self.consume.connect("toggled", self.set_option, "consume")
+		self.volume_button_changed=self.volume_button.connect("value-changed", self.set_volume)
+		self.repeat_changed=self.client.emitter.connect("repeat", self.repeat_refresh)
+		self.random_changed=self.client.emitter.connect("random", self.random_refresh)
+		self.single_changed=self.client.emitter.connect("single", self.single_refresh)
+		self.consume_changed=self.client.emitter.connect("consume", self.consume_refresh)
+		self.volume_changed=self.client.emitter.connect("volume_changed", self.volume_refresh)
 		self.settings.connect("changed::icon-size", self.on_icon_size_changed)
 
 		# packing
@@ -3166,76 +3184,50 @@ class PlaybackOptions(Gtk.Box):
 		ButtonBox.pack_start(self.single, True, True, 0)
 		ButtonBox.pack_start(self.consume, True, True, 0)
 		self.pack_start(ButtonBox, True, True, 0)
-		self.pack_start(self.volume, True, True, 0)
+		self.pack_start(self.volume_button, True, True, 0)
 
-	def set_random(self, widget):
+	def set_option(self, widget, option):
 		if widget.get_active():
-			self.client.wrapped_call("random", "1")
+			self.client.wrapped_call(option, "1")
 		else:
-			self.client.wrapped_call("random", "0")
-
-	def set_repeat(self, widget):
-		if widget.get_active():
-			self.client.wrapped_call("repeat", "1")
-		else:
-			self.client.wrapped_call("repeat", "0")
-
-	def set_single(self, widget):
-		if widget.get_active():
-			self.client.wrapped_call("single", "1")
-		else:
-			self.client.wrapped_call("single", "0")
-
-	def set_consume(self, widget):
-		if widget.get_active():
-			self.client.wrapped_call("consume", "1")
-		else:
-			self.client.wrapped_call("consume", "0")
+			self.client.wrapped_call(option, "0")
 
 	def set_volume(self, widget, value):
 		self.client.wrapped_call("setvol", str(int(value*100)))
 
-	def options_refresh(self, *args):
+	def repeat_refresh(self, emitter, val):
 		self.repeat.handler_block(self.repeat_toggled)
-		self.random.handler_block(self.random_toggled)
-		self.single.handler_block(self.single_toggled)
-		self.consume.handler_block(self.consume_toggled)
-		status=self.client.wrapped_call("status")
-		if status["repeat"] == "0":
-			self.repeat.set_active(False)
-		else:
-			self.repeat.set_active(True)
-		if status["random"] == "0":
-			self.random.set_active(False)
-		else:
-			self.random.set_active(True)
-		if status["single"] == "0":
-			self.single.set_active(False)
-		else:
-			self.single.set_active(True)
-		if status["consume"] == "0":
-			self.consume.set_active(False)
-		else:
-			self.consume.set_active(True)
+		self.repeat.set_active(val)
 		self.repeat.handler_unblock(self.repeat_toggled)
+
+	def random_refresh(self, emitter, val):
+		self.random.handler_block(self.random_toggled)
+		self.random.set_active(val)
 		self.random.handler_unblock(self.random_toggled)
+
+	def single_refresh(self, emitter, val):
+		self.single.handler_block(self.single_toggled)
+		self.single.set_active(val)
 		self.single.handler_unblock(self.single_toggled)
+
+	def consume_refresh(self, emitter, val):
+		self.consume.handler_block(self.consume_toggled)
+		self.consume.set_active(val)
 		self.consume.handler_unblock(self.consume_toggled)
 
-	def mixer_refresh(self, *args):
-		self.volume.handler_block(self.volume_changed)
-		status=self.client.wrapped_call("status")
+	def volume_refresh(self, emitter, volume):
+		self.volume_button.handler_block(self.volume_button_changed)
 		try:
-			self.volume.set_value((int(status["volume"])/100))
+			self.volume_button.set_value(volume/100)
 		except:
-			self.volume.set_value(0)
-		self.volume.handler_unblock(self.volume_changed)
+			self.volume_button.set_value(0)
+		self.volume_button.handler_unblock(self.volume_button_changed)
 
 	def on_icon_size_changed(self, *args):
 		pixel_size=self.settings.get_int("icon-size")
 		for icon in self.icons.values():
 			icon.set_pixel_size(pixel_size)
-		self.volume.set_property("size", self.settings.get_gtk_icon_size("icon-size"))
+		self.volume_button.set_property("size", self.settings.get_gtk_icon_size("icon-size"))
 
 #################
 # other dialogs #
@@ -3417,7 +3409,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.settings.connect("changed::playlist-right", self.on_playlist_pos_settings_changed)
 		if not self.use_csd:
 			self.settings.connect("changed::icon-size", self.on_icon_size_changed)
-		self.client.emitter.connect("playing_file_changed", self.on_file_changed)
+		self.client.emitter.connect("current_song_changed", self.on_song_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
 		# unmap space
@@ -3463,7 +3455,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.on_settings_changed()  # hide profiles button
 		self.client.start()  # connect client
 
-	def on_file_changed(self, *args):
+	def on_song_changed(self, *args):
 		try:
 			song=self.client.wrapped_call("currentsong")
 			if song == {}:
