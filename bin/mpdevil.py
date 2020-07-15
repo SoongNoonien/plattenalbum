@@ -888,10 +888,6 @@ class Client(MPDClient):
 			self.last_status=status
 		except MPDBase.ConnectionError:
 			self.last_status={}
-			try:
-				self.disconnect()
-			except:
-				pass
 			self.emitter.emit("disconnected")
 			if self.disconnected_loop():
 				self.disconnected_timeout_id=GLib.timeout_add(1000, self.disconnected_loop)
