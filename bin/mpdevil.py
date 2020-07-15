@@ -1623,7 +1623,7 @@ class AlbumIconView(Gtk.IconView):
 				else:
 					GLib.idle_add(self.emit, "done")
 					return
-			except:
+			except MPDBase.ConnectionError:
 				GLib.idle_add(self.emit, "done")
 				return
 		# display albums
@@ -1872,7 +1872,7 @@ class Browser(Gtk.Paned):
 	def search_started(self):
 		return self.search.started()
 
-	def back_to_album(self, *args):
+	def back_to_album(self, *args):  # TODO
 		try:  # since this can still be running when the connection is lost, various exceptions can occur
 			song=ClientHelper.song_to_first_str_dict(self.client.wrapped_call("currentsong"))
 			try:
@@ -3449,10 +3449,14 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.client.start()  # connect client
 
 	def on_song_changed(self, *args):
-		try:
-			song=self.client.wrapped_call("currentsong")
-			if song == {}:
-				raise ValueError("Song out of range")
+		song=self.client.wrapped_call("currentsong")
+		if song == {}:
+			if self.use_csd:
+				self.header_bar.set_title("mpdevil")
+				self.header_bar.set_subtitle("")
+			else:
+				self.set_title("mpdevil")
+		else:
 			song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(song))
 			if song["date"] != "":
 				date=" ("+song["date"]+")"
@@ -3469,12 +3473,6 @@ class MainWindow(Gtk.ApplicationWindow):
 					pixbuf=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song["file"]).get_pixbuf(400)
 					notify.set_image_from_pixbuf(pixbuf)
 					notify.show()
-		except:
-			if self.use_csd:
-				self.header_bar.set_title("mpdevil")
-				self.header_bar.set_subtitle("")
-			else:
-				self.set_title("mpdevil")
 
 	def on_reconnected(self, *args):
 		self.dbus_service.acquire_name()
