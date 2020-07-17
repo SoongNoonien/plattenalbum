@@ -686,7 +686,7 @@ class Cover(object):
 
 	def get_pixbuf(self, size):
 		if self.path == None:
-			self.path=Gtk.IconTheme.get_default().lookup_icon("mpdevil", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()  # fallback cover
+			self.path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()  # fallback cover
 		return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
 
 ######################
