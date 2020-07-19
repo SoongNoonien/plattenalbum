@@ -851,6 +851,12 @@ class Client(MPDClient):
 		else:
 			return([])
 
+	def get_metadata(self, uri):
+		meta_base=self.lsinfo(uri)[0]
+		meta_extra=self.readcomments(uri)  # contains comment tag
+		meta_base.update(meta_extra)
+		return meta_base
+
 	def loop(self, *args):
 		try:
 			status=self.status()
@@ -1252,7 +1258,7 @@ class SongsView(Gtk.TreeView):
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
 				file_name=self.store[path][self.file_column_id]
-				pop=SongPopover(self.client.wrapped_call("lsinfo", file_name)[0], widget, int(event.x), int(event.y))
+				pop=SongPopover(self.client.wrapped_call("get_metadata", file_name), widget, int(event.x), int(event.y))
 				pop.popup()
 				pop.show_all()
 			except:
@@ -1274,7 +1280,7 @@ class SongsView(Gtk.TreeView):
 				path=self.store.get_path(treeiter)
 				cell=self.get_cell_area(path, None)
 				file_name=self.store[path][self.file_column_id]
-				pop=SongPopover(self.client.wrapped_call("lsinfo", file_name)[0], widget, int(cell.x), int(cell.y))
+				pop=SongPopover(self.client.wrapped_call("get_metadata", file_name), widget, int(cell.x), int(cell.y))
 				pop.popup()
 				pop.show_all()
 		self.handler_unblock(self.key_press_event)
@@ -2245,7 +2251,7 @@ class PlaylistView(Gtk.Box):
 				path=self.store.get_path(treeiter)
 				cell=self.treeview.get_cell_area(path, None)
 				file_name=self.store[path][8]
-				pop=SongPopover(self.client.wrapped_call("lsinfo", file_name)[0], widget, int(cell.x), int(cell.y))
+				pop=SongPopover(self.client.wrapped_call("get_metadata", file_name), widget, int(cell.x), int(cell.y))
 				pop.popup()
 				pop.show_all()
 		self.treeview.handler_unblock(self.key_press_event)
@@ -2260,7 +2266,7 @@ class PlaylistView(Gtk.Box):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				pop=SongPopover(self.client.wrapped_call("playlistinfo", path)[0], widget, int(event.x), int(event.y))
+				pop=SongPopover(self.client.wrapped_call("get_metadata", self.store[path][8]), widget, int(event.x), int(event.y))
 				pop.popup()
 			except:
 				pass
