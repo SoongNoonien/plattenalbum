@@ -18,9 +18,33 @@ Features
 - MPRIS interface (based on mpDris2)
 
 See: https://github.com/SoongNoonien/mpdevil/wiki/Usage
+    
+Package Installation
+--------------------
 
-Building and installation
--------------------------
+See:
+https://github.com/SoongNoonien/mpdevil/releases/latest
+    
+Ubuntu, Debian, Mint:
+- Download the .deb file
+- Open a console
+- Navigate into download dir
+- Run: `sudo apt install ./mpdevil_VERSION-1_amd64.deb`
+
+Arch, Manjaro:
+- Download the PKGBUILD
+- Open a console
+- Navigate into download dir
+- Run: `makepkg -sirc`
+
+Gentoo (see: https://wiki.gentoo.org/wiki/Custom_repository):
+- Download the .ebuild
+- Place it into your local tree
+- Generate manifest file
+- Run: `emerge mpdevil`
+
+Building
+--------
 
 Dependencies:
 - Gtk3
@@ -33,7 +57,7 @@ Python modules:
 - bs4 (beautifulsoup)
 - dbus
 
-To build from source, use:
+To build and install from source, use:
 
     ./autogen.sh
     make
