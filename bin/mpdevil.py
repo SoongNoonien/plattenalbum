@@ -45,6 +45,7 @@ DATADIR='@datadir@'
 NAME='mpdevil'
 VERSION='@version@'
 PACKAGE=NAME.lower()
+COVER_REGEX="^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 #################
 # lang settings #
@@ -314,7 +315,7 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		if 'file' in mpd_meta:
 			song_file=mpd_meta['file']
 			self.metadata['xesam:url']="file://"+os.path.join(self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file)
-			cover=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file)
+			cover=Cover(self.settings, mpd_meta)
 			if not cover.path == None:
 				self.metadata['mpris:artUrl']="file://"+cover.path
 			else:
@@ -671,18 +672,42 @@ class SongPopover(Gtk.Popover):
 		frame.show_all()
 
 class Cover(object):
-	regex=re.compile(r'^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$', flags=re.IGNORECASE)
-	def __init__(self, lib_path, song_file):
-		self.lib_path=lib_path or ""
+	def __init__(self, settings, song):
 		self.path=None
-		if not song_file == None:
-			head, tail=os.path.split(song_file)
-			song_dir=os.path.join(self.lib_path, head)
-			if os.path.exists(song_dir):
-				for f in os.listdir(song_dir):
-					if self.regex.match(f):
-						self.path=os.path.join(song_dir, f)
-						break
+		if song != {}:
+			song_file=song["file"]
+
+			active_profile=settings.get_int("active-profile")
+
+			self.lib_path=settings.get_value("paths")[active_profile]
+			regex_str=settings.get_value("regex")[active_profile]
+
+			if regex_str == "":
+				self.regex=re.compile(r''+COVER_REGEX+'', flags=re.IGNORECASE)
+			else:
+				try:
+					artist=song["albumartist"]
+				except:
+					artist=""
+				try:
+					album=song["album"]
+				except:
+					album=""
+				regex_str=regex_str.replace("%AlbumArtist%", artist)
+				regex_str=regex_str.replace("%Album%", album)
+				try:
+					self.regex=re.compile(r''+regex_str+'', flags=re.IGNORECASE)
+				except:
+					print("illegal regex:", regex_str)
+
+			if not song_file == None:
+				head, tail=os.path.split(song_file)
+				song_dir=os.path.join(self.lib_path, head)
+				if os.path.exists(song_dir):
+					for f in os.listdir(song_dir):
+						if self.regex.match(f):
+							self.path=os.path.join(song_dir, f)
+							break
 
 	def get_pixbuf(self, size):
 		if self.path == None:
@@ -923,8 +948,18 @@ class Settings(Gio.Settings):
 	BASE_KEY="org.mpdevil"
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
+
+		# fix profile settings
 		if len(self.get_value("profiles")) < (self.get_int("active-profile")+1):
 			self.set_int("active-profile", 0)
+		profile_keys=[('as', "profiles", "new profile"), ('as', "hosts", "localhost"), ('ai', "ports", 6600), ('as', "passwords", ""), ('as', "paths", ""), ('as', "regex", "")]
+		profile_arrays=[]
+		for vtype, key, default in profile_keys:
+			profile_arrays.append(self.get_value(key).unpack())
+		max_len=max(len(x) for x in profile_arrays)
+		for index, (vtype, key, default) in enumerate(profile_keys):
+			profile_arrays[index]=(profile_arrays[index]+max_len*[default])[:max_len]
+			self.set_value(key, GLib.Variant(vtype, profile_arrays[index]))
 
 	def array_append(self, vtype, key, value):  # append to Gio.Settings (self.settings) array
 		array=self.get_value(key).unpack()
@@ -1637,11 +1672,10 @@ class AlbumIconView(Gtk.IconView):
 			albums=sorted(albums, key=lambda k: k['year'])
 		else:
 			albums=sorted(albums, key=lambda k: k['album'])
-		music_lib=self.settings.get_value("paths")[self.settings.get_int("active-profile")]
 		size=self.settings.get_int("album-cover")
 		for i, album in enumerate(albums):
 			if not self.stop_flag:
-				cover=Cover(lib_path=music_lib, song_file=album["songs"][0]["file"]).get_pixbuf(size)
+				cover=Cover(self.settings, album["songs"][0]).get_pixbuf(size)
 				# tooltip
 				length_human_readable=ClientHelper.calc_display_length(album["songs"])
 				try:
@@ -2022,7 +2056,7 @@ class MainCover(Gtk.Frame):
 		# cover
 		self.cover=Gtk.Image.new()
 		size=self.settings.get_int("track-cover")
-		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(size))  # set to fallback cover
+		self.cover.set_from_pixbuf(Cover(self.settings, {}).get_pixbuf(size))  # set to fallback cover
 		# set default size
 		self.cover.set_size_request(size, size)
 
@@ -2035,15 +2069,11 @@ class MainCover(Gtk.Frame):
 		self.add(event_box)
 
 	def refresh(self, *args):
-		try:
-			current_song=self.client.wrapped_call("currentsong")
-			song_file=current_song['file']
-		except:
-			song_file=None
-		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song_file).get_pixbuf(self.settings.get_int("track-cover")))
+		current_song=self.client.wrapped_call("currentsong")
+		self.cover.set_from_pixbuf(Cover(self.settings, current_song).get_pixbuf(self.settings.get_int("track-cover")))
 
 	def clear(self, *args):
-		self.cover.set_from_pixbuf(Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=None).get_pixbuf(self.settings.get_int("track-cover")))
+		self.cover.set_from_pixbuf(Cover(self.settings, {}).get_pixbuf(self.settings.get_int("track-cover")))
 		self.song_file=None
 
 	def on_button_press_event(self, widget, event):
@@ -2556,7 +2586,7 @@ class ProfileSettings(Gtk.Grid):
 		self.gui_modification=False  # indicates whether the settings were changed from the settings dialog
 
 		# widgets
-		self.profiles_combo=Gtk.ComboBoxText()
+		self.profiles_combo=Gtk.ComboBoxText(hexpand=True)
 		self.profiles_combo.set_entry_text_column(0)
 
 		add_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_ADD))
@@ -2566,19 +2596,22 @@ class ProfileSettings(Gtk.Grid):
 		add_delete_buttons.pack_start(add_button, True, True, 0)
 		add_delete_buttons.pack_start(delete_button, True, True, 0)
 
-		self.profile_entry=Gtk.Entry()
-		self.host_entry=Gtk.Entry()
+		self.profile_entry=Gtk.Entry(hexpand=True)
+		self.host_entry=Gtk.Entry(hexpand=True)
 		self.port_entry=IntEntry(0, 0, 65535, 1)
 		address_entry=Gtk.Box(spacing=6)
 		address_entry.pack_start(self.host_entry, True, True, 0)
 		address_entry.pack_start(self.port_entry, False, False, 0)
-		self.password_entry=Gtk.Entry()
+		self.password_entry=Gtk.Entry(hexpand=True)
 		self.password_entry.set_visibility(False)
-		self.path_entry=Gtk.Entry()
+		self.path_entry=Gtk.Entry(hexpand=True)
 		self.path_select_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_OPEN))
 		path_box=Gtk.Box(spacing=6)
 		path_box.pack_start(self.path_entry, True, True, 0)
 		path_box.pack_start(self.path_select_button, False, False, 0)
+		self.regex_entry=Gtk.Entry(hexpand=True)
+		self.regex_entry.set_property("placeholder-text", COVER_REGEX)
+		self.regex_entry.set_tooltip_text(_("The first image in the same directory as the song file matching this regex will be displayed. %AlbumArtist% and %Album% will be replaced by the corresponding tags of the song."))
 
 		profiles_label=Gtk.Label(label=_("Profile:"))
 		profiles_label.set_xalign(1)
@@ -2590,6 +2623,8 @@ class ProfileSettings(Gtk.Grid):
 		password_label.set_xalign(1)
 		path_label=Gtk.Label(label=_("Music lib:"))
 		path_label.set_xalign(1)
+		regex_label=Gtk.Label(label=_("Cover regex:"))
+		regex_label.set_xalign(1)
 
 		# connect
 		add_button.connect("clicked", self.on_add_button_clicked)
@@ -2602,12 +2637,14 @@ class ProfileSettings(Gtk.Grid):
 		self.entry_changed_handlers.append((self.port_entry, self.port_entry.connect("value-changed", self.on_port_entry_changed)))
 		self.entry_changed_handlers.append((self.password_entry, self.password_entry.connect("changed", self.on_password_entry_changed)))
 		self.entry_changed_handlers.append((self.path_entry, self.path_entry.connect("changed", self.on_path_entry_changed)))
+		self.entry_changed_handlers.append((self.regex_entry, self.regex_entry.connect("changed", self.on_regex_entry_changed)))
 		self.settings_handlers=[]
 		self.settings_handlers.append(self.settings.connect("changed::profiles", self.on_settings_changed))
 		self.settings_handlers.append(self.settings.connect("changed::hosts", self.on_settings_changed))
 		self.settings_handlers.append(self.settings.connect("changed::ports", self.on_settings_changed))
 		self.settings_handlers.append(self.settings.connect("changed::passwords", self.on_settings_changed))
 		self.settings_handlers.append(self.settings.connect("changed::paths", self.on_settings_changed))
+		self.settings_handlers.append(self.settings.connect("changed::regex", self.on_settings_changed))
 		self.connect("destroy", self.remove_handlers)
 
 		self.profiles_combo_reload()
@@ -2619,12 +2656,14 @@ class ProfileSettings(Gtk.Grid):
 		self.attach_next_to(host_label, profile_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(regex_label, path_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(self.profiles_combo, profiles_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(add_delete_buttons, self.profiles_combo, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(self.profile_entry, profile_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(address_entry, host_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(self.password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(path_box, path_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(self.regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
 
 	def remove_handlers(self, *args):
 		for handler in self.settings_handlers:
@@ -2661,6 +2700,7 @@ class ProfileSettings(Gtk.Grid):
 		self.settings.array_append('ai', "ports", 6600)
 		self.settings.array_append('as', "passwords", "")
 		self.settings.array_append('as', "paths", "")
+		self.settings.array_append('as', "regex", "")
 		self.profiles_combo_reload()
 		self.profiles_combo.set_active(pos)
 
@@ -2671,6 +2711,7 @@ class ProfileSettings(Gtk.Grid):
 		self.settings.array_delete('ai', "ports", pos)
 		self.settings.array_delete('as', "passwords", pos)
 		self.settings.array_delete('as', "paths", pos)
+		self.settings.array_delete('as', "regex", pos)
 		if len(self.settings.get_value("profiles")) == 0:
 			self.on_add_button_clicked()
 		else:
@@ -2700,6 +2741,10 @@ class ProfileSettings(Gtk.Grid):
 		self.gui_modification=True
 		self.settings.array_modify('as', "paths", self.profiles_combo.get_active(), self.path_entry.get_text())
 
+	def on_regex_entry_changed(self, *args):
+		self.gui_modification=True
+		self.settings.array_modify('as', "regex", self.profiles_combo.get_active(), self.regex_entry.get_text())
+
 	def on_path_select_button_clicked(self, widget, parent):
 		dialog=Gtk.FileChooserDialog(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
 		dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
@@ -2722,6 +2767,7 @@ class ProfileSettings(Gtk.Grid):
 		self.port_entry.set_int(self.settings.get_value("ports")[active])
 		self.password_entry.set_text(self.settings.get_value("passwords")[active])
 		self.path_entry.set_text(self.settings.get_value("paths")[active])
+		self.regex_entry.set_text(self.settings.get_value("regex")[active])
 
 		self.unblock_entry_changed_handlers()
 
@@ -3476,7 +3522,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			if self.settings.get_boolean("send-notify"):
 				if not self.is_active() and self.client.wrapped_call("status")["state"] == "play":
 					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"]+date)
-					pixbuf=Cover(lib_path=self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file=song["file"]).get_pixbuf(400)
+					pixbuf=Cover(self.settings, song).get_pixbuf(400)
 					notify.set_image_from_pixbuf(pixbuf)
 					notify.show()
 

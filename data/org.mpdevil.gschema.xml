@@ -146,5 +146,10 @@
       <summary>List of library paths</summary>
       <description></description>
     </key>
+    <key type="as" name="regex">
+      <default>[""]</default>
+      <summary>List of cover regex</summary>
+      <description></description>
+    </key>
   </schema>
 </schemalist>
