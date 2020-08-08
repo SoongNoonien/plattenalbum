@@ -1148,110 +1148,6 @@ class SearchWindow(Gtk.Box):
 	def on_open_clicked(self, *args):
 		self.client.wrapped_call("files_to_playlist", self.songs_view.get_files(), False)
 
-class LyricsWindow(Gtk.Overlay):
-	def __init__(self, client, settings):
-		Gtk.Overlay.__init__(self)
-
-		# adding vars
-		self.settings=settings
-		self.client=client
-
-		# widgets
-		self.text_view=Gtk.TextView()
-		self.text_view.set_editable(False)
-		self.text_view.set_left_margin(5)
-		self.text_view.set_bottom_margin(5)
-		self.text_view.set_cursor_visible(False)
-		self.text_view.set_wrap_mode(Gtk.WrapMode.WORD)
-		self.text_view.set_justification(Gtk.Justification.CENTER)
-		self.text_buffer=self.text_view.get_buffer()
-
-		# scroll
-		self.scroll=Gtk.ScrolledWindow()
-		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		self.scroll.add(self.text_view)
-
-		# frame
-		frame=FocusFrame()
-		frame.set_widget(self.text_view)
-		style_context=frame.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""* {border: 0px; background-color: @theme_base_color; opacity: 0.9;}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
-
-		# close button
-		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
-		close_button.set_margin_top(6)
-		close_button.set_margin_end(6)
-		style_context=close_button.get_style_context()
-		style_context.add_class("circular")
-
-		close_button.set_halign(2)
-		close_button.set_valign(1)
-
-		# connect
-		self.song_changed=self.client.emitter.connect("current_song_changed", self.refresh)
-		self.connect("destroy", self.remove_handlers)
-		close_button.connect("clicked", self.on_close_button_clicked)
-
-		# packing
-		frame.add(self.scroll)
-		self.add(frame)
-		self.add_overlay(close_button)
-
-		self.show_all()
-		self.refresh()
-		GLib.idle_add(self.text_view.grab_focus)  # focus textview
-
-	def remove_handlers(self, *args):
-		self.client.emitter.disconnect(self.song_changed)
-
-	def display_lyrics(self, current_song):
-		GLib.idle_add(self.text_buffer.set_text, _("searching..."), -1)
-		try:
-			text=self.getLyrics(current_song["artist"], current_song["title"])
-		except:
-			text=_("lyrics not found")
-		GLib.idle_add(self.text_buffer.set_text, text, -1)
-
-	def refresh(self, *args):
-		update_thread=threading.Thread(target=self.display_lyrics, kwargs={"current_song": ClientHelper.song_to_first_str_dict(self.client.wrapped_call("currentsong"))}, daemon=True)
-		update_thread.start()
-
-	def getLyrics(self, singer, song):  # partially copied from PyLyrics 1.1.0
-		# Replace spaces with _
-		singer=singer.replace(' ', '_')
-		song=song.replace(' ', '_')
-		r=requests.get('http://lyrics.wikia.com/{0}:{1}'.format(singer,song))
-		s=BeautifulSoup(r.text)
-		# Get main lyrics holder
-		lyrics=s.find("div",{'class':'lyricbox'})
-		if lyrics is None:
-			raise ValueError("Song or Singer does not exist or the API does not have Lyrics")
-			return None
-		# Remove Scripts
-		[s.extract() for s in lyrics('script')]
-		# Remove Comments
-		comments=lyrics.findAll(text=lambda text:isinstance(text, Comment))
-		[comment.extract() for comment in comments]
-		# Remove span tag (Needed for instrumantal)
-		if not lyrics.span == None:
-			lyrics.span.extract()
-		# Remove unecessary tags
-		for tag in ['div','i','b','a']:
-			for match in lyrics.findAll(tag):
-				match.replaceWithChildren()
-		# Get output as a string and remove non unicode characters and replace <br> with newlines
-		output=str(lyrics).encode('utf-8', errors='replace')[22:-6:].decode("utf-8").replace('\n','').replace('<br/>','\n')
-		try:
-			return output
-		except:
-			return output.encode('utf-8')
-
-	def on_close_button_clicked(self, *args):
-		self.destroy()
-
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
 		Gtk.TreeView.__init__(self)
@@ -1978,6 +1874,110 @@ class Browser(Gtk.Paned):
 ######################
 # playlist and cover #
 ######################
+
+class LyricsWindow(Gtk.Overlay):
+	def __init__(self, client, settings):
+		Gtk.Overlay.__init__(self)
+
+		# adding vars
+		self.settings=settings
+		self.client=client
+
+		# widgets
+		self.text_view=Gtk.TextView()
+		self.text_view.set_editable(False)
+		self.text_view.set_left_margin(5)
+		self.text_view.set_bottom_margin(5)
+		self.text_view.set_cursor_visible(False)
+		self.text_view.set_wrap_mode(Gtk.WrapMode.WORD)
+		self.text_view.set_justification(Gtk.Justification.CENTER)
+		self.text_buffer=self.text_view.get_buffer()
+
+		# scroll
+		self.scroll=Gtk.ScrolledWindow()
+		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		self.scroll.add(self.text_view)
+
+		# frame
+		frame=FocusFrame()
+		frame.set_widget(self.text_view)
+		style_context=frame.get_style_context()
+		provider=Gtk.CssProvider()
+		css=b"""* {border: 0px; background-color: @theme_base_color; opacity: 0.9;}"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
+
+		# close button
+		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
+		close_button.set_margin_top(6)
+		close_button.set_margin_end(6)
+		style_context=close_button.get_style_context()
+		style_context.add_class("circular")
+
+		close_button.set_halign(2)
+		close_button.set_valign(1)
+
+		# connect
+		self.song_changed=self.client.emitter.connect("current_song_changed", self.refresh)
+		self.connect("destroy", self.remove_handlers)
+		close_button.connect("clicked", self.on_close_button_clicked)
+
+		# packing
+		frame.add(self.scroll)
+		self.add(frame)
+		self.add_overlay(close_button)
+
+		self.show_all()
+		self.refresh()
+		GLib.idle_add(self.text_view.grab_focus)  # focus textview
+
+	def remove_handlers(self, *args):
+		self.client.emitter.disconnect(self.song_changed)
+
+	def display_lyrics(self, current_song):
+		GLib.idle_add(self.text_buffer.set_text, _("searching..."), -1)
+		try:
+			text=self.getLyrics(current_song["artist"], current_song["title"])
+		except:
+			text=_("lyrics not found")
+		GLib.idle_add(self.text_buffer.set_text, text, -1)
+
+	def refresh(self, *args):
+		update_thread=threading.Thread(target=self.display_lyrics, kwargs={"current_song": ClientHelper.song_to_first_str_dict(self.client.wrapped_call("currentsong"))}, daemon=True)
+		update_thread.start()
+
+	def getLyrics(self, singer, song):  # partially copied from PyLyrics 1.1.0
+		# Replace spaces with _
+		singer=singer.replace(' ', '_')
+		song=song.replace(' ', '_')
+		r=requests.get('http://lyrics.wikia.com/{0}:{1}'.format(singer,song))
+		s=BeautifulSoup(r.text)
+		# Get main lyrics holder
+		lyrics=s.find("div",{'class':'lyricbox'})
+		if lyrics is None:
+			raise ValueError("Song or Singer does not exist or the API does not have Lyrics")
+			return None
+		# Remove Scripts
+		[s.extract() for s in lyrics('script')]
+		# Remove Comments
+		comments=lyrics.findAll(text=lambda text:isinstance(text, Comment))
+		[comment.extract() for comment in comments]
+		# Remove span tag (Needed for instrumantal)
+		if not lyrics.span == None:
+			lyrics.span.extract()
+		# Remove unecessary tags
+		for tag in ['div','i','b','a']:
+			for match in lyrics.findAll(tag):
+				match.replaceWithChildren()
+		# Get output as a string and remove non unicode characters and replace <br> with newlines
+		output=str(lyrics).encode('utf-8', errors='replace')[22:-6:].decode("utf-8").replace('\n','').replace('<br/>','\n')
+		try:
+			return output
+		except:
+			return output.encode('utf-8')
+
+	def on_close_button_clicked(self, *args):
+		self.destroy()
 
 class AudioType(Gtk.Label):
 	def __init__(self, client):
