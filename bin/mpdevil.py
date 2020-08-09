@@ -2119,6 +2119,11 @@ class PlaylistView(Gtk.Box):
 		self.settings=settings
 		self.playlist_version=None
 
+		# buttons
+		self.back_to_song_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON))
+		self.back_to_song_button.set_tooltip_text(_("Scroll to current song"))
+		self.back_to_song_button.set_relief(Gtk.ReliefStyle.NONE)
+
 		# Store
 		# (track, disc, title, artist, album, duration, date, genre, file, weight)
 		self.store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
@@ -2175,26 +2180,29 @@ class PlaylistView(Gtk.Box):
 
 		# audio infos
 		audio=AudioType(self.client)
-		audio.set_margin_end(3)
 		audio.set_xalign(1)
 		audio.set_ellipsize(Pango.EllipsizeMode.END)
 
 		# playlist info
 		self.playlist_info=Gtk.Label()
-		self.playlist_info.set_margin_start(3)
 		self.playlist_info.set_xalign(0)
 		self.playlist_info.set_ellipsize(Pango.EllipsizeMode.END)
 
 		# status bar
-		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-		status_bar.set_property("border-width", 3)
+		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+		status_bar.set_property("border-width", 1)
+		status_bar.pack_start(self.back_to_song_button, False, False, 0)
+		self.playlist_info.set_margin_start(3)
 		status_bar.pack_start(self.playlist_info, True, True, 0)
+		audio.set_margin_end(5)
+		audio.set_margin_start(12)
 		status_bar.pack_end(audio, False, False, 0)
 
 		# connect
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 		self.treeview.connect("button-press-event", self.on_button_press_event)
+		self.back_to_song_button.connect("clicked", self.scroll_to_selected_title)
 
 		self.client.emitter.connect("playlist_changed", self.on_playlist_changed)
 		self.client.emitter.connect("current_song_changed", self.on_song_changed)
@@ -2228,7 +2236,7 @@ class PlaylistView(Gtk.Box):
 			self.columns[i].set_visible(visibilities[i])
 			self.treeview.append_column(self.columns[i])
 
-	def scroll_to_selected_title(self):
+	def scroll_to_selected_title(self, *args):
 		treeview, treeiter=self.selection.get_selected()
 		if not treeiter == None:
 			path=treeview.get_path(treeiter)
@@ -2242,7 +2250,7 @@ class PlaylistView(Gtk.Box):
 		else:
 			self.playlist_info.set_text("")
 
-	def refresh_selection(self):  # Gtk.TreePath(len(self.store) is used to generate an invalid TreePath (needed to unset cursor)
+	def refresh_selection(self, scroll=True):  # Gtk.TreePath(len(self.store) is used to generate an invalid TreePath (needed to unset cursor)
 		self.treeview.set_cursor(Gtk.TreePath(len(self.store)), None, False)
 		for row in self.store:  # reset bold text
 			row[9]=Pango.Weight.BOOK
@@ -2251,7 +2259,8 @@ class PlaylistView(Gtk.Box):
 			path=Gtk.TreePath(int(song))
 			self.selection.select_path(path)
 			self.store[path][9]=Pango.Weight.BOLD
-			self.scroll_to_selected_title()
+			if scroll:
+				self.scroll_to_selected_title()
 		except:
 			self.selection.unselect_all()
 
@@ -2328,7 +2337,10 @@ class PlaylistView(Gtk.Box):
 		self.playlist_version=version
 
 	def on_song_changed(self, *args):
-		self.refresh_selection()
+		if self.client.wrapped_call("status")["state"] == "play":
+			self.refresh_selection()
+		else:
+			self.refresh_selection(False)
 
 	def on_disconnected(self, *args):
 		self.clear()
