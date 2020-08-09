@@ -1080,6 +1080,7 @@ class SearchWindow(Gtk.Box):
 		self.play_button.connect("clicked", self.on_play_clicked)
 		self.open_button.connect("clicked", self.on_open_clicked)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
 
 		# packing
 		vbox=Gtk.Box(spacing=6)
@@ -1114,12 +1115,19 @@ class SearchWindow(Gtk.Box):
 		self.search_entry.set_text("")
 		self.tags.remove_all()
 
+	def on_disconnected(self, *args):
+		self.tags.set_sensitive(False)
+		self.search_entry.set_sensitive(False)
+		self.clear()
+
 	def on_reconnected(self, *args):
 		self.tags.append_text("any")
 		for tag in self.client.wrapped_call("tagtypes"):
 			if not tag.startswith("MUSICBRAINZ"):
 				self.tags.append_text(tag)
 		self.tags.set_active(0)
+		self.tags.set_sensitive(True)
+		self.search_entry.set_sensitive(True)
 
 	def on_search_changed(self, widget):
 		self.songs_view.clear()
@@ -1333,7 +1341,8 @@ class GenreSelect(Gtk.ComboBoxText):
 
 		# connect
 		self.changed=self.connect("changed", self.on_changed)
-		self.client.emitter.connect("reconnected", self.refresh)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
 		self.update_signal=self.client.emitter.connect("update", self.refresh)
 
 	def deactivate(self):
@@ -1365,6 +1374,14 @@ class GenreSelect(Gtk.ComboBoxText):
 
 	def on_changed(self, *args):
 		self.emit("genre_changed")
+
+	def on_disconnected(self, *args):
+		self.set_sensitive(False)
+		self.clear()
+
+	def on_reconnected(self, *args):
+		self.refresh()
+		self.set_sensitive(True)
 
 class ArtistView(FocusFrame):
 	def __init__(self, client, settings, genre_select):
@@ -1412,6 +1429,7 @@ class ArtistView(FocusFrame):
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.settings.connect("changed::use-album-artist", self.refresh)
 		self.settings.connect("changed::show-initials", self.on_show_initials_settings_changed)
+		self.client.emitter.connect("disconnected", self.clear)
 		self.client.emitter.connect("reconnected", self.refresh)
 		self.client.emitter.connect("update", self.refresh)
 		self.genre_select.connect("genre_changed", self.refresh)
@@ -1423,7 +1441,7 @@ class ArtistView(FocusFrame):
 	def artists_changed(self):
 		pass
 
-	def clear(self):
+	def clear(self, *args):
 		self.store.clear()
 
 	def refresh(self, *args):
@@ -1688,6 +1706,7 @@ class AlbumView(FocusFrame):
 		self.settings.connect("changed::album-cover", self.on_settings_changed)
 		self.iconview.connect("done", self.on_done)
 		self.client.emitter.connect("update", self.clear)
+		self.client.emitter.connect("disconnected", self.clear)
 		self.genre_select.connect("genre_changed", self.clear)
 		self.settings.connect("changed::use-album-artist", self.clear)
 
@@ -1799,12 +1818,6 @@ class Browser(Gtk.Paned):
 	def save_settings(self):
 		self.settings.set_int("paned1", self.get_position())
 
-	def clear(self, *args):
-		self.genre_select.clear()
-		self.artist_view.clear()
-		self.album_view.clear()
-		self.search.clear()
-
 	def search_started(self):
 		return self.search.started()
 
@@ -1852,14 +1865,11 @@ class Browser(Gtk.Paned):
 	def on_reconnected(self, *args):
 		self.back_to_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
-		self.genre_select.set_sensitive(True)
 
 	def on_disconnected(self, *args):
-		self.clear()
 		self.back_to_album_button.set_sensitive(False)
 		self.search_button.set_active(False)
 		self.search_button.set_sensitive(False)
-		self.genre_select.set_sensitive(False)
 
 	def on_artists_changed(self, *args):
 		self.search_button.set_active(False)
@@ -2207,6 +2217,7 @@ class PlaylistView(Gtk.Box):
 		self.client.emitter.connect("playlist_changed", self.on_playlist_changed)
 		self.client.emitter.connect("current_song_changed", self.on_song_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
 
 		self.settings.connect("changed::column-visibilities", self.load_settings)
 		self.settings.connect("changed::column-permutation", self.load_settings)
@@ -2344,6 +2355,10 @@ class PlaylistView(Gtk.Box):
 
 	def on_disconnected(self, *args):
 		self.clear()
+		self.back_to_song_button.set_sensitive(False)
+
+	def on_reconnected(self, *args):
+		self.back_to_song_button.set_sensitive(True)
 
 class CoverLyricsOSD(Gtk.Overlay):
 	def __init__(self, client, settings, window):
