@@ -1863,6 +1863,7 @@ class Browser(Gtk.Paned):
 			self.stack.set_visible_child_name("albums")
 
 	def on_reconnected(self, *args):
+		self.back_to_album()
 		self.back_to_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
 
@@ -3109,7 +3110,8 @@ class SeekBar(Gtk.Box):
 		self.scale.connect("scroll-event", self.dummy)  # disable mouse wheel
 		self.scale.connect("button-press-event", self.on_scale_button_press_event)
 		self.scale.connect("button-release-event", self.on_scale_button_release_event)
-		self.client.emitter.connect("disconnected", self.disable)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
 		self.client.emitter.connect("state", self.on_state)
 		self.client.emitter.connect("elapsed_changed", self.refresh)
 
@@ -3167,16 +3169,12 @@ class SeekBar(Gtk.Box):
 		self.client.wrapped_call("seekcur", "-"+self.seek_time)
 
 	def enable(self, *args):
-		self.scale.set_sensitive(True)
 		self.scale.set_range(0, 100)
-		self.elapsed_event_box.set_sensitive(True)
-		self.rest_event_box.set_sensitive(True)
+		self.set_sensitive(True)
 
 	def disable(self, *args):
-		self.scale.set_sensitive(False)
+		self.set_sensitive(False)
 		self.scale.set_range(0, 0)
-		self.elapsed_event_box.set_sensitive(False)
-		self.rest_event_box.set_sensitive(False)
 		self.elapsed.set_text("00:00")
 		self.rest.set_text("-00:00")
 
@@ -3207,6 +3205,12 @@ class SeekBar(Gtk.Box):
 			self.elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
 			self.rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
 		self.scale.set_fill_level(fraction)
+
+	def on_reconnected(self, *args):
+		self.enable()
+
+	def on_disconnected(self, *args):
+		self.disable()
 
 class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings):
@@ -3555,10 +3559,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_reconnected(self, *args):
 		self.dbus_service.acquire_name()
-		self.progress.set_sensitive(True)
 		self.control.set_sensitive(True)
 		self.play_opts.set_sensitive(True)
-		self.browser.back_to_album()
 
 	def on_disconnected(self, *args):
 		self.dbus_service.release_name()
@@ -3568,7 +3570,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			self.set_title("mpdevil (not connected)")
 		self.songid_playing=None
-		self.progress.set_sensitive(False)
 		self.control.set_sensitive(False)
 		self.play_opts.set_sensitive(False)
 
