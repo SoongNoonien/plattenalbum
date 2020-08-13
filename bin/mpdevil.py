@@ -1531,6 +1531,12 @@ class AlbumIconView(Gtk.IconView):
 		self.stop_flag=True
 		pass
 
+	def clear(self):
+		self.store.clear()
+		# workaround (scrollbar still visible after clear)
+		self.set_model(None)
+		self.set_model(self.store)
+
 	def tooltip_settings(self, *args):
 		if self.settings.get_boolean("show-album-view-tooltips"):
 			self.set_tooltip_column(3)
@@ -1713,7 +1719,7 @@ class AlbumView(FocusFrame):
 
 	def clear(self, *args):
 		if self.done:
-			self.iconview.store.clear()
+			self.iconview.clear()
 		elif not self.clear in self.pending:
 			self.iconview.stop_flag=True
 			self.pending.append(self.clear)
@@ -3250,6 +3256,8 @@ class PlaybackOptions(Gtk.Box):
 		self.single_changed=self.client.emitter.connect("single", self.single_refresh)
 		self.consume_changed=self.client.emitter.connect("consume", self.consume_refresh)
 		self.volume_changed=self.client.emitter.connect("volume_changed", self.volume_refresh)
+		self.client.emitter.connect("disconnected", self.on_disconnected)
+		self.client.emitter.connect("reconnected", self.on_reconnected)
 		self.settings.connect("changed::icon-size", self.on_icon_size_changed)
 
 		# packing
@@ -3304,6 +3312,17 @@ class PlaybackOptions(Gtk.Box):
 		for icon in self.icons.values():
 			icon.set_pixel_size(pixel_size)
 		self.volume_button.set_property("size", self.settings.get_gtk_icon_size("icon-size"))
+
+	def on_reconnected(self, *args):
+		self.set_sensitive(True)
+
+	def on_disconnected(self, *args):
+		self.set_sensitive(False)
+		self.repeat_refresh(None, False)
+		self.random_refresh(None, False)
+		self.single_refresh(None, False)
+		self.consume_refresh(None, False)
+		self.volume_refresh(None, 0)
 
 #################
 # other dialogs #
@@ -3560,7 +3579,6 @@ class MainWindow(Gtk.ApplicationWindow):
 	def on_reconnected(self, *args):
 		self.dbus_service.acquire_name()
 		self.control.set_sensitive(True)
-		self.play_opts.set_sensitive(True)
 
 	def on_disconnected(self, *args):
 		self.dbus_service.release_name()
@@ -3571,7 +3589,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_title("mpdevil (not connected)")
 		self.songid_playing=None
 		self.control.set_sensitive(False)
-		self.play_opts.set_sensitive(False)
 
 	def on_key_press_event(self, widget, event):
 		ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK)
