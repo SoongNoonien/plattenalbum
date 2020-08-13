@@ -2728,15 +2728,16 @@ class ProfileSettings(Gtk.Grid):
 		self.unblock_entry_changed_handlers()
 
 	def on_add_button_clicked(self, *args):
-		pos=self.profiles_combo.get_active()
-		self.settings.array_append('as', "profiles", "new profile")
+		model=self.profiles_combo.get_model()
+		self.settings.array_append('as', "profiles", "new profile ("+str(len(model))+")")
 		self.settings.array_append('as', "hosts", "localhost")
 		self.settings.array_append('ai', "ports", 6600)
 		self.settings.array_append('as', "passwords", "")
 		self.settings.array_append('as', "paths", "")
 		self.settings.array_append('as', "regex", "")
 		self.profiles_combo_reload()
-		self.profiles_combo.set_active(pos)
+		new_pos=len(model)-1
+		self.profiles_combo.set_active(new_pos)
 
 	def on_delete_button_clicked(self, *args):
 		pos=self.profiles_combo.get_active()
@@ -2750,7 +2751,8 @@ class ProfileSettings(Gtk.Grid):
 			self.on_add_button_clicked()
 		else:
 			self.profiles_combo_reload()
-			self.profiles_combo.set_active(0)	
+			new_pos=max(pos-1,0)
+			self.profiles_combo.set_active(new_pos)
 
 	def on_profile_entry_changed(self, *args):
 		self.gui_modification=True
