@@ -865,8 +865,6 @@ class Client(MPDClient):
 		self.files_to_playlist([song['file'] for song in songs], append, force)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
-		if "group" in args:
-			raise ValueError("'group' is not supported")
 		native_list=self.list(*args)
 		if len(native_list) > 0:
 			if type(native_list[0]) == dict:
