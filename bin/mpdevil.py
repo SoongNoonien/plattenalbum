@@ -1467,6 +1467,18 @@ class ArtistView(FocusFrame):
 				self.store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
+	def select(self, artist):
+		row_num=len(self.store)
+		for i in range(0, row_num):
+			path=Gtk.TreePath(i)
+			if self.store[path][0] == artist:
+				self.treeview.set_cursor(path, None, False)
+				if not self.get_selected_artists() == [artist]:
+					self.treeview.row_activated(path, self.column_name)
+				else:
+					self.treeview.set_cursor(path, None, False)
+				break
+
 	def get_selected_artists(self):
 		artists=[]
 		if self.store[Gtk.TreePath(0)][1] == Pango.Weight.BOLD:
@@ -1529,7 +1541,6 @@ class AlbumIconView(Gtk.IconView):
 	@GObject.Signal
 	def done(self):
 		self.stop_flag=True
-		pass
 
 	def clear(self):
 		self.store.clear()
@@ -1548,20 +1559,20 @@ class AlbumIconView(Gtk.IconView):
 			self.store.set_sort_column_id(5, Gtk.SortType.ASCENDING)
 		else:
 			self.store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
-		return False
 
-	def add_row(self, row):
+	def add_row(self, row):  # needed for GLib.idle
 		self.store.append(row)
-		return False
+		return False  # stop after one run
 
 	def populate(self, artists):
 		self.stop_flag=False
-		# prepare albmus list
 		GLib.idle_add(self.store.clear)
+		# show artist names if all albums are shown
 		if len(artists) > 1:
 			self.set_markup_column(2)
 		else:
 			self.set_markup_column(1)
+		# prepare albmus list (run all mpd related commands)
 		albums=[]
 		genre=self.genre_select.get_value()
 		artist_type=self.settings.get_artist_type()
@@ -1604,13 +1615,16 @@ class AlbumIconView(Gtk.IconView):
 					tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)") % {"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
 				else:
 					tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
+				# album label
 				display_label="<b>"+album["album"]+"</b>"
 				if album["year"] != "":
 					display_label=display_label+" ("+album["year"]+")"
 				display_label_artist=display_label+"\n"+album["artist"]
 				display_label=display_label.replace("&", "&amp;")
 				display_label_artist=display_label_artist.replace("&", "&amp;")
+				# add album
 				GLib.idle_add(self.add_row, [cover, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]])
+				# execute pending events
 				if i%16 == 0:
 					while Gtk.events_pending():
 						Gtk.main_iteration_do(True)
@@ -1620,12 +1634,16 @@ class AlbumIconView(Gtk.IconView):
 
 	def scroll_to_selected_album(self):
 		song=ClientHelper.song_to_first_str_dict(self.client.wrapped_call("currentsong"))
+		try:
+			album=song["album"]
+		except:
+			album=""
 		self.unselect_all()
 		row_num=len(self.store)
 		for i in range(0, row_num):
 			path=Gtk.TreePath(i)
 			treeiter=self.store.get_iter(path)
-			if self.store.get_value(treeiter, 4) == song["album"]:
+			if self.store.get_value(treeiter, 4) == album:
 				self.set_cursor(path, None, False)
 				self.select_path(path)
 				self.scroll_to_path(path, True, 0, 0)
@@ -1825,41 +1843,38 @@ class Browser(Gtk.Paned):
 	def search_started(self):
 		return self.search.started()
 
-	def back_to_album(self, *args):  # TODO
+	def back_to_album(self, *args):
 		def callback():
-			try:  # since this can still be running when the connection is lost, various exceptions can occur
+			try:
 				song=ClientHelper.song_to_first_str_dict(self.client.wrapped_call("currentsong"))
-				try:
-					artist=song[self.settings.get_artist_type()]
-				except:
-					try:
-						artist=song["artist"]
-					except:
-						artist=""
-				try:
-					if not song['genre'] == self.genre_select.get_value():
-						self.genre_select.deactivate()  # deactivate genre filter to show all artists
-				except:
-					self.genre_select.deactivate()  # deactivate genre filter to show all artists
-				if len(self.artist_view.get_selected_artists()) <= 1:
-					row_num=len(self.artist_view.store)
-					for i in range(0, row_num):
-						path=Gtk.TreePath(i)
-						if self.artist_view.store[path][0] == artist:
-							self.artist_view.treeview.set_cursor(path, None, False)
-							if not self.artist_view.get_selected_artists() == [artist]:
-								self.artist_view.treeview.row_activated(path, self.artist_view.column_name)
-							else:
-								self.search_button.set_active(False)
-								self.artist_view.highlight_selected()
-							break
-				else:
-					self.search_button.set_active(False)
-					self.artist_view.treeview.set_cursor(Gtk.TreePath(0), None, False)  # set cursor to 'all artists'
-				self.album_view.scroll_to_selected_album()
+				if song == {}:
+					return False
+			except MPDBase.ConnectionError:
+				return False
+			self.search_button.set_active(False)
+			# get artist name
+			try:
+				artist=song[self.settings.get_artist_type()]
 			except:
-				pass
-		GLib.idle_add(callback)
+				try:
+					artist=song["artist"]
+				except:
+					artist=""
+			# deactivate genre filter to show all artists (if needed)
+			try:
+				if not song['genre'] == self.genre_select.get_value():
+					self.genre_select.deactivate()
+			except:
+				self.genre_select.deactivate()
+			# select artist
+			if len(self.artist_view.get_selected_artists()) <= 1:  # one artist selected
+				self.artist_view.select(artist)
+			else:  # all artists selected
+				self.search_button.set_active(False)
+				self.artist_view.treeview.set_cursor(Gtk.TreePath(0), None, False)  # set cursor to 'all artists'
+			self.album_view.scroll_to_selected_album()
+			return False
+		GLib.idle_add(callback)  # ensure it will be executed even when albums are still loading
 
 	def on_search_toggled(self, widget):
 		if widget.get_active():
