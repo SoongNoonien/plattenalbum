@@ -915,7 +915,8 @@ class Client(MPDClient):
 				self.emitter.emit("update")
 
 			self.last_status=status
-		except MPDBase.ConnectionError:
+		except:  # (MPDBase.ConnectionError, ConnectionResetError) as e:
+			self.disconnect()
 			self.last_status={}
 			self.emitter.emit("disconnected")
 			if self.disconnected_loop():
