@@ -2971,25 +2971,33 @@ class PlaylistSettings(Gtk.Box):
 
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, settings):
-		Gtk.Dialog.__init__(self, title=_("Settings"), transient_for=parent)
-		self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+		use_csd=settings.get_boolean("use-csd")
+		if use_csd:
+			Gtk.Dialog.__init__(self, title=_("Settings"), transient_for=parent, use_header_bar=True)
+			# css
+			style_context=self.get_style_context()
+			provider=Gtk.CssProvider()
+			css=b"""* {-GtkDialog-content-area-border: 0px;}"""
+			provider.load_from_data(css)
+			style_context.add_provider(provider, 800)
+		else:
+			Gtk.Dialog.__init__(self, title=_("Settings"), transient_for=parent)
+			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 		self.set_default_size(500, 400)
 
-		# adding vars
-		self.settings=settings
-
 		# widgets
-		general=GeneralSettings(self.settings)
-		profiles=ProfileSettings(parent, self.settings)
-		playlist=PlaylistSettings(self.settings)
+		general=GeneralSettings(settings)
+		profiles=ProfileSettings(parent, settings)
+		playlist=PlaylistSettings(settings)
 
 		# packing
 		tabs=Gtk.Notebook()
 		tabs.append_page(general, Gtk.Label(label=_("General")))
 		tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 		tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
-		self.vbox.pack_start(tabs, True, True, 0)  # vbox default widget of dialogs
-		self.vbox.set_spacing(3)
+		vbox=self.get_content_area()
+		vbox.set_spacing(3)
+		vbox.pack_start(tabs, True, True, 0)
 
 		self.show_all()
 
@@ -3344,9 +3352,20 @@ class PlaybackOptions(Gtk.Box):
 #################
 
 class ServerStats(Gtk.Dialog):
-	def __init__(self, parent, client):
-		Gtk.Dialog.__init__(self, title=_("Stats"), transient_for=parent)
-		self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+	def __init__(self, parent, client, settings):
+		use_csd=settings.get_boolean("use-csd")
+		if use_csd:
+			Gtk.Dialog.__init__(self, title=_("Stats"), transient_for=parent, use_header_bar=True)
+			# css
+			style_context=self.get_style_context()
+			provider=Gtk.CssProvider()
+			css=b"""* {-GtkDialog-content-area-border: 0px;}"""
+			provider.load_from_data(css)
+			style_context.add_provider(provider, 800)
+		else:
+			Gtk.Dialog.__init__(self, title=_("Stats"), transient_for=parent)
+			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+		self.set_resizable(False)
 
 		# adding vars
 		self.client=client
@@ -3662,7 +3681,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_stats(self, action, param):
 		if self.client.connected():
-			stats=ServerStats(self, self.client)
+			stats=ServerStats(self, self.client, self.settings)
 			stats.destroy()
 
 	def on_update(self, action, param):
