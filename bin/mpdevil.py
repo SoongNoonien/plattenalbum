@@ -804,8 +804,6 @@ class MpdEventEmitter(GObject.Object):
 class Client(MPDClient):
 	def __init__(self, settings):
 		MPDClient.__init__(self)
-		self.settings=settings
-		self.settings.connect("changed::active-profile", self.on_settings_changed)
 
 		# adding vars
 		self.settings=settings
@@ -813,6 +811,9 @@ class Client(MPDClient):
 		self.last_status={}
 
 		self.current_file=None
+
+		#connect
+		self.settings.connect("changed::active-profile", self.on_settings_changed)
 
 	def wrapped_call(self, name, *args):
 		try:
@@ -823,6 +824,7 @@ class Client(MPDClient):
 
 	def start(self):
 		if self.disconnected_loop():
+			self.emitter.emit("disconnected")
 			self.disconnected_timeout_id=GLib.timeout_add(1000, self.disconnected_loop)
 
 	def connected(self):
@@ -905,7 +907,6 @@ class Client(MPDClient):
 						self.emitter.emit(key, True)
 					else:
 						self.emitter.emit(key, False)
-
 			diff=set(self.last_status)-set(status)
 			if "songid" in diff:
 				self.emitter.emit("current_song_changed")
@@ -913,9 +914,8 @@ class Client(MPDClient):
 				self.emitter.emit("volume_changed", 0)
 			if "updating_db" in diff:
 				self.emitter.emit("update")
-
 			self.last_status=status
-		except:  # (MPDBase.ConnectionError, ConnectionResetError) as e:
+		except (MPDBase.ConnectionError, ConnectionResetError) as e:
 			self.disconnect()
 			self.last_status={}
 			self.emitter.emit("disconnected")
@@ -1517,7 +1517,7 @@ class AlbumIconView(Gtk.IconView):
 		self.client=client
 		self.genre_select=genre_select
 		self.window=window
-		self.stop_flag=True
+		self.stop_flag=False
 		self.button_event=(None, None)
 
 		# cover, display_label, display_label_artist, tooltip(titles), album, year, artist
@@ -1541,7 +1541,7 @@ class AlbumIconView(Gtk.IconView):
 
 	@GObject.Signal
 	def done(self):
-		self.stop_flag=True
+		self.stop_flag=False
 
 	def clear(self):
 		self.store.clear()
@@ -1566,7 +1566,6 @@ class AlbumIconView(Gtk.IconView):
 		return False  # stop after one run
 
 	def populate(self, artists):
-		self.stop_flag=False
 		GLib.idle_add(self.store.clear)
 		# show artist names if all albums are shown
 		if len(artists) > 1:
@@ -1743,17 +1742,15 @@ class AlbumView(FocusFrame):
 			self.iconview.stop_flag=True
 			self.pending.append(self.clear)
 
-	def refresh(self, artists):
-		self.artists=artists
+	def refresh(self, artists=[]):
+		if not artists == []:
+			self.artists=artists
 		if self.done:
 			self.done=False
-			self.populate()
-		elif not self.populate in self.pending:
+			self.iconview.populate(self.artists)
+		elif not self.refresh in self.pending:
 			self.iconview.stop_flag=True
-			self.pending.append(self.populate)
-
-	def populate(self):
-		self.iconview.populate(self.artists)
+			self.pending.append(self.refresh)
 
 	def scroll_to_selected_album(self):
 		if self.done:
