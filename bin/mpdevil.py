@@ -2219,34 +2219,23 @@ class PlaylistView(Gtk.Box):
 		self.selection=self.treeview.get_selection()
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
 
-		# Column
+		# Columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 		self.columns=[None, None, None, None, None, None, None, None]
 
 		self.columns[0]=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=9)
-		self.columns[0].set_property("resizable", True)
-
 		self.columns[1]=Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9)
-		self.columns[1].set_property("resizable", True)
-
 		self.columns[2]=Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9)
-		self.columns[2].set_property("resizable", True)
-
 		self.columns[3]=Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9)
-		self.columns[3].set_property("resizable", True)
-
 		self.columns[4]=Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9)
-		self.columns[4].set_property("resizable", True)
-
 		self.columns[5]=Gtk.TreeViewColumn(_("Length"), renderer_text, text=5, weight=9)
-		self.columns[5].set_property("resizable", True)
-
 		self.columns[6]=Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9)
-		self.columns[6].set_property("resizable", True)
-
 		self.columns[7]=Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
-		self.columns[7].set_property("resizable", True)
+
+		for column in self.columns:
+			column.set_property("resizable", True)
+			column.set_min_width(30)
 
 		self.load_settings()
 
