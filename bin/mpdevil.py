@@ -2203,6 +2203,8 @@ class PlaylistView(Gtk.Box):
 		self.back_to_song_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON))
 		self.back_to_song_button.set_tooltip_text(_("Scroll to current song"))
 		self.back_to_song_button.set_relief(Gtk.ReliefStyle.NONE)
+		style_context=self.back_to_song_button.get_style_context()
+		style_context.add_class("circular")
 
 		# Store
 		# (track, disc, title, artist, album, duration, date, genre, file, weight)
