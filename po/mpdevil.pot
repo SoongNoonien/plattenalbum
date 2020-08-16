@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-09 22:22+0200\n"
+"POT-Creation-Date: 2020-08-16 17:01+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,299 +37,317 @@ msgstr ""
 msgid "Unknown Album"
 msgstr ""
 
-#: mpdevil.py:1026 mpdevil.py:1291 mpdevil.py:2145 mpdevil.py:2823
+#: mpdevil.py:1044 mpdevil.py:1347 mpdevil.py:2225 mpdevil.py:2910
 msgid "No"
 msgstr ""
 
-#: mpdevil.py:1031 mpdevil.py:1296 mpdevil.py:2151 mpdevil.py:2823
+#: mpdevil.py:1049 mpdevil.py:1352 mpdevil.py:2231 mpdevil.py:2910
 msgid "Title"
 msgstr ""
 
-#: mpdevil.py:1037 mpdevil.py:1435 mpdevil.py:2154 mpdevil.py:2823
+#: mpdevil.py:1055 mpdevil.py:1502 mpdevil.py:2234 mpdevil.py:2910
 msgid "Artist"
 msgstr ""
 
-#: mpdevil.py:1043 mpdevil.py:2157 mpdevil.py:2823
+#: mpdevil.py:1061 mpdevil.py:2237 mpdevil.py:2910
 msgid "Album"
 msgstr ""
 
-#: mpdevil.py:1049 mpdevil.py:1302 mpdevil.py:2160 mpdevil.py:2823
+#: mpdevil.py:1067 mpdevil.py:1358 mpdevil.py:2240 mpdevil.py:2910
 msgid "Length"
 msgstr ""
 
-#: mpdevil.py:1066
-msgid "Add"
-msgstr ""
-
-#: mpdevil.py:1069
-msgid "Play"
-msgstr ""
-
-#: mpdevil.py:1072
-msgid "Open"
-msgstr ""
-
-#: mpdevil.py:1132
+#: mpdevil.py:1127
 #, python-format
 msgid "hits: %i"
 msgstr ""
 
-#: mpdevil.py:1345
+#: mpdevil.py:1230
+msgid "Append"
+msgstr ""
+
+#: mpdevil.py:1231
+msgid "Add all titles to playlist"
+msgstr ""
+
+#: mpdevil.py:1232
+msgid "Play"
+msgstr ""
+
+#: mpdevil.py:1233
+msgid "Directly play all titles"
+msgstr ""
+
+#: mpdevil.py:1234
+msgid "Enqueue"
+msgstr ""
+
+#: mpdevil.py:1235
+msgid ""
+"Append all titles after the currently playing track and clear the playlist "
+"from all other songs"
+msgstr ""
+
+#: mpdevil.py:1364
+msgid "Close"
+msgstr ""
+
+#: mpdevil.py:1403
 msgid "all genres"
 msgstr ""
 
-#: mpdevil.py:1433
+#: mpdevil.py:1500
 msgid "Album Artist"
 msgstr ""
 
-#: mpdevil.py:1436
+#: mpdevil.py:1503
 msgid "all artists"
 msgstr ""
 
-#: mpdevil.py:1582
+#: mpdevil.py:1665
 #, python-format
 msgid "%(total_tracks)i titles on %(discs)i discs (%(total_length)s)"
 msgstr ""
 
-#: mpdevil.py:1584 mpdevil.py:2249
+#: mpdevil.py:1667 mpdevil.py:2330
 #, python-format
 msgid "%(total_tracks)i titles (%(total_length)s)"
 msgstr ""
 
-#: mpdevil.py:1759
+#: mpdevil.py:1848
 msgid "Back to current album"
 msgstr ""
 
-#: mpdevil.py:1761
+#: mpdevil.py:1850
 msgid "Search"
 msgstr ""
 
-#: mpdevil.py:1938
+#: mpdevil.py:2018
 msgid "searching..."
 msgstr ""
 
-#: mpdevil.py:1942
+#: mpdevil.py:2022
 msgid "lyrics not found"
 msgstr ""
 
-#: mpdevil.py:2010
+#: mpdevil.py:2090
 #, python-format
 msgid ""
 "%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)i bit, %(channels)i "
 "channels, %(file_type)s"
 msgstr ""
 
-#: mpdevil.py:2124
+#: mpdevil.py:2204
 msgid "Scroll to current song"
 msgstr ""
 
-#: mpdevil.py:2148 mpdevil.py:2823
+#: mpdevil.py:2228 mpdevil.py:2910
 msgid "Disc"
 msgstr ""
 
-#: mpdevil.py:2163 mpdevil.py:2823
+#: mpdevil.py:2243 mpdevil.py:2910
 msgid "Year"
 msgstr ""
 
-#: mpdevil.py:2166 mpdevil.py:2823
+#: mpdevil.py:2246 mpdevil.py:2910
 msgid "Genre"
 msgstr ""
 
-#: mpdevil.py:2363
+#: mpdevil.py:2448
 msgid "Show lyrics"
 msgstr ""
 
-#: mpdevil.py:2462
+#: mpdevil.py:2547
 msgid "Main cover size:"
 msgstr ""
 
-#: mpdevil.py:2463
+#: mpdevil.py:2548
 msgid "Album view cover size:"
 msgstr ""
 
-#: mpdevil.py:2464
+#: mpdevil.py:2549
 msgid "Button icon size:"
 msgstr ""
 
-#: mpdevil.py:2474
+#: mpdevil.py:2559
 msgid "Sort albums by:"
 msgstr ""
 
-#: mpdevil.py:2474
+#: mpdevil.py:2559
 msgid "name"
 msgstr ""
 
-#: mpdevil.py:2474
+#: mpdevil.py:2559
 msgid "year"
 msgstr ""
 
-#: mpdevil.py:2475
+#: mpdevil.py:2560
 msgid "Position of playlist:"
 msgstr ""
 
-#: mpdevil.py:2475
+#: mpdevil.py:2560
 msgid "bottom"
 msgstr ""
 
-#: mpdevil.py:2475
+#: mpdevil.py:2560
 msgid "right"
 msgstr ""
 
-#: mpdevil.py:2492
+#: mpdevil.py:2577
 msgid "Use Client-side decoration"
 msgstr ""
 
-#: mpdevil.py:2493
+#: mpdevil.py:2578
 msgid "Show stop button"
 msgstr ""
 
-#: mpdevil.py:2494
+#: mpdevil.py:2579
 msgid "Show lyrics button"
 msgstr ""
 
-#: mpdevil.py:2495
+#: mpdevil.py:2580
 msgid "Show initials in artist view"
 msgstr ""
 
-#: mpdevil.py:2496
+#: mpdevil.py:2581
 msgid "Show tooltips in album view"
 msgstr ""
 
-#: mpdevil.py:2497
+#: mpdevil.py:2582
 msgid "Use 'Album Artist' tag"
 msgstr ""
 
-#: mpdevil.py:2498
+#: mpdevil.py:2583
 msgid "Send notification on title change"
 msgstr ""
 
-#: mpdevil.py:2499
+#: mpdevil.py:2584
 msgid "Stop playback on quit"
 msgstr ""
 
-#: mpdevil.py:2500
+#: mpdevil.py:2585
 msgid "Play selected albums and titles immediately"
 msgstr ""
 
-#: mpdevil.py:2511
+#: mpdevil.py:2596
 msgid "<b>View</b>"
 msgstr ""
 
-#: mpdevil.py:2514
+#: mpdevil.py:2599
 msgid "<b>Behavior</b>"
 msgstr ""
 
-#: mpdevil.py:2545
+#: mpdevil.py:2630
 msgid "(restart required)"
 msgstr ""
 
-#: mpdevil.py:2626
+#: mpdevil.py:2711
 msgid ""
 "The first image in the same directory as the song file matching this regex "
 "will be displayed. %AlbumArtist% and %Album% will be replaced by the "
 "corresponding tags of the song."
 msgstr ""
 
-#: mpdevil.py:2628
+#: mpdevil.py:2713
 msgid "Profile:"
 msgstr ""
 
-#: mpdevil.py:2630
+#: mpdevil.py:2715
 msgid "Name:"
 msgstr ""
 
-#: mpdevil.py:2632
+#: mpdevil.py:2717
 msgid "Host:"
 msgstr ""
 
-#: mpdevil.py:2634
+#: mpdevil.py:2719
 msgid "Password:"
 msgstr ""
 
-#: mpdevil.py:2636
+#: mpdevil.py:2721
 msgid "Music lib:"
 msgstr ""
 
-#: mpdevil.py:2638
+#: mpdevil.py:2723
 msgid "Cover regex:"
 msgstr ""
 
-#: mpdevil.py:2761
+#: mpdevil.py:2848
 msgid "Choose directory"
 msgstr ""
 
-#: mpdevil.py:2795
+#: mpdevil.py:2882
 msgid "Choose the order of information to appear in the playlist:"
 msgstr ""
 
-#: mpdevil.py:2937 mpdevil.py:3447
+#: mpdevil.py:3026 mpdevil.py:3034 mpdevil.py:3569
 msgid "Settings"
 msgstr ""
 
-#: mpdevil.py:2951
+#: mpdevil.py:3045
 msgid "General"
 msgstr ""
 
-#: mpdevil.py:2952
+#: mpdevil.py:3046
 msgid "Profiles"
 msgstr ""
 
-#: mpdevil.py:2953
+#: mpdevil.py:3047
 msgid "Playlist"
 msgstr ""
 
-#: mpdevil.py:3212
+#: mpdevil.py:3310
 msgid "Random mode"
 msgstr ""
 
-#: mpdevil.py:3214
+#: mpdevil.py:3312
 msgid "Repeat mode"
 msgstr ""
 
-#: mpdevil.py:3216
+#: mpdevil.py:3314
 msgid "Single mode"
 msgstr ""
 
-#: mpdevil.py:3218
+#: mpdevil.py:3316
 msgid "Consume mode"
 msgstr ""
 
-#: mpdevil.py:3295
+#: mpdevil.py:3408 mpdevil.py:3416
 msgid "Stats"
 msgstr ""
 
-#: mpdevil.py:3348
+#: mpdevil.py:3470
 msgid "A small MPD client written in python"
 msgstr ""
 
-#: mpdevil.py:3440
+#: mpdevil.py:3562
 msgid "Select profile"
 msgstr ""
 
-#: mpdevil.py:3448
+#: mpdevil.py:3570
 msgid "Help"
 msgstr ""
 
-#: mpdevil.py:3449
+#: mpdevil.py:3571
 msgid "About"
 msgstr ""
 
-#: mpdevil.py:3450
+#: mpdevil.py:3572
 msgid "Quit"
 msgstr ""
 
-#: mpdevil.py:3453
+#: mpdevil.py:3575
 msgid "Save window layout"
 msgstr ""
 
-#: mpdevil.py:3454
+#: mpdevil.py:3576
 msgid "Update database"
 msgstr ""
 
-#: mpdevil.py:3455
+#: mpdevil.py:3577
 msgid "Server stats"
 msgstr ""
 
-#: mpdevil.py:3461
+#: mpdevil.py:3583
 msgid "Menu"
 msgstr ""

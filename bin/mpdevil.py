@@ -837,19 +837,21 @@ class Client(MPDClient):
 	def on_settings_changed(self, *args):
 		self.disconnect()
 
-	def files_to_playlist(self, files, append, force=False):
-		if append:
+	def files_to_playlist(self, files, mode="default"):  # modes: default, play, append, enqueue
+		def append(files):
 			for f in files:
 				self.add(f)
-		else:
-			if self.settings.get_boolean("force-mode") or force or self.status()["state"] == "stop":
-				if not files == []:
-					self.clear()
-					for f in files:
-						self.add(f)
-					self.play()
+		def play(files):
+			if not files == []:
+				self.clear()
+				for f in files:
+					self.add(f)
+				self.play()
+		def enqueue(files):
+			status=self.status()
+			if status["state"] == "stop":
+				play(files)
 			else:
-				status=self.status()
 				self.moveid(status["songid"], 0)
 				current_song_file=self.playlistinfo()[0]["file"]
 				try:
@@ -861,10 +863,21 @@ class Client(MPDClient):
 						self.add(f)
 					else:
 						self.move(0, (len(self.playlistinfo())-1))
+		if mode == "append":
+			append(files)
+		elif mode == "enqueue":
+			enqueue(files)
+		elif mode == "play":
+			play(files)
+		elif mode == "default":
+			if self.settings.get_boolean("force-mode"):
+				play(files)
+			else:
+				enqueue(files)
 
-	def album_to_playlist(self, album, artist, year, append, force=False):
+	def album_to_playlist(self, album, artist, year, mode="default"):
 		songs=self.find("album", album, "date", year, self.settings.get_artist_type(), artist)
-		self.files_to_playlist([song['file'] for song in songs], append, force)
+		self.files_to_playlist([song['file'] for song in songs], mode)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
@@ -1009,14 +1022,20 @@ class SearchWindow(Gtk.Box):
 		# label
 		self.label=Gtk.Label()
 		self.label.set_xalign(1)
-		self.label.set_margin_end(6)
 
 		# store
 		# (track, title, artist, album, duration, file)
 		self.store=Gtk.ListStore(int, str, str, str, str, str)
 
+		# songs window
+		self.songs_window=SongsWindow(self.client, self.store, 5)
+
+		# action bar
+		self.action_bar=self.songs_window.get_actionbar()
+		self.action_bar.set_sensitive(False)
+
 		# songs view
-		self.songs_view=SongsView(self.client, self.store, 5)
+		self.songs_view=self.songs_window.get_treeview()
 
 		# columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
@@ -1056,52 +1075,21 @@ class SearchWindow(Gtk.Box):
 		self.column_album.set_sort_column_id(3)
 		self.column_time.set_sort_column_id(4)
 
-		# scroll
-		scroll=Gtk.ScrolledWindow()
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self.songs_view)
-
-		# buttons
-		self.add_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_ADD), label=_("Add"))
-		self.add_button.set_sensitive(False)
-		self.add_button.set_relief(Gtk.ReliefStyle.NONE)
-		self.play_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_MEDIA_PLAY), label=_("Play"))
-		self.play_button.set_sensitive(False)
-		self.play_button.set_relief(Gtk.ReliefStyle.NONE)
-		self.open_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_OPEN), label=_("Open"))
-		self.open_button.set_sensitive(False)
-		self.open_button.set_relief(Gtk.ReliefStyle.NONE)
-
 		# connect
 		self.search_entry.connect("search-changed", self.on_search_changed)
 		self.tags.connect("changed", self.on_search_changed)
-		self.add_button.connect("clicked", self.on_add_clicked)
-		self.play_button.connect("clicked", self.on_play_clicked)
-		self.open_button.connect("clicked", self.on_open_clicked)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 
 		# packing
-		vbox=Gtk.Box(spacing=6)
-		vbox.set_property("border-width", 6)
-		vbox.pack_start(self.search_entry, True, True, 0)
-		vbox.pack_end(self.tags, False, False, 0)
-		frame=FocusFrame()
-		frame.set_widget(self.songs_view)
-		frame.add(scroll)
-		ButtonBox=Gtk.ButtonBox(spacing=1)
-		ButtonBox.set_property("border-width", 1)
-		ButtonBox.pack_start(self.add_button, True, True, 0)
-		ButtonBox.pack_start(self.play_button, True, True, 0)
-		ButtonBox.pack_start(self.open_button, True, True, 0)
-		hbox=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-		hbox.pack_start(ButtonBox, 0, False, False)
-		hbox.pack_end(self.label, 0, False, False)
-		self.pack_start(vbox, False, False, 0)
-		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		self.pack_start(frame, True, True, 0)
-		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		hbox=Gtk.Box(spacing=6)
+		hbox.set_property("border-width", 6)
+		hbox.pack_start(self.search_entry, True, True, 0)
+		hbox.pack_end(self.tags, False, False, 0)
+		self.action_bar.pack_end(self.label)
 		self.pack_start(hbox, False, False, 0)
+		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		self.pack_start(self.songs_window, True, True, 0)
 
 	def start(self):
 		self.search_entry.grab_focus()
@@ -1138,22 +1126,9 @@ class SearchWindow(Gtk.Box):
 				self.store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
 			self.label.set_text(_("hits: %i") % (self.songs_view.count()))
 		if self.songs_view.count() == 0:
-			self.add_button.set_sensitive(False)
-			self.play_button.set_sensitive(False)
-			self.open_button.set_sensitive(False)
+			self.action_bar.set_sensitive(False)
 		else:
-			self.add_button.set_sensitive(True)
-			self.play_button.set_sensitive(True)
-			self.open_button.set_sensitive(True)
-
-	def on_add_clicked(self, *args):
-		self.client.wrapped_call("files_to_playlist", self.songs_view.get_files(), True)
-
-	def on_play_clicked(self, *args):
-		self.client.wrapped_call("files_to_playlist", self.songs_view.get_files(), False, True)
-
-	def on_open_clicked(self, *args):
-		self.client.wrapped_call("files_to_playlist", self.songs_view.get_files(), False)
+			self.action_bar.set_sensitive(True)
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
@@ -1177,19 +1152,19 @@ class SongsView(Gtk.TreeView):
 		self.key_press_event=self.connect("key-press-event", self.on_key_press_event)
 
 	def on_row_activated(self, widget, path, view_column):
-		self.client.wrapped_call("files_to_playlist", [self.store[path][self.file_column_id]], False, True)
+		self.client.wrapped_call("files_to_playlist", [self.store[path][self.file_column_id]], "play")
 
 	def on_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				self.client.wrapped_call("files_to_playlist", [self.store[path][self.file_column_id]], False)
+				self.client.wrapped_call("files_to_playlist", [self.store[path][self.file_column_id]])
 			except:
 				pass
 		elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				self.client.wrapped_call("files_to_playlist", [self.store[path][self.file_column_id]], True)
+				self.client.wrapped_call("files_to_playlist", [self.store[path][self.file_column_id]], "append")
 			except:
 				pass
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -1207,11 +1182,11 @@ class SongsView(Gtk.TreeView):
 		if event.keyval == 112:  # p
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
-				self.client.wrapped_call("files_to_playlist", [self.store.get_value(treeiter, self.file_column_id)], False)
+				self.client.wrapped_call("files_to_playlist", [self.store.get_value(treeiter, self.file_column_id)])
 		elif event.keyval == 97:  # a
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
-				self.client.wrapped_call("files_to_playlist", [self.store.get_value(treeiter, self.file_column_id)], True)
+				self.client.wrapped_call("files_to_playlist", [self.store.get_value(treeiter, self.file_column_id)], "append")
 		elif event.keyval == 65383:  # menu key
 			treeview, treeiter=self.selection.get_selected()
 			if not treeiter == None:
@@ -1235,10 +1210,81 @@ class SongsView(Gtk.TreeView):
 			return_list.append(row[self.file_column_id])
 		return return_list
 
+class SongsWindow(Gtk.Box):
+	def __init__(self, client, store, file_column_id):
+		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
+
+		# adding vars
+		self.client=client
+		self.store=store
+
+		# treeview
+		self.songs_view=SongsView(client, store, file_column_id)
+
+		# scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		scroll.add(self.songs_view)
+
+		# buttons
+		self.append_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-add", Gtk.IconSize.BUTTON), label=_("Append"))
+		self.append_button.set_tooltip_text(_("Add all titles to playlist"))
+		self.play_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start", Gtk.IconSize.BUTTON), label=_("Play"))
+		self.play_button.set_tooltip_text(_("Directly play all titles"))
+		self.enqueue_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("insert-object", Gtk.IconSize.BUTTON), label=_("Enqueue"))
+		self.enqueue_button.set_tooltip_text(_("Append all titles after the currently playing track and clear the playlist from all other songs"))
+
+		# button box
+		button_box=Gtk.ButtonBox()
+		button_box.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
+
+		# action bar
+		self.action_bar=Gtk.ActionBar()
+
+		# connect
+		self.append_button.connect("clicked", self.on_append_button_clicked)
+		self.play_button.connect("clicked", self.on_play_button_clicked)
+		self.enqueue_button.connect("clicked", self.on_enqueue_button_clicked)
+
+		# packing
+		frame=FocusFrame()
+		frame.set_widget(self.songs_view)
+		frame.add(scroll)
+		self.pack_start(frame, True, True, 0)
+		button_box.pack_start(self.append_button, True, True, 0)
+		button_box.pack_start(self.play_button, True, True, 0)
+		button_box.pack_start(self.enqueue_button, True, True, 0)
+		self.action_bar.pack_start(button_box)
+		self.pack_start(self.action_bar, False, False, 0)
+
+	def get_treeview(self):
+		return self.songs_view
+
+	def get_actionbar(self):
+		return self.action_bar
+
+	def on_append_button_clicked(self, *args):
+		self.client.wrapped_call("files_to_playlist", self.songs_view.get_files(), "append")
+
+	def on_play_button_clicked(self, *args):
+		self.client.wrapped_call("files_to_playlist", self.songs_view.get_files(), "play")
+
+	def on_enqueue_button_clicked(self, *args):
+		self.client.wrapped_call("files_to_playlist", self.songs_view.get_files(), "enqueue")
+
 class AlbumDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, album, artist, year):
-		Gtk.Dialog.__init__(self, transient_for=parent)
-		self.add_buttons(Gtk.STOCK_ADD, Gtk.ResponseType.ACCEPT, Gtk.STOCK_MEDIA_PLAY, Gtk.ResponseType.YES, Gtk.STOCK_OPEN, Gtk.ResponseType.OK, Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+		use_csd=settings.get_boolean("use-csd")
+		if use_csd:
+			Gtk.Dialog.__init__(self, transient_for=parent, use_header_bar=True)
+			# css
+			style_context=self.get_style_context()
+			provider=Gtk.CssProvider()
+			css=b"""* {-GtkDialog-content-area-border: 0px;}"""
+			provider.load_from_data(css)
+			style_context.add_provider(provider, 800)
+		else:
+			Gtk.Dialog.__init__(self, transient_for=parent)
 
 		# metadata
 		self.album=album
@@ -1267,9 +1313,6 @@ class AlbumDialog(Gtk.Dialog):
 		# store
 		# (track, title (artist), duration, file)
 		self.store=Gtk.ListStore(int, str, str, str)
-
-		# songs view
-		self.songs_view=SongsView(self.client, self.store, 3)
 		for s in songs:
 			song=ClientHelper.extend_song_for_display(s)
 			if type(song["title"]) == list:  # could be impossible
@@ -1291,6 +1334,12 @@ class AlbumDialog(Gtk.Dialog):
 			title_artist=title_artist.replace("&", "&amp;")
 			self.store.append([int(song["track"]), title_artist, song["human_duration"], song["file"]])
 
+		# songs window
+		self.songs_window=SongsWindow(self.client, self.store, 3)
+
+		# songs view
+		self.songs_view=self.songs_window.get_treeview()
+
 		# columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
@@ -1311,24 +1360,25 @@ class AlbumDialog(Gtk.Dialog):
 		self.column_time.set_property("resizable", False)
 		self.songs_view.append_column(self.column_time)
 
-		# scroll
-		scroll=Gtk.ScrolledWindow()
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self.songs_view)
+		# close button
+		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close", Gtk.IconSize.BUTTON), label=_("Close"))
+
+		# action bar
+		action_bar=self.songs_window.get_actionbar()
+		action_bar.pack_end(close_button)
+
+		# connect
+		close_button.connect("clicked", self.on_close_button_clicked)
 
 		# packing
-		self.vbox.pack_start(scroll, True, True, 0)  # vbox default widget of dialogs
-		self.vbox.set_spacing(3)
+		self.vbox.pack_start(self.songs_window, True, True, 0)  # vbox default widget of dialogs
 		self.show_all()
 
 	def open(self):
 		response=self.run()
-		if response == Gtk.ResponseType.OK:
-			self.client.wrapped_call("album_to_playlist", self.album, self.artist, self.year, False)
-		elif response == Gtk.ResponseType.ACCEPT:
-			self.client.wrapped_call("album_to_playlist", self.album, self.artist, self.year, True)
-		elif response == Gtk.ResponseType.YES:
-			self.client.wrapped_call("album_to_playlist", self.album, self.artist, self.year, False, True)
+
+	def on_close_button_clicked(self, *args):
+		self.destroy()
 
 class GenreSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings):
@@ -1649,11 +1699,11 @@ class AlbumIconView(Gtk.IconView):
 				self.scroll_to_path(path, True, 0, 0)
 				break
 
-	def path_to_playlist(self, path, add, force=False):
+	def path_to_playlist(self, path, mode="default"):
 		album=self.store[path][4]
 		year=self.store[path][5]
 		artist=self.store[path][6]
-		self.client.wrapped_call("album_to_playlist", album, artist, year, add, force)
+		self.client.wrapped_call("album_to_playlist", album, artist, year, mode)
 
 	def open_album_dialog(self, path):
 		if self.client.connected():
@@ -1674,9 +1724,9 @@ class AlbumIconView(Gtk.IconView):
 		if not path == None:
 			if self.button_event == (event.button, path):
 				if event.button == 1 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self.path_to_playlist(path, False)
+					self.path_to_playlist(path)
 				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self.path_to_playlist(path, True)
+					self.path_to_playlist(path, "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					self.open_album_dialog(path)
 
@@ -1685,11 +1735,11 @@ class AlbumIconView(Gtk.IconView):
 		if event.keyval == 112:  # p
 			paths=self.get_selected_items()
 			if not len(paths) == 0:
-				self.path_to_playlist(paths[0], False)
+				self.path_to_playlist(paths[0])
 		elif event.keyval == 97:  # a
 			paths=self.get_selected_items()
 			if not len(paths) == 0:
-				self.path_to_playlist(paths[0], True)
+				self.path_to_playlist(paths[0], "append")
 		elif event.keyval == 65383:  # menu key
 			paths=self.get_selected_items()
 			if not len(paths) == 0:
@@ -1701,7 +1751,7 @@ class AlbumIconView(Gtk.IconView):
 		selected_album=self.store.get_value(treeiter, 4)
 		selected_album_year=self.store.get_value(treeiter, 5)
 		selected_artist=self.store.get_value(treeiter, 6)
-		self.client.wrapped_call("album_to_playlist", selected_album, selected_artist, selected_album_year, False, True)
+		self.client.wrapped_call("album_to_playlist", selected_album, selected_artist, selected_album_year, "play")
 
 class AlbumView(FocusFrame):
 	def __init__(self, client, settings, genre_select, window):
@@ -2126,9 +2176,9 @@ class MainCover(Gtk.Frame):
 				except:
 					album_year=""
 				if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-					self.client.wrapped_call("album_to_playlist", album, artist, album_year, False)
+					self.client.wrapped_call("album_to_playlist", album, artist, album_year)
 				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-					self.client.wrapped_call("album_to_playlist", album, artist, album_year, True)
+					self.client.wrapped_call("album_to_playlist", album, artist, album_year, "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 					album_dialog=AlbumDialog(self.window, self.client, self.settings, album, artist, album_year)
 					album_dialog.open()
