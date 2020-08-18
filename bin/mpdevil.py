@@ -1278,14 +1278,18 @@ class AlbumDialog(Gtk.Dialog):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
 			Gtk.Dialog.__init__(self, transient_for=parent, use_header_bar=True)
-			# css
-			style_context=self.get_style_context()
-			provider=Gtk.CssProvider()
-			css=b"""* {-GtkDialog-content-area-border: 0px;}"""
-			provider.load_from_data(css)
-			style_context.add_provider(provider, 800)
 		else:
 			Gtk.Dialog.__init__(self, transient_for=parent)
+
+		# css
+		style_context=self.get_style_context()
+		provider=Gtk.CssProvider()
+		if use_csd:
+			css=b"""* {-GtkDialog-content-area-border: 0px;}"""
+		else:
+			css=b"""* {-GtkDialog-action-area-border: 0px;}"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
 
 		# metadata
 		self.album=album
