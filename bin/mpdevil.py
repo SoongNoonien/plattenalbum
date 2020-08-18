@@ -1820,8 +1820,10 @@ class AlbumView(FocusFrame):
 				pass
 
 	def on_settings_changed(self, *args):
-		if self.done:
+		def callback():
 			self.refresh(self.artists)
+			return False
+		GLib.idle_add(callback)
 
 class Browser(Gtk.Paned):
 	def __init__(self, client, settings, window):
