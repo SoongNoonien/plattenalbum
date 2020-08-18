@@ -1839,7 +1839,7 @@ class Browser(Gtk.Paned):
 		if self.use_csd:
 			self.icon_size=0
 		else:
-			self.icon_size=self.settings.get_int("icon-size")
+			self.icon_size=self.settings.get_int("icon-size-sec")
 
 		# widgets
 		self.icons={}
@@ -1861,7 +1861,7 @@ class Browser(Gtk.Paned):
 		self.search_button.connect("toggled", self.on_search_toggled)
 		self.artist_view.connect("artists_changed", self.on_artists_changed)
 		if not self.use_csd:
-			self.settings.connect("changed::icon-size", self.on_icon_size_changed)
+			self.settings.connect("changed::icon-size-sec", self.on_icon_size_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
 
@@ -1950,7 +1950,7 @@ class Browser(Gtk.Paned):
 		self.album_view.refresh(artists)
 
 	def on_icon_size_changed(self, *args):
-		pixel_size=self.settings.get_int("icon-size")
+		pixel_size=self.settings.get_int("icon-size-sec")
 		for icon in self.icons.values():
 			icon.set_pixel_size(pixel_size)
 
@@ -2201,12 +2201,18 @@ class PlaylistView(Gtk.Box):
 		self.client=client
 		self.settings=settings
 		self.playlist_version=None
+		self.icon_size=self.settings.get_int("icon-size-sec")
 
 		# buttons
-		self.back_to_song_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON))
+		self.icons={}
+		icons_data=["go-previous-symbolic", "edit-clear-symbolic"]
+		for data in icons_data:
+			self.icons[data]=PixelSizedIcon(data, self.icon_size)
+
+		self.back_to_song_button=Gtk.Button(image=self.icons["go-previous-symbolic"])
 		self.back_to_song_button.set_tooltip_text(_("Scroll to current song"))
 		self.back_to_song_button.set_relief(Gtk.ReliefStyle.NONE)
-		self.clear_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("edit-clear-symbolic", Gtk.IconSize.BUTTON))
+		self.clear_button=Gtk.Button(image=self.icons["edit-clear-symbolic"])
 		self.clear_button.set_tooltip_text(_("Clear playlist"))
 		self.clear_button.set_relief(Gtk.ReliefStyle.NONE)
 		style_context=self.clear_button.get_style_context()
@@ -2289,6 +2295,7 @@ class PlaylistView(Gtk.Box):
 
 		self.settings.connect("changed::column-visibilities", self.load_settings)
 		self.settings.connect("changed::column-permutation", self.load_settings)
+		self.settings.connect("changed::icon-size-sec", self.on_icon_size_changed)
 
 		# packing
 		self.pack_start(frame, True, True, 0)
@@ -2432,6 +2439,11 @@ class PlaylistView(Gtk.Box):
 		self.back_to_song_button.set_sensitive(True)
 		self.clear_button.set_sensitive(True)
 
+	def on_icon_size_changed(self, *args):
+		pixel_size=self.settings.get_int("icon-size-sec")
+		for icon in self.icons.values():
+			icon.set_pixel_size(pixel_size)
+
 class CoverLyricsOSD(Gtk.Overlay):
 	def __init__(self, client, settings, window):
 		Gtk.Overlay.__init__(self)
@@ -2548,7 +2560,8 @@ class GeneralSettings(Gtk.Box):
 		int_settings={}
 		int_settings_data=[(_("Main cover size:"), (100, 1200, 10), "track-cover"),\
 				(_("Album view cover size:"), (50, 600, 10), "album-cover"),\
-				(_("Button icon size:"), (16, 64, 2), "icon-size")]
+				(_("Action bar icon size:"), (16, 64, 2), "icon-size"),\
+				(_("Secondary icon size:"), (16, 64, 2), "icon-size-sec")]
 		for data in int_settings_data:
 			int_settings[data[2]]=(Gtk.Label(), IntEntry(self.settings.get_int(data[2]), data[1][0], data[1][1], data[1][2]))
 			int_settings[data[2]][0].set_label(data[0])
@@ -2609,10 +2622,12 @@ class GeneralSettings(Gtk.Box):
 		view_grid.add(int_settings["track-cover"][0])
 		view_grid.attach_next_to(int_settings["album-cover"][0], int_settings["track-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size"][0], int_settings["album-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
-		view_grid.attach_next_to(combo_settings["playlist-right"][0], int_settings["icon-size"][0], Gtk.PositionType.BOTTOM, 1, 1)
+		view_grid.attach_next_to(int_settings["icon-size-sec"][0], int_settings["icon-size"][0], Gtk.PositionType.BOTTOM, 1, 1)
+		view_grid.attach_next_to(combo_settings["playlist-right"][0], int_settings["icon-size-sec"][0], Gtk.PositionType.BOTTOM, 1, 1)
 		view_grid.attach_next_to(int_settings["track-cover"][1], int_settings["track-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(int_settings["album-cover"][1], int_settings["album-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size"][1], int_settings["icon-size"][0], Gtk.PositionType.RIGHT, 1, 1)
+		view_grid.attach_next_to(int_settings["icon-size-sec"][1], int_settings["icon-size-sec"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(combo_settings["playlist-right"][1], combo_settings["playlist-right"][0], Gtk.PositionType.RIGHT, 1, 1)
 
 		# behavior grid
