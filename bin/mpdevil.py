@@ -2209,14 +2209,21 @@ class PlaylistView(Gtk.Box):
 		for data in icons_data:
 			self.icons[data]=PixelSizedIcon(data, self.icon_size)
 
+		provider=Gtk.CssProvider()
+		css=b"""* {min-height: 8px;}"""  # allow further shrinking
+		provider.load_from_data(css)
+
 		self.back_to_song_button=Gtk.Button(image=self.icons["go-previous-symbolic"])
 		self.back_to_song_button.set_tooltip_text(_("Scroll to current song"))
 		self.back_to_song_button.set_relief(Gtk.ReliefStyle.NONE)
+		style_context=self.back_to_song_button.get_style_context()
+		style_context.add_provider(provider, 800)
 		self.clear_button=Gtk.Button(image=self.icons["edit-clear-symbolic"])
 		self.clear_button.set_tooltip_text(_("Clear playlist"))
 		self.clear_button.set_relief(Gtk.ReliefStyle.NONE)
 		style_context=self.clear_button.get_style_context()
 		style_context.add_class("destructive-action")
+		style_context.add_provider(provider, 800)
 
 		# Store
 		# (track, disc, title, artist, album, duration, date, genre, file, weight)
