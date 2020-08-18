@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-16 17:01+0200\n"
+"POT-Creation-Date: 2020-08-18 11:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,119 +37,123 @@ msgstr ""
 msgid "Unknown Album"
 msgstr ""
 
-#: mpdevil.py:1044 mpdevil.py:1347 mpdevil.py:2225 mpdevil.py:2910
+#: mpdevil.py:1044 mpdevil.py:1348 mpdevil.py:2231 mpdevil.py:2910
 msgid "No"
 msgstr ""
 
-#: mpdevil.py:1049 mpdevil.py:1352 mpdevil.py:2231 mpdevil.py:2910
+#: mpdevil.py:1049 mpdevil.py:1353 mpdevil.py:2233 mpdevil.py:2910
 msgid "Title"
 msgstr ""
 
-#: mpdevil.py:1055 mpdevil.py:1502 mpdevil.py:2234 mpdevil.py:2910
+#: mpdevil.py:1055 mpdevil.py:1503 mpdevil.py:2234 mpdevil.py:2910
 msgid "Artist"
 msgstr ""
 
-#: mpdevil.py:1061 mpdevil.py:2237 mpdevil.py:2910
+#: mpdevil.py:1061 mpdevil.py:2235 mpdevil.py:2910
 msgid "Album"
 msgstr ""
 
-#: mpdevil.py:1067 mpdevil.py:1358 mpdevil.py:2240 mpdevil.py:2910
+#: mpdevil.py:1067 mpdevil.py:1359 mpdevil.py:2236 mpdevil.py:2910
 msgid "Length"
 msgstr ""
 
-#: mpdevil.py:1127
+#: mpdevil.py:1128
 #, python-format
-msgid "hits: %i"
-msgstr ""
-
-#: mpdevil.py:1230
-msgid "Append"
+msgid "%i hits"
 msgstr ""
 
 #: mpdevil.py:1231
-msgid "Add all titles to playlist"
+msgid "Append"
 msgstr ""
 
 #: mpdevil.py:1232
-msgid "Play"
+msgid "Add all titles to playlist"
 msgstr ""
 
 #: mpdevil.py:1233
-msgid "Directly play all titles"
+msgid "Play"
 msgstr ""
 
 #: mpdevil.py:1234
-msgid "Enqueue"
+msgid "Directly play all titles"
 msgstr ""
 
 #: mpdevil.py:1235
+msgid "Enqueue"
+msgstr ""
+
+#: mpdevil.py:1236
 msgid ""
 "Append all titles after the currently playing track and clear the playlist "
 "from all other songs"
 msgstr ""
 
-#: mpdevil.py:1364
+#: mpdevil.py:1365
 msgid "Close"
 msgstr ""
 
-#: mpdevil.py:1403
+#: mpdevil.py:1404
 msgid "all genres"
 msgstr ""
 
-#: mpdevil.py:1500
+#: mpdevil.py:1501
 msgid "Album Artist"
 msgstr ""
 
-#: mpdevil.py:1503
+#: mpdevil.py:1504
 msgid "all artists"
 msgstr ""
 
-#: mpdevil.py:1665
+#: mpdevil.py:1666
 #, python-format
 msgid "%(total_tracks)i titles on %(discs)i discs (%(total_length)s)"
 msgstr ""
 
-#: mpdevil.py:1667 mpdevil.py:2330
+#: mpdevil.py:1668 mpdevil.py:2325
 #, python-format
 msgid "%(total_tracks)i titles (%(total_length)s)"
 msgstr ""
 
-#: mpdevil.py:1848
+#: mpdevil.py:1849
 msgid "Back to current album"
 msgstr ""
 
-#: mpdevil.py:1850
+#: mpdevil.py:1851
 msgid "Search"
 msgstr ""
 
-#: mpdevil.py:2018
+#: mpdevil.py:2019
 msgid "searching..."
 msgstr ""
 
-#: mpdevil.py:2022
+#: mpdevil.py:2023
 msgid "lyrics not found"
 msgstr ""
 
-#: mpdevil.py:2090
+#: mpdevil.py:2091
 #, python-format
 msgid ""
 "%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)i bit, %(channels)i "
 "channels, %(file_type)s"
 msgstr ""
 
-#: mpdevil.py:2204
+#: mpdevil.py:2205
 msgid "Scroll to current song"
 msgstr ""
 
-#: mpdevil.py:2228 mpdevil.py:2910
+#: mpdevil.py:2208
+msgid "Clear playlist"
+msgstr ""
+
+#: mpdevil.py:2232 mpdevil.py:2910
 msgid "Disc"
 msgstr ""
 
-#: mpdevil.py:2243 mpdevil.py:2910
+#: mpdevil.py:2237 mpdevil.py:2910
 msgid "Year"
 msgstr ""
 
-#: mpdevil.py:2246 mpdevil.py:2910
+#: mpdevil.py:2238 mpdevil.py:2910
 msgid "Genre"
 msgstr ""
 

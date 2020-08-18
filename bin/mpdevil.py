@@ -1086,6 +1086,7 @@ class SearchWindow(Gtk.Box):
 		hbox.set_property("border-width", 6)
 		hbox.pack_start(self.search_entry, True, True, 0)
 		hbox.pack_end(self.tags, False, False, 0)
+		self.label.set_margin_end(6)
 		self.action_bar.pack_end(self.label)
 		self.pack_start(hbox, False, False, 0)
 		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
@@ -1124,7 +1125,7 @@ class SearchWindow(Gtk.Box):
 			for s in songs:
 				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
 				self.store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
-			self.label.set_text(_("hits: %i") % (self.songs_view.count()))
+			self.label.set_text(_("%i hits") % (self.songs_view.count()))
 		if self.songs_view.count() == 0:
 			self.action_bar.set_sensitive(False)
 		else:
@@ -2203,8 +2204,11 @@ class PlaylistView(Gtk.Box):
 		self.back_to_song_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON))
 		self.back_to_song_button.set_tooltip_text(_("Scroll to current song"))
 		self.back_to_song_button.set_relief(Gtk.ReliefStyle.NONE)
-		style_context=self.back_to_song_button.get_style_context()
-		style_context.add_class("circular")
+		self.clear_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("edit-clear-symbolic", Gtk.IconSize.BUTTON))
+		self.clear_button.set_tooltip_text(_("Clear playlist"))
+		self.clear_button.set_relief(Gtk.ReliefStyle.NONE)
+		style_context=self.clear_button.get_style_context()
+		style_context.add_class("destructive-action")
 
 		# Store
 		# (track, disc, title, artist, album, duration, date, genre, file, weight)
@@ -2259,21 +2263,22 @@ class PlaylistView(Gtk.Box):
 		self.playlist_info.set_xalign(0)
 		self.playlist_info.set_ellipsize(Pango.EllipsizeMode.END)
 
-		# status bar
-		status_bar=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-		status_bar.set_property("border-width", 1)
-		status_bar.pack_start(self.back_to_song_button, False, False, 0)
+		# action bar
+		action_bar=Gtk.ActionBar()
+		action_bar.pack_start(self.back_to_song_button)
 		self.playlist_info.set_margin_start(3)
-		status_bar.pack_start(self.playlist_info, True, True, 0)
-		audio.set_margin_end(5)
+		action_bar.pack_start(self.playlist_info)
+		audio.set_margin_end(3)
 		audio.set_margin_start(12)
-		status_bar.pack_end(audio, False, False, 0)
+		action_bar.pack_end(self.clear_button)
+		action_bar.pack_end(audio)
 
 		# connect
 		self.treeview.connect("row-activated", self.on_row_activated)
 		self.key_press_event=self.treeview.connect("key-press-event", self.on_key_press_event)
 		self.treeview.connect("button-press-event", self.on_button_press_event)
 		self.back_to_song_button.connect("clicked", self.scroll_to_selected_title)
+		self.clear_button.connect("clicked", self.on_clear_button_clicked)
 
 		self.client.emitter.connect("playlist_changed", self.on_playlist_changed)
 		self.client.emitter.connect("current_song_changed", self.on_song_changed)
@@ -2285,8 +2290,7 @@ class PlaylistView(Gtk.Box):
 
 		# packing
 		self.pack_start(frame, True, True, 0)
-		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		self.pack_end(status_bar, False, False, 0)
+		self.pack_end(action_bar, False, False, 0)
 
 	def save_settings(self):  # only saves the column sizes
 		columns=self.treeview.get_columns()
@@ -2414,12 +2418,17 @@ class PlaylistView(Gtk.Box):
 		else:
 			self.refresh_selection(False)
 
+	def on_clear_button_clicked(self, *args):
+		self.client.clear()
+
 	def on_disconnected(self, *args):
 		self.clear()
 		self.back_to_song_button.set_sensitive(False)
+		self.clear_button.set_sensitive(False)
 
 	def on_reconnected(self, *args):
 		self.back_to_song_button.set_sensitive(True)
+		self.clear_button.set_sensitive(True)
 
 class CoverLyricsOSD(Gtk.Overlay):
 	def __init__(self, client, settings, window):
