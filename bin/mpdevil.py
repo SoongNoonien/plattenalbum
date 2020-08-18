@@ -1821,7 +1821,7 @@ class AlbumView(FocusFrame):
 
 	def on_settings_changed(self, *args):
 		if self.done:
-			self.populate()
+			self.refresh(self.artists)
 
 class Browser(Gtk.Paned):
 	def __init__(self, client, settings, window):
