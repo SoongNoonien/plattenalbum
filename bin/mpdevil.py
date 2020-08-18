@@ -3070,7 +3070,7 @@ class SettingsDialog(Gtk.Dialog):
 		tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 		tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
 		vbox=self.get_content_area()
-		vbox.set_spacing(3)
+		vbox.set_spacing(6)
 		vbox.pack_start(tabs, True, True, 0)
 
 		self.show_all()
@@ -3482,7 +3482,7 @@ class ServerStats(Gtk.Dialog):
 		frame=Gtk.Frame()
 		frame.add(self.treeview)
 		self.vbox.pack_start(frame, True, True, 0)
-		self.vbox.set_spacing(3)
+		self.vbox.set_spacing(6)
 		self.show_all()
 		self.run()
 
