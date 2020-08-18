@@ -1837,14 +1837,19 @@ class Browser(Gtk.Paned):
 		self.use_csd=self.settings.get_boolean("use-csd")
 
 		if self.use_csd:
-			icon_size=Gtk.IconSize.BUTTON
+			self.icon_size=0
 		else:
-			icon_size=Gtk.IconSize.LARGE_TOOLBAR
+			self.icon_size=self.settings.get_int("icon-size")
 
 		# widgets
-		self.back_to_album_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", icon_size))
+		self.icons={}
+		icons_data=["go-previous-symbolic", "system-search-symbolic"]
+		for data in icons_data:
+			self.icons[data]=PixelSizedIcon(data, self.icon_size)
+
+		self.back_to_album_button=Gtk.Button(image=self.icons["go-previous-symbolic"])
 		self.back_to_album_button.set_tooltip_text(_("Back to current album"))
-		self.search_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("system-search-symbolic", icon_size))
+		self.search_button=Gtk.ToggleButton(image=self.icons["system-search-symbolic"])
 		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings)
 		self.artist_view=ArtistView(self.client, self.settings, self.genre_select)
@@ -1855,6 +1860,8 @@ class Browser(Gtk.Paned):
 		self.back_to_album_button.connect("clicked", self.back_to_album)
 		self.search_button.connect("toggled", self.on_search_toggled)
 		self.artist_view.connect("artists_changed", self.on_artists_changed)
+		if not self.use_csd:
+			self.settings.connect("changed::icon-size", self.on_icon_size_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
 		self.client.emitter.connect("reconnected", self.on_reconnected)
 
@@ -1941,6 +1948,11 @@ class Browser(Gtk.Paned):
 		self.search_button.set_active(False)
 		artists=self.artist_view.get_selected_artists()
 		self.album_view.refresh(artists)
+
+	def on_icon_size_changed(self, *args):
+		pixel_size=self.settings.get_int("icon-size")
+		for icon in self.icons.values():
+			icon.set_pixel_size(pixel_size)
 
 ######################
 # playlist and cover #
@@ -2191,10 +2203,10 @@ class PlaylistView(Gtk.Box):
 		self.playlist_version=None
 
 		# buttons
-		self.back_to_song_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.LARGE_TOOLBAR))
+		self.back_to_song_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON))
 		self.back_to_song_button.set_tooltip_text(_("Scroll to current song"))
 		self.back_to_song_button.set_relief(Gtk.ReliefStyle.NONE)
-		self.clear_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("edit-clear-symbolic", Gtk.IconSize.LARGE_TOOLBAR))
+		self.clear_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("edit-clear-symbolic", Gtk.IconSize.BUTTON))
 		self.clear_button.set_tooltip_text(_("Clear playlist"))
 		self.clear_button.set_relief(Gtk.ReliefStyle.NONE)
 		style_context=self.clear_button.get_style_context()
