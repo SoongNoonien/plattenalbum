@@ -2,7 +2,7 @@ README for mpdevil
 ==================
 mpdevil is focused on playing your local music directly instead of managing playlists or playing network streams. So it neither supports saving playlists nor restoring them. Therefore mpdevil is mainly a music browser which aims to be easy to use. mpdevil dosen't store any client side database of your music library. Instead all tags and covers get presented to you in real time. So you'll never see any outdated information in your browser. mpdevil strongly relies on tags.
 
-![ScreenShot](screenshots/mainwindow_0.8.3.png)
+![ScreenShot](screenshots/mainwindow_0.8.5.png)
 
 Features
 --------
@@ -29,13 +29,14 @@ Ubuntu, Debian, Mint:
 - Download the .deb file
 - Open a console
 - Navigate into download dir
-- Run: `sudo apt install ./mpdevil_VERSION-1_amd64.deb`
+- Run: `sudo apt install ./mpdevil_VERSION_amd64.deb`
 
-Arch, Manjaro:
-- Download the PKGBUILD
+Arch, Manjaro (see: https://aur.archlinux.org/packages/mpdevil/):
+- Download the PKGBUILD from the AUR
 - Open a console
 - Navigate into download dir
 - Run: `makepkg -sirc`
+- Alternatively install it with an AUR helper
 
 Gentoo (see: https://wiki.gentoo.org/wiki/Custom_repository):
 - Download the .ebuild
