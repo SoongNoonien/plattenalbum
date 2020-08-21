@@ -2285,7 +2285,7 @@ class PlaylistWindow(Gtk.Box):
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._key_press_event=self._treeview.connect("key-press-event", self._on_key_press_event)
 		self._treeview.connect("button-press-event", self._on_button_press_event)
-		self._back_to_song_button.connect("clicked", self.scroll_to_selected_title)
+		self._back_to_song_button.connect("clicked", self._on_back_to_song_button_clicked)
 		self._clear_button.connect("clicked", self._on_clear_button_clicked)
 
 		self._client.emitter.connect("playlist_changed", self._on_playlist_changed)
@@ -2305,12 +2305,6 @@ class PlaylistWindow(Gtk.Box):
 		self._playlist_info.set_text("")
 		self._store.clear()
 		self._playlist_version=None
-
-	def scroll_to_selected_title(self, *args):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
-			path=treeview.get_path(treeiter)
-			self._treeview.scroll_to_cell(path, None, True, 0.25)
 
 	def save_settings(self):  # only saves the column sizes
 		columns=self._treeview.get_columns()
@@ -2340,7 +2334,13 @@ class PlaylistWindow(Gtk.Box):
 			whole_length_human_readable=ClientHelper.calc_display_length(songs)
 			self._playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
 
-	def _refresh_selection(self, scroll=True):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
+	def _scroll_to_selected_title(self, *args):
+		treeview, treeiter=self._selection.get_selected()
+		if treeiter is not None:
+			path=treeview.get_path(treeiter)
+			self._treeview.scroll_to_cell(path, None, True, 0.25)
+
+	def _refresh_selection(self):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
 		self._treeview.set_cursor(Gtk.TreePath(len(self._store)), None, False)
 		for row in self._store:  # reset bold text
 			row[9]=Pango.Weight.BOOK
@@ -2349,8 +2349,6 @@ class PlaylistWindow(Gtk.Box):
 			path=Gtk.TreePath(int(song))
 			self._selection.select_path(path)
 			self._store[path][9]=Pango.Weight.BOLD
-			if scroll:
-				self.scroll_to_selected_title()
 		except:
 			self._selection.unselect_all()
 
@@ -2417,15 +2415,22 @@ class PlaylistWindow(Gtk.Box):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
 		self._refresh_playlist_info()
-		if self._playlist_version is None or songs != []:
+		if songs != []:
 			self._refresh_selection()
+			self._scroll_to_selected_title()
 		self._playlist_version=version
 
 	def _on_song_changed(self, *args):
+		self._refresh_selection()
 		if self._client.wrapped_call("status")["state"] == "play":
-			self._refresh_selection()
-		else:
-			self._refresh_selection(False)
+			self._scroll_to_selected_title()
+
+	def _on_back_to_song_button_clicked(self, *args):
+		for path, row in enumerate(self._store):
+			if row[9] == Pango.Weight.BOLD:
+				self._selection.select_path(path)
+				break
+		self._scroll_to_selected_title()
 
 	def _on_clear_button_clicked(self, *args):
 		self._client.clear()
