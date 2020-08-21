@@ -316,10 +316,10 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 			song_file=mpd_meta['file']
 			self.metadata['xesam:url']="file://"+os.path.join(self.settings.get_value("paths")[self.settings.get_int("active-profile")], song_file)
 			cover=Cover(self.settings, mpd_meta)
-			if not cover.path == None:
-				self.metadata['mpris:artUrl']="file://"+cover.path
-			else:
+			if cover.path is None:
 				self.metadata['mpris:artUrl']=None
+			else:
+				self.metadata['mpris:artUrl']="file://"+cover.path
 
 		# Cast self.metadata to the correct type, or discard it
 		for key, value in self.metadata.items():
@@ -700,7 +700,7 @@ class Cover(object):
 				except:
 					print("illegal regex:", regex_str)
 
-			if not song_file == None:
+			if song_file is not None:
 				head, tail=os.path.split(song_file)
 				song_dir=os.path.join(self.lib_path, head)
 				if os.path.exists(song_dir):
@@ -710,7 +710,7 @@ class Cover(object):
 							break
 
 	def get_pixbuf(self, size):
-		if self.path == None:
+		if self.path is None:
 			self.path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()  # fallback cover
 		return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
 
@@ -842,7 +842,7 @@ class Client(MPDClient):
 			for f in files:
 				self.add(f)
 		def play(files):
-			if not files == []:
+			if files != []:
 				self.clear()
 				for f in files:
 					self.add(f)
@@ -859,10 +859,10 @@ class Client(MPDClient):
 				except:
 					pass
 				for f in files:
-					if not f == current_song_file:
-						self.add(f)
-					else:
+					if f == current_song_file:
 						self.move(0, (len(self.playlistinfo())-1))
+					else:
+						self.add(f)
 		if mode == "append":
 			append(files)
 		elif mode == "enqueue":
@@ -1182,15 +1182,15 @@ class SongsView(Gtk.TreeView):
 		self.handler_block(self.key_press_event)
 		if event.keyval == 112:  # p
 			treeview, treeiter=self.selection.get_selected()
-			if not treeiter == None:
+			if treeiter is not None:
 				self.client.wrapped_call("files_to_playlist", [self.store.get_value(treeiter, self.file_column_id)])
 		elif event.keyval == 97:  # a
 			treeview, treeiter=self.selection.get_selected()
-			if not treeiter == None:
+			if treeiter is not None:
 				self.client.wrapped_call("files_to_playlist", [self.store.get_value(treeiter, self.file_column_id)], "append")
 		elif event.keyval == 65383:  # menu key
 			treeview, treeiter=self.selection.get_selected()
-			if not treeiter == None:
+			if treeiter is not None:
 				path=self.store.get_path(treeiter)
 				cell=self.get_cell_area(path, None)
 				file_name=self.store[path][self.file_column_id]
@@ -1332,10 +1332,11 @@ class AlbumDialog(Gtk.Dialog):
 				artist=(', '.join(song["artist"]))
 			else:
 				artist=song["artist"]
-			if artist != self.artist:
-				title_artist="<b>"+title+"</b> - "+artist
-			else:
+			if artist == self.artist:
 				title_artist="<b>"+title+"</b>"
+			else:
+				title_artist="<b>"+title+"</b> - "+artist
+
 			title_artist=title_artist.replace("&", "&amp;")
 			self.store.append([int(song["track"]), title_artist, song["human_duration"], song["file"]])
 
@@ -1507,18 +1508,18 @@ class ArtistView(FocusFrame):
 			self.column_name.set_title(_("Artist"))
 		self.store.append([_("all artists"), Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		genre=self.genre_select.get_value()
-		if genre == None:
+		if genre is None:
 			artists=self.client.wrapped_call("comp_list", self.settings.get_artist_type())
 		else:
 			artists=self.client.wrapped_call("comp_list", self.settings.get_artist_type(), "genre", genre)
 		current_char=""
 		for artist in artists:
 			try:
-				if current_char != artist[0]:
+				if current_char == artist[0]:
+					self.store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+				else:
 					self.store.append([artist, Pango.Weight.BOOK, artist[0], Pango.Weight.BOLD])
 					current_char=artist[0]
-				else:
-					self.store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 			except:
 				self.store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		self.selection.set_mode(Gtk.SelectionMode.SINGLE)
@@ -1529,10 +1530,10 @@ class ArtistView(FocusFrame):
 			path=Gtk.TreePath(i)
 			if self.store[path][0] == artist:
 				self.treeview.set_cursor(path, None, False)
-				if not self.get_selected_artists() == [artist]:
-					self.treeview.row_activated(path, self.column_name)
-				else:
+				if self.get_selected_artists() == [artist]:
 					self.treeview.set_cursor(path, None, False)
+				else:
+					self.treeview.row_activated(path, self.column_name)
 				break
 
 	def get_selected_artists(self):
@@ -1633,8 +1634,11 @@ class AlbumIconView(Gtk.IconView):
 		artist_type=self.settings.get_artist_type()
 		for artist in artists:
 			try:  # client cloud meanwhile disconnect
-				if not self.stop_flag:
-					if genre == None:
+				if self.stop_flag:
+					GLib.idle_add(self.emit, "done")
+					return
+				else:
+					if genre is None:
 						album_candidates=self.client.wrapped_call("comp_list", "album", artist_type, artist)
 					else:
 						album_candidates=self.client.wrapped_call("comp_list", "album", artist_type, artist, "genre", genre)
@@ -1645,9 +1649,6 @@ class AlbumIconView(Gtk.IconView):
 							albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
 					while Gtk.events_pending():
 						Gtk.main_iteration_do(True)
-				else:
-					GLib.idle_add(self.emit, "done")
-					return
 			except MPDBase.ConnectionError:
 				GLib.idle_add(self.emit, "done")
 				return
@@ -1658,7 +1659,9 @@ class AlbumIconView(Gtk.IconView):
 			albums=sorted(albums, key=lambda k: k['album'])
 		size=self.settings.get_int("album-cover")
 		for i, album in enumerate(albums):
-			if not self.stop_flag:
+			if self.stop_flag:
+				break
+			else:
 				cover=Cover(self.settings, album["songs"][0]).get_pixbuf(size)
 				# tooltip
 				length_human_readable=ClientHelper.calc_display_length(album["songs"])
@@ -1683,8 +1686,6 @@ class AlbumIconView(Gtk.IconView):
 				if i%16 == 0:
 					while Gtk.events_pending():
 						Gtk.main_iteration_do(True)
-			else:
-				break
 		GLib.idle_add(self.emit, "done")
 
 	def scroll_to_selected_album(self):
@@ -1726,7 +1727,7 @@ class AlbumIconView(Gtk.IconView):
 
 	def on_button_release_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
-		if not path == None:
+		if path is not None:
 			if self.button_event == (event.button, path):
 				if event.button == 1 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					self.path_to_playlist(path)
@@ -1739,15 +1740,15 @@ class AlbumIconView(Gtk.IconView):
 		self.handler_block(self.key_press_event)
 		if event.keyval == 112:  # p
 			paths=self.get_selected_items()
-			if not len(paths) == 0:
+			if len(paths) != 0:
 				self.path_to_playlist(paths[0])
 		elif event.keyval == 97:  # a
 			paths=self.get_selected_items()
-			if not len(paths) == 0:
+			if len(paths) != 0:
 				self.path_to_playlist(paths[0], "append")
 		elif event.keyval == 65383:  # menu key
 			paths=self.get_selected_items()
-			if not len(paths) == 0:
+			if len(paths) != 0:
 				self.open_album_dialog(paths[0])
 		self.handler_unblock(self.key_press_event)
 
@@ -1798,7 +1799,7 @@ class AlbumView(FocusFrame):
 			self.pending.append(self.clear)
 
 	def refresh(self, artists=[]):
-		if not artists == []:
+		if artists != []:
 			self.artists=artists
 		if self.done:
 			self.done=False
@@ -1917,7 +1918,7 @@ class Browser(Gtk.Paned):
 					artist=""
 			# deactivate genre filter to show all artists (if needed)
 			try:
-				if not song['genre'] == self.genre_select.get_value():
+				if song['genre'] != self.genre_select.get_value():
 					self.genre_select.deactivate()
 			except:
 				self.genre_select.deactivate()
@@ -2050,7 +2051,7 @@ class LyricsWindow(Gtk.Overlay):
 		comments=lyrics.findAll(text=lambda text:isinstance(text, Comment))
 		[comment.extract() for comment in comments]
 		# Remove span tag (Needed for instrumantal)
-		if not lyrics.span == None:
+		if lyrics.span is not None:
 			lyrics.span.extract()
 		# Remove unecessary tags
 		for tag in ['div','i','b','a']:
@@ -2072,11 +2073,7 @@ class AudioType(Gtk.Label):
 
 		# adding vars
 		self.client=client
-		self.freq=0
-		self.res=0
-		self.chan=0
-		self.brate=0
-		self.file_type=""
+		self.init_vars()
 
 		# connect
 		self.client.emitter.connect("audio", self.on_audio)
@@ -2085,13 +2082,16 @@ class AudioType(Gtk.Label):
 		self.client.emitter.connect("disconnected", self.clear)
 		self.client.emitter.connect("state", self.on_state)
 
-	def clear(self, *args):
-		self.set_text("")
+	def init_vars(self):
 		self.freq=0
 		self.res=0
 		self.chan=0
 		self.brate=0
 		self.file_type=""
+
+	def clear(self, *args):
+		self.set_text("")
+		self.init_vars()
 
 	def refresh(self, *args):
 		string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)i bit, %(channels)i channels, %(file_type)s") % {"bitrate": str(self.brate), "frequency": str(self.freq), "resolution": self.res, "channels": self.chan, "file_type": self.file_type}
@@ -2166,7 +2166,7 @@ class MainCover(Gtk.Frame):
 	def on_button_press_event(self, widget, event):
 		if self.client.connected():
 			song=ClientHelper.song_to_first_str_dict(self.client.wrapped_call("currentsong"))
-			if not song == {}:
+			if song != {}:
 				try:
 					artist=song[self.settings.get_artist_type()]
 				except:
@@ -2334,17 +2334,18 @@ class PlaylistView(Gtk.Box):
 
 	def scroll_to_selected_title(self, *args):
 		treeview, treeiter=self.selection.get_selected()
-		if not treeiter == None:
+		if treeiter is not None:
 			path=treeview.get_path(treeiter)
 			self.treeview.scroll_to_cell(path, None, True, 0.25)
 
 	def refresh_playlist_info(self):
 		songs=self.client.wrapped_call("playlistinfo")
-		if not songs == []:
+		if songs == []:
+			self.playlist_info.set_text("")
+		else:
 			whole_length_human_readable=ClientHelper.calc_display_length(songs)
 			self.playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
-		else:
-			self.playlist_info.set_text("")
+
 
 	def refresh_selection(self, scroll=True):  # Gtk.TreePath(len(self.store) is used to generate an invalid TreePath (needed to unset cursor)
 		self.treeview.set_cursor(Gtk.TreePath(len(self.store)), None, False)
@@ -2374,7 +2375,7 @@ class PlaylistView(Gtk.Box):
 		self.treeview.handler_block(self.key_press_event)
 		if event.keyval == 65535:  # entf
 			treeview, treeiter=self.selection.get_selected()
-			if not treeiter == None:
+			if treeiter is not None:
 				path=self.store.get_path(treeiter)
 				try:
 					self.remove_song(path)
@@ -2382,7 +2383,7 @@ class PlaylistView(Gtk.Box):
 					pass
 		elif event.keyval == 65383:  # menu key
 			treeview, treeiter=self.selection.get_selected()
-			if not treeiter == None:
+			if treeiter is not None:
 				path=self.store.get_path(treeiter)
 				cell=self.treeview.get_cell_area(path, None)
 				file_name=self.store[path][8]
@@ -2411,11 +2412,11 @@ class PlaylistView(Gtk.Box):
 
 	def on_playlist_changed(self, emitter, version):
 		songs=[]
-		if not self.playlist_version == None:
+		if self.playlist_version is not None:
 			songs=self.client.wrapped_call("plchanges", self.playlist_version)
 		else:
 			songs=self.client.wrapped_call("playlistinfo")
-		if not songs == []:
+		if songs != []:
 			self.playlist_info.set_text("")
 			for s in songs:
 				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
@@ -2428,7 +2429,7 @@ class PlaylistView(Gtk.Box):
 			treeiter=self.store.get_iter(i)
 			self.store.remove(treeiter)
 		self.refresh_playlist_info()
-		if self.playlist_version == None or not songs == []:
+		if self.playlist_version is None or songs != []:
 			self.refresh_selection()
 		self.playlist_version=version
 
@@ -2993,12 +2994,12 @@ class PlaylistSettings(Gtk.Box):
 
 	def set_button_sensitivity(self, *args):
 		treeiter=self.selection.get_selected()[1]
-		if treeiter == None:
+		if treeiter is None:
 			self.up_button.set_sensitive(False)
 			self.down_button.set_sensitive(False)
 		else:
 			path=self.store.get_path(treeiter)
-			if self.store.iter_next(treeiter) == None:
+			if self.store.iter_next(treeiter) is None:
 				self.up_button.set_sensitive(True)
 				self.down_button.set_sensitive(False)
 			elif not path.prev():
@@ -3144,12 +3145,9 @@ class ClientControl(Gtk.ButtonBox):
 				self.client.wrapped_call("pause", 0)
 			else:
 				try:
-					self.client.wrapped_call("play", status["song"])
+					self.client.wrapped_call("play")
 				except:
-					try:
-						self.client.wrapped_call("play", )
-					except:
-						pass
+					pass
 
 	def on_stop_clicked(self, widget):
 		if self.client.connected():
@@ -3402,10 +3400,7 @@ class PlaybackOptions(Gtk.Box):
 
 	def volume_refresh(self, emitter, volume):
 		self.volume_button.handler_block(self.volume_button_changed)
-		try:
-			self.volume_button.set_value(volume/100)
-		except:
-			self.volume_button.set_value(0)
+		self.volume_button.set_value(volume/100)
 		self.volume_button.handler_unblock(self.volume_button_changed)
 
 	def on_icon_size_changed(self, *args):
@@ -3672,10 +3667,10 @@ class MainWindow(Gtk.ApplicationWindow):
 				self.set_title("mpdevil")
 		else:
 			song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(song))
-			if song["date"] != "":
-				date=" ("+song["date"]+")"
-			else:
+			if song["date"] == "":
 				date=""
+			else:
+				date=" ("+song["date"]+")"
 			if self.use_csd:
 				self.header_bar.set_title(song["title"]+" - "+song["artist"])
 				self.header_bar.set_subtitle(song["album"]+date)
