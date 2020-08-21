@@ -2415,7 +2415,7 @@ class PlaylistWindow(Gtk.Box):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
 		self._refresh_playlist_info()
-		if songs != []:
+		if self._playlist_version is None or songs != []:
 			self._refresh_selection()
 			self._scroll_to_selected_title()
 		self._playlist_version=version
