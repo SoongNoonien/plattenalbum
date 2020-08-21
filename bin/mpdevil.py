@@ -226,23 +226,12 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		self._client.emitter.connect("single", self._on_loop_changed)
 		self._client.emitter.connect("random", self._on_random_changed)
 
-	def _on_state_changed(self, *args):
-		self.update_property('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
-		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoNext')
-		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoPrevious')
+	def acquire_name(self):
+		self._bus_name=dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)
 
-	def _on_song_changed(self, *args):
-		self.update_metadata()
-		self.update_property('org.mpris.MediaPlayer2.Player', 'Metadata')
-
-	def _on_volume_changed(self, *args):
-		self.update_property('org.mpris.MediaPlayer2.Player', 'Volume')
-
-	def _on_loop_changed(self, *args):
-		self.update_property('org.mpris.MediaPlayer2.Player', 'LoopStatus')
-
-	def _on_random_changed(self, *args):
-		self.update_property('org.mpris.MediaPlayer2.Player', 'Shuffle')
+	def release_name(self):
+		if hasattr(self, "_bus_name"):
+			del self._bus_name
 
 	def update_metadata(self):  # TODO
 		"""
@@ -327,21 +316,6 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 				self._metadata[key]=self.allowed_tags[key](value)
 			except ValueError:
 				del self._metadata[key]
-
-	def _name_owner_changed_callback(self, name, old_owner, new_owner):
-		if name == self._name and old_owner == self._uname and new_owner != "":
-			try:
-				pid=self._dbus_obj.GetConnectionUnixProcessID(new_owner)
-			except:
-				pid=None
-			loop.quit()
-
-	def acquire_name(self):
-		self._bus_name=dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)
-
-	def release_name(self):
-		if hasattr(self, "_bus_name"):
-			del self._bus_name
 
 	__root_interface="org.mpris.MediaPlayer2"
 	__root_props={
@@ -566,6 +540,32 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 	@dbus.service.method(__player_interface, in_signature='', out_signature='')
 	def OpenUri(self):
 		return
+
+	def _on_state_changed(self, *args):
+		self.update_property('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
+		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoNext')
+		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoPrevious')
+
+	def _on_song_changed(self, *args):
+		self.update_metadata()
+		self.update_property('org.mpris.MediaPlayer2.Player', 'Metadata')
+
+	def _on_volume_changed(self, *args):
+		self.update_property('org.mpris.MediaPlayer2.Player', 'Volume')
+
+	def _on_loop_changed(self, *args):
+		self.update_property('org.mpris.MediaPlayer2.Player', 'LoopStatus')
+
+	def _on_random_changed(self, *args):
+		self.update_property('org.mpris.MediaPlayer2.Player', 'Shuffle')
+
+	def _name_owner_changed_callback(self, name, old_owner, new_owner):
+		if name == self._name and old_owner == self._uname and new_owner != "":
+			try:
+				pid=self._dbus_obj.GetConnectionUnixProcessID(new_owner)
+			except:
+				pid=None
+			loop.quit()
 
 #################################
 # small general purpose widgets #
@@ -834,9 +834,6 @@ class Client(MPDClient):
 		except:
 			return False
 
-	def _on_settings_changed(self, *args):
-		self.disconnect()
-
 	def files_to_playlist(self, files, mode="default"):  # modes: default, play, append, enqueue
 		def append(files):
 			for f in files:
@@ -950,6 +947,9 @@ class Client(MPDClient):
 		self._main_timeout_id=GLib.timeout_add(100, self._main_loop)
 		self.emitter.emit("reconnected")
 		return False
+
+	def _on_settings_changed(self, *args):
+		self.disconnect()
 
 ########################
 # gio settings wrapper #
@@ -1484,10 +1484,6 @@ class ArtistWindow(FocusFrame):
 		self.set_widget(self._treeview)
 		self.add(scroll)
 
-	@GObject.Signal
-	def artists_changed(self):
-		pass
-
 	def clear(self, *args):
 		self._store.clear()
 
@@ -1521,6 +1517,10 @@ class ArtistWindow(FocusFrame):
 			if row[1] == Pango.Weight.BOLD:
 				self._treeview.set_cursor(path, None, False)
 				break
+
+	@GObject.Signal
+	def artists_changed(self):
+		pass
 
 	def _refresh(self, *args):
 		self._selection.set_mode(Gtk.SelectionMode.NONE)
@@ -1587,15 +1587,28 @@ class AlbumView(Gtk.IconView):
 		self._settings.connect("changed::show-album-view-tooltips", self._tooltip_settings)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 
-	@GObject.Signal
-	def done(self):
-		self.stop_flag=False
-
 	def clear(self):
 		self._store.clear()
 		# workaround (scrollbar still visible after clear)
 		self.set_model(None)
 		self.set_model(self._store)
+
+	def scroll_to_selected_album(self):
+		song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
+		try:
+			album=song["album"]
+		except:
+			album=""
+		self.unselect_all()
+		row_num=len(self._store)
+		for i in range(0, row_num):
+			path=Gtk.TreePath(i)
+			treeiter=self._store.get_iter(path)
+			if self._store.get_value(treeiter, 4) == album:
+				self.set_cursor(path, None, False)
+				self.select_path(path)
+				self.scroll_to_path(path, True, 0, 0)
+				break
 
 	def _tooltip_settings(self, *args):
 		if self._settings.get_boolean("show-album-view-tooltips"):
@@ -1680,23 +1693,6 @@ class AlbumView(Gtk.IconView):
 						Gtk.main_iteration_do(True)
 		GLib.idle_add(self.emit, "done")
 
-	def scroll_to_selected_album(self):
-		song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
-		try:
-			album=song["album"]
-		except:
-			album=""
-		self.unselect_all()
-		row_num=len(self._store)
-		for i in range(0, row_num):
-			path=Gtk.TreePath(i)
-			treeiter=self._store.get_iter(path)
-			if self._store.get_value(treeiter, 4) == album:
-				self.set_cursor(path, None, False)
-				self.select_path(path)
-				self.scroll_to_path(path, True, 0, 0)
-				break
-
 	def _path_to_playlist(self, path, mode="default"):
 		album=self._store[path][4]
 		year=self._store[path][5]
@@ -1711,6 +1707,10 @@ class AlbumView(Gtk.IconView):
 			album_dialog=AlbumDialog(self._window, self._client, self._settings, album, artist, year)
 			album_dialog.open()
 			album_dialog.destroy()
+
+	@GObject.Signal
+	def done(self):
+		self.stop_flag=False
 
 	def _on_button_press_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -2008,9 +2008,6 @@ class LyricsWindow(Gtk.Overlay):
 		self._refresh()
 		GLib.idle_add(text_view.grab_focus)  # focus textview
 
-	def _remove_handlers(self, *args):
-		self._client.emitter.disconnect(self._song_changed)
-
 	def _display_lyrics(self, current_song):
 		GLib.idle_add(self._text_buffer.set_text, _("searching..."), -1)
 		try:
@@ -2056,6 +2053,9 @@ class LyricsWindow(Gtk.Overlay):
 	def _on_close_button_clicked(self, *args):
 		self.destroy()
 
+	def _remove_handlers(self, *args):
+		self._client.emitter.disconnect(self._song_changed)
+
 class AudioType(Gtk.Label):
 	def __init__(self, client):
 		Gtk.Label.__init__(self)
@@ -2071,16 +2071,16 @@ class AudioType(Gtk.Label):
 		self._client.emitter.connect("disconnected", self.clear)
 		self._client.emitter.connect("state", self._on_state)
 
+	def clear(self, *args):
+		self.set_text("")
+		self._init_vars()
+
 	def _init_vars(self):
 		self.freq=0
 		self.res=0
 		self.chan=0
 		self.brate=0
 		self.file_type=""
-
-	def clear(self, *args):
-		self.set_text("")
-		self._init_vars()
 
 	def _refresh(self, *args):
 		string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)i bit, %(channels)i channels, %(file_type)s") % {"bitrate": str(self.brate), "frequency": str(self.freq), "resolution": self.res, "channels": self.chan, "file_type": self.file_type}
@@ -2144,13 +2144,13 @@ class MainCover(Gtk.Frame):
 		event_box.add(self._cover)
 		self.add(event_box)
 
-	def _refresh(self, *args):
-		current_song=self._client.wrapped_call("currentsong")
-		self._cover.set_from_pixbuf(Cover(self._settings, current_song).get_pixbuf(self._settings.get_int("track-cover")))
-
 	def clear(self, *args):
 		self._cover.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(self._settings.get_int("track-cover")))
 		self.song_file=None
+
+	def _refresh(self, *args):
+		current_song=self._client.wrapped_call("currentsong")
+		self._cover.set_from_pixbuf(Cover(self._settings, current_song).get_pixbuf(self._settings.get_int("track-cover")))
 
 	def _on_button_press_event(self, widget, event):
 		if self._client.connected():
@@ -2301,6 +2301,17 @@ class PlaylistWindow(Gtk.Box):
 		self.pack_start(frame, True, True, 0)
 		self.pack_end(action_bar, False, False, 0)
 
+	def clear(self, *args):
+		self._playlist_info.set_text("")
+		self._store.clear()
+		self._playlist_version=None
+
+	def scroll_to_selected_title(self, *args):
+		treeview, treeiter=self._selection.get_selected()
+		if treeiter is not None:
+			path=treeview.get_path(treeiter)
+			self._treeview.scroll_to_cell(path, None, True, 0.25)
+
 	def save_settings(self):  # only saves the column sizes
 		columns=self._treeview.get_columns()
 		permutation=self._settings.get_value("column-permutation").unpack()
@@ -2321,12 +2332,6 @@ class PlaylistWindow(Gtk.Box):
 			self._columns[i].set_visible(visibilities[i])
 			self._treeview.append_column(self._columns[i])
 
-	def scroll_to_selected_title(self, *args):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
-			path=treeview.get_path(treeiter)
-			self._treeview.scroll_to_cell(path, None, True, 0.25)
-
 	def _refresh_playlist_info(self):
 		songs=self._client.wrapped_call("playlistinfo")
 		if songs == []:
@@ -2334,7 +2339,6 @@ class PlaylistWindow(Gtk.Box):
 		else:
 			whole_length_human_readable=ClientHelper.calc_display_length(songs)
 			self._playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
-
 
 	def _refresh_selection(self, scroll=True):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
 		self._treeview.set_cursor(Gtk.TreePath(len(self._store)), None, False)
@@ -2349,11 +2353,6 @@ class PlaylistWindow(Gtk.Box):
 				self.scroll_to_selected_title()
 		except:
 			self._selection.unselect_all()
-
-	def clear(self, *args):
-		self._playlist_info.set_text("")
-		self._store.clear()
-		self._playlist_version=None
 
 	def _remove_song(self, path):
 		self._client.wrapped_call("delete", path)  # bad song index possible
@@ -2775,17 +2774,6 @@ class ProfileSettings(Gtk.Grid):
 		self.attach_next_to(path_box, path_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(self._regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
 
-	def _remove_handlers(self, *args):
-		for handler in self._settings_handlers:
-			self._settings.disconnect(handler)
-
-	def _on_settings_changed(self, *args):
-		if self._gui_modification:
-			self._gui_modification=False
-		else:
-			self._profiles_combo_reload()
-			self._profiles_combo.set_active(0)
-
 	def _block_entry_changed_handlers(self, *args):
 		for obj, handler in self.entry_changed_handlers:
 			obj.handler_block(handler)
@@ -2802,6 +2790,17 @@ class ProfileSettings(Gtk.Grid):
 			self._profiles_combo.append_text(profile)
 
 		self._unblock_entry_changed_handlers()
+
+	def _remove_handlers(self, *args):
+		for handler in self._settings_handlers:
+			self._settings.disconnect(handler)
+
+	def _on_settings_changed(self, *args):
+		if self._gui_modification:
+			self._gui_modification=False
+		else:
+			self._profiles_combo_reload()
+			self._profiles_combo.set_active(0)
 
 	def _on_add_button_clicked(self, *args):
 		model=self._profiles_combo.get_model()
@@ -2961,10 +2960,6 @@ class PlaylistSettings(Gtk.Box):
 		self.pack_start(label, False, False, 0)
 		self.pack_start(column_chooser, True, True, 0)
 
-	def _remove_handlers(self, *args):
-		for handler in self._settings_handlers:
-			self._settings.disconnect(handler)
-
 	def _fill(self, *args):
 		visibilities=self._settings.get_value("column-visibilities").unpack()
 		for actual_index in self._settings.get_value("column-permutation"):
@@ -2992,6 +2987,10 @@ class PlaylistSettings(Gtk.Box):
 			else:
 				self._up_button.set_sensitive(True)
 				self._down_button.set_sensitive(True)
+
+	def _remove_handlers(self, *args):
+		for handler in self._settings_handlers:
+			self._settings.disconnect(handler)
 
 	def _on_cell_toggled(self, widget, path):
 		self._store[path][0]=not self._store[path][0]
@@ -3202,7 +3201,7 @@ class SeekBar(Gtk.Box):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("elapsed_changed", self.refresh)
+		self._client.emitter.connect("elapsed_changed", self._refresh)
 
 		# packing
 		self._elapsed_event_box.add(self._elapsed)
@@ -3213,6 +3212,32 @@ class SeekBar(Gtk.Box):
 
 	def _dummy(self, *args):
 		return True
+
+	def seek_forward(self):
+		self._client.wrapped_call("seekcur", "+"+self._seek_time)
+
+	def seek_backward(self):
+		self._client.wrapped_call("seekcur", "-"+self._seek_time)
+
+	def _refresh(self, emitter, elapsed, duration):
+		if elapsed > duration:  # fix display error
+			elapsed=duration
+		fraction=(elapsed/duration)*100
+		if self._update:
+			self.scale.set_value(fraction)
+			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
+			self._rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
+		self.scale.set_fill_level(fraction)
+
+	def _enable(self, *args):
+		self.scale.set_range(0, 100)
+		self.set_sensitive(True)
+
+	def _disable(self, *args):
+		self.set_sensitive(False)
+		self.scale.set_range(0, 0)
+		self._elapsed.set_text("00:00")
+		self._rest.set_text("-00:00")
 
 	def _on_scale_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3233,7 +3258,7 @@ class SeekBar(Gtk.Box):
 				self._client.wrapped_call("seekcur", pos)
 				self._jumped=False
 			else:
-				self.refresh(None, float(status["elapsed"]), float(status["duration"]))
+				self._refresh(None, float(status["elapsed"]), float(status["duration"]))
 
 	def _on_change_value(self, range, scroll, value):  # value is inaccurate
 		if scroll == Gtk.ScrollType.STEP_BACKWARD:
@@ -3250,22 +3275,6 @@ class SeekBar(Gtk.Box):
 			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
 			self._rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
 			self._jumped=True
-
-	def seek_forward(self):
-		self._client.wrapped_call("seekcur", "+"+self._seek_time)
-
-	def seek_backward(self):
-		self._client.wrapped_call("seekcur", "-"+self._seek_time)
-
-	def _enable(self, *args):
-		self.scale.set_range(0, 100)
-		self.set_sensitive(True)
-
-	def _disable(self, *args):
-		self.set_sensitive(False)
-		self.scale.set_range(0, 0)
-		self._elapsed.set_text("00:00")
-		self._rest.set_text("-00:00")
 
 	def _on_elapsed_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3284,16 +3293,6 @@ class SeekBar(Gtk.Box):
 			self._disable()
 		else:
 			self._enable()
-
-	def refresh(self, emitter, elapsed, duration):
-		if elapsed > duration:  # fix display error
-			elapsed=duration
-		fraction=(elapsed/duration)*100
-		if self._update:
-			self.scale.set_value(fraction)
-			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
-			self._rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
-		self.scale.set_fill_level(fraction)
 
 	def _on_reconnected(self, *args):
 		self._enable()
