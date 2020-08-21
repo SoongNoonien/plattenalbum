@@ -1031,7 +1031,7 @@ class SearchWindow(Gtk.Box):
 		self.songs_window=SongsWindow(self.client, self.store, 5)
 
 		# action bar
-		self.action_bar=self.songs_window.get_actionbar()
+		self.action_bar=self.songs_window.get_action_bar()
 		self.action_bar.set_sensitive(False)
 
 		# songs view
@@ -1261,7 +1261,7 @@ class SongsWindow(Gtk.Box):
 	def get_treeview(self):
 		return self.songs_view
 
-	def get_actionbar(self):
+	def get_action_bar(self):
 		return self.action_bar
 
 	def on_append_button_clicked(self, *args):
@@ -1370,7 +1370,7 @@ class AlbumDialog(Gtk.Dialog):
 		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close", Gtk.IconSize.BUTTON), label=_("Close"))
 
 		# action bar
-		action_bar=self.songs_window.get_actionbar()
+		action_bar=self.songs_window.get_action_bar()
 		action_bar.pack_end(close_button)
 
 		# connect
@@ -1438,7 +1438,7 @@ class GenreSelect(Gtk.ComboBoxText):
 		self.refresh()
 		self.set_sensitive(True)
 
-class ArtistView(FocusFrame):
+class ArtistWindow(FocusFrame):
 	def __init__(self, client, settings, genre_select):
 		FocusFrame.__init__(self)
 
@@ -1564,7 +1564,7 @@ class ArtistView(FocusFrame):
 	def on_show_initials_settings_changed(self, *args):
 		self.column_initials.set_visible(self.settings.get_boolean("show-initials"))
 
-class AlbumIconView(Gtk.IconView):
+class AlbumView(Gtk.IconView):
 	def __init__(self, client, settings, genre_select, window):
 		Gtk.IconView.__init__(self)
 
@@ -1759,7 +1759,7 @@ class AlbumIconView(Gtk.IconView):
 		selected_artist=self.store.get_value(treeiter, 6)
 		self.client.wrapped_call("album_to_playlist", selected_album, selected_artist, selected_album_year, "play")
 
-class AlbumView(FocusFrame):
+class AlbumWindow(FocusFrame):
 	def __init__(self, client, settings, genre_select, window):
 		FocusFrame.__init__(self)
 
@@ -1773,7 +1773,7 @@ class AlbumView(FocusFrame):
 		self.pending=[]
 
 		# iconview
-		self.iconview=AlbumIconView(self.client, self.settings, self.genre_select, self.window)
+		self.iconview=AlbumView(self.client, self.settings, self.genre_select, self.window)
 
 		# scroll
 		scroll=Gtk.ScrolledWindow()
@@ -1857,14 +1857,14 @@ class Browser(Gtk.Paned):
 		self.search_button=Gtk.ToggleButton(image=self.icons["system-search-symbolic"])
 		self.search_button.set_tooltip_text(_("Search"))
 		self.genre_select=GenreSelect(self.client, self.settings)
-		self.artist_view=ArtistView(self.client, self.settings, self.genre_select)
-		self.search=SearchWindow(self.client)
-		self.album_view=AlbumView(self.client, self.settings, self.genre_select, self.window)
+		self.artist_window=ArtistWindow(self.client, self.settings, self.genre_select)
+		self.search_window=SearchWindow(self.client)
+		self.album_window=AlbumWindow(self.client, self.settings, self.genre_select, self.window)
 
 		# connect
 		self.back_to_album_button.connect("clicked", self.back_to_album)
 		self.search_button.connect("toggled", self.on_search_toggled)
-		self.artist_view.connect("artists_changed", self.on_artists_changed)
+		self.artist_window.connect("artists_changed", self.on_artists_changed)
 		if not self.use_csd:
 			self.settings.connect("changed::icon-size-sec", self.on_icon_size_changed)
 		self.client.emitter.connect("disconnected", self.on_disconnected)
@@ -1873,11 +1873,11 @@ class Browser(Gtk.Paned):
 		# packing
 		self.stack=Gtk.Stack()
 		self.stack.set_transition_type(1)
-		self.stack.add_named(self.album_view, "albums")
-		self.stack.add_named(self.search, "search")
+		self.stack.add_named(self.album_window, "albums")
+		self.stack.add_named(self.search_window, "search")
 
 		if self.use_csd:
-			self.pack1(self.artist_view, False, False)
+			self.pack1(self.artist_window, False, False)
 		else:
 			hbox=Gtk.Box(spacing=6)
 			hbox.set_property("border-width", 6)
@@ -1887,7 +1887,7 @@ class Browser(Gtk.Paned):
 			box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 			box1.pack_start(hbox, False, False, 0)
 			box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-			box1.pack_start(self.artist_view, True, True, 0)
+			box1.pack_start(self.artist_window, True, True, 0)
 			self.pack1(box1, False, False)
 		self.pack2(self.stack, True, False)
 
@@ -1897,7 +1897,7 @@ class Browser(Gtk.Paned):
 		self.settings.set_int("paned1", self.get_position())
 
 	def search_started(self):
-		return self.search.started()
+		return self.search_window.started()
 
 	def back_to_album(self, *args):
 		def callback():
@@ -1923,19 +1923,19 @@ class Browser(Gtk.Paned):
 			except:
 				self.genre_select.deactivate()
 			# select artist
-			if len(self.artist_view.get_selected_artists()) <= 1:  # one artist selected
-				self.artist_view.select(artist)
+			if len(self.artist_window.get_selected_artists()) <= 1:  # one artist selected
+				self.artist_window.select(artist)
 			else:  # all artists selected
 				self.search_button.set_active(False)
-				self.artist_view.treeview.set_cursor(Gtk.TreePath(0), None, False)  # set cursor to 'all artists'
-			self.album_view.scroll_to_selected_album()
+				self.artist_window.treeview.set_cursor(Gtk.TreePath(0), None, False)  # set cursor to 'all artists'
+			self.album_window.scroll_to_selected_album()
 			return False
 		GLib.idle_add(callback)  # ensure it will be executed even when albums are still loading
 
 	def on_search_toggled(self, widget):
 		if widget.get_active():
 			self.stack.set_visible_child_name("search")
-			self.search.start()
+			self.search_window.start()
 		else:
 			self.stack.set_visible_child_name("albums")
 
@@ -1951,8 +1951,8 @@ class Browser(Gtk.Paned):
 
 	def on_artists_changed(self, *args):
 		self.search_button.set_active(False)
-		artists=self.artist_view.get_selected_artists()
-		self.album_view.refresh(artists)
+		artists=self.artist_window.get_selected_artists()
+		self.album_window.refresh(artists)
 
 	def on_icon_size_changed(self, *args):
 		pixel_size=self.settings.get_int("icon-size-sec")
@@ -2197,7 +2197,7 @@ class MainCover(Gtk.Frame):
 		self.song_file=None
 		self.refresh()
 
-class PlaylistView(Gtk.Box):
+class PlaylistWindow(Gtk.Box):
 	def __init__(self, client, settings):
 		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
 
@@ -2529,7 +2529,7 @@ class CoverLyricsOSD(Gtk.Overlay):
 		else:
 			self.revealer.set_reveal_child(False)
 
-class CoverPlaylistView(Gtk.Paned):
+class CoverPlaylistWindow(Gtk.Paned):
 	def __init__(self, client, settings, window):
 		Gtk.Paned.__init__(self)  # paned0
 
@@ -2540,11 +2540,11 @@ class CoverPlaylistView(Gtk.Paned):
 
 		# widgets
 		self.cover=CoverLyricsOSD(self.client, self.settings, self.window)
-		self.playlist_view=PlaylistView(self.client, self.settings)
+		self.playlist_window=PlaylistWindow(self.client, self.settings)
 
 		# packing
 		self.pack1(self.cover, False, False)
-		self.pack2(self.playlist_view, True, False)
+		self.pack2(self.playlist_window, True, False)
 
 		self.set_position(self.settings.get_int("paned0"))
 
@@ -2553,7 +2553,7 @@ class CoverPlaylistView(Gtk.Paned):
 
 	def save_settings(self):
 		self.settings.set_int("paned0", self.get_position())
-		self.playlist_view.save_settings()
+		self.playlist_window.save_settings()
 
 ###################
 # settings dialog #
@@ -3084,7 +3084,7 @@ class SettingsDialog(Gtk.Dialog):
 # control widgets #
 ###################
 
-class ClientControl(Gtk.ButtonBox):
+class PlaybackControl(Gtk.ButtonBox):
 	def __init__(self, client, settings):
 		Gtk.ButtonBox.__init__(self, spacing=6)
 		self.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
@@ -3332,23 +3332,23 @@ class PlaybackOptions(Gtk.Box):
 		for data in icons_data:
 			self.icons[data]=PixelSizedIcon(data, self.icon_size)
 
-		self.random=Gtk.ToggleButton(image=self.icons["media-playlist-shuffle-symbolic"])
-		self.random.set_tooltip_text(_("Random mode"))
-		self.repeat=Gtk.ToggleButton(image=self.icons["media-playlist-repeat-symbolic"])
-		self.repeat.set_tooltip_text(_("Repeat mode"))
-		self.single=Gtk.ToggleButton(image=self.icons["zoom-original-symbolic"])
-		self.single.set_tooltip_text(_("Single mode"))
-		self.consume=Gtk.ToggleButton(image=self.icons["edit-cut-symbolic"])
-		self.consume.set_tooltip_text(_("Consume mode"))
+		self.random_button=Gtk.ToggleButton(image=self.icons["media-playlist-shuffle-symbolic"])
+		self.random_button.set_tooltip_text(_("Random mode"))
+		self.repeat_button=Gtk.ToggleButton(image=self.icons["media-playlist-repeat-symbolic"])
+		self.repeat_button.set_tooltip_text(_("Repeat mode"))
+		self.single_button=Gtk.ToggleButton(image=self.icons["zoom-original-symbolic"])
+		self.single_button.set_tooltip_text(_("Single mode"))
+		self.consume_button=Gtk.ToggleButton(image=self.icons["edit-cut-symbolic"])
+		self.consume_button.set_tooltip_text(_("Consume mode"))
 		self.volume_button=Gtk.VolumeButton()
 		self.volume_button.set_property("use-symbolic", True)
 		self.volume_button.set_property("size", self.settings.get_gtk_icon_size("icon-size"))
 
 		# connect
-		self.random_toggled=self.random.connect("toggled", self.set_option, "random")
-		self.repeat_toggled=self.repeat.connect("toggled", self.set_option, "repeat")
-		self.single_toggled=self.single.connect("toggled", self.set_option, "single")
-		self.consume_toggled=self.consume.connect("toggled", self.set_option, "consume")
+		self.random_button_toggled=self.random_button.connect("toggled", self.set_option, "random")
+		self.repeat_button_toggled=self.repeat_button.connect("toggled", self.set_option, "repeat")
+		self.single_button_toggled=self.single_button.connect("toggled", self.set_option, "single")
+		self.consume_button_toggled=self.consume_button.connect("toggled", self.set_option, "consume")
 		self.volume_button_changed=self.volume_button.connect("value-changed", self.set_volume)
 		self.repeat_changed=self.client.emitter.connect("repeat", self.repeat_refresh)
 		self.random_changed=self.client.emitter.connect("random", self.random_refresh)
@@ -3362,10 +3362,10 @@ class PlaybackOptions(Gtk.Box):
 		# packing
 		ButtonBox=Gtk.ButtonBox()
 		ButtonBox.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
-		ButtonBox.pack_start(self.repeat, True, True, 0)
-		ButtonBox.pack_start(self.random, True, True, 0)
-		ButtonBox.pack_start(self.single, True, True, 0)
-		ButtonBox.pack_start(self.consume, True, True, 0)
+		ButtonBox.pack_start(self.repeat_button, True, True, 0)
+		ButtonBox.pack_start(self.random_button, True, True, 0)
+		ButtonBox.pack_start(self.single_button, True, True, 0)
+		ButtonBox.pack_start(self.consume_button, True, True, 0)
 		self.pack_start(ButtonBox, True, True, 0)
 		self.pack_start(self.volume_button, True, True, 0)
 
@@ -3379,24 +3379,24 @@ class PlaybackOptions(Gtk.Box):
 		self.client.wrapped_call("setvol", str(int(value*100)))
 
 	def repeat_refresh(self, emitter, val):
-		self.repeat.handler_block(self.repeat_toggled)
-		self.repeat.set_active(val)
-		self.repeat.handler_unblock(self.repeat_toggled)
+		self.repeat_button.handler_block(self.repeat_button_toggled)
+		self.repeat_button.set_active(val)
+		self.repeat_button.handler_unblock(self.repeat_button_toggled)
 
 	def random_refresh(self, emitter, val):
-		self.random.handler_block(self.random_toggled)
-		self.random.set_active(val)
-		self.random.handler_unblock(self.random_toggled)
+		self.random_button.handler_block(self.random_button_toggled)
+		self.random_button.set_active(val)
+		self.random_button.handler_unblock(self.random_button_toggled)
 
 	def single_refresh(self, emitter, val):
-		self.single.handler_block(self.single_toggled)
-		self.single.set_active(val)
-		self.single.handler_unblock(self.single_toggled)
+		self.single_button.handler_block(self.single_button_toggled)
+		self.single_button.set_active(val)
+		self.single_button.handler_unblock(self.single_button_toggled)
 
 	def consume_refresh(self, emitter, val):
-		self.consume.handler_block(self.consume_toggled)
-		self.consume.set_active(val)
-		self.consume.handler_unblock(self.consume_toggled)
+		self.consume_button.handler_block(self.consume_button_toggled)
+		self.consume_button.set_active(val)
+		self.consume_button.handler_unblock(self.consume_button_toggled)
 
 	def volume_refresh(self, emitter, volume):
 		self.volume_button.handler_block(self.volume_button_changed)
@@ -3580,12 +3580,12 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.icons[data]=PixelSizedIcon(data, self.icon_size)
 
 		self.browser=Browser(self.client, self.settings, self)
-		self.cover_playlist_view=CoverPlaylistView(self.client, self.settings, self)
-		self.profiles=ProfileSelect(self.client, self.settings)
-		self.profiles.set_tooltip_text(_("Select profile"))
-		self.control=ClientControl(self.client, self.settings)
-		self.progress=SeekBar(self.client)
-		self.play_opts=PlaybackOptions(self.client, self.settings)
+		self.cover_playlist_window=CoverPlaylistWindow(self.client, self.settings, self)
+		self.profile_select=ProfileSelect(self.client, self.settings)
+		self.profile_select.set_tooltip_text(_("Select profile"))
+		self.playback_control=PlaybackControl(self.client, self.settings)
+		self.seek_bar=SeekBar(self.client)
+		self.playback_options=PlaybackOptions(self.client, self.settings)
 
 		# menu
 		subsection=Gio.Menu()
@@ -3625,14 +3625,14 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.paned2.set_position(self.settings.get_int("paned2"))
 		self.on_playlist_pos_settings_changed()  # set orientation
 		self.paned2.pack1(self.browser, True, False)
-		self.paned2.pack2(self.cover_playlist_view, False, False)
+		self.paned2.pack2(self.cover_playlist_window, False, False)
 		self.vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.action_bar=Gtk.ActionBar()
 		self.vbox.pack_start(self.paned2, True, True, 0)
 		self.vbox.pack_start(self.action_bar, False, False, 0)
-		self.action_bar.pack_start(self.control)
-		self.action_bar.pack_start(self.progress)
-		self.action_bar.pack_start(self.play_opts)
+		self.action_bar.pack_start(self.playback_control)
+		self.action_bar.pack_start(self.seek_bar)
+		self.action_bar.pack_start(self.playback_options)
 
 		if self.use_csd:
 			self.header_bar=Gtk.HeaderBar()
@@ -3642,11 +3642,11 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.header_bar.pack_start(self.browser.back_to_album_button)
 			self.header_bar.pack_start(self.browser.genre_select)
 			self.header_bar.pack_end(menu_button)
-			self.header_bar.pack_end(self.profiles)
+			self.header_bar.pack_end(self.profile_select)
 			self.header_bar.pack_end(self.browser.search_button)
 		else:
 			self.action_bar.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.VERTICAL))
-			self.action_bar.pack_start(self.profiles)
+			self.action_bar.pack_start(self.profile_select)
 			self.action_bar.pack_start(menu_button)
 
 		self.add(self.vbox)
@@ -3685,7 +3685,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_reconnected(self, *args):
 		self.dbus_service.acquire_name()
-		self.control.set_sensitive(True)
+		self.playback_control.set_sensitive(True)
 
 	def on_disconnected(self, *args):
 		self.dbus_service.release_name()
@@ -3695,44 +3695,44 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			self.set_title("mpdevil (not connected)")
 		self.songid_playing=None
-		self.control.set_sensitive(False)
+		self.playback_control.set_sensitive(False)
 
 	def on_key_press_event(self, widget, event):
 		ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK)
 		if ctrl:
 			if event.keyval == 108:  # ctrl + l
-				self.cover_playlist_view.show_lyrics()
+				self.cover_playlist_window.show_lyrics()
 		else:
 			if event.keyval == 32:  # space
 				if not self.browser.search_started():
-					self.control.play_button.grab_focus()
+					self.playback_control.play_button.grab_focus()
 			elif event.keyval == 269025044:  # AudioPlay
-				self.control.play_button.grab_focus()
-				self.control.play_button.emit("clicked")
+				self.playback_control.play_button.grab_focus()
+				self.playback_control.play_button.emit("clicked")
 			elif event.keyval == 269025047:  # AudioNext
-				self.control.next_button.grab_focus()
-				self.control.next_button.emit("clicked")
+				self.playback_control.next_button.grab_focus()
+				self.playback_control.next_button.emit("clicked")
 			elif event.keyval == 43 or event.keyval == 65451:  # +
 				if not self.browser.search_started():
-					self.control.next_button.grab_focus()
-					self.control.next_button.emit("clicked")
+					self.playback_control.next_button.grab_focus()
+					self.playback_control.next_button.emit("clicked")
 			elif event.keyval == 269025046:  # AudioPrev
-				self.control.prev_button.grab_focus()
-				self.control.prev_button.emit("clicked")
+				self.playback_control.prev_button.grab_focus()
+				self.playback_control.prev_button.emit("clicked")
 			elif event.keyval == 45 or event.keyval == 65453:  # -
 				if not self.browser.search_started():
-					self.control.prev_button.grab_focus()
-					self.control.prev_button.emit("clicked")
+					self.playback_control.prev_button.grab_focus()
+					self.playback_control.prev_button.emit("clicked")
 			elif event.keyval == 65307:  # esc
 				self.browser.back_to_album()
 			elif event.keyval == 65450:  # *
 				if not self.browser.search_started():
-					self.progress.scale.grab_focus()
-					self.progress.seek_forward()
+					self.seek_bar.scale.grab_focus()
+					self.seek_bar.seek_forward()
 			elif event.keyval == 65455:  # /
 				if not self.browser.search_started():
-					self.progress.scale.grab_focus()
-					self.progress.seek_backward()
+					self.seek_bar.scale.grab_focus()
+					self.seek_bar.seek_backward()
 			elif event.keyval == 65474:  # F5
 				self.update_action.emit("activate", None)
 			elif event.keyval == 65470:  # F1
@@ -3744,7 +3744,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.settings.set_int("height", size[1])
 		self.settings.set_boolean("maximize", self.is_maximized())
 		self.browser.save_settings()
-		self.cover_playlist_view.save_settings()
+		self.cover_playlist_window.save_settings()
 		self.settings.set_int("paned2", self.paned2.get_position())
 
 	def on_settings(self, action, param):
@@ -3766,16 +3766,16 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def on_settings_changed(self, *args):
 		if len(self.settings.get_value("profiles")) > 1:
-			self.profiles.set_property("visible", True)
+			self.profile_select.set_property("visible", True)
 		else:
-			self.profiles.set_property("visible", False)
+			self.profile_select.set_property("visible", False)
 
 	def on_playlist_pos_settings_changed(self, *args):
 		if self.settings.get_boolean("playlist-right"):
-			self.cover_playlist_view.set_orientation(Gtk.Orientation.VERTICAL)
+			self.cover_playlist_window.set_orientation(Gtk.Orientation.VERTICAL)
 			self.paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
 		else:
-			self.cover_playlist_view.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self.cover_playlist_window.set_orientation(Gtk.Orientation.HORIZONTAL)
 			self.paned2.set_orientation(Gtk.Orientation.VERTICAL)
 
 	def on_icon_size_changed(self, *args):
