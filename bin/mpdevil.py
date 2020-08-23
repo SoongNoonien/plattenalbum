@@ -1395,12 +1395,12 @@ class GenreSelect(Gtk.ComboBoxText):
 	def deactivate(self):
 		self.set_active(0)
 
-	def clear(self, *args):
+	def _clear(self, *args):
 		self.handler_block(self._changed)
 		self.remove_all()
 		self.handler_unblock(self._changed)
 
-	def get_value(self):
+	def get_selected_genre(self):
 		if self.get_active() == 0:
 			return None
 		else:
@@ -1424,7 +1424,7 @@ class GenreSelect(Gtk.ComboBoxText):
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
-		self.clear()
+		self._clear()
 
 	def _on_reconnected(self, *args):
 		self._refresh()
@@ -1476,7 +1476,7 @@ class ArtistWindow(FocusFrame):
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._settings.connect("changed::use-album-artist", self._refresh)
 		self._settings.connect("changed::show-initials", self._on_show_initials_settings_changed)
-		self._client.emitter.connect("disconnected", self.clear)
+		self._client.emitter.connect("disconnected", self._clear)
 		self._client.emitter.connect("reconnected", self._refresh)
 		self._client.emitter.connect("update", self._refresh)
 		self._genre_select.connect("genre_changed", self._refresh)
@@ -1484,7 +1484,7 @@ class ArtistWindow(FocusFrame):
 		self.set_widget(self._treeview)
 		self.add(scroll)
 
-	def clear(self, *args):
+	def _clear(self, *args):
 		self._store.clear()
 
 	def select(self, artist):
@@ -1493,24 +1493,23 @@ class ArtistWindow(FocusFrame):
 			path=Gtk.TreePath(i)
 			if self._store[path][0] == artist:
 				self._treeview.set_cursor(path, None, False)
-				if self.get_selected_artists() == [artist]:
-					self._treeview.set_cursor(path, None, False)
-				else:
+				if self.get_selected_artists()[1] != [artist]:
 					self._treeview.row_activated(path, self._column_name)
 				break
 
 	def get_selected_artists(self):
 		artists=[]
+		genre=self._genre_select.get_selected_genre()
 		if self._store[Gtk.TreePath(0)][1] == Pango.Weight.BOLD:
 			for row in self._store:
 				artists.append(row[0])
-			return artists[1:]
+			return (genre, artists[1:])
 		else:
 			for row in self._store:
 				if row[1] == Pango.Weight.BOLD:
 					artists.append(row[0])
 					break
-			return artists
+			return (genre, artists)
 
 	def highlight_selected(self):
 		for path, row in enumerate(self._store):
@@ -1524,13 +1523,13 @@ class ArtistWindow(FocusFrame):
 
 	def _refresh(self, *args):
 		self._selection.set_mode(Gtk.SelectionMode.NONE)
-		self.clear()
+		self._clear()
 		if self._settings.get_artist_type() == "albumartist":
 			self._column_name.set_title(_("Album Artist"))
 		else:
 			self._column_name.set_title(_("Artist"))
 		self._store.append([_("all artists"), Pango.Weight.BOOK, "", Pango.Weight.BOOK])
-		genre=self._genre_select.get_value()
+		genre=self._genre_select.get_selected_genre()
 		if genre is None:
 			artists=self._client.wrapped_call("comp_list", self._settings.get_artist_type())
 		else:
@@ -1546,6 +1545,7 @@ class ArtistWindow(FocusFrame):
 			except:
 				self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
+		self.emit("artists_changed")
 
 	def _on_row_activated(self, widget, path, view_column):
 		for row in self._store:  # reset bold text
@@ -1557,13 +1557,12 @@ class ArtistWindow(FocusFrame):
 		self._column_initials.set_visible(self._settings.get_boolean("show-initials"))
 
 class AlbumWindow(FocusFrame):
-	def __init__(self, client, settings, genre_select, artist_window, window):
+	def __init__(self, client, settings, artist_window, window):
 		FocusFrame.__init__(self)
 
 		# adding vars
 		self._settings=settings
 		self._client=client
-		self._genre_select=genre_select
 		self._artist_window=artist_window
 		self._window=window
 		self._button_event=(None, None)
@@ -1593,30 +1592,30 @@ class AlbumWindow(FocusFrame):
 		self._iconview.connect("button-release-event", self._on_button_release_event)
 		self._iconview.connect("button-press-event", self._on_button_press_event)
 		self._key_press_event=self.connect("key-press-event", self._on_key_press_event)
-		self._client.emitter.connect("update", self.clear)
-		self._client.emitter.connect("disconnected", self.clear)
+		self._client.emitter.connect("update", self._clear)
+		self._client.emitter.connect("disconnected", self._clear)
 		self._settings.connect("changed::show-album-view-tooltips", self._tooltip_settings)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_settings_changed)
-		self._settings.connect("changed::use-album-artist", self.clear)
+		self._settings.connect("changed::use-album-artist", self._clear)
 		self.connect("done", self._on_done)
-		self._genre_select.connect("genre_changed", self.clear)
 		self._artist_window.connect("artists_changed", self._refresh)
 
 		self.set_widget(self._iconview)
 		self.add(scroll)
 
-	def clear(self, *args):
-		def callback():
-			self._store.clear()
-			# workaround (scrollbar still visible after clear)
-			self._iconview.set_model(None)
-			self._iconview.set_model(self._store)
+	def _workaround_clear(self):
+		self._store.clear()
+		# workaround (scrollbar still visible after clear)
+		self._iconview.set_model(None)
+		self._iconview.set_model(self._store)
+
+	def _clear(self, *args):
 		if self._done:
-			callback()
-		elif not callback in self._pending:
+			self._workaround_clear()
+		elif not self._clear in self._pending:
 			self.stop_flag=True
-			self._pending.append(self.clear)
+			self._pending.append(self._clear)
 
 	def scroll_to_selected_album(self):
 		def callback():
@@ -1637,7 +1636,7 @@ class AlbumWindow(FocusFrame):
 					break
 		if self._done:
 			callback()
-		elif not callback in self._pending:
+		elif not self.scroll_to_selected_album in self._pending:
 			self._pending.append(self.scroll_to_selected_album)
 
 	def _tooltip_settings(self, *args):
@@ -1658,8 +1657,8 @@ class AlbumWindow(FocusFrame):
 
 	def _refresh(self, *args):
 		def callback():
-			GLib.idle_add(self._store.clear)
-			artists=self._artist_window.get_selected_artists()
+			GLib.idle_add(self._workaround_clear)
+			genre, artists=self._artist_window.get_selected_artists()
 			# show artist names if all albums are shown
 			if len(artists) > 1:
 				self._iconview.set_markup_column(2)
@@ -1667,7 +1666,6 @@ class AlbumWindow(FocusFrame):
 				self._iconview.set_markup_column(1)
 			# prepare albmus list (run all mpd related commands)
 			albums=[]
-			genre=self._genre_select.get_value()
 			artist_type=self._settings.get_artist_type()
 			for artist in artists:
 				try:  # client cloud meanwhile disconnect
@@ -1727,7 +1725,7 @@ class AlbumWindow(FocusFrame):
 		if self._done:
 			self._done=False
 			callback()
-		elif not callback in self._pending:
+		elif not self._refresh in self._pending:
 			self.stop_flag=True
 			self._pending.append(self._refresh)
 
@@ -1833,7 +1831,7 @@ class Browser(Gtk.Paned):
 		self.genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self.genre_select)
 		self._search_window=SearchWindow(self._client)
-		self._album_window=AlbumWindow(self._client, self._settings, self.genre_select, self._artist_window, window)
+		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window, window)
 
 		# connect
 		self.back_to_album_button.connect("clicked", self.back_to_album)
@@ -1892,12 +1890,12 @@ class Browser(Gtk.Paned):
 					artist=""
 			# deactivate genre filter to show all artists (if needed)
 			try:
-				if song['genre'] != self.genre_select.get_value():
+				if song['genre'] != self.genre_select.get_selected_genre():
 					self.genre_select.deactivate()
 			except:
 				self.genre_select.deactivate()
 			# select artist
-			if len(self._artist_window.get_selected_artists()) <= 1:  # one artist selected
+			if len(self._artist_window.get_selected_artists()[1]) <= 1:  # one artist selected
 				self._artist_window.select(artist)
 			else:  # all artists selected
 				self.search_button.set_active(False)
