@@ -2120,14 +2120,12 @@ class MainCover(Gtk.Frame):
 		# connect
 		event_box.connect("button-press-event", self._on_button_press_event)
 		self._client.emitter.connect("current_song_changed", self._refresh)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._settings.connect("changed::track-cover", self._on_settings_changed)
 
 		event_box.add(self._cover)
 		self.add(event_box)
-
-	def clear(self, *args):
-		self._cover.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(self._settings.get_int("track-cover")))
-		self.song_file=None
 
 	def _refresh(self, *args):
 		current_song=self._client.wrapped_call("currentsong")
@@ -2160,6 +2158,15 @@ class MainCover(Gtk.Frame):
 					album_dialog=AlbumDialog(self._window, self._client, self._settings, album, artist, album_year)
 					album_dialog.open()
 					album_dialog.destroy()
+
+	def _on_disconnected(self, *args):
+		size=self._settings.get_int("track-cover")
+		self._cover.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(size))
+		self.song_file=None
+		self._cover.set_sensitive(False)
+
+	def _on_reconnected(self, *args):
+		self._cover.set_sensitive(True)
 
 	def _on_settings_changed(self, *args):
 		size=self._settings.get_int("track-cover")
@@ -2282,11 +2289,6 @@ class PlaylistWindow(Gtk.Box):
 		self.pack_start(frame, True, True, 0)
 		self.pack_end(action_bar, False, False, 0)
 
-	def clear(self, *args):
-		self._playlist_info.set_text("")
-		self._store.clear()
-		self._playlist_version=None
-
 	def save_settings(self):  # only saves the column sizes
 		columns=self._treeview.get_columns()
 		permutation=self._settings.get_value("column-permutation").unpack()
@@ -2306,6 +2308,11 @@ class PlaylistWindow(Gtk.Box):
 				self._columns[i].set_fixed_width(sizes[i])
 			self._columns[i].set_visible(visibilities[i])
 			self._treeview.append_column(self._columns[i])
+
+	def _clear(self, *args):
+		self._playlist_info.set_text("")
+		self._store.clear()
+		self._playlist_version=None
 
 	def _refresh_playlist_info(self):
 		songs=self._client.wrapped_call("playlistinfo")
@@ -2417,7 +2424,7 @@ class PlaylistWindow(Gtk.Box):
 		self._client.clear()
 
 	def _on_disconnected(self, *args):
-		self.clear()
+		self._clear()
 		self._back_to_song_button.set_sensitive(False)
 		self._clear_button.set_sensitive(False)
 
@@ -2479,7 +2486,6 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 	def _on_disconnected(self, *args):
 		self._lyrics_button.set_sensitive(False)
-		self._main_cover.clear()
 		try:
 			self._lyrics_win.destroy()
 		except:
