@@ -1556,65 +1556,95 @@ class ArtistWindow(FocusFrame):
 	def _on_show_initials_settings_changed(self, *args):
 		self._column_initials.set_visible(self._settings.get_boolean("show-initials"))
 
-class AlbumView(Gtk.IconView):
-	def __init__(self, client, settings, genre_select, window):
-		Gtk.IconView.__init__(self)
+class AlbumWindow(FocusFrame):
+	def __init__(self, client, settings, genre_select, artist_window, window):
+		FocusFrame.__init__(self)
 
 		# adding vars
 		self._settings=settings
 		self._client=client
 		self._genre_select=genre_select
+		self._artist_window=artist_window
 		self._window=window
 		self._button_event=(None, None)
 		self.stop_flag=False
+		self._done=True
+		self._pending=[]
 
 		# cover, display_label, display_label_artist, tooltip(titles), album, year, artist
 		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str)
 		self._sort_settings()
 
 		# iconview
-		self.set_model(self._store)
-		self.set_pixbuf_column(0)
-		self.set_markup_column(1)
-		self.set_item_width(0)
+		self._iconview=Gtk.IconView()
+		self._iconview.set_model(self._store)
+		self._iconview.set_pixbuf_column(0)
+		self._iconview.set_markup_column(1)
+		self._iconview.set_item_width(0)
 		self._tooltip_settings()
 
+		# scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		scroll.add(self._iconview)
+
 		# connect
-		self.connect("item-activated", self._on_item_activated)
-		self.connect("button-release-event", self._on_button_release_event)
-		self.connect("button-press-event", self._on_button_press_event)
+		self._iconview.connect("item-activated", self._on_item_activated)
+		self._iconview.connect("button-release-event", self._on_button_release_event)
+		self._iconview.connect("button-press-event", self._on_button_press_event)
 		self._key_press_event=self.connect("key-press-event", self._on_key_press_event)
+		self._client.emitter.connect("update", self.clear)
+		self._client.emitter.connect("disconnected", self.clear)
 		self._settings.connect("changed::show-album-view-tooltips", self._tooltip_settings)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
+		self._settings.connect("changed::album-cover", self._on_settings_changed)
+		self._settings.connect("changed::use-album-artist", self.clear)
+		self.connect("done", self._on_done)
+		self._genre_select.connect("genre_changed", self.clear)
+		self._artist_window.connect("artists_changed", self._refresh)
 
-	def clear(self):
-		self._store.clear()
-		# workaround (scrollbar still visible after clear)
-		self.set_model(None)
-		self.set_model(self._store)
+		self.set_widget(self._iconview)
+		self.add(scroll)
+
+	def clear(self, *args):
+		def callback():
+			self._store.clear()
+			# workaround (scrollbar still visible after clear)
+			self._iconview.set_model(None)
+			self._iconview.set_model(self._store)
+		if self._done:
+			callback()
+		elif not callback in self._pending:
+			self.stop_flag=True
+			self._pending.append(self.clear)
 
 	def scroll_to_selected_album(self):
-		song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
-		try:
-			album=song["album"]
-		except:
-			album=""
-		self.unselect_all()
-		row_num=len(self._store)
-		for i in range(0, row_num):
-			path=Gtk.TreePath(i)
-			treeiter=self._store.get_iter(path)
-			if self._store.get_value(treeiter, 4) == album:
-				self.set_cursor(path, None, False)
-				self.select_path(path)
-				self.scroll_to_path(path, True, 0, 0)
-				break
+		def callback():
+			song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
+			try:
+				album=song["album"]
+			except:
+				album=""
+			self._iconview.unselect_all()
+			row_num=len(self._store)
+			for i in range(0, row_num):
+				path=Gtk.TreePath(i)
+				treeiter=self._store.get_iter(path)
+				if self._store.get_value(treeiter, 4) == album:
+					self._iconview.set_cursor(path, None, False)
+					self._iconview.select_path(path)
+					self._iconview.scroll_to_path(path, True, 0, 0)
+					break
+		if self._done:
+			callback()
+		elif not callback in self._pending:
+			self._pending.append(self.scroll_to_selected_album)
 
 	def _tooltip_settings(self, *args):
 		if self._settings.get_boolean("show-album-view-tooltips"):
-			self.set_tooltip_column(3)
+			self._iconview.set_tooltip_column(3)
 		else:
-			self.set_tooltip_column(-1)
+			self._iconview.set_tooltip_column(-1)
 
 	def _sort_settings(self, *args):
 		if self._settings.get_boolean("sort-albums-by-year"):
@@ -1626,72 +1656,80 @@ class AlbumView(Gtk.IconView):
 		self._store.append(row)
 		return False  # stop after one run
 
-	def populate(self, artists):
-		GLib.idle_add(self._store.clear)
-		# show artist names if all albums are shown
-		if len(artists) > 1:
-			self.set_markup_column(2)
-		else:
-			self.set_markup_column(1)
-		# prepare albmus list (run all mpd related commands)
-		albums=[]
-		genre=self._genre_select.get_value()
-		artist_type=self._settings.get_artist_type()
-		for artist in artists:
-			try:  # client cloud meanwhile disconnect
-				if self.stop_flag:
+	def _refresh(self, *args):
+		def callback():
+			GLib.idle_add(self._store.clear)
+			artists=self._artist_window.get_selected_artists()
+			# show artist names if all albums are shown
+			if len(artists) > 1:
+				self._iconview.set_markup_column(2)
+			else:
+				self._iconview.set_markup_column(1)
+			# prepare albmus list (run all mpd related commands)
+			albums=[]
+			genre=self._genre_select.get_value()
+			artist_type=self._settings.get_artist_type()
+			for artist in artists:
+				try:  # client cloud meanwhile disconnect
+					if self.stop_flag:
+						GLib.idle_add(self.emit, "done")
+						return
+					else:
+						if genre is None:
+							album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist)
+						else:
+							album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist, "genre", genre)
+						for album in album_candidates:
+							years=self._client.wrapped_call("comp_list", "date", "album", album, artist_type, artist)
+							for year in years:
+								songs=self._client.wrapped_call("find", "album", album, "date", year, artist_type, artist)
+								albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
+						while Gtk.events_pending():
+							Gtk.main_iteration_do(True)
+				except MPDBase.ConnectionError:
 					GLib.idle_add(self.emit, "done")
 					return
-				else:
-					if genre is None:
-						album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist)
-					else:
-						album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist, "genre", genre)
-					for album in album_candidates:
-						years=self._client.wrapped_call("comp_list", "date", "album", album, artist_type, artist)
-						for year in years:
-							songs=self._client.wrapped_call("find", "album", album, "date", year, artist_type, artist)
-							albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
-					while Gtk.events_pending():
-						Gtk.main_iteration_do(True)
-			except MPDBase.ConnectionError:
-				GLib.idle_add(self.emit, "done")
-				return
-		# display albums
-		if self._settings.get_boolean("sort-albums-by-year"):
-			albums=sorted(albums, key=lambda k: k['year'])
-		else:
-			albums=sorted(albums, key=lambda k: k['album'])
-		size=self._settings.get_int("album-cover")
-		for i, album in enumerate(albums):
-			if self.stop_flag:
-				break
+			# display albums
+			if self._settings.get_boolean("sort-albums-by-year"):
+				albums=sorted(albums, key=lambda k: k['year'])
 			else:
-				cover=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
-				# tooltip
-				length_human_readable=ClientHelper.calc_display_length(album["songs"])
-				try:
-					discs=int(album["songs"][-1]["disc"])
-				except:
-					discs=1
-				if discs > 1:
-					tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)") % {"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
+				albums=sorted(albums, key=lambda k: k['album'])
+			size=self._settings.get_int("album-cover")
+			for i, album in enumerate(albums):
+				if self.stop_flag:
+					break
 				else:
-					tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
-				# album label
-				display_label="<b>"+album["album"]+"</b>"
-				if album["year"] != "":
-					display_label=display_label+" ("+album["year"]+")"
-				display_label_artist=display_label+"\n"+album["artist"]
-				display_label=display_label.replace("&", "&amp;")
-				display_label_artist=display_label_artist.replace("&", "&amp;")
-				# add album
-				GLib.idle_add(self._add_row, [cover, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]])
-				# execute pending events
-				if i%16 == 0:
-					while Gtk.events_pending():
-						Gtk.main_iteration_do(True)
-		GLib.idle_add(self.emit, "done")
+					cover=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
+					# tooltip
+					length_human_readable=ClientHelper.calc_display_length(album["songs"])
+					try:
+						discs=int(album["songs"][-1]["disc"])
+					except:
+						discs=1
+					if discs > 1:
+						tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)") % {"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
+					else:
+						tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
+					# album label
+					display_label="<b>"+album["album"]+"</b>"
+					if album["year"] != "":
+						display_label=display_label+" ("+album["year"]+")"
+					display_label_artist=display_label+"\n"+album["artist"]
+					display_label=display_label.replace("&", "&amp;")
+					display_label_artist=display_label_artist.replace("&", "&amp;")
+					# add album
+					GLib.idle_add(self._add_row, [cover, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]])
+					# execute pending events
+					if i%16 == 0:
+						while Gtk.events_pending():
+							Gtk.main_iteration_do(True)
+			GLib.idle_add(self.emit, "done")
+		if self._done:
+			self._done=False
+			callback()
+		elif not callback in self._pending:
+			self.stop_flag=True
+			self._pending.append(self._refresh)
 
 	def _path_to_playlist(self, path, mode="default"):
 		album=self._store[path][4]
@@ -1712,6 +1750,16 @@ class AlbumView(Gtk.IconView):
 	def done(self):
 		self.stop_flag=False
 
+	def _on_done(self, *args):
+		self._done=True
+		pending=self._pending
+		self._pending=[]
+		for p in pending:
+			try:
+				p()
+			except:
+				pass
+
 	def _on_button_press_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
 		if event.type == Gdk.EventType.BUTTON_PRESS:
@@ -1731,15 +1779,15 @@ class AlbumView(Gtk.IconView):
 	def _on_key_press_event(self, widget, event):
 		self.handler_block(self._key_press_event)
 		if event.keyval == 112:  # p
-			paths=self.get_selected_items()
+			paths=self._iconview.get_selected_items()
 			if len(paths) != 0:
 				self._path_to_playlist(paths[0])
 		elif event.keyval == 97:  # a
-			paths=self.get_selected_items()
+			paths=self._iconview.get_selected_items()
 			if len(paths) != 0:
 				self._path_to_playlist(paths[0], "append")
 		elif event.keyval == 65383:  # menu key
-			paths=self.get_selected_items()
+			paths=self._iconview.get_selected_items()
 			if len(paths) != 0:
 				self._open_album_dialog(paths[0])
 		self.handler_unblock(self._key_press_event)
@@ -1751,72 +1799,9 @@ class AlbumView(Gtk.IconView):
 		selected_artist=self._store.get_value(treeiter, 6)
 		self._client.wrapped_call("album_to_playlist", selected_album, selected_artist, selected_album_year, "play")
 
-class AlbumWindow(FocusFrame):
-	def __init__(self, client, settings, genre_select, window):
-		FocusFrame.__init__(self)
-
-		# adding vars
-		self._settings=settings
-		self._client=client
-		self._artists=[]
-		self._done=True
-		self._pending=[]
-
-		# iconview
-		self._iconview=AlbumView(client, settings, genre_select, window)
-
-		# scroll
-		scroll=Gtk.ScrolledWindow()
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self._iconview)
-
-		# connect
-		self._iconview.connect("done", self._on_done)
-		genre_select.connect("genre_changed", self.clear)
-		self._client.emitter.connect("update", self.clear)
-		self._client.emitter.connect("disconnected", self.clear)
-		self._settings.connect("changed::album-cover", self._on_settings_changed)
-		self._settings.connect("changed::use-album-artist", self.clear)
-
-		self.set_widget(self._iconview)
-		self.add(scroll)
-
-	def clear(self, *args):
-		if self._done:
-			self._iconview.clear()
-		elif not self.clear in self._pending:
-			self._iconview.stop_flag=True
-			self._pending.append(self.clear)
-
-	def refresh(self, artists=[]):
-		if artists != []:
-			self._artists=artists
-		if self._done:
-			self._done=False
-			self._iconview.populate(self._artists)
-		elif not self.refresh in self._pending:
-			self._iconview.stop_flag=True
-			self._pending.append(self.refresh)
-
-	def scroll_to_selected_album(self):
-		if self._done:
-			self._iconview.scroll_to_selected_album()
-		elif not self.scroll_to_selected_album in self._pending:
-			self._pending.append(self.scroll_to_selected_album)
-
-	def _on_done(self, *args):
-		self._done=True
-		pending=self._pending
-		self._pending=[]
-		for p in pending:
-			try:
-				p()
-			except:
-				pass
-
 	def _on_settings_changed(self, *args):
 		def callback():
-			self.refresh(self._artists)
+			self._refresh()
 			return False
 		GLib.idle_add(callback)
 
@@ -1848,7 +1833,7 @@ class Browser(Gtk.Paned):
 		self.genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self.genre_select)
 		self._search_window=SearchWindow(self._client)
-		self._album_window=AlbumWindow(self._client, self._settings, self.genre_select, window)
+		self._album_window=AlbumWindow(self._client, self._settings, self.genre_select, self._artist_window, window)
 
 		# connect
 		self.back_to_album_button.connect("clicked", self.back_to_album)
@@ -1940,8 +1925,6 @@ class Browser(Gtk.Paned):
 
 	def _on_artists_changed(self, *args):
 		self.search_button.set_active(False)
-		artists=self._artist_window.get_selected_artists()
-		self._album_window.refresh(artists)
 
 	def _on_icon_size_changed(self, *args):
 		pixel_size=self._settings.get_int("icon-size-sec")
