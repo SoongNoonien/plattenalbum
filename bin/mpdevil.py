@@ -3318,6 +3318,9 @@ class PlaybackOptions(Gtk.Box):
 		self._volume_button=Gtk.VolumeButton()
 		self._volume_button.set_property("use-symbolic", True)
 		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
+		adj=self._volume_button.get_adjustment()
+		adj.set_step_increment(0.05)
+		adj.set_page_increment(0.1)
 
 		# connect
 		self._random_button_toggled=self._random_button.connect("toggled", self._set_option, "random")
