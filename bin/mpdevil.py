@@ -2091,13 +2091,11 @@ class AudioType(Gtk.Label):
 class MainCover(Gtk.Frame):
 	def __init__(self, client, settings, window):
 		Gtk.Frame.__init__(self)
-		# diable auto resize
-		self.set_halign(3)
-		self.set_valign(3)
+
 		# css
 		style_context=self.get_style_context()
 		provider=Gtk.CssProvider()
-		css=b"""* {background-color: @theme_base_color; border-radius: 6px;}"""
+		css=b"""* {background-color: @theme_base_color; border-width: 0px}"""
 		provider.load_from_data(css)
 		style_context.add_provider(provider, 800)
 
@@ -2108,7 +2106,7 @@ class MainCover(Gtk.Frame):
 
 		# event box
 		event_box=Gtk.EventBox()
-		event_box.set_property("border-width", 6)
+		event_box.set_property("border-width", 4)
 
 		# cover
 		self._cover=Gtk.Image.new()
@@ -2448,7 +2446,6 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 		# cover
 		self._main_cover=MainCover(self._client, self._settings, self._window)
-		self._main_cover.set_property("border-width", 3)
 
 		# lyrics button
 		self._lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON))
