@@ -2106,7 +2106,7 @@ class MainCover(Gtk.Frame):
 
 		# event box
 		event_box=Gtk.EventBox()
-		event_box.set_property("border-width", 4)
+		event_box.set_property("border-width", 5)
 
 		# cover
 		self._cover=Gtk.Image.new()
