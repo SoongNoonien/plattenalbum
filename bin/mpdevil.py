@@ -1941,7 +1941,7 @@ class LyricsWindow(Gtk.Overlay):
 		self._settings=settings
 		self._client=client
 
-		# widgets
+		# text view
 		text_view=Gtk.TextView()
 		text_view.set_editable(False)
 		text_view.set_left_margin(5)
@@ -1949,6 +1949,9 @@ class LyricsWindow(Gtk.Overlay):
 		text_view.set_cursor_visible(False)
 		text_view.set_wrap_mode(Gtk.WrapMode.WORD)
 		text_view.set_justification(Gtk.Justification.CENTER)
+		text_view.set_opacity(0.9)
+
+		# text buffer
 		self._text_buffer=text_view.get_buffer()
 
 		# scroll
@@ -1959,11 +1962,6 @@ class LyricsWindow(Gtk.Overlay):
 		# frame
 		frame=FocusFrame()
 		frame.set_widget(text_view)
-		style_context=frame.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""* {border: 0px; background-color: @theme_base_color; opacity: 0.9;}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
 
 		# close button
 		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
@@ -1971,7 +1969,6 @@ class LyricsWindow(Gtk.Overlay):
 		close_button.set_margin_end(6)
 		style_context=close_button.get_style_context()
 		style_context.add_class("circular")
-
 		close_button.set_halign(2)
 		close_button.set_valign(1)
 
