@@ -37,7 +37,7 @@
       <description></description>
     </key>
     <key type="i" name="track-cover">
-      <default>360</default>
+      <default>370</default>
       <summary>Size of main cover</summary>
       <description></description>
     </key>
