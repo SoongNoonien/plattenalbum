@@ -571,18 +571,6 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 # small general purpose widgets #
 #################################
 
-class IntEntry(Gtk.SpinButton):
-	def __init__(self, default, lower, upper, step):
-		Gtk.SpinButton.__init__(self)
-		adj=Gtk.Adjustment(value=default, lower=lower, upper=upper, step_increment=step)
-		self.set_adjustment(adj)
-
-	def get_int(self):
-		return int(self.get_value())
-
-	def set_int(self, value):
-		self.set_value(value)
-
 class PixelSizedIcon(Gtk.Image):
 	def __init__(self, icon_name, pixel_size):
 		Gtk.Image.__init__(self)
@@ -2543,9 +2531,10 @@ class GeneralSettings(Gtk.Box):
 				(_("Action bar icon size:"), (16, 64, 2), "icon-size"),\
 				(_("Secondary icon size:"), (16, 64, 2), "icon-size-sec")]
 		for data in int_settings_data:
-			int_settings[data[2]]=(Gtk.Label(), IntEntry(self._settings.get_int(data[2]), data[1][0], data[1][1], data[1][2]))
+			int_settings[data[2]]=(Gtk.Label(), Gtk.SpinButton.new_with_range(data[1][0], data[1][1], data[1][2]))
 			int_settings[data[2]][0].set_label(data[0])
 			int_settings[data[2]][0].set_xalign(0)
+			int_settings[data[2]][1].set_value(self._settings.get_int(data[2]))
 			int_settings[data[2]][1].connect("value-changed", self._on_int_changed, data[2])
 			self._settings_handlers.append(self._settings.connect("changed::"+data[2], self._on_int_settings_changed, int_settings[data[2]][1]))
 
@@ -2656,7 +2645,7 @@ class GeneralSettings(Gtk.Box):
 		button.set_active(settings.get_boolean(key))
 
 	def _on_int_changed(self, widget, key):
-		self._settings.set_int(key, widget.get_int())
+		self._settings.set_int(key, int(widget.get_value()))
 
 	def _on_combo_changed(self, box, key):
 		active=box.get_active()
@@ -2692,7 +2681,7 @@ class ProfileSettings(Gtk.Grid):
 
 		self._profile_entry=Gtk.Entry(hexpand=True)
 		self._host_entry=Gtk.Entry(hexpand=True)
-		self._port_entry=IntEntry(0, 0, 65535, 1)
+		self._port_entry=Gtk.SpinButton.new_with_range(0, 65535, 1)
 		address_entry=Gtk.Box(spacing=6)
 		address_entry.pack_start(self._host_entry, True, True, 0)
 		address_entry.pack_start(self._port_entry, False, False, 0)
@@ -2827,7 +2816,7 @@ class ProfileSettings(Gtk.Grid):
 
 	def _on_port_entry_changed(self, *args):
 		self._gui_modification=True
-		self._settings.array_modify('ai', "ports", self._profiles_combo.get_active(), self._port_entry.get_int())
+		self._settings.array_modify('ai', "ports", self._profiles_combo.get_active(), int(self._port_entry.get_value()))
 
 	def _on_password_entry_changed(self, *args):
 		self._gui_modification=True
@@ -2860,7 +2849,7 @@ class ProfileSettings(Gtk.Grid):
 
 		self._profile_entry.set_text(self._settings.get_value("profiles")[active])
 		self._host_entry.set_text(self._settings.get_value("hosts")[active])
-		self._port_entry.set_int(self._settings.get_value("ports")[active])
+		self._port_entry.set_value(self._settings.get_value("ports")[active])
 		self._password_entry.set_text(self._settings.get_value("passwords")[active])
 		self._path_entry.set_text(self._settings.get_value("paths")[active])
 		self._regex_entry.set_text(self._settings.get_value("regex")[active])
