@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+# This file is based on https://github.com/kassoulet/soundconverter
 import os
 import DistUtilsExtra.auto
 
