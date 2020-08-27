@@ -29,7 +29,7 @@ Ubuntu, Debian, Mint:
 - Download the .deb file
 - Open a console
 - Navigate into download dir
-- Run: `sudo apt install ./mpdevil_VERSION_amd64.deb`
+- Run: `sudo apt install ./mpdevil_VERSION.deb`
 
 Arch, Manjaro (see: https://aur.archlinux.org/packages/mpdevil/):
 - Download the PKGBUILD from the AUR
@@ -47,6 +47,9 @@ Gentoo (see: https://wiki.gentoo.org/wiki/Custom_repository):
 Building
 --------
 
+Build dependencies:
+- DistUtilsExtra (python-distutils-extra)
+
 Dependencies:
 - Gtk3
 - Python3
@@ -57,10 +60,12 @@ Python modules:
 - requests
 - bs4 (beautifulsoup)
 - dbus
+- pkg_resources (setuptools)
 
-To build and install from source, use:
+Run:
+```bash
+git clone https://github.com/SoongNoonien/mpdevil.git
+cd mpdevil
+sudo python3 setup.py install
+```
 
-    ./autogen.sh
-    make
-    make install
-    

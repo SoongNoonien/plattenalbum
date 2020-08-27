@@ -30,10 +30,13 @@ from bs4 import BeautifulSoup, Comment
 import threading
 import locale
 import gettext
+gettext.textdomain('mpdevil')
+_=gettext.gettext
 import datetime
 import os
 import sys
 import re
+import pkg_resources
 
 # MPRIS modules
 import dbus
@@ -41,27 +44,11 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 import base64
 
-DATADIR='@datadir@'
-NAME='mpdevil'
-VERSION='@version@'
+NAME=pkg_resources.require('mpdevil')[0].project_name
+VERSION=pkg_resources.require('mpdevil')[0].version
 PACKAGE=NAME.lower()
 COVER_REGEX="^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
-#################
-# lang settings #
-#################
-
-try:
-	locale.setlocale(locale.LC_ALL, '')
-	locale.bindtextdomain(PACKAGE, '@datadir@/locale')
-	gettext.bindtextdomain(PACKAGE, '@datadir@/locale')
-	gettext.textdomain(PACKAGE)
-	gettext.install(PACKAGE, localedir='@datadir@/locale')
-except locale.Error:
-	print('  cannot use system locale.')
-	locale.setlocale(locale.LC_ALL, 'C')
-	gettext.textdomain(PACKAGE)
-	gettext.install(PACKAGE, localedir='@datadir@/locale')
 
 #########
 # MPRIS #
