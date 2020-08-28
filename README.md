@@ -48,7 +48,7 @@ Building
 --------
 
 Build dependencies:
-- DistUtilsExtra (python-distutils-extra)
+- DistUtilsExtra
 
 Dependencies:
 - Gtk3
@@ -67,5 +67,8 @@ Run:
 git clone https://github.com/SoongNoonien/mpdevil.git
 cd mpdevil
 sudo python3 setup.py install
+sudo glib-compile-schemas /usr/share/glib-2.0/schemas
+sudo gtk-update-icon-cache
+sudo update-desktop-database
 ```
 
