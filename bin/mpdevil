@@ -676,7 +676,7 @@ class Client(MPDClient):
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 
 		#connect
-		self._settings.connect("changed::active-profile", self._on_settings_changed)
+		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
 
 	def wrapped_call(self, name, *args):
 		try:
@@ -811,7 +811,7 @@ class Client(MPDClient):
 		self.emitter.emit("reconnected")
 		return False
 
-	def _on_settings_changed(self, *args):
+	def _on_active_profile_changed(self, *args):
 		self.disconnect()
 
 ########################
@@ -1338,7 +1338,7 @@ class ArtistWindow(FocusFrame):
 		# connect
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._settings.connect("changed::use-album-artist", self._refresh)
-		self._settings.connect("changed::show-initials", self._on_show_initials_settings_changed)
+		self._settings.connect("changed::show-initials", self._on_show_initials_changed)
 		self._client.emitter.connect("disconnected", self._clear)
 		self._client.emitter.connect("reconnected", self._refresh)
 		self._client.emitter.connect("update", self._refresh)
@@ -1416,7 +1416,7 @@ class ArtistWindow(FocusFrame):
 		self._store[path][1]=Pango.Weight.BOLD
 		self.emit("artists_changed")
 
-	def _on_show_initials_settings_changed(self, *args):
+	def _on_show_initials_changed(self, *args):
 		self._column_initials.set_visible(self._settings.get_boolean("show-initials"))
 
 class AlbumWindow(FocusFrame):
@@ -1459,7 +1459,7 @@ class AlbumWindow(FocusFrame):
 		self._client.emitter.connect("disconnected", self._clear)
 		self._settings.connect("changed::show-album-view-tooltips", self._tooltip_settings)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
-		self._settings.connect("changed::album-cover", self._on_settings_changed)
+		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
 		self._settings.connect("changed::use-album-artist", self._clear)
 		self.connect("done", self._on_done)
 		self._artist_window.connect("artists_changed", self._refresh)
@@ -1660,7 +1660,7 @@ class AlbumWindow(FocusFrame):
 		selected_artist=self._store.get_value(treeiter, 6)
 		self._client.wrapped_call("album_to_playlist", selected_album, selected_artist, selected_album_year, "play")
 
-	def _on_settings_changed(self, *args):
+	def _on_cover_size_changed(self, *args):
 		def callback():
 			self._refresh()
 			return False
@@ -2943,7 +2943,7 @@ class PlaybackControl(Gtk.ButtonBox):
 		self.stop_button.connect("clicked", self._on_stop_clicked)
 		self.prev_button.connect("clicked", self._on_prev_clicked)
 		self.next_button.connect("clicked", self._on_next_clicked)
-		self._settings.connect("changed::show-stop", self._on_settings_changed)
+		self._settings.connect("changed::show-stop", self._on_show_stop_changed)
 		self._settings.connect("changed::icon-size", self._on_icon_size_changed)
 		self._client.emitter.connect("state", self._on_state)
 
@@ -2993,7 +2993,7 @@ class PlaybackControl(Gtk.ButtonBox):
 		if self._client.connected():
 			self._client.wrapped_call("next")
 
-	def _on_settings_changed(self, *args):
+	def _on_show_stop_changed(self, *args):
 		if self._settings.get_boolean("show-stop"):
 			self.pack_start(self.stop_button, True, True, 0)
 			self.reorder_child(self.stop_button, 2)
@@ -3455,8 +3455,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.pack_start(playback_options)
 
 		# connect
-		self._settings.connect("changed::profiles", self._on_settings_changed)
-		self._settings.connect("changed::playlist-right", self._on_playlist_pos_settings_changed)
+		self._settings.connect("changed::profiles", self._on_profiles_changed)
+		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
 		if not self._use_csd:
 			self._settings.connect("changed::icon-size", self._on_icon_size_changed)
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
@@ -3471,7 +3471,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		# packing
 		self._paned2=Gtk.Paned()
 		self._paned2.set_position(self._settings.get_int("paned2"))
-		self._on_playlist_pos_settings_changed()  # set orientation
+		self._on_playlist_pos_changed()  # set orientation
 		self._paned2.pack1(self._browser, True, False)
 		self._paned2.pack2(self._cover_playlist_window, False, False)
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -3497,7 +3497,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.show_all()
 		if self._settings.get_boolean("maximize"):
 			self.maximize()
-		self._on_settings_changed()  # hide profiles button
+		self._on_profiles_changed()  # hide profiles button
 		self._client.start()  # connect client
 
 	def _on_song_changed(self, *args):
@@ -3607,13 +3607,13 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_help(self, action, param):
 		Gtk.show_uri_on_window(self, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
 
-	def _on_settings_changed(self, *args):
+	def _on_profiles_changed(self, *args):
 		if len(self._settings.get_value("profiles")) > 1:
 			self._profile_select.set_property("visible", True)
 		else:
 			self._profile_select.set_property("visible", False)
 
-	def _on_playlist_pos_settings_changed(self, *args):
+	def _on_playlist_pos_changed(self, *args):
 		if self._settings.get_boolean("playlist-right"):
 			self._cover_playlist_window.set_orientation(Gtk.Orientation.VERTICAL)
 			self._paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
