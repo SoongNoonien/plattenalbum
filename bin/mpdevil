@@ -3481,7 +3481,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar()
 			self._header_bar.set_show_close_button(True)
-			self._header_bar.set_title("mpdevil")
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_start(self._browser.back_to_album_button)
 			self._header_bar.pack_start(self._browser.genre_select)
@@ -3505,7 +3504,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		song=self._client.wrapped_call("currentsong")
 		if song == {}:
 			if self._use_csd:
-				self._header_bar.set_title("mpdevil")
+				self.set_title("mpdevil")
 				self._header_bar.set_subtitle("")
 			else:
 				self.set_title("mpdevil")
@@ -3516,7 +3515,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			else:
 				date=" ("+song["date"]+")"
 			if self._use_csd:
-				self._header_bar.set_title(song["title"]+" - "+song["artist"])
+				self.set_title(song["title"]+" - "+song["artist"])
 				self._header_bar.set_subtitle(song["album"]+date)
 			else:
 				self.set_title(song["title"]+" - "+song["artist"]+" - "+song["album"]+date)
@@ -3534,7 +3533,7 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_disconnected(self, *args):
 		self._dbus_service.release_name()
 		if self._use_csd:
-			self._header_bar.set_title("mpdevil")
+			self.set_title("mpdevil")
 			self._header_bar.set_subtitle("(not connected)")
 		else:
 			self.set_title("mpdevil (not connected)")
