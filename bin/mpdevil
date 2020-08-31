@@ -504,9 +504,8 @@ class SongPopover(Gtk.Popover):
 		sel=treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
 
-		frame=Gtk.Frame()
+		frame=Gtk.Frame(border_width=3)
 		frame.add(treeview)
-		frame.set_property("border-width", 3)
 
 		# Column
 		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
@@ -944,8 +943,7 @@ class SearchWindow(Gtk.Box):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 		# packing
-		hbox=Gtk.Box(spacing=6)
-		hbox.set_property("border-width", 6)
+		hbox=Gtk.Box(spacing=6, border_width=6)
 		hbox.pack_start(self._search_entry, True, True, 0)
 		hbox.pack_end(self._tags, False, False, 0)
 		self._hits_label.set_margin_end(6)
@@ -1097,8 +1095,7 @@ class SongsWindow(Gtk.Box):
 		enqueue_button.set_tooltip_text(_("Append all titles after the currently playing track and clear the playlist from all other songs"))
 
 		# button box
-		button_box=Gtk.ButtonBox()
-		button_box.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
+		button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 
 		# action bar
 		self._action_bar=Gtk.ActionBar()
@@ -1307,10 +1304,9 @@ class ArtistWindow(FocusFrame):
 		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
 
 		# TreeView
-		self._treeview=Gtk.TreeView(model=self._store)
+		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True)
 		self._treeview.set_search_column(0)
 		self._treeview.columns_autosize()
-		self._treeview.set_property("activate-on-single-click", True)
 
 		# Selection
 		self._selection=self._treeview.get_selection()
@@ -1714,8 +1710,7 @@ class Browser(Gtk.Paned):
 		if self._use_csd:
 			self.pack1(self._artist_window, False, False)
 		else:
-			hbox=Gtk.Box(spacing=6)
-			hbox.set_property("border-width", 6)
+			hbox=Gtk.Box(spacing=6, border_width=6)
 			hbox.pack_start(self.back_to_album_button, False, False, 0)
 			hbox.pack_start(self.genre_select, True, True, 0)
 			hbox.pack_start(self.search_button, False, False, 0)
@@ -2068,9 +2063,8 @@ class PlaylistWindow(Gtk.Box):
 		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
 
 		# TreeView
-		self._treeview=Gtk.TreeView(model=self._store)
+		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True)
 		self._treeview.set_search_column(2)
-		self._treeview.set_property("activate-on-single-click", True)
 
 		# selection
 		self._selection=self._treeview.get_selection()
@@ -2392,8 +2386,7 @@ class CoverPlaylistWindow(Gtk.Paned):
 
 class GeneralSettings(Gtk.Box):
 	def __init__(self, settings):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-		self.set_property("border-width", 18)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=18)
 
 		# adding vars
 		self._settings=settings
@@ -2534,10 +2527,7 @@ class GeneralSettings(Gtk.Box):
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
-		super().__init__()
-		self.set_row_spacing(6)
-		self.set_column_spacing(12)
-		self.set_property("border-width", 18)
+		super().__init__(row_spacing=6, column_spacing=12, border_width=18)
 
 		# adding vars
 		self._settings=settings
@@ -2549,8 +2539,7 @@ class ProfileSettings(Gtk.Grid):
 
 		add_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_ADD))
 		delete_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_DELETE))
-		add_delete_buttons=Gtk.ButtonBox()
-		add_delete_buttons.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
+		add_delete_buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		add_delete_buttons.pack_start(add_button, True, True, 0)
 		add_delete_buttons.pack_start(delete_button, True, True, 0)
 
@@ -2567,8 +2556,7 @@ class ProfileSettings(Gtk.Grid):
 		path_box=Gtk.Box(spacing=6)
 		path_box.pack_start(self._path_entry, True, True, 0)
 		path_box.pack_start(self._path_select_button, False, False, 0)
-		self._regex_entry=Gtk.Entry(hexpand=True)
-		self._regex_entry.set_property("placeholder-text", COVER_REGEX)
+		self._regex_entry=Gtk.Entry(hexpand=True, placeholder_text=COVER_REGEX)
 		self._regex_entry.set_tooltip_text(_("The first image in the same directory as the song file matching this regex will be displayed. %AlbumArtist% and %Album% will be replaced by the corresponding tags of the song."))
 
 		profiles_label=Gtk.Label(label=_("Profile:"))
@@ -2733,8 +2721,7 @@ class ProfileSettings(Gtk.Grid):
 
 class PlaylistSettings(Gtk.Box):
 	def __init__(self, settings):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-		self.set_property("border-width", 18)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=18)
 
 		# adding vars
 		self._settings=settings
@@ -2918,8 +2905,7 @@ class SettingsDialog(Gtk.Dialog):
 
 class PlaybackControl(Gtk.ButtonBox):
 	def __init__(self, client, settings):
-		super().__init__()
-		self.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
+		super().__init__(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 
 		# adding vars
 		self._client=client
@@ -3172,9 +3158,8 @@ class PlaybackOptions(Gtk.Box):
 		self._single_button.set_tooltip_text(_("Single mode"))
 		self._consume_button=Gtk.ToggleButton(image=self._icons["edit-cut-symbolic"])
 		self._consume_button.set_tooltip_text(_("Consume mode"))
-		self._volume_button=Gtk.VolumeButton()
+		self._volume_button=Gtk.VolumeButton(use_symbolic=True)
 		self._volume_button.set_sensitive(False)  # do not allow volume change by user when MPD has not yet reported volume
-		self._volume_button.set_property("use-symbolic", True)
 		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
 		adj=self._volume_button.get_adjustment()
 		adj.set_step_increment(0.05)
@@ -3196,8 +3181,7 @@ class PlaybackOptions(Gtk.Box):
 		self._settings.connect("changed::icon-size", self._on_icon_size_changed)
 
 		# packing
-		ButtonBox=Gtk.ButtonBox()
-		ButtonBox.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
+		ButtonBox=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		ButtonBox.pack_start(self._repeat_button, True, True, 0)
 		ButtonBox.pack_start(self._random_button, True, True, 0)
 		ButtonBox.pack_start(self._single_button, True, True, 0)
