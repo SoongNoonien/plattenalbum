@@ -83,7 +83,7 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 	}
 
 	def __init__(self, window, client, settings):
-		dbus.service.Object.__init__(self, dbus.SessionBus(), "/org/mpris/MediaPlayer2")
+		super().__init__(dbus.SessionBus(), "/org/mpris/MediaPlayer2")
 		self._name="org.mpris.MediaPlayer2.mpdevil"
 
 		self._bus=dbus.SessionBus()
@@ -447,14 +447,14 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 
 class PixelSizedIcon(Gtk.Image):
 	def __init__(self, icon_name, pixel_size):
-		Gtk.Image.__init__(self)
+		super().__init__()
 		self.set_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
 		if pixel_size > 0:
 			self.set_pixel_size(pixel_size)
 
 class FocusFrame(Gtk.Overlay):
 	def __init__(self):
-		Gtk.Overlay.__init__(self)
+		super().__init__()
 
 		self._frame=Gtk.Frame()
 		self._frame.set_no_show_all(True)
@@ -481,7 +481,7 @@ class FocusFrame(Gtk.Overlay):
 
 class SongPopover(Gtk.Popover):
 	def __init__(self, song, relative, x, y):
-		Gtk.Popover.__init__(self)
+		super().__init__()
 		rect=Gdk.Rectangle()
 		rect.x=x
 		# Gtk places popovers 26px above the given position for no obvious reasons, so I move them 26px
@@ -667,7 +667,7 @@ class MpdEventEmitter(GObject.Object):
 
 class Client(MPDClient):
 	def __init__(self, settings):
-		MPDClient.__init__(self)
+		super().__init__()
 
 		# adding vars
 		self._settings=settings
@@ -870,7 +870,7 @@ class Settings(Gio.Settings):
 
 class SearchWindow(Gtk.Box):
 	def __init__(self, client):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 
 		# adding vars
 		self._client=client
@@ -995,7 +995,7 @@ class SearchWindow(Gtk.Box):
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
-		Gtk.TreeView.__init__(self)
+		super().__init__()
 		self.set_model(store)
 		self.set_search_column(-1)
 		self.columns_autosize()
@@ -1075,7 +1075,7 @@ class SongsView(Gtk.TreeView):
 
 class SongsWindow(Gtk.Box):
 	def __init__(self, client, store, file_column_id):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 
 		# adding vars
 		self._client=client
@@ -1138,9 +1138,9 @@ class AlbumDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, album, album_artist, year):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
-			Gtk.Dialog.__init__(self, transient_for=parent, use_header_bar=True)
+			super().__init__(transient_for=parent, use_header_bar=True)
 		else:
-			Gtk.Dialog.__init__(self, transient_for=parent)
+			super().__init__(transient_for=parent)
 
 		# css
 		style_context=self.get_style_context()
@@ -1244,7 +1244,7 @@ class AlbumDialog(Gtk.Dialog):
 
 class GenreSelect(Gtk.ComboBoxText):
 	def __init__(self, client):
-		Gtk.ComboBoxText.__init__(self)
+		super().__init__()
 
 		# adding vars
 		self._client=client
@@ -1295,7 +1295,7 @@ class GenreSelect(Gtk.ComboBoxText):
 
 class ArtistWindow(FocusFrame):
 	def __init__(self, client, settings, genre_select):
-		FocusFrame.__init__(self)
+		super().__init__()
 
 		# adding vars
 		self._client=client
@@ -1421,7 +1421,7 @@ class ArtistWindow(FocusFrame):
 
 class AlbumWindow(FocusFrame):
 	def __init__(self, client, settings, artist_window, window):
-		FocusFrame.__init__(self)
+		super().__init__()
 
 		# adding vars
 		self._settings=settings
@@ -1668,7 +1668,7 @@ class AlbumWindow(FocusFrame):
 
 class Browser(Gtk.Paned):
 	def __init__(self, client, settings, window):
-		Gtk.Paned.__init__(self)  # paned1
+		super().__init__()  # paned1
 		self.set_orientation(Gtk.Orientation.HORIZONTAL)
 
 		# adding vars
@@ -1798,7 +1798,7 @@ class Browser(Gtk.Paned):
 
 class LyricsWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
-		Gtk.Overlay.__init__(self)
+		super().__init__()
 
 		# adding vars
 		self._settings=settings
@@ -1899,7 +1899,7 @@ class LyricsWindow(Gtk.Overlay):
 
 class AudioType(Gtk.Label):
 	def __init__(self, client):
-		Gtk.Label.__init__(self)
+		super().__init__()
 
 		# adding vars
 		self._client=client
@@ -1950,7 +1950,7 @@ class AudioType(Gtk.Label):
 
 class MainCover(Gtk.Frame):
 	def __init__(self, client, settings, window):
-		Gtk.Frame.__init__(self)
+		super().__init__()
 
 		# css
 		style_context=self.get_style_context()
@@ -2033,7 +2033,7 @@ class MainCover(Gtk.Frame):
 
 class PlaylistWindow(Gtk.Box):
 	def __init__(self, client, settings):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 
 		# adding vars
 		self._client=client
@@ -2296,7 +2296,7 @@ class PlaylistWindow(Gtk.Box):
 
 class CoverLyricsOSD(Gtk.Overlay):
 	def __init__(self, client, settings, window):
-		Gtk.Overlay.__init__(self)
+		super().__init__()
 
 		# adding vars
 		self._client=client
@@ -2363,7 +2363,7 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 class CoverPlaylistWindow(Gtk.Paned):
 	def __init__(self, client, settings, window):
-		Gtk.Paned.__init__(self)  # paned0
+		super().__init__()  # paned0
 
 		# adding vars
 		self._client=client
@@ -2392,7 +2392,7 @@ class CoverPlaylistWindow(Gtk.Paned):
 
 class GeneralSettings(Gtk.Box):
 	def __init__(self, settings):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		self.set_property("border-width", 18)
 
 		# adding vars
@@ -2534,7 +2534,7 @@ class GeneralSettings(Gtk.Box):
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, settings):
-		Gtk.Grid.__init__(self)
+		super().__init__()
 		self.set_row_spacing(6)
 		self.set_column_spacing(12)
 		self.set_property("border-width", 18)
@@ -2733,7 +2733,7 @@ class ProfileSettings(Gtk.Grid):
 
 class PlaylistSettings(Gtk.Box):
 	def __init__(self, settings):
-		Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		self.set_property("border-width", 18)
 
 		# adding vars
@@ -2884,7 +2884,7 @@ class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, settings):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
-			Gtk.Dialog.__init__(self, title=_("Settings"), transient_for=parent, use_header_bar=True)
+			super().__init__(title=_("Settings"), transient_for=parent, use_header_bar=True)
 			# css
 			style_context=self.get_style_context()
 			provider=Gtk.CssProvider()
@@ -2892,7 +2892,7 @@ class SettingsDialog(Gtk.Dialog):
 			provider.load_from_data(css)
 			style_context.add_provider(provider, 800)
 		else:
-			Gtk.Dialog.__init__(self, title=_("Settings"), transient_for=parent)
+			super().__init__(title=_("Settings"), transient_for=parent)
 			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 		self.set_default_size(500, 400)
 
@@ -2918,7 +2918,7 @@ class SettingsDialog(Gtk.Dialog):
 
 class PlaybackControl(Gtk.ButtonBox):
 	def __init__(self, client, settings):
-		Gtk.ButtonBox.__init__(self, spacing=6)
+		super().__init__()
 		self.set_property("layout-style", Gtk.ButtonBoxStyle.EXPAND)
 
 		# adding vars
@@ -3008,7 +3008,7 @@ class PlaybackControl(Gtk.ButtonBox):
 
 class SeekBar(Gtk.Box):
 	def __init__(self, client):
-		Gtk.Box.__init__(self)
+		super().__init__()
 		self.set_hexpand(True)
 
 		# adding vars
@@ -3151,7 +3151,7 @@ class SeekBar(Gtk.Box):
 
 class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings):
-		Gtk.Box.__init__(self, spacing=6)
+		super().__init__(spacing=6)
 
 		# adding vars
 		self._client=client
@@ -3275,7 +3275,7 @@ class ServerStats(Gtk.Dialog):
 	def __init__(self, parent, client, settings):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
-			Gtk.Dialog.__init__(self, title=_("Stats"), transient_for=parent, use_header_bar=True)
+			super().__init__(title=_("Stats"), transient_for=parent, use_header_bar=True)
 			# css
 			style_context=self.get_style_context()
 			provider=Gtk.CssProvider()
@@ -3283,7 +3283,7 @@ class ServerStats(Gtk.Dialog):
 			provider.load_from_data(css)
 			style_context.add_provider(provider, 800)
 		else:
-			Gtk.Dialog.__init__(self, title=_("Stats"), transient_for=parent)
+			super().__init__(title=_("Stats"), transient_for=parent)
 			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 		self.set_resizable(False)
 
@@ -3331,7 +3331,7 @@ class ServerStats(Gtk.Dialog):
 
 class AboutDialog(Gtk.AboutDialog):
 	def __init__(self, window):
-		Gtk.AboutDialog.__init__(self, transient_for=window, modal=True)
+		super().__init__(transient_for=window, modal=True)
 		self.set_program_name(NAME)
 		self.set_version(VERSION)
 		self.set_comments(_("A small MPD client written in python"))
@@ -3346,7 +3346,7 @@ class AboutDialog(Gtk.AboutDialog):
 
 class ProfileSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings):
-		Gtk.ComboBoxText.__init__(self)
+		super().__init__()
 
 		# adding vars
 		self._client=client
@@ -3376,7 +3376,7 @@ class ProfileSelect(Gtk.ComboBoxText):
 
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings):
-		Gtk.ApplicationWindow.__init__(self, title=("mpdevil"), application=app)
+		super().__init__(title=("mpdevil"), application=app)
 		Notify.init("mpdevil")
 		self.set_icon_name("mpdevil")
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
