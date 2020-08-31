@@ -496,11 +496,7 @@ class SongPopover(Gtk.Popover):
 		store=Gtk.ListStore(str, str, str)
 
 		# TreeView
-		treeview=Gtk.TreeView(model=store)
-		treeview.set_can_focus(False)
-		treeview.set_search_column(-1)
-		treeview.set_tooltip_column(2)
-		treeview.set_headers_visible(False)
+		treeview=Gtk.TreeView(model=store, headers_visible=False, can_focus=False, search_column=-1, tooltip_column=2)
 		sel=treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
 
@@ -881,8 +877,7 @@ class SearchWindow(Gtk.Box):
 		self._search_entry=Gtk.SearchEntry()
 
 		# label
-		self._hits_label=Gtk.Label()
-		self._hits_label.set_xalign(1)
+		self._hits_label=Gtk.Label(xalign=1)
 
 		# store
 		# (track, title, artist, album, duration, file)
@@ -993,8 +988,7 @@ class SearchWindow(Gtk.Box):
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
-		super().__init__()
-		self.set_model(store)
+		super().__init__(model=store)
 		self.set_search_column(-1)
 		self.columns_autosize()
 
@@ -1304,8 +1298,7 @@ class ArtistWindow(FocusFrame):
 		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
 
 		# TreeView
-		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True)
-		self._treeview.set_search_column(0)
+		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, search_column=0)
 		self._treeview.columns_autosize()
 
 		# Selection
@@ -1434,11 +1427,7 @@ class AlbumWindow(FocusFrame):
 		self._sort_settings()
 
 		# iconview
-		self._iconview=Gtk.IconView()
-		self._iconview.set_model(self._store)
-		self._iconview.set_pixbuf_column(0)
-		self._iconview.set_markup_column(1)
-		self._iconview.set_item_width(0)
+		self._iconview=Gtk.IconView(model=self._store, item_width=0, pixbuf_column=0, markup_column=1)
 		self._tooltip_settings()
 
 		# scroll
@@ -1664,8 +1653,7 @@ class AlbumWindow(FocusFrame):
 
 class Browser(Gtk.Paned):
 	def __init__(self, client, settings, window):
-		super().__init__()  # paned1
-		self.set_orientation(Gtk.Orientation.HORIZONTAL)
+		super().__init__(orientation=Gtk.Orientation.HORIZONTAL)  # paned1
 
 		# adding vars
 		self._client=client
@@ -1683,10 +1671,8 @@ class Browser(Gtk.Paned):
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self.back_to_album_button=Gtk.Button(image=self._icons["go-previous-symbolic"])
-		self.back_to_album_button.set_tooltip_text(_("Back to current album"))
-		self.search_button=Gtk.ToggleButton(image=self._icons["system-search-symbolic"])
-		self.search_button.set_tooltip_text(_("Search"))
+		self.back_to_album_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Back to current album"))
+		self.search_button=Gtk.ToggleButton(image=self._icons["system-search-symbolic"], tooltip_text=_("Search"))
 		self.genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self.genre_select)
 		self._search_window=SearchWindow(self._client)
@@ -1702,8 +1688,7 @@ class Browser(Gtk.Paned):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 		# packing
-		self._stack=Gtk.Stack()
-		self._stack.set_transition_type(1)
+		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
 		self._stack.add_named(self._album_window, "albums")
 		self._stack.add_named(self._search_window, "search")
 
@@ -1800,14 +1785,10 @@ class LyricsWindow(Gtk.Overlay):
 		self._client=client
 
 		# text view
-		text_view=Gtk.TextView()
-		text_view.set_editable(False)
+		text_view=Gtk.TextView(editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD, justification=Gtk.Justification.CENTER, opacity=0.9)
 		text_view.set_left_margin(5)
 		text_view.set_bottom_margin(5)
-		text_view.set_cursor_visible(False)
-		text_view.set_wrap_mode(Gtk.WrapMode.WORD)
-		text_view.set_justification(Gtk.Justification.CENTER)
-		text_view.set_opacity(0.9)
+		text_view.set_top_margin(3)
 
 		# text buffer
 		self._text_buffer=text_view.get_buffer()
@@ -1825,10 +1806,10 @@ class LyricsWindow(Gtk.Overlay):
 		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
 		close_button.set_margin_top(6)
 		close_button.set_margin_end(6)
-		style_context=close_button.get_style_context()
-		style_context.add_class("circular")
 		close_button.set_halign(2)
 		close_button.set_valign(1)
+		style_context=close_button.get_style_context()
+		style_context.add_class("circular")
 
 		# connect
 		self._song_changed=self._client.emitter.connect("current_song_changed", self._refresh)
@@ -2046,14 +2027,10 @@ class PlaylistWindow(Gtk.Box):
 		css=b"""* {min-height: 8px;}"""  # allow further shrinking
 		provider.load_from_data(css)
 
-		self._back_to_song_button=Gtk.Button(image=self._icons["go-previous-symbolic"])
-		self._back_to_song_button.set_tooltip_text(_("Scroll to current song"))
-		self._back_to_song_button.set_relief(Gtk.ReliefStyle.NONE)
+		self._back_to_song_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Scroll to current song"), relief=Gtk.ReliefStyle.NONE)
 		style_context=self._back_to_song_button.get_style_context()
 		style_context.add_provider(provider, 800)
-		self._clear_button=Gtk.Button(image=self._icons["edit-clear-symbolic"])
-		self._clear_button.set_tooltip_text(_("Clear playlist"))
-		self._clear_button.set_relief(Gtk.ReliefStyle.NONE)
+		self._clear_button=Gtk.Button(image=self._icons["edit-clear-symbolic"], tooltip_text=_("Clear playlist"), relief=Gtk.ReliefStyle.NONE)
 		style_context=self._clear_button.get_style_context()
 		style_context.add_class("destructive-action")
 		style_context.add_provider(provider, 800)
@@ -2106,9 +2083,7 @@ class PlaylistWindow(Gtk.Box):
 		audio.set_ellipsize(Pango.EllipsizeMode.END)
 
 		# playlist info
-		self._playlist_info=Gtk.Label()
-		self._playlist_info.set_xalign(0)
-		self._playlist_info.set_ellipsize(Pango.EllipsizeMode.END)
+		self._playlist_info=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
 
 		# action bar
 		action_bar=Gtk.ActionBar()
@@ -2301,8 +2276,7 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self._main_cover=MainCover(self._client, self._settings, self._window)
 
 		# lyrics button
-		self._lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON))
-		self._lyrics_button.set_tooltip_text(_("Show lyrics"))
+		self._lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Show lyrics"))
 		style_context=self._lyrics_button.get_style_context()
 		style_context.add_class("circular")
 
@@ -2399,9 +2373,7 @@ class GeneralSettings(Gtk.Box):
 				(_("Action bar icon size:"), (16, 64, 2), "icon-size"),\
 				(_("Secondary icon size:"), (16, 64, 2), "icon-size-sec")]
 		for data in int_settings_data:
-			int_settings[data[2]]=(Gtk.Label(), Gtk.SpinButton.new_with_range(data[1][0], data[1][1], data[1][2]))
-			int_settings[data[2]][0].set_label(data[0])
-			int_settings[data[2]][0].set_xalign(0)
+			int_settings[data[2]]=(Gtk.Label(label=data[0], xalign=0), Gtk.SpinButton.new_with_range(data[1][0], data[1][1], data[1][2]))
 			int_settings[data[2]][1].set_value(self._settings.get_int(data[2]))
 			int_settings[data[2]][1].connect("value-changed", self._on_int_changed, data[2])
 			self._settings_handlers.append(self._settings.connect("changed::"+data[2], self._on_int_settings_changed, int_settings[data[2]][1]))
@@ -2411,10 +2383,7 @@ class GeneralSettings(Gtk.Box):
 		combo_settings_data=[(_("Sort albums by:"), _("name"), _("year"), "sort-albums-by-year"), \
 					(_("Position of playlist:"), _("bottom"), _("right"), "playlist-right")]
 		for data in combo_settings_data:
-			combo_settings[data[3]]=(Gtk.Label(), Gtk.ComboBoxText())
-			combo_settings[data[3]][0].set_label(data[0])
-			combo_settings[data[3]][0].set_xalign(0)
-			combo_settings[data[3]][1].set_entry_text_column(0)
+			combo_settings[data[3]]=(Gtk.Label(label=data[0], xalign=0), Gtk.ComboBoxText(entry_text_column=0))
 			combo_settings[data[3]][1].append_text(data[1])
 			combo_settings[data[3]][1].append_text(data[2])
 			if self._settings.get_boolean(data[3]):
@@ -2444,17 +2413,11 @@ class GeneralSettings(Gtk.Box):
 			self._settings_handlers.append(self._settings.connect("changed::"+data[1], self._on_check_settings_changed, check_buttons[data[1]]))
 
 		# headings
-		view_heading=Gtk.Label()
-		view_heading.set_markup(_("<b>View</b>"))
-		view_heading.set_xalign(0)
-		behavior_heading=Gtk.Label()
-		behavior_heading.set_markup(_("<b>Behavior</b>"))
-		behavior_heading.set_xalign(0)
+		view_heading=Gtk.Label(label=_("<b>View</b>"), use_markup=True, xalign=0)
+		behavior_heading=Gtk.Label(label=_("<b>Behavior</b>"), use_markup=True, xalign=0)
 
 		# view grid
-		view_grid=Gtk.Grid()
-		view_grid.set_row_spacing(6)
-		view_grid.set_column_spacing(12)
+		view_grid=Gtk.Grid(row_spacing=6, column_spacing=12)
 		view_grid.set_margin_start(12)
 		view_grid.add(int_settings["track-cover"][0])
 		view_grid.attach_next_to(int_settings["album-cover"][0], int_settings["track-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
@@ -2468,9 +2431,7 @@ class GeneralSettings(Gtk.Box):
 		view_grid.attach_next_to(combo_settings["playlist-right"][1], combo_settings["playlist-right"][0], Gtk.PositionType.RIGHT, 1, 1)
 
 		# behavior grid
-		behavior_grid=Gtk.Grid()
-		behavior_grid.set_row_spacing(6)
-		behavior_grid.set_column_spacing(12)
+		behavior_grid=Gtk.Grid(row_spacing=6, column_spacing=12)
 		behavior_grid.set_margin_start(12)
 		behavior_grid.add(combo_settings["sort-albums-by-year"][0])
 		behavior_grid.attach_next_to(combo_settings["sort-albums-by-year"][1], combo_settings["sort-albums-by-year"][0], Gtk.PositionType.RIGHT, 1, 1)
@@ -2534,8 +2495,7 @@ class ProfileSettings(Gtk.Grid):
 		self._gui_modification=False  # indicates whether the settings were changed from the settings dialog
 
 		# widgets
-		self._profiles_combo=Gtk.ComboBoxText(hexpand=True)
-		self._profiles_combo.set_entry_text_column(0)
+		self._profiles_combo=Gtk.ComboBoxText(entry_text_column=0, hexpand=True)
 
 		add_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_ADD))
 		delete_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_DELETE))
@@ -2549,8 +2509,7 @@ class ProfileSettings(Gtk.Grid):
 		address_entry=Gtk.Box(spacing=6)
 		address_entry.pack_start(self._host_entry, True, True, 0)
 		address_entry.pack_start(self._port_entry, False, False, 0)
-		self._password_entry=Gtk.Entry(hexpand=True)
-		self._password_entry.set_visibility(False)
+		self._password_entry=Gtk.Entry(hexpand=True, visibility=False)
 		self._path_entry=Gtk.Entry(hexpand=True)
 		self._path_select_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_OPEN))
 		path_box=Gtk.Box(spacing=6)
@@ -2559,18 +2518,12 @@ class ProfileSettings(Gtk.Grid):
 		self._regex_entry=Gtk.Entry(hexpand=True, placeholder_text=COVER_REGEX)
 		self._regex_entry.set_tooltip_text(_("The first image in the same directory as the song file matching this regex will be displayed. %AlbumArtist% and %Album% will be replaced by the corresponding tags of the song."))
 
-		profiles_label=Gtk.Label(label=_("Profile:"))
-		profiles_label.set_xalign(1)
-		profile_label=Gtk.Label(label=_("Name:"))
-		profile_label.set_xalign(1)
-		host_label=Gtk.Label(label=_("Host:"))
-		host_label.set_xalign(1)
-		password_label=Gtk.Label(label=_("Password:"))
-		password_label.set_xalign(1)
-		path_label=Gtk.Label(label=_("Music lib:"))
-		path_label.set_xalign(1)
-		regex_label=Gtk.Label(label=_("Cover regex:"))
-		regex_label.set_xalign(1)
+		profiles_label=Gtk.Label(label=_("Profile:"), xalign=1)
+		profile_label=Gtk.Label(label=_("Name:"), xalign=1)
+		host_label=Gtk.Label(label=_("Host:"), xalign=1)
+		password_label=Gtk.Label(label=_("Password:"), xalign=1)
+		path_label=Gtk.Label(label=_("Music lib:"), xalign=1)
+		regex_label=Gtk.Label(label=_("Cover regex:"), xalign=1)
 
 		# connect
 		add_button.connect("clicked", self._on_add_button_clicked)
@@ -2727,19 +2680,15 @@ class PlaylistSettings(Gtk.Box):
 		self._settings=settings
 
 		# label
-		label=Gtk.Label(label=_("Choose the order of information to appear in the playlist:"))
-		label.set_line_wrap(True)
-		label.set_xalign(0)
+		label=Gtk.Label(label=_("Choose the order of information to appear in the playlist:"), wrap=True, xalign=0)
 
 		# Store
 		# (toggle, header, actual_index)
 		self._store=Gtk.ListStore(bool, str, int)
 
 		# TreeView
-		treeview=Gtk.TreeView(model=self._store)
+		treeview=Gtk.TreeView(model=self._store, reorderable=True, headers_visible=False)
 		treeview.set_search_column(-1)
-		treeview.set_reorderable(True)
-		treeview.set_headers_visible(False)
 
 		# selection
 		self._selection=treeview.get_selection()
@@ -2994,8 +2943,7 @@ class PlaybackControl(Gtk.ButtonBox):
 
 class SeekBar(Gtk.Box):
 	def __init__(self, client):
-		super().__init__()
-		self.set_hexpand(True)
+		super().__init__(hexpand=True)
 
 		# adding vars
 		self._client=client
@@ -3004,10 +2952,8 @@ class SeekBar(Gtk.Box):
 		self._jumped=False
 
 		# labels
-		self._elapsed=Gtk.Label()
-		self._elapsed.set_width_chars(5)
-		self._rest=Gtk.Label()
-		self._rest.set_width_chars(6)
+		self._elapsed=Gtk.Label(width_chars=5)
+		self._rest=Gtk.Label(width_chars=6)
 
 		# progress bar
 		self.scale=Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=0, max=100, step=0.001)
@@ -3150,17 +3096,12 @@ class PlaybackOptions(Gtk.Box):
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self._random_button=Gtk.ToggleButton(image=self._icons["media-playlist-shuffle-symbolic"])
-		self._random_button.set_tooltip_text(_("Random mode"))
-		self._repeat_button=Gtk.ToggleButton(image=self._icons["media-playlist-repeat-symbolic"])
-		self._repeat_button.set_tooltip_text(_("Repeat mode"))
-		self._single_button=Gtk.ToggleButton(image=self._icons["zoom-original-symbolic"])
-		self._single_button.set_tooltip_text(_("Single mode"))
-		self._consume_button=Gtk.ToggleButton(image=self._icons["edit-cut-symbolic"])
-		self._consume_button.set_tooltip_text(_("Consume mode"))
-		self._volume_button=Gtk.VolumeButton(use_symbolic=True)
+		self._random_button=Gtk.ToggleButton(image=self._icons["media-playlist-shuffle-symbolic"], tooltip_text=_("Random mode"))
+		self._repeat_button=Gtk.ToggleButton(image=self._icons["media-playlist-repeat-symbolic"], tooltip_text=_("Repeat mode"))
+		self._single_button=Gtk.ToggleButton(image=self._icons["zoom-original-symbolic"], tooltip_text=_("Single mode"))
+		self._consume_button=Gtk.ToggleButton(image=self._icons["edit-cut-symbolic"], tooltip_text=_("Consume mode"))
+		self._volume_button=Gtk.VolumeButton(use_symbolic=True, size=self._settings.get_gtk_icon_size("icon-size"))
 		self._volume_button.set_sensitive(False)  # do not allow volume change by user when MPD has not yet reported volume
-		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
 		adj=self._volume_button.get_adjustment()
 		adj.set_step_increment(0.05)
 		adj.set_page_increment(0.1)
@@ -3276,10 +3217,8 @@ class ServerStats(Gtk.Dialog):
 		store=Gtk.ListStore(str, str)
 
 		# TreeView
-		treeview=Gtk.TreeView(model=store)
-		treeview.set_can_focus(False)
+		treeview=Gtk.TreeView(model=store, headers_visible=False, can_focus=False)
 		treeview.set_search_column(-1)
-		treeview.set_headers_visible(False)
 
 		# selection
 		sel=treeview.get_selection()
@@ -3330,7 +3269,7 @@ class AboutDialog(Gtk.AboutDialog):
 
 class ProfileSelect(Gtk.ComboBoxText):
 	def __init__(self, client, settings):
-		super().__init__()
+		super().__init__(tooltip_text=_("Select profile"))
 
 		# adding vars
 		self._client=client
@@ -3360,9 +3299,8 @@ class ProfileSelect(Gtk.ComboBoxText):
 
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings):
-		super().__init__(title=("mpdevil"), application=app)
+		super().__init__(title=("mpdevil"), icon_name="mpdevil", application=app)
 		Notify.init("mpdevil")
-		self.set_icon_name("mpdevil")
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
 
 		# adding vars
@@ -3408,7 +3346,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._browser=Browser(self._client, self._settings, self)
 		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings, self)
 		self._profile_select=ProfileSelect(self._client, self._settings)
-		self._profile_select.set_tooltip_text(_("Select profile"))
 		self._playback_control=PlaybackControl(self._client, self._settings)
 		self._seek_bar=SeekBar(self._client)
 		playback_options=PlaybackOptions(self._client, self._settings)
@@ -3426,11 +3363,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append(_("Server stats"), "win.stats")
 		menu.append_section(None, subsection)
 
-		menu_button=Gtk.MenuButton.new()
+		menu_button=Gtk.MenuButton(image=self._icons["open-menu-symbolic"], tooltip_text=_("Menu"))
 		menu_popover=Gtk.Popover.new_from_model(menu_button, menu)
 		menu_button.set_popover(menu_popover)
-		menu_button.set_tooltip_text(_("Menu"))
-		menu_button.set_image(image=self._icons["open-menu-symbolic"])
 
 		# action bar
 		action_bar=Gtk.ActionBar()
