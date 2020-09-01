@@ -1465,7 +1465,7 @@ class AlbumWindow(FocusFrame):
 			self.stop_flag=True
 			self._pending.append(self._clear)
 
-	def scroll_to_selected_album(self):
+	def scroll_to_current_album(self):
 		def callback():
 			song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
 			try:
@@ -1484,8 +1484,8 @@ class AlbumWindow(FocusFrame):
 					break
 		if self._done:
 			callback()
-		elif not self.scroll_to_selected_album in self._pending:
-			self._pending.append(self.scroll_to_selected_album)
+		elif not self.scroll_to_current_album in self._pending:
+			self._pending.append(self.scroll_to_current_album)
 
 	def _tooltip_settings(self, *args):
 		if self._settings.get_boolean("show-album-view-tooltips"):
@@ -1671,7 +1671,7 @@ class Browser(Gtk.Paned):
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self.back_to_album_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Back to current album"))
+		self.back_to_current_album_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Back to current album"))
 		self.search_button=Gtk.ToggleButton(image=self._icons["system-search-symbolic"], tooltip_text=_("Search"))
 		self.genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self.genre_select)
@@ -1679,7 +1679,7 @@ class Browser(Gtk.Paned):
 		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window, window)
 
 		# connect
-		self.back_to_album_button.connect("clicked", self.back_to_album)
+		self.back_to_current_album_button.connect("clicked", self.back_to_current_album)
 		self.search_button.connect("toggled", self._on_search_toggled)
 		self._artist_window.connect("artists_changed", self._on_artists_changed)
 		if not self._use_csd:
@@ -1696,7 +1696,7 @@ class Browser(Gtk.Paned):
 			self.pack1(self._artist_window, False, False)
 		else:
 			hbox=Gtk.Box(spacing=6, border_width=6)
-			hbox.pack_start(self.back_to_album_button, False, False, 0)
+			hbox.pack_start(self.back_to_current_album_button, False, False, 0)
 			hbox.pack_start(self.genre_select, True, True, 0)
 			hbox.pack_start(self.search_button, False, False, 0)
 			box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -1714,7 +1714,7 @@ class Browser(Gtk.Paned):
 	def search_started(self):
 		return self._search_window.started()
 
-	def back_to_album(self, *args):
+	def back_to_current_album(self, *args):
 		def callback():
 			try:
 				song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
@@ -1743,7 +1743,7 @@ class Browser(Gtk.Paned):
 			else:  # all artists selected
 				self.search_button.set_active(False)
 				self._artist_window.highlight_selected()
-			self._album_window.scroll_to_selected_album()
+			self._album_window.scroll_to_current_album()
 			return False
 		GLib.idle_add(callback)  # ensure it will be executed even when albums are still loading
 
@@ -1755,12 +1755,12 @@ class Browser(Gtk.Paned):
 			self._stack.set_visible_child_name("albums")
 
 	def _on_reconnected(self, *args):
-		self.back_to_album()
-		self.back_to_album_button.set_sensitive(True)
+		self.back_to_current_album()
+		self.back_to_current_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
-		self.back_to_album_button.set_sensitive(False)
+		self.back_to_current_album_button.set_sensitive(False)
 		self.search_button.set_active(False)
 		self.search_button.set_sensitive(False)
 
@@ -2027,8 +2027,8 @@ class PlaylistWindow(Gtk.Box):
 		css=b"""* {min-height: 8px;}"""  # allow further shrinking
 		provider.load_from_data(css)
 
-		self._back_to_song_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Scroll to current song"), relief=Gtk.ReliefStyle.NONE)
-		style_context=self._back_to_song_button.get_style_context()
+		self._back_to_current_song_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Scroll to current song"), relief=Gtk.ReliefStyle.NONE)
+		style_context=self._back_to_current_song_button.get_style_context()
 		style_context.add_provider(provider, 800)
 		self._clear_button=Gtk.Button(image=self._icons["edit-clear-symbolic"], tooltip_text=_("Clear playlist"), relief=Gtk.ReliefStyle.NONE)
 		style_context=self._clear_button.get_style_context()
@@ -2087,7 +2087,7 @@ class PlaylistWindow(Gtk.Box):
 
 		# action bar
 		action_bar=Gtk.ActionBar()
-		action_bar.pack_start(self._back_to_song_button)
+		action_bar.pack_start(self._back_to_current_song_button)
 		self._playlist_info.set_margin_start(3)
 		action_bar.pack_start(self._playlist_info)
 		audio.set_margin_end(3)
@@ -2099,7 +2099,7 @@ class PlaylistWindow(Gtk.Box):
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._key_press_event=self._treeview.connect("key-press-event", self._on_key_press_event)
 		self._treeview.connect("button-press-event", self._on_button_press_event)
-		self._back_to_song_button.connect("clicked", self._on_back_to_song_button_clicked)
+		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
 		self._clear_button.connect("clicked", self._on_clear_button_clicked)
 
 		self._client.emitter.connect("playlist_changed", self._on_playlist_changed)
@@ -2239,7 +2239,7 @@ class PlaylistWindow(Gtk.Box):
 		if self._client.wrapped_call("status")["state"] == "play":
 			self._scroll_to_selected_title()
 
-	def _on_back_to_song_button_clicked(self, *args):
+	def _on_back_to_current_song_button_clicked(self, *args):
 		for path, row in enumerate(self._store):
 			if row[9] == Pango.Weight.BOLD:
 				self._selection.select_path(path)
@@ -2251,11 +2251,11 @@ class PlaylistWindow(Gtk.Box):
 
 	def _on_disconnected(self, *args):
 		self._clear()
-		self._back_to_song_button.set_sensitive(False)
+		self._back_to_current_song_button.set_sensitive(False)
 		self._clear_button.set_sensitive(False)
 
 	def _on_reconnected(self, *args):
-		self._back_to_song_button.set_sensitive(True)
+		self._back_to_current_song_button.set_sensitive(True)
 		self._clear_button.set_sensitive(True)
 
 	def _on_icon_size_changed(self, *args):
@@ -3401,7 +3401,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._header_bar=Gtk.HeaderBar()
 			self._header_bar.set_show_close_button(True)
 			self.set_titlebar(self._header_bar)
-			self._header_bar.pack_start(self._browser.back_to_album_button)
+			self._header_bar.pack_start(self._browser.back_to_current_album_button)
 			self._header_bar.pack_start(self._browser.genre_select)
 			self._header_bar.pack_end(menu_button)
 			self._header_bar.pack_end(self._profile_select)
@@ -3486,7 +3486,7 @@ class MainWindow(Gtk.ApplicationWindow):
 					self._playback_control.prev_button.grab_focus()
 					self._playback_control.prev_button.emit("clicked")
 			elif event.keyval == 65307:  # esc
-				self._browser.back_to_album()
+				self._browser.back_to_current_album()
 			elif event.keyval == 65450:  # *
 				if not self._browser.search_started():
 					self._seek_bar.scale.grab_focus()
