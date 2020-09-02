@@ -72,3 +72,8 @@ sudo gtk-update-icon-cache
 sudo update-desktop-database
 ```
 
+Translation
+-----------
+
+mpdevil is currently available in English and German. If you speek another language you can easily translate mpdevil by using `poedit`. Just import `po/mpdevil.pot` from this repo into `poedit`. To test your translation copy the new `.po` file in your cloned mpdevil repo into the `po` directory and proceed as described in the Building section. To integrate your translation into mpdevil just send me an e-mail or create a pull request. Link to `poedit`: https://poedit.net/
+
