@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
 import DistUtilsExtra.auto
+import mpdevil
 
 DistUtilsExtra.auto.setup(
 	name='mpdevil',
-	version='0.8.5',
+	version=mpdevil.__version__,
 	author="Martin Wagner",
 	author_email="martin.wagner.dev@gmail.com",
 	description=('A small MPD client written in python'),

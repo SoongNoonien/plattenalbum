@@ -60,7 +60,6 @@ Python modules:
 - requests
 - bs4 (beautifulsoup)
 - dbus
-- pkg_resources (setuptools)
 
 Run:
 ```bash

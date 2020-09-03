@@ -34,16 +34,13 @@ import datetime
 import os
 import sys
 import re
-import pkg_resources
+import mpdevil  # only used to get version
 
 # MPRIS modules
 import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 
-NAME=pkg_resources.require('mpdevil')[0].project_name
-VERSION=pkg_resources.require('mpdevil')[0].version
-PACKAGE=NAME.lower()
 COVER_REGEX="^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -3255,13 +3252,13 @@ class ServerStats(Gtk.Dialog):
 class AboutDialog(Gtk.AboutDialog):
 	def __init__(self, window):
 		super().__init__(transient_for=window, modal=True)
-		self.set_program_name(NAME)
-		self.set_version(VERSION)
+		self.set_program_name("mpdevil")
+		self.set_version(mpdevil.__version__)
 		self.set_comments(_("A small MPD client written in python"))
 		self.set_authors(["Martin Wagner"])
 		self.set_website("https://github.com/SoongNoonien/mpdevil")
 		self.set_copyright("\xa9 2020 Martin Wagner")
-		self.set_logo_icon_name(PACKAGE)
+		self.set_logo_icon_name("mpdevil")
 
 ###############
 # main window #
