@@ -4,7 +4,7 @@ import DistUtilsExtra.auto
 
 DistUtilsExtra.auto.setup(
 	name='mpdevil',
-	version='0.8.5',  # sync with bin/mpdevil
+	version='0.9.0',  # sync with bin/mpdevil
 	author="Martin Wagner",
 	author_email="martin.wagner.dev@gmail.com",
 	description=('A small MPD client written in python'),
