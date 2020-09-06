@@ -40,7 +40,7 @@ import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 
-VERSION='0.9.0'  # sync with setup.py
+VERSION='0.8.5'  # sync with setup.py
 COVER_REGEX="^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -2274,6 +2274,8 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 		# lyrics button
 		self._lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Show lyrics"))
+		self._lyrics_button.set_margin_top(6)
+		self._lyrics_button.set_margin_end(6)
 		style_context=self._lyrics_button.get_style_context()
 		style_context.add_class("circular")
 
@@ -2282,8 +2284,6 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self._revealer=Gtk.Revealer()
 		self._revealer.set_halign(2)
 		self._revealer.set_valign(1)
-		self._revealer.set_margin_top(6)
-		self._revealer.set_margin_end(6)
 		self._revealer.add(self._lyrics_button)
 
 		# packing
