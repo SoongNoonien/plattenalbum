@@ -619,7 +619,7 @@ class MpdEventEmitter(GObject.Object):
 		'random': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		'single': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		'consume': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		'audio': (GObject.SignalFlags.RUN_FIRST, None, (float,int,int,)),
+		'audio': (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
 		'bitrate': (GObject.SignalFlags.RUN_FIRST, None, (float,))
 	}
 
@@ -761,8 +761,9 @@ class Client(MPDClient):
 				elif key == "state":
 					self.emitter.emit("state", val)
 				elif key == "audio":
+					# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
 					samplerate, bits, channels=val.split(':')
-					self.emitter.emit("audio", float(samplerate), int(bits), int(channels))
+					self.emitter.emit("audio", samplerate, bits, channels)
 				elif key == "volume":
 					self.emitter.emit("volume_changed", float(val))
 				elif key == "playlist":
@@ -1897,11 +1898,14 @@ class AudioType(Gtk.Label):
 		self.file_type=""
 
 	def _refresh(self, *args):
-		string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)i bit, %(channels)i channels, %(file_type)s") % {"bitrate": str(self.brate), "frequency": str(self.freq), "resolution": self.res, "channels": self.chan, "file_type": self.file_type}
+		string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": self.brate, "frequency": self.freq, "resolution": self.res, "channels": self.chan, "file_type": self.file_type}
 		self.set_text(string)
 
 	def _on_audio(self, emitter, freq, res, chan):
-		self.freq=freq/1000
+		try:
+			self.freq=str(int(freq)/1000)
+		except:
+			self.freq=freq
 		self.res=res
 		self.chan=chan
 		self._refresh()
