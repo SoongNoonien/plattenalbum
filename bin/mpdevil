@@ -1462,7 +1462,6 @@ class AlbumWindow(FocusFrame):
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
 		self._settings.connect("changed::use-album-artist", self._clear)
-		self.connect("done", self._on_done)
 		self._artist_window.connect("artists_changed", self._refresh)
 
 		self.set_widget(self._iconview)
@@ -1522,7 +1521,10 @@ class AlbumWindow(FocusFrame):
 	def _refresh(self, *args):
 		def callback():
 			GLib.idle_add(self._workaround_clear)
-			genre, artists=self._artist_window.get_selected_artists()
+			try:  # self._artist_window could still be empty
+				genre, artists=self._artist_window.get_selected_artists()
+			except:
+				GLib.idle_add(self._done_callback)
 			# show artist names if all albums are shown
 			if len(artists) > 1:
 				self._iconview.set_markup_column(2)
@@ -1534,7 +1536,7 @@ class AlbumWindow(FocusFrame):
 			for artist in artists:
 				try:  # client cloud meanwhile disconnect
 					if self.stop_flag:
-						GLib.idle_add(self.emit, "done")
+						GLib.idle_add(self._done_callback)
 						return
 					else:
 						if genre is None:
@@ -1549,7 +1551,7 @@ class AlbumWindow(FocusFrame):
 						while Gtk.events_pending():
 							Gtk.main_iteration_do(True)
 				except MPDBase.ConnectionError:
-					GLib.idle_add(self.emit, "done")
+					GLib.idle_add(self._done_callback)
 					return
 			# display albums
 			if self._settings.get_boolean("sort-albums-by-year"):
@@ -1585,7 +1587,7 @@ class AlbumWindow(FocusFrame):
 					if i%16 == 0:
 						while Gtk.events_pending():
 							Gtk.main_iteration_do(True)
-			GLib.idle_add(self.emit, "done")
+			GLib.idle_add(self._done_callback)
 		if self._done:
 			self._done=False
 			callback()
@@ -1608,11 +1610,8 @@ class AlbumWindow(FocusFrame):
 			album_dialog.open()
 			album_dialog.destroy()
 
-	@GObject.Signal
-	def done(self):
+	def _done_callback(self, *args):
 		self.stop_flag=False
-
-	def _on_done(self, *args):
 		self._done=True
 		pending=self._pending
 		self._pending=[]
@@ -1621,6 +1620,7 @@ class AlbumWindow(FocusFrame):
 				p()
 			except:
 				pass
+		return False
 
 	def _on_button_press_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
