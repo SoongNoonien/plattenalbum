@@ -610,6 +610,7 @@ class MpdEventEmitter(GObject.Object):
 		'update': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'disconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'reconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
+		'connection_error': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'current_song_changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
 		'state': (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		'elapsed_changed': (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
@@ -635,6 +636,9 @@ class MpdEventEmitter(GObject.Object):
 
 	def do_reconnected(self):
 		pass
+
+	def do_connection_error(self):
+		print("Connection error!")
 
 	def do_current_file_changed(self):
 		pass
@@ -666,6 +670,7 @@ class Client(MPDClient):
 		self.emitter=MpdEventEmitter()
 		self._last_status={}
 		self._refresh_interval=self._settings.get_int("refresh-interval")
+		self._main_timeout_id=None
 
 		#connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
@@ -678,9 +683,27 @@ class Client(MPDClient):
 		return func(*args)
 
 	def start(self):
-		if self._disconnected_loop():
-			self.emitter.emit("disconnected")
-			self._disconnected_timeout_id=GLib.timeout_add(1000, self._disconnected_loop)
+		self.emitter.emit("disconnected")  # bring player in defined state
+		active=self._settings.get_int("active-profile")
+		try:
+			self.connect(self._settings.get_value("hosts")[active], self._settings.get_value("ports")[active])
+			if self._settings.get_value("passwords")[active] != "":
+				self.password(self._settings.get_value("passwords")[active])
+		except:
+			self.emitter.emit("connection_error")
+			return False
+		# connect successful
+		self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
+		self.emitter.emit("reconnected")
+		return True
+
+	def reconnect(self):
+		if self._main_timeout_id is not None:
+			GLib.source_remove(self._main_timeout_id)
+			self._main_timeout_id=None
+		self._last_status={}
+		self.disconnect()
+		self.start()
 
 	def connected(self):
 		try:
@@ -785,27 +808,13 @@ class Client(MPDClient):
 			self.disconnect()
 			self._last_status={}
 			self.emitter.emit("disconnected")
-			if self._disconnected_loop():
-				self._disconnected_timeout_id=GLib.timeout_add(1000, self._disconnected_loop)
+			self.emitter.emit("connection_error")
+			self._main_timeout_id=None
 			return False
 		return True
 
-	def _disconnected_loop(self, *args):
-		active=self._settings.get_int("active-profile")
-		try:
-			self.connect(self._settings.get_value("hosts")[active], self._settings.get_value("ports")[active])
-			if self._settings.get_value("passwords")[active] != "":
-				self.password(self._settings.get_value("passwords")[active])
-		except:
-			print("connect failed")
-			return True
-		# connect successful
-		self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
-		self.emitter.emit("reconnected")
-		return False
-
 	def _on_active_profile_changed(self, *args):
-		self.disconnect()
+		self.reconnect()
 
 ########################
 # gio settings wrapper #
@@ -2488,10 +2497,11 @@ class GeneralSettings(Gtk.Box):
 		self._settings.set_boolean(key, widget.get_active())
 
 class ProfileSettings(Gtk.Grid):
-	def __init__(self, parent, settings):
+	def __init__(self, parent, client, settings):
 		super().__init__(row_spacing=6, column_spacing=12, border_width=18)
 
 		# adding vars
+		self._client=client
 		self._settings=settings
 		self._gui_modification=False  # indicates whether the settings were changed from the settings dialog
 
@@ -2503,6 +2513,8 @@ class ProfileSettings(Gtk.Grid):
 		add_delete_buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		add_delete_buttons.pack_start(add_button, True, True, 0)
 		add_delete_buttons.pack_start(delete_button, True, True, 0)
+
+		connect_button=Gtk.Button(label=_("Connect"), image=Gtk.Image.new_from_icon_name("system-run", Gtk.IconSize.BUTTON))
 
 		self._profile_entry=Gtk.Entry(hexpand=True)
 		self._host_entry=Gtk.Entry(hexpand=True)
@@ -2529,6 +2541,7 @@ class ProfileSettings(Gtk.Grid):
 		# connect
 		add_button.connect("clicked", self._on_add_button_clicked)
 		delete_button.connect("clicked", self._on_delete_button_clicked)
+		connect_button.connect("clicked", self._on_connect_button_clicked)
 		self._path_select_button.connect("clicked", self._on_path_select_button_clicked, parent)
 		self._profiles_combo.connect("changed", self._on_profiles_changed)
 		self.entry_changed_handlers=[]
@@ -2564,6 +2577,8 @@ class ProfileSettings(Gtk.Grid):
 		self.attach_next_to(self._password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(path_box, path_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(self._regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
+		connect_button.set_margin_top(12)
+		self.attach_next_to(connect_button, self._regex_entry, Gtk.PositionType.BOTTOM, 2, 1)
 
 	def _block_entry_changed_handlers(self, *args):
 		for obj, handler in self.entry_changed_handlers:
@@ -2619,6 +2634,10 @@ class ProfileSettings(Gtk.Grid):
 			self._profiles_combo_reload()
 			new_pos=max(pos-1,0)
 			self._profiles_combo.set_active(new_pos)
+
+	def _on_connect_button_clicked(self, *args):
+		self._settings.set_int("active-profile", self._profiles_combo.get_active())
+		self._client.reconnect()
 
 	def _on_profile_entry_changed(self, *args):
 		self._gui_modification=True
@@ -2818,7 +2837,7 @@ class PlaylistSettings(Gtk.Box):
 			self._store.handler_unblock(self._row_deleted)
 
 class SettingsDialog(Gtk.Dialog):
-	def __init__(self, parent, settings):
+	def __init__(self, parent, client, settings):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
 			super().__init__(title=_("Settings"), transient_for=parent, use_header_bar=True)
@@ -2835,7 +2854,7 @@ class SettingsDialog(Gtk.Dialog):
 
 		# widgets
 		general=GeneralSettings(settings)
-		profiles=ProfileSettings(parent, settings)
+		profiles=ProfileSettings(parent, client, settings)
 		playlist=PlaylistSettings(settings)
 
 		# packing
@@ -3017,6 +3036,7 @@ class SeekBar(Gtk.Box):
 
 	def _disable(self, *args):
 		self.set_sensitive(False)
+		self.scale.set_fill_level(0)
 		self.scale.set_range(0, 0)
 		self._elapsed.set_text("00:00")
 		self._rest.set_text("-00:00")
@@ -3298,6 +3318,52 @@ class ProfileSelect(Gtk.ComboBoxText):
 		active=self.get_active()
 		self._settings.set_int("active-profile", active)
 
+class ConnectionNotify(Gtk.Revealer):
+	def __init__(self, client, settings):
+		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.CENTER)
+
+		# adding vars
+		self._client=client
+		self._settings=settings
+
+		# widgets
+		self._label=Gtk.Label(wrap=True)
+		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
+		close_button.set_relief(Gtk.ReliefStyle.NONE)
+		connect_button=Gtk.Button(label=_("Connect"))
+
+		# connect
+		close_button.connect("clicked", self._on_close_button_clicked)
+		connect_button.connect("clicked", self._on_connect_button_clicked)
+		self._client.emitter.connect("connection_error", self._on_connection_error)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
+
+		# packing
+		box=Gtk.Box(spacing=12)
+		box.get_style_context().add_class("app-notification")
+		box.pack_start(self._label, False, True, 6)
+		box.pack_end(close_button, False, True, 0)
+		box.pack_end(connect_button, False, True, 0)
+		self.add(box)
+
+	def _on_connection_error(self, *args):
+		active=self._settings.get_int("active-profile")
+		profile=self._settings.get_value("profiles")[active]
+		host=self._settings.get_value("hosts")[active]
+		port=self._settings.get_value("ports")[active]
+		string=_('Connection to "%(profile)s" (%(host)s:%(port)s) failed') % {"profile": profile, "host": host, "port": port}
+		self._label.set_text(string)
+		self.set_reveal_child(True)
+
+	def _on_reconnected(self, *args):
+		self.set_reveal_child(False)
+
+	def _on_close_button_clicked(self, *args):
+		self.set_reveal_child(False)
+
+	def _on_connect_button_clicked(self, *args):
+		self._client.reconnect()
+
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings):
 		super().__init__(title=("mpdevil"), icon_name="mpdevil", application=app)
@@ -3350,6 +3416,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._playback_control=PlaybackControl(self._client, self._settings)
 		self._seek_bar=SeekBar(self._client)
 		playback_options=PlaybackOptions(self._client, self._settings)
+		connection_notify=ConnectionNotify(self._client, self._settings)
 
 		# menu
 		subsection=Gio.Menu()
@@ -3397,6 +3464,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		vbox.pack_start(self._paned2, True, True, 0)
 		vbox.pack_start(action_bar, False, False, 0)
+		overlay=Gtk.Overlay()
+		overlay.add(vbox)
+		overlay.add_overlay(connection_notify)
 
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar()
@@ -3412,7 +3482,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			action_bar.pack_start(self._profile_select)
 			action_bar.pack_start(menu_button)
 
-		self.add(vbox)
+		self.add(overlay)
 
 		self.show_all()
 		if self._settings.get_boolean("maximize"):
@@ -3511,7 +3581,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.set_int("paned2", self._paned2.get_position())
 
 	def _on_settings(self, action, param):
-		settings=SettingsDialog(self, self._settings)
+		settings=SettingsDialog(self, self._client, self._settings)
 		settings.run()
 		settings.destroy()
 
