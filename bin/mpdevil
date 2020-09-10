@@ -3321,6 +3321,7 @@ class ProfileSelect(Gtk.ComboBoxText):
 		self._settings.connect("changed::ports", self._refresh)
 		self._settings.connect("changed::passwords", self._refresh)
 		self._settings.connect("changed::paths", self._refresh)
+		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
 
 		self._refresh()
 
@@ -3335,6 +3336,11 @@ class ProfileSelect(Gtk.ComboBoxText):
 	def _on_changed(self, *args):
 		active=self.get_active()
 		self._settings.set_int("active-profile", active)
+
+	def _on_active_profile_changed(self, *args):
+		self.handler_block(self._changed)
+		self.set_active(self._settings.get_int("active-profile"))
+		self.handler_unblock(self._changed)
 
 class ConnectionNotify(Gtk.Revealer):
 	def __init__(self, client, settings):
