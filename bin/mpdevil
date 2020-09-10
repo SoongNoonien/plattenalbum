@@ -1335,8 +1335,8 @@ class ArtistWindow(FocusFrame):
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._settings.connect("changed::use-album-artist", self._refresh)
 		self._settings.connect("changed::show-initials", self._on_show_initials_changed)
-		self._client.emitter.connect("disconnected", self._clear)
-		self._client.emitter.connect("reconnected", self._refresh)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("update", self._refresh)
 		self._genre_select.connect("genre_changed", self._refresh)
 
@@ -1412,6 +1412,14 @@ class ArtistWindow(FocusFrame):
 		self._store[path][1]=Pango.Weight.BOLD
 		self.emit("artists_changed")
 
+	def _on_disconnected(self, *args):
+		self.set_sensitive(False)
+		self._clear()
+
+	def _on_reconnected(self, *args):
+		self._refresh()
+		self.set_sensitive(True)
+
 	def _on_show_initials_changed(self, *args):
 		self._column_initials.set_visible(self._settings.get_boolean("show-initials"))
 
@@ -1448,7 +1456,8 @@ class AlbumWindow(FocusFrame):
 		self._iconview.connect("button-press-event", self._on_button_press_event)
 		self._key_press_event=self.connect("key-press-event", self._on_key_press_event)
 		self._client.emitter.connect("update", self._clear)
-		self._client.emitter.connect("disconnected", self._clear)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._settings.connect("changed::show-album-view-tooltips", self._tooltip_settings)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
@@ -1652,6 +1661,13 @@ class AlbumWindow(FocusFrame):
 		selected_artist=self._store.get_value(treeiter, 6)
 		self._client.wrapped_call("album_to_playlist", selected_album, selected_artist, selected_album_year, "play")
 
+	def _on_disconnected(self, *args):
+		self._iconview.set_sensitive(False)
+		self._clear()
+
+	def _on_reconnected(self, *args):
+		self._iconview.set_sensitive(True)
+
 	def _on_cover_size_changed(self, *args):
 		def callback():
 			self._refresh()
@@ -1810,7 +1826,7 @@ class LyricsWindow(Gtk.Overlay):
 		frame.set_widget(text_view)
 
 		# close button
-		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
+		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
 		close_button.set_margin_top(6)
 		close_button.set_margin_end(6)
 		close_button.set_halign(2)
@@ -2260,6 +2276,7 @@ class PlaylistWindow(Gtk.Box):
 		self._client.clear()
 
 	def _on_disconnected(self, *args):
+		self._treeview.set_sensitive(False)
 		self._clear()
 		self._back_to_current_song_button.set_sensitive(False)
 		self._clear_button.set_sensitive(False)
@@ -2267,6 +2284,7 @@ class PlaylistWindow(Gtk.Box):
 	def _on_reconnected(self, *args):
 		self._back_to_current_song_button.set_sensitive(True)
 		self._clear_button.set_sensitive(True)
+		self._treeview.set_sensitive(True)
 
 	def _on_icon_size_changed(self, *args):
 		pixel_size=self._settings.get_int("icon-size-sec")
@@ -2319,11 +2337,11 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self._lyrics_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
-		self._lyrics_button.set_sensitive(False)
 		try:
 			self._lyrics_win.destroy()
 		except:
 			pass
+		self._lyrics_button.set_sensitive(False)
 
 	def _on_lyrics_clicked(self, widget):
 		self._lyrics_button.set_sensitive(False)
@@ -2508,8 +2526,8 @@ class ProfileSettings(Gtk.Grid):
 		# widgets
 		self._profiles_combo=Gtk.ComboBoxText(entry_text_column=0, hexpand=True)
 
-		add_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_ADD))
-		delete_button=Gtk.Button(label=None, image=Gtk.Image(stock=Gtk.STOCK_DELETE))
+		add_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-add", Gtk.IconSize.BUTTON))
+		delete_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-remove", Gtk.IconSize.BUTTON))
 		add_delete_buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		add_delete_buttons.pack_start(add_button, True, True, 0)
 		add_delete_buttons.pack_start(delete_button, True, True, 0)
@@ -2524,7 +2542,7 @@ class ProfileSettings(Gtk.Grid):
 		address_entry.pack_start(self._port_entry, False, False, 0)
 		self._password_entry=Gtk.Entry(hexpand=True, visibility=False)
 		self._path_entry=Gtk.Entry(hexpand=True)
-		self._path_select_button=Gtk.Button(image=Gtk.Image(stock=Gtk.STOCK_OPEN))
+		self._path_select_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open", Gtk.IconSize.BUTTON))
 		path_box=Gtk.Box(spacing=6)
 		path_box.pack_start(self._path_entry, True, True, 0)
 		path_box.pack_start(self._path_select_button, False, False, 0)
