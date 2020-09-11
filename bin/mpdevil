@@ -786,6 +786,8 @@ class Client(MPDClient):
 				elif key == "audio":
 					# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
 					samplerate, bits, channels=val.split(':')
+					if bits == "f":
+						bits="32fp"
 					self.emitter.emit("audio", samplerate, bits, channels)
 				elif key == "volume":
 					self.emitter.emit("volume_changed", float(val))
