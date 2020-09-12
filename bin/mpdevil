@@ -181,7 +181,8 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 
 		if 'file' in mpd_meta:
 			song_file=mpd_meta['file']
-			self._metadata['xesam:url']="file://"+os.path.join(self._settings.get_value("paths")[self._settings.get_int("active-profile")], song_file)
+			lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
+			self._metadata['xesam:url']="file://"+os.path.join(lib_path, song_file)
 			cover=Cover(self._settings, mpd_meta)
 			if cover.path is None:
 				self._metadata['mpris:artUrl']=None
@@ -576,8 +577,8 @@ class Cover(object):
 							break
 
 	def get_pixbuf(self, size):
-		if self.path is None:
-			self.path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()  # fallback cover
+		if self.path is None:  # fallback needed
+			self.path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
 		return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
 
 ######################
@@ -600,7 +601,16 @@ class ClientHelper():
 		return return_song
 
 	def extend_song_for_display(song):
-		base_song={"title": _("Unknown Title"), "track": "0", "disc": "", "artist": _("Unknown Artist"), "album": _("Unknown Album"), "duration": "0.0", "date": "", "genre": ""}
+		base_song={
+			"title": _("Unknown Title"),
+			"track": "0",
+			"disc": "",
+			"artist": _("Unknown Artist"),
+			"album": _("Unknown Album"),
+			"duration": "0.0",
+			"date": "",
+			"genre": ""
+		}
 		base_song.update(song)
 		base_song["human_duration"]=str(datetime.timedelta(seconds=int(float(base_song["duration"])))).lstrip("0").lstrip(":")
 		return base_song
@@ -840,7 +850,14 @@ class Settings(Gio.Settings):
 		# fix profile settings
 		if len(self.get_value("profiles")) < (self.get_int("active-profile")+1):
 			self.set_int("active-profile", 0)
-		profile_keys=[('as', "profiles", "new profile"), ('as', "hosts", "localhost"), ('ai', "ports", 6600), ('as', "passwords", ""), ('as', "paths", ""), ('as', "regex", "")]
+		profile_keys=[
+			('as', "profiles", "new profile"),
+			('as', "hosts", "localhost"),
+			('ai', "ports", 6600),
+			('as', "passwords", ""),
+			('as', "paths", ""),
+			('as', "regex", "")
+		]
 		profile_arrays=[]
 		for vtype, key, default in profile_keys:
 			profile_arrays.append(self.get_value(key).unpack())
@@ -998,7 +1015,11 @@ class SearchWindow(Gtk.Box):
 			songs=self._client.wrapped_call("search", self._tags.get_active_text(), self._search_entry.get_text())
 			for s in songs:
 				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
-				self._store.append([int(song["track"]), song["title"], song["artist"], song["album"], song["human_duration"], song["file"]])
+				self._store.append([
+						int(song["track"]), song["title"],
+						song["artist"], song["album"],
+						song["human_duration"], song["file"]
+				])
 			self._hits_label.set_text(_("%i hits") % (self._songs_view.count()))
 		if self._songs_view.count() == 0:
 			self._action_bar.set_sensitive(False)
@@ -1554,11 +1575,15 @@ class AlbumWindow(FocusFrame):
 						if genre is None:
 							album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist)
 						else:
-							album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist, "genre", genre)
+							album_candidates=self._client.wrapped_call(
+								"comp_list", "album", artist_type, artist, "genre", genre
+							)
 						for album in album_candidates:
 							years=self._client.wrapped_call("comp_list", "date", "album", album, artist_type, artist)
 							for year in years:
-								songs=self._client.wrapped_call("find", "album", album, "date", year, artist_type, artist)
+								songs=self._client.wrapped_call(
+									"find", "album", album, "date", year, artist_type, artist
+								)
 								albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
 						while Gtk.events_pending():
 							Gtk.main_iteration_do(True)
@@ -1583,9 +1608,11 @@ class AlbumWindow(FocusFrame):
 					except:
 						discs=1
 					if discs > 1:
-						tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)") % {"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
+						tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)")
+							%{"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
 					else:
-						tooltip=(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(album["songs"]), "total_length": length_human_readable})
+						tooltip=(_("%(total_tracks)i titles (%(total_length)s)")
+							%{"total_tracks": len(album["songs"]), "total_length": length_human_readable})
 					# album label
 					display_label="<b>"+album["album"]+"</b>"
 					if album["year"] != "":
@@ -1594,7 +1621,9 @@ class AlbumWindow(FocusFrame):
 					display_label=display_label.replace("&", "&amp;")
 					display_label_artist=display_label_artist.replace("&", "&amp;")
 					# add album
-					GLib.idle_add(self._add_row, [cover, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]])
+					GLib.idle_add(self._add_row,
+						[cover, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]]
+					)
 					# execute pending events
 					if i%16 == 0:
 						while Gtk.events_pending():
@@ -1820,7 +1849,13 @@ class LyricsWindow(Gtk.Overlay):
 		self._client=client
 
 		# text view
-		text_view=Gtk.TextView(editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD, justification=Gtk.Justification.CENTER, opacity=0.9)
+		text_view=Gtk.TextView(
+			editable=False,
+			cursor_visible=False,
+			wrap_mode=Gtk.WrapMode.WORD,
+			justification=Gtk.Justification.CENTER,
+			opacity=0.9
+		)
 		text_view.set_left_margin(5)
 		text_view.set_bottom_margin(5)
 		text_view.set_top_margin(3)
@@ -1869,7 +1904,11 @@ class LyricsWindow(Gtk.Overlay):
 		GLib.idle_add(self._text_buffer.set_text, text, -1)
 
 	def _refresh(self, *args):
-		update_thread=threading.Thread(target=self._display_lyrics, kwargs={"current_song": ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))}, daemon=True)
+		update_thread=threading.Thread(
+				target=self._display_lyrics,
+				kwargs={"current_song": ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))},
+				daemon=True
+		)
 		update_thread.start()
 
 	def _get_lyrics(self, singer, song):  # partially copied from PyLyrics 1.1.0
@@ -1935,7 +1974,8 @@ class AudioType(Gtk.Label):
 		self.file_type=""
 
 	def _refresh(self, *args):
-		string=_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s") % {"bitrate": self.brate, "frequency": self.freq, "resolution": self.res, "channels": self.chan, "file_type": self.file_type}
+		string=(_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s")
+			%{"bitrate": self.brate, "frequency": self.freq, "resolution": self.res, "channels": self.chan, "file_type": self.file_type})
 		self.set_text(string)
 
 	def _on_audio(self, emitter, freq, res, chan):
@@ -2065,10 +2105,18 @@ class PlaylistWindow(Gtk.Box):
 		css=b"""* {min-height: 8px;}"""  # allow further shrinking
 		provider.load_from_data(css)
 
-		self._back_to_current_song_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Scroll to current song"), relief=Gtk.ReliefStyle.NONE)
+		self._back_to_current_song_button=Gtk.Button(
+			image=self._icons["go-previous-symbolic"],
+			tooltip_text=_("Scroll to current song"),
+			relief=Gtk.ReliefStyle.NONE
+		)
 		style_context=self._back_to_current_song_button.get_style_context()
 		style_context.add_provider(provider, 800)
-		self._clear_button=Gtk.Button(image=self._icons["edit-clear-symbolic"], tooltip_text=_("Clear playlist"), relief=Gtk.ReliefStyle.NONE)
+		self._clear_button=Gtk.Button(
+			image=self._icons["edit-clear-symbolic"],
+			tooltip_text=_("Clear playlist"),
+			relief=Gtk.ReliefStyle.NONE
+		)
 		style_context=self._clear_button.get_style_context()
 		style_context.add_class("destructive-action")
 		style_context.add_provider(provider, 800)
@@ -2184,7 +2232,8 @@ class PlaylistWindow(Gtk.Box):
 			self._playlist_info.set_text("")
 		else:
 			whole_length_human_readable=ClientHelper.calc_display_length(songs)
-			self._playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)") % {"total_tracks": len(songs), "total_length": whole_length_human_readable})
+			self._playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)")
+							%{"total_tracks": len(songs), "total_length": whole_length_human_readable})
 
 	def _scroll_to_selected_title(self, *args):
 		treeview, treeiter=self._selection.get_selected()
@@ -2260,9 +2309,26 @@ class PlaylistWindow(Gtk.Box):
 				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
 				try:
 					treeiter=self._store.get_iter(song["pos"])
-					self._store.set(treeiter, 0, song["track"], 1, song["disc"], 2, song["title"], 3, song["artist"], 4, song["album"], 5, song["human_duration"], 6, song["date"], 7, song["genre"], 8, song["file"], 9, Pango.Weight.BOOK)
+					self._store.set(treeiter,
+						0, song["track"],
+						1, song["disc"],
+						2, song["title"],
+						3, song["artist"],
+						4, song["album"],
+						5, song["human_duration"],
+						6, song["date"],
+						7, song["genre"],
+						8, song["file"],
+						9, Pango.Weight.BOOK
+					)
 				except:
-					self._store.append([song["track"], song["disc"], song["title"], song["artist"], song["album"], song["human_duration"], song["date"], song["genre"], song["file"], Pango.Weight.BOOK])
+					self._store.append([
+						song["track"], song["disc"],
+						song["title"], song["artist"],
+						song["album"], song["human_duration"],
+						song["date"], song["genre"],
+						song["file"], Pango.Weight.BOOK
+					])
 		for i in reversed(range(int(self._client.wrapped_call("status")["playlistlength"]), len(self._store))):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
@@ -2316,7 +2382,10 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self._main_cover=MainCover(self._client, self._settings, self._window)
 
 		# lyrics button
-		self._lyrics_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Show lyrics"))
+		self._lyrics_button=Gtk.Button(
+			image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON),
+			tooltip_text=_("Show lyrics")
+		)
 		self._lyrics_button.set_margin_top(6)
 		self._lyrics_button.set_margin_end(6)
 		style_context=self._lyrics_button.get_style_context()
@@ -2408,20 +2477,26 @@ class GeneralSettings(Gtk.Box):
 
 		# int_settings
 		int_settings={}
-		int_settings_data=[(_("Main cover size:"), (100, 1200, 10), "track-cover"),\
-				(_("Album view cover size:"), (50, 600, 10), "album-cover"),\
-				(_("Action bar icon size:"), (16, 64, 2), "icon-size"),\
-				(_("Secondary icon size:"), (16, 64, 2), "icon-size-sec")]
+		int_settings_data=[
+			(_("Main cover size:"), (100, 1200, 10), "track-cover"),
+			(_("Album view cover size:"), (50, 600, 10), "album-cover"),
+			(_("Action bar icon size:"), (16, 64, 2), "icon-size"),
+			(_("Secondary icon size:"), (16, 64, 2), "icon-size-sec")
+		]
 		for data in int_settings_data:
 			int_settings[data[2]]=(Gtk.Label(label=data[0], xalign=0), Gtk.SpinButton.new_with_range(data[1][0], data[1][1], data[1][2]))
 			int_settings[data[2]][1].set_value(self._settings.get_int(data[2]))
 			int_settings[data[2]][1].connect("value-changed", self._on_int_changed, data[2])
-			self._settings_handlers.append(self._settings.connect("changed::"+data[2], self._on_int_settings_changed, int_settings[data[2]][1]))
+			self._settings_handlers.append(
+				self._settings.connect("changed::"+data[2], self._on_int_settings_changed, int_settings[data[2]][1])
+			)
 
 		# combo_settings
 		combo_settings={}
-		combo_settings_data=[(_("Sort albums by:"), _("name"), _("year"), "sort-albums-by-year"), \
-					(_("Position of playlist:"), _("bottom"), _("right"), "playlist-right")]
+		combo_settings_data=[
+			(_("Sort albums by:"), _("name"), _("year"), "sort-albums-by-year"),
+			(_("Position of playlist:"), _("bottom"), _("right"), "playlist-right")
+		]
 		for data in combo_settings_data:
 			combo_settings[data[3]]=(Gtk.Label(label=data[0], xalign=0), Gtk.ComboBoxText(entry_text_column=0))
 			combo_settings[data[3]][1].append_text(data[1])
@@ -2431,26 +2506,32 @@ class GeneralSettings(Gtk.Box):
 			else:
 				combo_settings[data[3]][1].set_active(0)
 			combo_settings[data[3]][1].connect("changed", self._on_combo_changed, data[3])
-			self._settings_handlers.append(self._settings.connect("changed::"+data[3], self._on_combo_settings_changed, combo_settings[data[3]][1]))
+			self._settings_handlers.append(
+				self._settings.connect("changed::"+data[3], self._on_combo_settings_changed, combo_settings[data[3]][1])
+			)
 
 		# check buttons
 		check_buttons={}
-		check_buttons_data=[(_("Use Client-side decoration"), "use-csd"), \
-				(_("Show stop button"), "show-stop"), \
-				(_("Show lyrics button"), "show-lyrics-button"), \
-				(_("Show initials in artist view"), "show-initials"), \
-				(_("Show tooltips in album view"), "show-album-view-tooltips"), \
-				(_("Use 'Album Artist' tag"), "use-album-artist"), \
-				(_("Send notification on title change"), "send-notify"), \
-				(_("Stop playback on quit"), "stop-on-quit"), \
-				(_("Play selected albums and titles immediately"), "force-mode")]
+		check_buttons_data=[
+			(_("Use Client-side decoration"), "use-csd"),
+			(_("Show stop button"), "show-stop"),
+			(_("Show lyrics button"), "show-lyrics-button"),
+			(_("Show initials in artist view"), "show-initials"),
+			(_("Show tooltips in album view"), "show-album-view-tooltips"),
+			(_("Use 'Album Artist' tag"), "use-album-artist"),
+			(_("Send notification on title change"), "send-notify"),
+			(_("Stop playback on quit"), "stop-on-quit"),
+			(_("Play selected albums and titles immediately"), "force-mode")
+		]
 
 		for data in check_buttons_data:
 			check_buttons[data[1]]=Gtk.CheckButton(label=data[0])
 			check_buttons[data[1]].set_active(self._settings.get_boolean(data[1]))
 			check_buttons[data[1]].set_margin_start(12)
 			check_buttons[data[1]].connect("toggled", self._on_toggled, data[1])
-			self._settings_handlers.append(self._settings.connect("changed::"+data[1], self._on_check_settings_changed, check_buttons[data[1]]))
+			self._settings_handlers.append(
+				self._settings.connect("changed::"+data[1], self._on_check_settings_changed, check_buttons[data[1]])
+			)
 
 		# headings
 		view_heading=Gtk.Label(label=_("<b>View</b>"), use_markup=True, xalign=0)
@@ -2474,7 +2555,11 @@ class GeneralSettings(Gtk.Box):
 		behavior_grid=Gtk.Grid(row_spacing=6, column_spacing=12)
 		behavior_grid.set_margin_start(12)
 		behavior_grid.add(combo_settings["sort-albums-by-year"][0])
-		behavior_grid.attach_next_to(combo_settings["sort-albums-by-year"][1], combo_settings["sort-albums-by-year"][0], Gtk.PositionType.RIGHT, 1, 1)
+		behavior_grid.attach_next_to(
+			combo_settings["sort-albums-by-year"][1],
+			combo_settings["sort-albums-by-year"][0],
+			Gtk.PositionType.RIGHT, 1, 1
+		)
 
 		# connect
 		self.connect("destroy", self._remove_handlers)
@@ -2559,7 +2644,11 @@ class ProfileSettings(Gtk.Grid):
 		path_box.pack_start(self._path_entry, True, True, 0)
 		path_box.pack_start(self._path_select_button, False, False, 0)
 		self._regex_entry=Gtk.Entry(hexpand=True, placeholder_text=COVER_REGEX)
-		self._regex_entry.set_tooltip_text(_("The first image in the same directory as the song file matching this regex will be displayed. %AlbumArtist% and %Album% will be replaced by the corresponding tags of the song."))
+		self._regex_entry.set_tooltip_text(
+			_("The first image in the same directory as the song file "\
+			"matching this regex will be displayed. %AlbumArtist% and "\
+			"%Album% will be replaced by the corresponding tags of the song.")
+		)
 
 		profiles_label=Gtk.Label(label=_("Profile:"), xalign=1)
 		profile_label=Gtk.Label(label=_("Name:"), xalign=1)
