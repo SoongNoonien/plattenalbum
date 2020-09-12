@@ -1876,8 +1876,8 @@ class LyricsWindow(Gtk.Overlay):
 		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
 		close_button.set_margin_top(6)
 		close_button.set_margin_end(6)
-		close_button.set_halign(2)
-		close_button.set_valign(1)
+		close_button.set_halign(Gtk.Align.END)
+		close_button.set_valign(Gtk.Align.START)
 		style_context=close_button.get_style_context()
 		style_context.add_class("circular")
 
@@ -2394,8 +2394,8 @@ class CoverLyricsOSD(Gtk.Overlay):
 		# revealer
 		# workaround to get tooltips in overlay
 		self._revealer=Gtk.Revealer()
-		self._revealer.set_halign(2)
-		self._revealer.set_valign(1)
+		self._revealer.set_halign(Gtk.Align.END)
+		self._revealer.set_valign(Gtk.Align.START)
 		self._revealer.add(self._lyrics_button)
 
 		# packing
@@ -2483,12 +2483,12 @@ class GeneralSettings(Gtk.Box):
 			(_("Action bar icon size:"), (16, 64, 2), "icon-size"),
 			(_("Secondary icon size:"), (16, 64, 2), "icon-size-sec")
 		]
-		for data in int_settings_data:
-			int_settings[data[2]]=(Gtk.Label(label=data[0], xalign=0), Gtk.SpinButton.new_with_range(data[1][0], data[1][1], data[1][2]))
-			int_settings[data[2]][1].set_value(self._settings.get_int(data[2]))
-			int_settings[data[2]][1].connect("value-changed", self._on_int_changed, data[2])
+		for label, (vmin, vmax, step), key in int_settings_data:
+			int_settings[key]=(Gtk.Label(label=label, xalign=0), Gtk.SpinButton.new_with_range(vmin, vmax, step))
+			int_settings[key][1].set_value(self._settings.get_int(key))
+			int_settings[key][1].connect("value-changed", self._on_int_changed, key)
 			self._settings_handlers.append(
-				self._settings.connect("changed::"+data[2], self._on_int_settings_changed, int_settings[data[2]][1])
+				self._settings.connect("changed::"+key, self._on_int_settings_changed, int_settings[key][1])
 			)
 
 		# combo_settings
@@ -2497,17 +2497,17 @@ class GeneralSettings(Gtk.Box):
 			(_("Sort albums by:"), _("name"), _("year"), "sort-albums-by-year"),
 			(_("Position of playlist:"), _("bottom"), _("right"), "playlist-right")
 		]
-		for data in combo_settings_data:
-			combo_settings[data[3]]=(Gtk.Label(label=data[0], xalign=0), Gtk.ComboBoxText(entry_text_column=0))
-			combo_settings[data[3]][1].append_text(data[1])
-			combo_settings[data[3]][1].append_text(data[2])
-			if self._settings.get_boolean(data[3]):
-				combo_settings[data[3]][1].set_active(1)
+		for label, vfalse, vtrue, key in combo_settings_data:
+			combo_settings[key]=(Gtk.Label(label=label, xalign=0), Gtk.ComboBoxText(entry_text_column=0))
+			combo_settings[key][1].append_text(vfalse)
+			combo_settings[key][1].append_text(vtrue)
+			if self._settings.get_boolean(key):
+				combo_settings[key][1].set_active(1)
 			else:
-				combo_settings[data[3]][1].set_active(0)
-			combo_settings[data[3]][1].connect("changed", self._on_combo_changed, data[3])
+				combo_settings[key][1].set_active(0)
+			combo_settings[key][1].connect("changed", self._on_combo_changed, key)
 			self._settings_handlers.append(
-				self._settings.connect("changed::"+data[3], self._on_combo_settings_changed, combo_settings[data[3]][1])
+				self._settings.connect("changed::"+key, self._on_combo_settings_changed, combo_settings[key][1])
 			)
 
 		# check buttons
@@ -2524,13 +2524,13 @@ class GeneralSettings(Gtk.Box):
 			(_("Play selected albums and titles immediately"), "force-mode")
 		]
 
-		for data in check_buttons_data:
-			check_buttons[data[1]]=Gtk.CheckButton(label=data[0])
-			check_buttons[data[1]].set_active(self._settings.get_boolean(data[1]))
-			check_buttons[data[1]].set_margin_start(12)
-			check_buttons[data[1]].connect("toggled", self._on_toggled, data[1])
+		for label, key in check_buttons_data:
+			check_buttons[key]=Gtk.CheckButton(label=label)
+			check_buttons[key].set_active(self._settings.get_boolean(key))
+			check_buttons[key].set_margin_start(12)
+			check_buttons[key].connect("toggled", self._on_toggled, key)
 			self._settings_handlers.append(
-				self._settings.connect("changed::"+data[1], self._on_check_settings_changed, check_buttons[data[1]])
+				self._settings.connect("changed::"+key, self._on_check_settings_changed, check_buttons[key])
 			)
 
 		# headings
@@ -3002,8 +3002,11 @@ class PlaybackControl(Gtk.ButtonBox):
 
 		# widgets
 		self._icons={}
-		icons_data=["media-playback-start-symbolic", "media-playback-stop-symbolic", "media-playback-pause-symbolic", \
-				"media-skip-backward-symbolic", "media-skip-forward-symbolic"]
+		icons_data=[
+			"media-playback-start-symbolic", "media-playback-stop-symbolic",
+			"media-playback-pause-symbolic", "media-skip-backward-symbolic",
+			"media-skip-forward-symbolic"
+		]
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
