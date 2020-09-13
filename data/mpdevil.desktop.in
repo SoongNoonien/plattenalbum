@@ -1,11 +1,11 @@
 [Desktop Entry]
-Version=1.0
-_Name=mpdevil
-_GenericName=MPD Client
+Name=mpdevil
+GenericName=MPD Client
 _Comment=A simple music browser for MPD
 Exec=mpdevil
 Icon=mpdevil
 Terminal=false
 Type=Application
 StartupNotify=true
-Categories=GTK;AudioVideo;Player;
+Categories=Audio;AudioVideo;Player;GTK
+
