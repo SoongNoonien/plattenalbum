@@ -2,7 +2,7 @@
 Version=1.0
 _Name=mpdevil
 _GenericName=MPD Client
-_Comment=A small MPD client written in python
+_Comment=A simple music browser for MPD
 Exec=mpdevil
 Icon=mpdevil
 Terminal=false

@@ -3400,7 +3400,7 @@ class AboutDialog(Gtk.AboutDialog):
 		super().__init__(transient_for=window, modal=True)
 		self.set_program_name("mpdevil")
 		self.set_version(VERSION)
-		self.set_comments(_("A small MPD client written in python"))
+		self.set_comments(_("A simple music browser for MPD"))
 		self.set_authors(["Martin Wagner"])
 		self.set_website("https://github.com/SoongNoonien/mpdevil")
 		self.set_copyright("\xa9 2020 Martin Wagner")
