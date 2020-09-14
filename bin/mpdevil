@@ -41,7 +41,7 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 
-VERSION='0.9.0-dev'  # sync with setup.py
+VERSION='0.9.1'  # sync with setup.py
 COVER_REGEX="^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
