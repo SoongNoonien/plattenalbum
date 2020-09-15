@@ -3543,7 +3543,8 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._icon_size=0
 		else:
 			self._icon_size=self._settings.get_int("icon-size")
-		self.tmp_saved_size=None  # needed to restore size after leaving mini player mode
+		self._tmp_saved_size=None  # needed to restore size after leaving mini player mode
+		self._tmp_saved_maximized=None  # needed to restore maximize state after leaving mini player mode
 
 		# MPRIS
 		dbus_service=MPRISInterface(self, self._client, self._settings)
@@ -3767,15 +3768,19 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
-			self.tmp_saved_size=self.get_size()
+			self._tmp_saved_size=self.get_size()
+			self._tmp_saved_miximized=self.is_maximized()
 			self._save_action.set_enabled(False)
-			if self.is_maximized():
+			if self._tmp_saved_miximized:
 				self.unmaximize()
 			self.resize(1,1)
 		else:
 			self._save_action.set_enabled(True)
-			self.resize(self.tmp_saved_size[0], self.tmp_saved_size[1])
-			self.tmp_saved_size=None
+			self.resize(self._tmp_saved_size[0], self._tmp_saved_size[1])
+			if self._tmp_saved_miximized:
+				self.maximize()
+			self._tmp_saved_size=None
+			self._tmp_saved_maximized=None
 
 	def _on_playlist_pos_changed(self, *args):
 		if self._settings.get_boolean("playlist-right"):
