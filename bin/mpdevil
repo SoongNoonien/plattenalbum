@@ -41,7 +41,7 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 
-VERSION='0.9.1'  # sync with setup.py
+VERSION='0.9.1-dev'  # sync with setup.py
 COVER_REGEX="^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -844,6 +844,8 @@ class Client(MPDClient):
 
 class Settings(Gio.Settings):
 	BASE_KEY="org.mpdevil"
+	# temp settings
+	mini_player=GObject.Property(type=bool, default=False)
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
 
@@ -1746,6 +1748,7 @@ class Browser(Gtk.Paned):
 		self.back_to_current_album_button.connect("clicked", self.back_to_current_album)
 		self.search_button.connect("toggled", self._on_search_toggled)
 		self._artist_window.connect("artists_changed", self._on_artists_changed)
+		self._settings.connect("notify::mini-player", self._on_mini_player)
 		if not self._use_csd:
 			self._settings.connect("changed::icon-size-sec", self._on_icon_size_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -1830,6 +1833,13 @@ class Browser(Gtk.Paned):
 
 	def _on_artists_changed(self, *args):
 		self.search_button.set_active(False)
+
+	def _on_mini_player(self, obj, typestring):
+		visibility=not(obj.get_property("mini-player"))
+		self.set_property("visible", visibility)
+		self.back_to_current_album_button.set_property("visible", visibility)
+		self.search_button.set_property("visible", visibility)
+		self.genre_select.set_property("visible", visibility)
 
 	def _on_icon_size_changed(self, *args):
 		pixel_size=self._settings.get_int("icon-size-sec")
@@ -2019,7 +2029,7 @@ class MainCover(Gtk.Frame):
 		self._window=window
 
 		# event box
-		event_box=Gtk.EventBox()
+		self._event_box=Gtk.EventBox()
 
 		# cover
 		self._cover=Gtk.Image.new()
@@ -2029,14 +2039,15 @@ class MainCover(Gtk.Frame):
 		self._cover.set_size_request(size, size)
 
 		# connect
-		event_box.connect("button-press-event", self._on_button_press_event)
+		self._button_press_event=self._event_box.connect("button-press-event", self._on_button_press_event)
 		self._client.emitter.connect("current_song_changed", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::track-cover", self._on_settings_changed)
 
-		event_box.add(self._cover)
-		self.add(event_box)
+		self._event_box.add(self._cover)
+		self.add(self._event_box)
 
 	def _refresh(self, *args):
 		current_song=self._client.wrapped_call("currentsong")
@@ -2078,6 +2089,12 @@ class MainCover(Gtk.Frame):
 
 	def _on_reconnected(self, *args):
 		self._cover.set_sensitive(True)
+
+	def _on_mini_player(self, obj, typestring):
+		if obj.get_property("mini-player"):
+			self._event_box.handler_block(self._button_press_event)
+		else:
+			self._event_box.handler_unblock(self._button_press_event)
 
 	def _on_settings_changed(self, *args):
 		size=self._settings.get_int("track-cover")
@@ -2193,6 +2210,7 @@ class PlaylistWindow(Gtk.Box):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
+		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::column-visibilities", self._load_settings)
 		self._settings.connect("changed::column-permutation", self._load_settings)
 		self._settings.connect("changed::icon-size-sec", self._on_icon_size_changed)
@@ -2363,6 +2381,10 @@ class PlaylistWindow(Gtk.Box):
 		self._back_to_current_song_button.set_sensitive(True)
 		self._clear_button.set_sensitive(True)
 		self._treeview.set_sensitive(True)
+
+	def _on_mini_player(self, obj, typestring):
+		visibility=not(obj.get_property("mini-player"))
+		self.set_property("visible", visibility)
 
 	def _on_icon_size_changed(self, *args):
 		pixel_size=self._settings.get_int("icon-size-sec")
@@ -3018,8 +3040,10 @@ class PlaybackControl(Gtk.ButtonBox):
 		# connect
 		self.play_button.connect("clicked", self._on_play_clicked)
 		self.stop_button.connect("clicked", self._on_stop_clicked)
+		self.stop_button.set_property("no-show-all", not(self._settings.get_boolean("show-stop")))
 		self.prev_button.connect("clicked", self._on_prev_clicked)
 		self.next_button.connect("clicked", self._on_next_clicked)
+		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::show-stop", self._on_show_stop_changed)
 		self._settings.connect("changed::icon-size", self._on_icon_size_changed)
 		self._client.emitter.connect("state", self._on_state)
@@ -3027,8 +3051,7 @@ class PlaybackControl(Gtk.ButtonBox):
 		# packing
 		self.pack_start(self.prev_button, True, True, 0)
 		self.pack_start(self.play_button, True, True, 0)
-		if self._settings.get_boolean("show-stop"):
-			self.pack_start(self.stop_button, True, True, 0)
+		self.pack_start(self.stop_button, True, True, 0)
 		self.pack_start(self.next_button, True, True, 0)
 
 	def _on_state(self, emitter, state):
@@ -3070,13 +3093,13 @@ class PlaybackControl(Gtk.ButtonBox):
 		if self._client.connected():
 			self._client.wrapped_call("next")
 
+	def _on_mini_player(self, obj, typestring):
+		self._on_show_stop_changed()
+
 	def _on_show_stop_changed(self, *args):
-		if self._settings.get_boolean("show-stop"):
-			self.pack_start(self.stop_button, True, True, 0)
-			self.reorder_child(self.stop_button, 2)
-			self.stop_button.show()
-		else:
-			self.remove(self.stop_button)
+		visibility=(self._settings.get_boolean("show-stop") and not self._settings.get_property("mini-player"))
+		self.stop_button.set_property("visible", visibility)
+		self.stop_button.set_property("no-show-all", not(visibility))
 
 	def _on_icon_size_changed(self, *args):
 		pixel_size=self._settings.get_int("icon-size")
@@ -3262,15 +3285,16 @@ class PlaybackOptions(Gtk.Box):
 		self._volume_changed=self._client.emitter.connect("volume_changed", self._volume_refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::icon-size", self._on_icon_size_changed)
 
 		# packing
-		ButtonBox=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
-		ButtonBox.pack_start(self._repeat_button, True, True, 0)
-		ButtonBox.pack_start(self._random_button, True, True, 0)
-		ButtonBox.pack_start(self._single_button, True, True, 0)
-		ButtonBox.pack_start(self._consume_button, True, True, 0)
-		self.pack_start(ButtonBox, True, True, 0)
+		self._button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
+		self._button_box.pack_start(self._repeat_button, True, True, 0)
+		self._button_box.pack_start(self._random_button, True, True, 0)
+		self._button_box.pack_start(self._single_button, True, True, 0)
+		self._button_box.pack_start(self._consume_button, True, True, 0)
+		self.pack_start(self._button_box, True, True, 0)
 		self.pack_start(self._volume_button, True, True, 0)
 
 	def _set_option(self, widget, option):
@@ -3312,12 +3336,6 @@ class PlaybackOptions(Gtk.Box):
 			self._volume_button.set_sensitive(True)
 		self._volume_button.handler_unblock(self._volume_button_changed)
 
-	def _on_icon_size_changed(self, *args):
-		pixel_size=self._settings.get_int("icon-size")
-		for icon in self._icons.values():
-			icon.set_pixel_size(pixel_size)
-		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
-
 	def _on_reconnected(self, *args):
 		self._repeat_button.set_sensitive(True)
 		self._random_button.set_sensitive(True)
@@ -3334,6 +3352,16 @@ class PlaybackOptions(Gtk.Box):
 		self._single_refresh(None, False)
 		self._consume_refresh(None, False)
 		self._volume_refresh(None, -1)
+
+	def _on_mini_player(self, obj, typestring):
+		visibility=not(obj.get_property("mini-player"))
+		self._button_box.set_property("visible", visibility)
+
+	def _on_icon_size_changed(self, *args):
+		pixel_size=self._settings.get_int("icon-size")
+		for icon in self._icons.values():
+			icon.set_pixel_size(pixel_size)
+		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
 
 #################
 # other dialogs #
@@ -3411,11 +3439,11 @@ class AboutDialog(Gtk.AboutDialog):
 ###############
 
 class ProfileSelect(Gtk.ComboBoxText):
-	def __init__(self, client, settings):
+	def __init__(self, settings):
 		super().__init__(tooltip_text=_("Select profile"))
+		self.set_property("no-show-all", not(len(settings.get_value("profiles")) > 1))
 
 		# adding vars
-		self._client=client
 		self._settings=settings
 
 		# connect
@@ -3426,6 +3454,7 @@ class ProfileSelect(Gtk.ComboBoxText):
 		self._settings.connect("changed::passwords", self._refresh)
 		self._settings.connect("changed::paths", self._refresh)
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
+		self._settings.connect("changed::profiles", self._on_profiles_changed)
 
 		self._refresh()
 
@@ -3445,6 +3474,14 @@ class ProfileSelect(Gtk.ComboBoxText):
 		self.handler_block(self._changed)
 		self.set_active(self._settings.get_int("active-profile"))
 		self.handler_unblock(self._changed)
+
+	def _on_profiles_changed(self, *args):
+		if len(self._settings.get_value("profiles")) > 1:
+			self.set_property("no-show-all", False)
+			self.set_property("visible", True)
+		else:
+			self.set_property("no-show-all", True)
+			self.set_property("visible", False)
 
 class ConnectionNotify(Gtk.Revealer):
 	def __init__(self, client, settings):
@@ -3506,14 +3543,18 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._icon_size=0
 		else:
 			self._icon_size=self._settings.get_int("icon-size")
+		self.tmp_saved_size=None  # needed to restore size after leaving mini player mode
 
 		# MPRIS
 		dbus_service=MPRISInterface(self, self._client, self._settings)
 
 		# actions
-		save_action=Gio.SimpleAction.new("save", None)
-		save_action.connect("activate", self._on_save)
-		self.add_action(save_action)
+		self._save_action=Gio.SimpleAction.new("save", None)
+		self._save_action.connect("activate", self._on_save)
+		self.add_action(self._save_action)
+
+		mini_player_action=Gio.PropertyAction.new("mini-player", self._settings, "mini-player")
+		self.add_action(mini_player_action)
 
 		settings_action=Gio.SimpleAction.new("settings", None)
 		settings_action.connect("activate", self._on_settings)
@@ -3539,7 +3580,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		self._browser=Browser(self._client, self._settings, self)
 		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings, self)
-		self._profile_select=ProfileSelect(self._client, self._settings)
+		self._profile_select=ProfileSelect(self._settings)
 		self._playback_control=PlaybackControl(self._client, self._settings)
 		self._seek_bar=SeekBar(self._client)
 		playback_options=PlaybackOptions(self._client, self._settings)
@@ -3558,6 +3599,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		menu=Gio.Menu()
 		menu.append(_("Save window layout"), "win.save")
+		menu.append(_("Mini player"), "win.mini-player")
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
@@ -3572,7 +3614,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.pack_start(playback_options)
 
 		# connect
-		self._settings.connect("changed::profiles", self._on_profiles_changed)
+		self._settings.connect_after("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
 		if not self._use_csd:
 			self._settings.connect("changed::icon-size", self._on_icon_size_changed)
@@ -3617,7 +3659,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.show_all()
 		if self._settings.get_boolean("maximize"):
 			self.maximize()
-		self._on_profiles_changed()  # hide profiles button
 		self._client.start()  # connect client
 
 	def _on_song_changed(self, *args):
@@ -3724,11 +3765,15 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_help(self, action, param):
 		Gtk.show_uri_on_window(self, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
 
-	def _on_profiles_changed(self, *args):
-		if len(self._settings.get_value("profiles")) > 1:
-			self._profile_select.set_property("visible", True)
+	def _on_mini_player(self, obj, typestring):
+		if obj.get_property("mini-player"):
+			self.tmp_saved_size=self.get_size()
+			self._save_action.set_enabled(False)
+			self.resize(1,1)
 		else:
-			self._profile_select.set_property("visible", False)
+			self._save_action.set_enabled(True)
+			self.resize(self.tmp_saved_size[0], self.tmp_saved_size[1])
+			self.tmp_saved_size=None
 
 	def _on_playlist_pos_changed(self, *args):
 		if self._settings.get_boolean("playlist-right"):
