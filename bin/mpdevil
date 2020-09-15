@@ -3769,6 +3769,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		if obj.get_property("mini-player"):
 			self.tmp_saved_size=self.get_size()
 			self._save_action.set_enabled(False)
+			if self.is_maximized():
+				self.unmaximize()
 			self.resize(1,1)
 		else:
 			self._save_action.set_enabled(True)
