@@ -912,7 +912,7 @@ class SearchWindow(Gtk.Box):
 		self._tags=Gtk.ComboBoxText()
 
 		# search entry
-		self._search_entry=Gtk.SearchEntry()
+		self.search_entry=Gtk.SearchEntry()
 
 		# label
 		self._hits_label=Gtk.Label(xalign=1)
@@ -970,14 +970,14 @@ class SearchWindow(Gtk.Box):
 		column_time.set_sort_column_id(4)
 
 		# connect
-		self._search_entry.connect("search-changed", self._on_search_changed)
+		self.search_entry.connect("search-changed", self._on_search_changed)
 		self._tags.connect("changed", self._on_search_changed)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 		# packing
 		hbox=Gtk.Box(spacing=6, border_width=6)
-		hbox.pack_start(self._search_entry, True, True, 0)
+		hbox.pack_start(self.search_entry, True, True, 0)
 		hbox.pack_end(self._tags, False, False, 0)
 		self._hits_label.set_margin_end(6)
 		self._action_bar.pack_end(self._hits_label)
@@ -985,20 +985,14 @@ class SearchWindow(Gtk.Box):
 		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.pack_start(self._songs_window, True, True, 0)
 
-	def start(self):
-		self._search_entry.grab_focus()
-
-	def started(self):
-		return self._search_entry.has_focus()
-
 	def clear(self, *args):
 		self._songs_view.clear()
-		self._search_entry.set_text("")
+		self.search_entry.set_text("")
 		self._tags.remove_all()
 
 	def _on_disconnected(self, *args):
 		self._tags.set_sensitive(False)
-		self._search_entry.set_sensitive(False)
+		self.search_entry.set_sensitive(False)
 		self.clear()
 
 	def _on_reconnected(self, *args):
@@ -1008,13 +1002,13 @@ class SearchWindow(Gtk.Box):
 				self._tags.append_text(tag)
 		self._tags.set_active(0)
 		self._tags.set_sensitive(True)
-		self._search_entry.set_sensitive(True)
+		self.search_entry.set_sensitive(True)
 
 	def _on_search_changed(self, widget):
 		self._songs_view.clear()
 		self._hits_label.set_text("")
-		if len(self._search_entry.get_text()) > 1:
-			songs=self._client.wrapped_call("search", self._tags.get_active_text(), self._search_entry.get_text())
+		if len(self.search_entry.get_text()) > 1:
+			songs=self._client.wrapped_call("search", self._tags.get_active_text(), self.search_entry.get_text())
 			for s in songs:
 				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
 				self._store.append([
@@ -1718,6 +1712,10 @@ class AlbumWindow(FocusFrame):
 		GLib.idle_add(callback)
 
 class Browser(Gtk.Paned):
+	__gsignals__={
+		'search_focus_changed': (GObject.SignalFlags.RUN_FIRST, None, (bool,))
+	}
+
 	def __init__(self, client, settings, window):
 		super().__init__(orientation=Gtk.Orientation.HORIZONTAL)  # paned1
 
@@ -1747,6 +1745,8 @@ class Browser(Gtk.Paned):
 		# connect
 		self.back_to_current_album_button.connect("clicked", self.back_to_current_album)
 		self.search_button.connect("toggled", self._on_search_toggled)
+		self._search_window.search_entry.connect("focus_in_event", lambda *args: self.emit("search_focus_changed", True))
+		self._search_window.search_entry.connect("focus_out_event", lambda *args: self.emit("search_focus_changed", False))
 		self._artist_window.connect("artists_changed", self._on_artists_changed)
 		self._settings.connect("notify::mini-player", self._on_mini_player)
 		if not self._use_csd:
@@ -1777,9 +1777,6 @@ class Browser(Gtk.Paned):
 
 	def save_settings(self):
 		self._settings.set_int("paned1", self.get_position())
-
-	def search_started(self):
-		return self._search_window.started()
 
 	def back_to_current_album(self, *args):
 		def callback():
@@ -1817,7 +1814,7 @@ class Browser(Gtk.Paned):
 	def _on_search_toggled(self, widget):
 		if widget.get_active():
 			self._stack.set_visible_child_name("search")
-			self._search_window.start()
+			self._search_window.search_entry.grab_focus()
 		else:
 			self._stack.set_visible_child_name("albums")
 
@@ -3550,28 +3547,16 @@ class MainWindow(Gtk.ApplicationWindow):
 		dbus_service=MPRISInterface(self, self._client, self._settings)
 
 		# actions
-		self._save_action=Gio.SimpleAction.new("save", None)
-		self._save_action.connect("activate", self._on_save)
-		self.add_action(self._save_action)
-
+		simple_actions_data=[
+			"save","settings","stats","update","help",
+			"show-lyrics","toggle-play","next","prev","back-to-current-album","seek-forward","seek-backward"
+		]
+		for name in simple_actions_data:
+			action=Gio.SimpleAction.new(name, None)
+			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
+			self.add_action(action)
 		mini_player_action=Gio.PropertyAction.new("mini-player", self._settings, "mini-player")
 		self.add_action(mini_player_action)
-
-		settings_action=Gio.SimpleAction.new("settings", None)
-		settings_action.connect("activate", self._on_settings)
-		self.add_action(settings_action)
-
-		self._stats_action=Gio.SimpleAction.new("stats", None)
-		self._stats_action.connect("activate", self._on_stats)
-		self.add_action(self._stats_action)
-
-		self._update_action=Gio.SimpleAction.new("update", None)
-		self._update_action.connect("activate", self._on_update)
-		self.add_action(self._update_action)
-
-		self._help_action=Gio.SimpleAction.new("help", None)
-		self._help_action.connect("activate", self._on_help)
-		self.add_action(self._help_action)
 
 		# widgets
 		self._icons={}
@@ -3622,11 +3607,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
-		# unmap space
-		binding_set=Gtk.binding_set_find('GtkTreeView')
-		Gtk.binding_entry_remove(binding_set, 32, Gdk.ModifierType.MOD2_MASK)
-		# map space play/pause
-		self.connect("key-press-event", self._on_key_press_event)
+		self._browser.connect("search_focus_changed", self._on_search_focus_changed)
 
 		# packing
 		self._paned2=Gtk.Paned()
@@ -3690,57 +3671,49 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_reconnected(self, *args):
 		self._playback_control.set_sensitive(True)
-		self._update_action.set_enabled(True)
-		self._stats_action.set_enabled(True)
+		self.action_enabled_changed
+		self.lookup_action("update").set_enabled(True)
+		self.lookup_action("stats").set_enabled(True)
 
 	def _on_disconnected(self, *args):
 		self.set_title("mpdevil")
 		if self._use_csd:
 			self._header_bar.set_subtitle("")
 		self._playback_control.set_sensitive(False)
-		self._update_action.set_enabled(False)
-		self._stats_action.set_enabled(False)
+		self.lookup_action("update").set_enabled(False)
+		self.lookup_action("stats").set_enabled(False)
 
-	def _on_key_press_event(self, widget, event):
-		ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK)
-		if ctrl:
-			if event.keyval == 108:  # ctrl + l
-				self._cover_playlist_window.show_lyrics()
+	def _on_search_focus_changed(self, obj, focus):
+		if focus:
+			self.lookup_action("toggle-play").set_enabled(False)
 		else:
-			if event.keyval == 32:  # space
-				if not self._browser.search_started():
-					self._playback_control.play_button.grab_focus()
-			elif event.keyval == 269025044:  # AudioPlay
-				self._playback_control.play_button.grab_focus()
-				self._playback_control.play_button.emit("clicked")
-			elif event.keyval == 269025047:  # AudioNext
-				self._playback_control.next_button.grab_focus()
-				self._playback_control.next_button.emit("clicked")
-			elif event.keyval == 43 or event.keyval == 65451:  # +
-				if not self._browser.search_started():
-					self._playback_control.next_button.grab_focus()
-					self._playback_control.next_button.emit("clicked")
-			elif event.keyval == 269025046:  # AudioPrev
-				self._playback_control.prev_button.grab_focus()
-				self._playback_control.prev_button.emit("clicked")
-			elif event.keyval == 45 or event.keyval == 65453:  # -
-				if not self._browser.search_started():
-					self._playback_control.prev_button.grab_focus()
-					self._playback_control.prev_button.emit("clicked")
-			elif event.keyval == 65307:  # esc
-				self._browser.back_to_current_album()
-			elif event.keyval == 65450:  # *
-				if not self._browser.search_started():
-					self._seek_bar.scale.grab_focus()
-					self._seek_bar.seek_forward()
-			elif event.keyval == 65455:  # /
-				if not self._browser.search_started():
-					self._seek_bar.scale.grab_focus()
-					self._seek_bar.seek_backward()
-			elif event.keyval == 65474:  # F5
-				self._update_action.emit("activate", None)
-			elif event.keyval == 65470:  # F1
-				self._help_action.emit("activate", None)
+			self.lookup_action("toggle-play").set_enabled(True)
+
+	def _on_show_lyrics(self, action, param):
+		self._cover_playlist_window.show_lyrics()
+
+	def _on_toggle_play(self, action, param):
+		self._playback_control.play_button.grab_focus()
+		self._playback_control.play_button.emit("clicked")
+
+	def _on_next(self, action, param):
+		self._playback_control.next_button.grab_focus()
+		self._playback_control.next_button.emit("clicked")
+
+	def _on_prev(self, action, param):
+		self._playback_control.prev_button.grab_focus()
+		self._playback_control.prev_button.emit("clicked")
+
+	def _on_back_to_current_album(self, action, param):
+		self._browser.back_to_current_album()
+
+	def _on_seek_forward(self, action, param):
+		self._seek_bar.scale.grab_focus()
+		self._seek_bar.seek_forward()
+
+	def _on_seek_backward(self, action, param):
+		self._seek_bar.scale.grab_focus()
+		self._seek_bar.seek_backward()
 
 	def _on_save(self, action, param):
 		size=self.get_size()
@@ -3770,12 +3743,14 @@ class MainWindow(Gtk.ApplicationWindow):
 		if obj.get_property("mini-player"):
 			self._tmp_saved_size=self.get_size()
 			self._tmp_saved_miximized=self.is_maximized()
-			self._save_action.set_enabled(False)
+			self.lookup_action("save").set_enabled(False)
+			self.lookup_action("back-to-current-album").set_enabled(False)
 			if self._tmp_saved_miximized:
 				self.unmaximize()
 			self.resize(1,1)
 		else:
-			self._save_action.set_enabled(True)
+			self.lookup_action("save").set_enabled(True)
+			self.lookup_action("back-to-current-album").set_enabled(True)
 			self.resize(self._tmp_saved_size[0], self._tmp_saved_size[1])
 			if self._tmp_saved_miximized:
 				self.maximize()
@@ -3810,6 +3785,18 @@ class mpdevil(Gtk.Application):
 		if not self._window:  # allow just one instance
 			self._window=MainWindow(self, self._client, self._settings)
 			self._window.connect("delete-event", self._on_delete_event)
+			# accelerators
+			self.set_accels_for_action("app.quit", ["<Control>q"])
+			self.set_accels_for_action("win.mini-player", ["<Control>m"])
+			self.set_accels_for_action("win.update", ["F5"])
+			self.set_accels_for_action("win.help", ["F1"])
+			self.set_accels_for_action("win.show-lyrics", ["<Control>l"])
+			self.set_accels_for_action("win.toggle-play", ["space"])
+			self.set_accels_for_action("win.next", ["KP_Add"])
+			self.set_accels_for_action("win.prev", ["KP_Subtract",])
+			self.set_accels_for_action("win.seek-forward", ["KP_Multiply"])
+			self.set_accels_for_action("win.seek-backward", ["KP_Divide"])
+			self.set_accels_for_action("win.back-to-current-album", ["Escape"])
 		self._window.present()
 
 	def do_startup(self):
