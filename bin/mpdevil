@@ -3398,6 +3398,40 @@ class PlaybackOptions(Gtk.Box):
 			icon.set_pixel_size(pixel_size)
 		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
 
+####################
+# shortcuts window #
+####################
+class ShortcutsWindow(Gtk.ShortcutsWindow):
+	def __init__(self):
+		super().__init__(modal=True)
+
+		general_group=Gtk.ShortcutsGroup(title=_("General"), visible=True)
+		window_group=Gtk.ShortcutsGroup(title=_("Window"), visible=True)
+		playback_group=Gtk.ShortcutsGroup(title=_("Playback"), visible=True)
+		section=Gtk.ShortcutsSection(section_name="shortcuts", visible=True)
+		section.add(general_group)
+		section.add(window_group)
+		section.add(playback_group)
+
+		shortcut_data=[
+			("<Control>m", _("Toggle mini player"), window_group),
+			("<Control>l", _("Toggle lyrics"), window_group),
+			("Escape", _("Back to current album"), window_group),
+			("F1", _("Open online help"), general_group),
+			("<Control>q", _("Quit"), general_group),
+			("space", _("Play/Pause"), playback_group),
+			("KP_Add", _("Next title"), playback_group),
+			("KP_Subtract", _("Previous title"), playback_group),
+			("KP_Multiply", _("Seek forward"), playback_group),
+			("KP_Divide", _("Seek backward"), playback_group),
+			("F5", _("Update database"), playback_group)
+		]
+		for accel, title, group in shortcut_data:
+			shortcut=Gtk.ShortcutsShortcut(visible=True, accelerator=accel, title=title)
+			group.pack_start(shortcut, False, False, 0)
+
+		self.add(section)
+
 ###############
 # main window #
 ###############
@@ -3498,6 +3532,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		super().__init__(title=("mpdevil"), icon_name="mpdevil", application=app)
 		Notify.init("mpdevil")
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
+		self.set_help_overlay(ShortcutsWindow())
 
 		# adding vars
 		self._client=client
@@ -3542,6 +3577,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		# menu
 		subsection=Gio.Menu()
 		subsection.append(_("Settings"), "win.settings")
+		subsection.append(_("Keyboard shortcuts"), "win.show-help-overlay")
 		subsection.append(_("Help"), "win.help")
 		subsection.append(_("About"), "app.about")
 		subsection.append(_("Quit"), "app.quit")

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-15 18:44+0200\n"
-"PO-Revision-Date: 2020-09-15 18:45+0200\n"
+"POT-Creation-Date: 2020-09-16 19:12+0200\n"
+"PO-Revision-Date: 2020-09-16 19:15+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -18,247 +18,111 @@ msgstr ""
 "X-Generator: Poedit 2.3.1\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: bin/mpdevil:518
-msgid "MPD-Tag"
-msgstr "MPD-Tag"
-
-#: bin/mpdevil:522
-msgid "Value"
-msgstr "Wert"
-
-#: bin/mpdevil:605
+#: mpdevil:473
 msgid "Unknown Title"
 msgstr "Unbekannter Titel"
 
-#: bin/mpdevil:608
+#: mpdevil:476
 msgid "Unknown Artist"
 msgstr "Unbekannter Interpret"
 
-#: bin/mpdevil:609
+#: mpdevil:477
 msgid "Unknown Album"
 msgstr "Unbekanntes Album"
 
-#: bin/mpdevil:938 bin/mpdevil:1242 bin/mpdevil:2158 bin/mpdevil:2868
-msgid "No"
-msgstr "Nr."
-
-#: bin/mpdevil:943 bin/mpdevil:1247 bin/mpdevil:2160 bin/mpdevil:2868
-msgid "Title"
-msgstr "Titel"
-
-#: bin/mpdevil:949 bin/mpdevil:1424 bin/mpdevil:2161 bin/mpdevil:2868
-msgid "Artist"
-msgstr "Interpret"
-
-#: bin/mpdevil:955 bin/mpdevil:2162 bin/mpdevil:2868
-msgid "Album"
-msgstr "Album"
-
-#: bin/mpdevil:961 bin/mpdevil:1253 bin/mpdevil:2163 bin/mpdevil:2868
-msgid "Length"
-msgstr "Länge"
-
-#: bin/mpdevil:1025
-#, python-format
-msgid "%i hits"
-msgstr "%i Treffer"
-
-#: bin/mpdevil:1126
-msgid "Append"
-msgstr "Anhängen"
-
-#: bin/mpdevil:1127
-msgid "Add all titles to playlist"
-msgstr "Alle Titel der Wiedergabeliste anhängen"
-
-#: bin/mpdevil:1128
-msgid "Play"
-msgstr "Abspielen"
-
-#: bin/mpdevil:1129
-msgid "Directly play all titles"
-msgstr "Alle Titel sofort abspielen"
-
-#: bin/mpdevil:1130
-msgid "Enqueue"
-msgstr "Einreihen"
-
-#: bin/mpdevil:1131
-msgid ""
-"Append all titles after the currently playing track and clear the playlist "
-"from all other songs"
-msgstr ""
-"Alle Titel hinter dem aktuellen Stück einreihen und die weitere "
-"Wiedergabeliste leeren"
-
-#: bin/mpdevil:1259
-msgid "Close"
-msgstr "Schließen"
-
-#: bin/mpdevil:1312
-msgid "all genres"
-msgstr "Alle Genres"
-
-#: bin/mpdevil:1422
-msgid "Album Artist"
-msgstr "Albuminterpret"
-
-#: bin/mpdevil:1425
-msgid "all artists"
-msgstr "Alle Interpreten"
-
-#: bin/mpdevil:1613
-#, python-format
-msgid "%(total_tracks)i titles on %(discs)i discs (%(total_length)s)"
-msgstr "%(total_tracks)i Titel auf %(discs)i CDs (%(total_length)s)"
-
-#: bin/mpdevil:1616 bin/mpdevil:2253
-#, python-format
-msgid "%(total_tracks)i titles (%(total_length)s)"
-msgstr "%(total_tracks)i Titel (%(total_length)s)"
-
-#: bin/mpdevil:1740
-msgid "Back to current album"
-msgstr "Zurück zu aktuellem Album"
-
-#: bin/mpdevil:1741
-msgid "Search"
-msgstr "Suche"
-
-#: bin/mpdevil:1909
-msgid "searching..."
-msgstr "suche..."
-
-#: bin/mpdevil:1913
-msgid "lyrics not found"
-msgstr "Liedtext nicht gefunden"
-
-#: bin/mpdevil:1987
-#, python-format
-msgid ""
-"%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
-"channels, %(file_type)s"
-msgstr ""
-"%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
-"Kanäle, %(file_type)s"
-
-#: bin/mpdevil:2127
-msgid "Scroll to current song"
-msgstr "Gehe zu aktuellem Lied"
-
-#: bin/mpdevil:2134
-msgid "Clear playlist"
-msgstr "Wiedergabeliste leeren"
-
-#: bin/mpdevil:2159 bin/mpdevil:2868
-msgid "Disc"
-msgstr "CD"
-
-#: bin/mpdevil:2164 bin/mpdevil:2868
-msgid "Year"
-msgstr "Jahr"
-
-#: bin/mpdevil:2165 bin/mpdevil:2868
-msgid "Genre"
-msgstr "Genre"
-
-#: bin/mpdevil:2409
-msgid "Show lyrics"
-msgstr "Zeige Liedtext"
-
-#: bin/mpdevil:2503
+#: mpdevil:753
 msgid "Main cover size:"
 msgstr "Größe des Haupt-Covers:"
 
-#: bin/mpdevil:2504
+#: mpdevil:754
 msgid "Album view cover size:"
 msgstr "Covergröße in Albumliste:"
 
-#: bin/mpdevil:2505
+#: mpdevil:755
 msgid "Action bar icon size:"
 msgstr "Symbolgröße Aktionsleiste:"
 
-#: bin/mpdevil:2506
+#: mpdevil:756
 msgid "Secondary icon size:"
 msgstr "Sekundäre Symbolgröße:"
 
-#: bin/mpdevil:2519
+#: mpdevil:769
 msgid "Sort albums by:"
 msgstr "Sortiere Alben nach:"
 
-#: bin/mpdevil:2519
+#: mpdevil:769
 msgid "name"
 msgstr "Name"
 
-#: bin/mpdevil:2519
+#: mpdevil:769
 msgid "year"
 msgstr "Jahr"
 
-#: bin/mpdevil:2520
+#: mpdevil:770
 msgid "Position of playlist:"
 msgstr "Wiedergabelistenposition:"
 
-#: bin/mpdevil:2520
+#: mpdevil:770
 msgid "bottom"
 msgstr "unten"
 
-#: bin/mpdevil:2520
+#: mpdevil:770
 msgid "right"
 msgstr "rechts"
 
-#: bin/mpdevil:2538
+#: mpdevil:788
 msgid "Use Client-side decoration"
 msgstr "Benutze \"Client-side decoration\""
 
-#: bin/mpdevil:2539
+#: mpdevil:789
 msgid "Show stop button"
 msgstr "Zeige Stopp-Knopf"
 
-#: bin/mpdevil:2540
+#: mpdevil:790
 msgid "Show lyrics button"
 msgstr "Zeige Liedtext-Knopf"
 
-#: bin/mpdevil:2541
+#: mpdevil:791
 msgid "Show initials in artist view"
 msgstr "Zeige Anfangsbuchstaben in Interpretenliste"
 
-#: bin/mpdevil:2542
+#: mpdevil:792
 msgid "Show tooltips in album view"
 msgstr "Zeige Tooltips in Albumliste"
 
-#: bin/mpdevil:2543
+#: mpdevil:793
 msgid "Use 'Album Artist' tag"
 msgstr "Benutze \"Album Artist\" Tag"
 
-#: bin/mpdevil:2544
+#: mpdevil:794
 msgid "Send notification on title change"
 msgstr "Sende Benachrichtigung bei Titelwechsel"
 
-#: bin/mpdevil:2545
+#: mpdevil:795
 msgid "Stop playback on quit"
 msgstr "Wiedergabe beim Beenden stoppen"
 
-#: bin/mpdevil:2546
+#: mpdevil:796
 msgid "Play selected albums and titles immediately"
 msgstr "Ausgewählte Alben und Titel sofort abspielen"
 
-#: bin/mpdevil:2559
+#: mpdevil:809
 msgid "<b>View</b>"
 msgstr "<b>Ansicht</b>"
 
-#: bin/mpdevil:2560
+#: mpdevil:810
 msgid "<b>Behavior</b>"
 msgstr "<b>Verhalten</b>"
 
-#: bin/mpdevil:2592
+#: mpdevil:842
 msgid "(restart required)"
 msgstr "(Neustart erforderlich)"
 
-#: bin/mpdevil:2654 bin/mpdevil:3498
+#: mpdevil:904 mpdevil:3496
 msgid "Connect"
 msgstr "Verbinden"
 
-#: bin/mpdevil:2670
+#: mpdevil:920
 msgid ""
 "The first image in the same directory as the song file matching this regex "
 "will be displayed. %AlbumArtist% and %Album% will be replaced by the "
@@ -268,118 +132,298 @@ msgstr ""
 "regulären Ausdruck entspricht, wird angezeigt. %AlbumArtist% und %Album% "
 "werden durch die entsprechenden Tags des Liedes ersetzt."
 
-#: bin/mpdevil:2675
+#: mpdevil:925
 msgid "Profile:"
 msgstr "Profil:"
 
-#: bin/mpdevil:2676
+#: mpdevil:926
 msgid "Name:"
 msgstr "Name:"
 
-#: bin/mpdevil:2677
+#: mpdevil:927
 msgid "Host:"
 msgstr "Host:"
 
-#: bin/mpdevil:2678
+#: mpdevil:928
 msgid "Password:"
 msgstr "Passwort:"
 
-#: bin/mpdevil:2679
+#: mpdevil:929
 msgid "Music lib:"
 msgstr "Musikverzeichnis:"
 
-#: bin/mpdevil:2680
+#: mpdevil:930
 msgid "Cover regex:"
 msgstr "Cover-Regex:"
 
-#: bin/mpdevil:2811
+#: mpdevil:1061
 msgid "Choose directory"
 msgstr "Verzeichnis Wählen"
 
-#: bin/mpdevil:2844
+#: mpdevil:1094
 msgid "Choose the order of information to appear in the playlist:"
 msgstr ""
 "Lege die Reihenfolge fest, in der Informationen in der Wiedergabeliste "
 "angezeigt werden sollen:"
 
-#: bin/mpdevil:2984 bin/mpdevil:2992 bin/mpdevil:3591
+#: mpdevil:1118 mpdevil:1642 mpdevil:1980 mpdevil:2714
+msgid "No"
+msgstr "Nr."
+
+#: mpdevil:1118 mpdevil:2715
+msgid "Disc"
+msgstr "CD"
+
+#: mpdevil:1118 mpdevil:1647 mpdevil:1985 mpdevil:2716
+msgid "Title"
+msgstr "Titel"
+
+#: mpdevil:1118 mpdevil:1653 mpdevil:1871 mpdevil:2717
+msgid "Artist"
+msgstr "Interpret"
+
+#: mpdevil:1118 mpdevil:1659 mpdevil:2718
+msgid "Album"
+msgstr "Album"
+
+#: mpdevil:1118 mpdevil:1665 mpdevil:1991 mpdevil:2719
+msgid "Length"
+msgstr "Länge"
+
+#: mpdevil:1118 mpdevil:2720
+msgid "Year"
+msgstr "Jahr"
+
+#: mpdevil:1118 mpdevil:2721
+msgid "Genre"
+msgstr "Genre"
+
+#: mpdevil:1234 mpdevil:1242 mpdevil:3579
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: bin/mpdevil:3003
+#: mpdevil:1253 mpdevil:3408
 msgid "General"
 msgstr "Allgemein"
 
-#: bin/mpdevil:3004
+#: mpdevil:1254
 msgid "Profiles"
 msgstr "Profile"
 
-#: bin/mpdevil:3005
+#: mpdevil:1255
 msgid "Playlist"
 msgstr "Wiedergabeliste"
 
-#: bin/mpdevil:3265
-msgid "Random mode"
-msgstr "Zufallsmodus"
-
-#: bin/mpdevil:3266
-msgid "Repeat mode"
-msgstr "Dauerschleife"
-
-#: bin/mpdevil:3267
-msgid "Single mode"
-msgstr "Einzelstückmodus"
-
-#: bin/mpdevil:3268
-msgid "Consume mode"
-msgstr "Wiedergabeliste verbrauchen"
-
-#: bin/mpdevil:3374 bin/mpdevil:3382
+#: mpdevil:1270 mpdevil:1278
 msgid "Stats"
 msgstr "Statistik"
 
-#: bin/mpdevil:3431
+#: mpdevil:1327
 msgid "A simple music browser for MPD"
 msgstr "Ein einfacher Musikbrowser für MPD"
 
-#: bin/mpdevil:3443
+#: mpdevil:1399
+msgid "MPD-Tag"
+msgstr "MPD-Tag"
+
+#: mpdevil:1403
+msgid "Value"
+msgstr "Wert"
+
+#: mpdevil:1564
+msgid "Append"
+msgstr "Anhängen"
+
+#: mpdevil:1565
+msgid "Add all titles to playlist"
+msgstr "Alle Titel der Wiedergabeliste anhängen"
+
+#: mpdevil:1566
+msgid "Play"
+msgstr "Abspielen"
+
+#: mpdevil:1567
+msgid "Directly play all titles"
+msgstr "Alle Titel sofort abspielen"
+
+#: mpdevil:1568
+msgid "Enqueue"
+msgstr "Einreihen"
+
+#: mpdevil:1569
+msgid ""
+"Append all titles after the currently playing track and clear the playlist "
+"from all other songs"
+msgstr ""
+"Alle Titel hinter dem aktuellen Stück einreihen und die weitere "
+"Wiedergabeliste leeren"
+
+#: mpdevil:1723
+#, python-format
+msgid "%i hits"
+msgstr "%i Treffer"
+
+#: mpdevil:1761
+msgid "all genres"
+msgstr "Alle Genres"
+
+#: mpdevil:1869
+msgid "Album Artist"
+msgstr "Albuminterpret"
+
+#: mpdevil:1872
+msgid "all artists"
+msgstr "Alle Interpreten"
+
+#: mpdevil:1997
+msgid "Close"
+msgstr "Schließen"
+
+#: mpdevil:2168
+#, python-format
+msgid "%(total_tracks)i titles on %(discs)i discs (%(total_length)s)"
+msgstr "%(total_tracks)i Titel auf %(discs)i CDs (%(total_length)s)"
+
+#: mpdevil:2171 mpdevil:2809
+#, python-format
+msgid "%(total_tracks)i titles (%(total_length)s)"
+msgstr "%(total_tracks)i Titel (%(total_length)s)"
+
+#: mpdevil:2297 mpdevil:3419
+msgid "Back to current album"
+msgstr "Zurück zu aktuellem Album"
+
+#: mpdevil:2298
+msgid "Search"
+msgstr "Suche"
+
+#: mpdevil:2462
+msgid "searching..."
+msgstr "suche..."
+
+#: mpdevil:2466
+msgid "lyrics not found"
+msgstr "Liedtext nicht gefunden"
+
+#: mpdevil:2543
+#, python-format
+msgid ""
+"%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
+"channels, %(file_type)s"
+msgstr ""
+"%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
+"Kanäle, %(file_type)s"
+
+#: mpdevil:2683
+msgid "Scroll to current song"
+msgstr "Gehe zu aktuellem Lied"
+
+#: mpdevil:2690
+msgid "Clear playlist"
+msgstr "Wiedergabeliste leeren"
+
+#: mpdevil:2965
+msgid "Show lyrics"
+msgstr "Zeige Liedtext"
+
+#: mpdevil:3300
+msgid "Random mode"
+msgstr "Zufallsmodus"
+
+#: mpdevil:3301
+msgid "Repeat mode"
+msgstr "Dauerschleife"
+
+#: mpdevil:3302
+msgid "Single mode"
+msgstr "Einzelstückmodus"
+
+#: mpdevil:3303
+msgid "Consume mode"
+msgstr "Wiedergabeliste verbrauchen"
+
+#: mpdevil:3409
+msgid "Window"
+msgstr "Fenster"
+
+#: mpdevil:3410
+msgid "Playback"
+msgstr "Wiedergabe"
+
+#: mpdevil:3417
+msgid "Toggle mini player"
+msgstr "Miniplayer ein-/ausschalten"
+
+#: mpdevil:3418
+msgid "Toggle lyrics"
+msgstr "Liedtext ein-/ausblenden"
+
+#: mpdevil:3420
+msgid "Open online help"
+msgstr "Onlinehilfe öffnen"
+
+#: mpdevil:3421 mpdevil:3583
+msgid "Quit"
+msgstr "Beenden"
+
+#: mpdevil:3422
+msgid "Play/Pause"
+msgstr "Wiedergabe/Pause"
+
+#: mpdevil:3423
+msgid "Next title"
+msgstr "Nächster Titel"
+
+#: mpdevil:3424
+msgid "Previous title"
+msgstr "Vorheriger Titel"
+
+#: mpdevil:3425
+msgid "Seek forward"
+msgstr "Vorspulen"
+
+#: mpdevil:3426
+msgid "Seek backward"
+msgstr "Zurückspulen"
+
+#: mpdevil:3427 mpdevil:3586
+msgid "Update database"
+msgstr "Datenbank aktualisieren"
+
+#: mpdevil:3441
 msgid "Select profile"
 msgstr "Profil auswählen"
 
-#: bin/mpdevil:3519
+#: mpdevil:3517
 #, python-format
 msgid "Connection to \"%(profile)s\" (%(host)s:%(port)s) failed"
 msgstr "Verbindung zu \"%(profile)s\" (%(host)s:%(port)s) fehlgeschlagen"
 
-#: bin/mpdevil:3592
+#: mpdevil:3580
+msgid "Keyboard shortcuts"
+msgstr "Tastenkürzel"
+
+#: mpdevil:3581
 msgid "Help"
 msgstr "Hilfe"
 
-#: bin/mpdevil:3593
+#: mpdevil:3582
 msgid "About"
 msgstr "Über"
 
-#: bin/mpdevil:3594
-msgid "Quit"
-msgstr "Beenden"
-
-#: bin/mpdevil:3597
-msgid "Update database"
-msgstr "Datenbank aktualisieren"
-
-#: bin/mpdevil:3598
+#: mpdevil:3587
 msgid "Server stats"
 msgstr "Serverstatistik"
 
-#: bin/mpdevil:3601
+#: mpdevil:3590
 msgid "Save window layout"
 msgstr "Fensterlayout speichern"
 
-#: bin/mpdevil:3602
+#: mpdevil:3591
 msgid "Mini player"
 msgstr "Miniplayer"
 
-#: bin/mpdevil:3606
+#: mpdevil:3595
 msgid "Menu"
 msgstr "Menü"
 
