@@ -648,38 +648,8 @@ class MpdEventEmitter(GObject.Object):
 		super().__init__()
 
 	# gsignals
-	def do_update(self):
-		pass
-
-	def do_disconnected(self):
-		pass
-
-	def do_reconnected(self):
-		pass
-
 	def do_connection_error(self):
 		print("Connection error!")
-
-	def do_current_file_changed(self):
-		pass
-
-	def do_state(self, state):
-		pass
-
-	def do_elapsed_changed(self, elapsed, duration):
-		pass
-
-	def do_volume_changed(self, volume):
-		pass
-
-	def do_playlist_changed(self, version):
-		pass
-
-	def do_audio(self, sampelrate, bits, channels):
-		pass
-
-	def do_bitrate(self, rate):
-		pass
 
 class Client(MPDClient):
 	def __init__(self, settings):
@@ -1270,6 +1240,8 @@ class AlbumDialog(Gtk.Dialog):
 		self.destroy()
 
 class GenreSelect(Gtk.ComboBoxText):
+	__gsignals__={'genre_changed': (GObject.SignalFlags.RUN_FIRST, None, ())}
+
 	def __init__(self, client):
 		super().__init__()
 
@@ -1296,10 +1268,6 @@ class GenreSelect(Gtk.ComboBoxText):
 		else:
 			return self.get_active_text()
 
-	@GObject.Signal
-	def genre_changed(self):
-		pass
-
 	def _refresh(self, *args):
 		self.handler_block(self._changed)
 		self.remove_all()
@@ -1321,6 +1289,8 @@ class GenreSelect(Gtk.ComboBoxText):
 		self.set_sensitive(True)
 
 class ArtistWindow(FocusFrame):
+	__gsignals__={'artists_changed': (GObject.SignalFlags.RUN_FIRST, None, ())}
+
 	def __init__(self, client, settings, genre_select):
 		super().__init__()
 
@@ -1404,10 +1374,6 @@ class ArtistWindow(FocusFrame):
 			if row[1] == Pango.Weight.BOLD:
 				self._treeview.set_cursor(path, None, False)
 				break
-
-	@GObject.Signal
-	def artists_changed(self):
-		pass
 
 	def _refresh(self, *args):
 		self._selection.set_mode(Gtk.SelectionMode.NONE)
@@ -1712,9 +1678,7 @@ class AlbumWindow(FocusFrame):
 		GLib.idle_add(callback)
 
 class Browser(Gtk.Paned):
-	__gsignals__={
-		'search_focus_changed': (GObject.SignalFlags.RUN_FIRST, None, (bool,))
-	}
+	__gsignals__={'search_focus_changed': (GObject.SignalFlags.RUN_FIRST, None, (bool,))}
 
 	def __init__(self, client, settings, window):
 		super().__init__(orientation=Gtk.Orientation.HORIZONTAL)  # paned1
