@@ -2406,60 +2406,57 @@ class Browser(Gtk.Paned):
 # playlist and cover #
 ######################
 
-class LyricsWindow(Gtk.Overlay):
+class LyricsWindow(FocusFrame):
 	def __init__(self, client, settings):
 		super().__init__()
 
 		# adding vars
 		self._settings=settings
 		self._client=client
+		self._displayed_song_file=None
 
 		# text view
-		text_view=Gtk.TextView(
+		self._text_view=Gtk.TextView(
 			editable=False,
 			cursor_visible=False,
 			wrap_mode=Gtk.WrapMode.WORD,
 			justification=Gtk.Justification.CENTER,
 			opacity=0.9
 		)
-		text_view.set_left_margin(5)
-		text_view.set_bottom_margin(5)
-		text_view.set_top_margin(3)
+		self._text_view.set_left_margin(5)
+		self._text_view.set_bottom_margin(5)
+		self._text_view.set_top_margin(3)
+		self.set_widget(self._text_view)
 
 		# text buffer
-		self._text_buffer=text_view.get_buffer()
+		self._text_buffer=self._text_view.get_buffer()
 
 		# scroll
 		scroll=Gtk.ScrolledWindow()
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(text_view)
-
-		# frame
-		frame=FocusFrame()
-		frame.set_widget(text_view)
-
-		# close button
-		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
-		close_button.set_margin_top(6)
-		close_button.set_margin_end(6)
-		close_button.set_halign(Gtk.Align.END)
-		close_button.set_valign(Gtk.Align.START)
-		style_context=close_button.get_style_context()
-		style_context.add_class("circular")
+		scroll.add(self._text_view)
 
 		# connect
+		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._song_changed=self._client.emitter.connect("current_song_changed", self._refresh)
-		self.connect("destroy", self._remove_handlers)
-		close_button.connect("clicked", self._on_close_button_clicked)
+		self._client.emitter.handler_block(self._song_changed)
 
 		# packing
-		frame.add(scroll)
-		self.add(frame)
-		self.add_overlay(close_button)
+		self.add(scroll)
 
-		self.show_all()
-		self._refresh()
-		GLib.idle_add(text_view.grab_focus)  # focus textview
+	def enable(self, *args):
+		current_song=self._client.wrapped_call("currentsong")
+		if current_song == {}:
+			if self._displayed_song_file is not None:
+				self._refresh()
+		else:
+			if current_song["file"] != self._displayed_song_file:
+				self._refresh()
+		self._client.emitter.handler_unblock(self._song_changed)
+		GLib.idle_add(self._text_view.grab_focus)  # focus textview
+
+	def disable(self, *args):
+		self._client.emitter.handler_block(self._song_changed)
 
 	def _display_lyrics(self, current_song):
 		GLib.idle_add(self._text_buffer.set_text, _("searching..."), -1)
@@ -2470,9 +2467,14 @@ class LyricsWindow(Gtk.Overlay):
 		GLib.idle_add(self._text_buffer.set_text, text, -1)
 
 	def _refresh(self, *args):
+		current_song=self._client.wrapped_call("currentsong")
+		if current_song == {}:
+			self._displayed_song_file=None
+		else:
+			self._displayed_song_file=current_song["file"]
 		update_thread=threading.Thread(
 				target=self._display_lyrics,
-				kwargs={"current_song": ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))},
+				kwargs={"current_song": ClientHelper.song_to_first_str_dict(current_song)},
 				daemon=True
 		)
 		update_thread.start()
@@ -2507,11 +2509,9 @@ class LyricsWindow(Gtk.Overlay):
 		except:
 			return output.encode('utf-8')
 
-	def _on_close_button_clicked(self, *args):
-		self.destroy()
-
-	def _remove_handlers(self, *args):
-		self._client.emitter.disconnect(self._song_changed)
+	def _on_disconnected(self, *args):
+		self._displayed_song_file=None
+		self._text_buffer.set_text("", -1)
 
 class AudioType(Gtk.Label):
 	def __init__(self, client):
@@ -2960,7 +2960,7 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self._main_cover=MainCover(self._client, self._settings, self._window)
 
 		# lyrics button
-		self._lyrics_button=Gtk.Button(
+		self._lyrics_button=Gtk.ToggleButton(
 			image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON),
 			tooltip_text=_("Show lyrics")
 		)
@@ -2969,52 +2969,55 @@ class CoverLyricsOSD(Gtk.Overlay):
 		style_context=self._lyrics_button.get_style_context()
 		style_context.add_class("circular")
 
+		# lyrics window
+		self._lyrics_window=LyricsWindow(self._client, self._settings)
+		self._lyrics_window_revealer=Gtk.Revealer()
+		self._lyrics_window_revealer.set_transition_type(Gtk.RevealerTransitionType.CROSSFADE)
+		self._lyrics_window_revealer.add(self._lyrics_window)
+		self._lyrics_window_revealer.set_reveal_child(False)
+
 		# revealer
-		# workaround to get tooltips in overlay
-		self._revealer=Gtk.Revealer()
-		self._revealer.set_halign(Gtk.Align.END)
-		self._revealer.set_valign(Gtk.Align.START)
-		self._revealer.add(self._lyrics_button)
+		self._lyrics_button_revealer=Gtk.Revealer()
+		self._lyrics_button_revealer.set_halign(Gtk.Align.END)
+		self._lyrics_button_revealer.set_valign(Gtk.Align.START)
+		self._lyrics_button_revealer.add(self._lyrics_button)
 
 		# packing
 		self.add(self._main_cover)
-		self.add_overlay(self._revealer)
+		self.add_overlay(self._lyrics_window_revealer)
+		self.add_overlay(self._lyrics_button_revealer)
 
 		# connect
-		self._lyrics_button.connect("clicked", self._on_lyrics_clicked)
+		self._lyrics_button.connect("toggled", self._on_lyrics_toggled)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._settings.connect("changed::show-lyrics-button", self._on_settings_changed)
 
 		self._on_settings_changed()  # hide lyrics button
 
-	def show_lyrics(self, *args):
-		if self._lyrics_button.get_sensitive():
-			self._lyrics_button.emit("clicked")
+	def toggle_lyrics(self, *args):
+		self._lyrics_button.set_active(not(self._lyrics_button.get_active()))
 
 	def _on_reconnected(self, *args):
 		self._lyrics_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
-		try:
-			self._lyrics_win.destroy()
-		except:
-			pass
+		self._lyrics_button.set_active(False)
 		self._lyrics_button.set_sensitive(False)
 
-	def _on_lyrics_clicked(self, widget):
-		self._lyrics_button.set_sensitive(False)
-		self._lyrics_win=LyricsWindow(self._client, self._settings)
-		def on_destroy(*args):
-			self._lyrics_button.set_sensitive(True)
-		self._lyrics_win.connect("destroy", on_destroy)
-		self.add_overlay(self._lyrics_win)
+	def _on_lyrics_toggled(self, widget):
+		if widget.get_active():
+			self._lyrics_window_revealer.set_reveal_child(True)
+			self._lyrics_window.enable()
+		else:
+			self._lyrics_window_revealer.set_reveal_child(False)
+			self._lyrics_window.disable()
 
 	def _on_settings_changed(self, *args):
 		if self._settings.get_boolean("show-lyrics-button"):
-			self._revealer.set_reveal_child(True)
+			self._lyrics_button_revealer.set_reveal_child(True)
 		else:
-			self._revealer.set_reveal_child(False)
+			self._lyrics_button_revealer.set_reveal_child(False)
 
 class CoverPlaylistWindow(Gtk.Paned):
 	def __init__(self, client, settings, window):
@@ -3034,8 +3037,8 @@ class CoverPlaylistWindow(Gtk.Paned):
 
 		self.set_position(self._settings.get_int("paned0"))
 
-	def show_lyrics(self, *args):
-		self._cover_lyrics_osd.show_lyrics()
+	def toggle_lyrics(self, *args):
+		self._cover_lyrics_osd.toggle_lyrics()
 
 	def save_settings(self):
 		self._settings.set_int("paned0", self.get_position())
@@ -3513,7 +3516,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		# actions
 		simple_actions_data=[
 			"save","settings","stats","update","help",
-			"show-lyrics","toggle-play","next","prev","back-to-current-album","seek-forward","seek-backward"
+			"toggle-lyrics","toggle-play","next","prev","back-to-current-album","seek-forward","seek-backward"
 		]
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
@@ -3638,6 +3641,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.action_enabled_changed
 		self.lookup_action("update").set_enabled(True)
 		self.lookup_action("stats").set_enabled(True)
+		self.lookup_action("toggle-lyrics").set_enabled(True)
 
 	def _on_disconnected(self, *args):
 		self.set_title("mpdevil")
@@ -3646,6 +3650,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._playback_control.set_sensitive(False)
 		self.lookup_action("update").set_enabled(False)
 		self.lookup_action("stats").set_enabled(False)
+		self.lookup_action("toggle-lyrics").set_enabled(False)
 
 	def _on_search_focus_changed(self, obj, focus):
 		if focus:
@@ -3653,8 +3658,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			self.lookup_action("toggle-play").set_enabled(True)
 
-	def _on_show_lyrics(self, action, param):
-		self._cover_playlist_window.show_lyrics()
+	def _on_toggle_lyrics(self, action, param):
+		self._cover_playlist_window.toggle_lyrics()
 
 	def _on_toggle_play(self, action, param):
 		self._playback_control.play_button.grab_focus()
@@ -3754,7 +3759,7 @@ class mpdevil(Gtk.Application):
 			self.set_accels_for_action("win.mini-player", ["<Control>m"])
 			self.set_accels_for_action("win.update", ["F5"])
 			self.set_accels_for_action("win.help", ["F1"])
-			self.set_accels_for_action("win.show-lyrics", ["<Control>l"])
+			self.set_accels_for_action("win.toggle-lyrics", ["<Control>l"])
 			self.set_accels_for_action("win.toggle-play", ["space"])
 			self.set_accels_for_action("win.next", ["KP_Add"])
 			self.set_accels_for_action("win.prev", ["KP_Subtract",])
