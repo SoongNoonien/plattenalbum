@@ -2568,46 +2568,18 @@ class AudioType(Gtk.Label):
 		if state == "stop":
 			self.clear()
 
-class MainCover(Gtk.Frame):
+class CoverEventBox(Gtk.EventBox):
 	def __init__(self, client, settings, window):
 		super().__init__()
-
-		# css
-		style_context=self.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""* {background-color: @theme_base_color; border-width: 0px}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
 
 		# adding vars
 		self._client=client
 		self._settings=settings
 		self._window=window
 
-		# event box
-		self._event_box=Gtk.EventBox()
-
-		# cover
-		self._cover=Gtk.Image.new()
-		size=self._settings.get_int("track-cover")
-		self._cover.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(size))  # set to fallback cover
-		# set default size
-		self._cover.set_size_request(size, size)
-
 		# connect
-		self._button_press_event=self._event_box.connect("button-press-event", self._on_button_press_event)
-		self._client.emitter.connect("current_song_changed", self._refresh)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._button_press_event=self.connect("button-press-event", self._on_button_press_event)
 		self._settings.connect("notify::mini-player", self._on_mini_player)
-		self._settings.connect("changed::track-cover", self._on_settings_changed)
-
-		self._event_box.add(self._cover)
-		self.add(self._event_box)
-
-	def _refresh(self, *args):
-		current_song=self._client.wrapped_call("currentsong")
-		self._cover.set_from_pixbuf(Cover(self._settings, current_song).get_pixbuf(self._settings.get_int("track-cover")))
 
 	def _on_button_press_event(self, widget, event):
 		if self._client.connected():
@@ -2637,25 +2609,57 @@ class MainCover(Gtk.Frame):
 					album_dialog.open()
 					album_dialog.destroy()
 
+	def _on_mini_player(self, obj, typestring):
+		if obj.get_property("mini-player"):
+			self.handler_block(self._button_press_event)
+		else:
+			self.handler_unblock(self._button_press_event)
+
+class MainCover(Gtk.Frame):
+	def __init__(self, client, settings):
+		super().__init__()
+
+		# css
+		style_context=self.get_style_context()
+		provider=Gtk.CssProvider()
+		css=b"""* {background-color: @theme_base_color; border-width: 0px}"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
+
+		# adding vars
+		self._client=client
+		self._settings=settings
+
+		# cover
+		self._cover=Gtk.Image.new()
+		size=self._settings.get_int("track-cover")
+		self._cover.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(size))  # set to fallback cover
+		# set default size
+		self._cover.set_size_request(size, size)
+
+		# connect
+		self._client.emitter.connect("current_song_changed", self._refresh)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._settings.connect("changed::track-cover", self._on_settings_changed)
+
+		self.add(self._cover)
+
+	def _refresh(self, *args):
+		current_song=self._client.wrapped_call("currentsong")
+		self._cover.set_from_pixbuf(Cover(self._settings, current_song).get_pixbuf(self._settings.get_int("track-cover")))
+
 	def _on_disconnected(self, *args):
 		size=self._settings.get_int("track-cover")
 		self._cover.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(size))
-		self.song_file=None
 		self._cover.set_sensitive(False)
 
 	def _on_reconnected(self, *args):
 		self._cover.set_sensitive(True)
 
-	def _on_mini_player(self, obj, typestring):
-		if obj.get_property("mini-player"):
-			self._event_box.handler_block(self._button_press_event)
-		else:
-			self._event_box.handler_unblock(self._button_press_event)
-
 	def _on_settings_changed(self, *args):
 		size=self._settings.get_int("track-cover")
 		self._cover.set_size_request(size, size)
-		self.song_file=None
 		self._refresh()
 
 class PlaylistWindow(Gtk.Box):
@@ -2957,7 +2961,8 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self._window=window
 
 		# cover
-		self._main_cover=MainCover(self._client, self._settings, self._window)
+		main_cover=MainCover(self._client, self._settings)
+		self._cover_event_box=CoverEventBox(self._client, self._settings, self._window)
 
 		# lyrics button
 		self._lyrics_button=Gtk.ToggleButton(
@@ -2971,10 +2976,6 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 		# lyrics window
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
-		self._lyrics_window_revealer=Gtk.Revealer()
-		self._lyrics_window_revealer.set_transition_type(Gtk.RevealerTransitionType.CROSSFADE)
-		self._lyrics_window_revealer.add(self._lyrics_window)
-		self._lyrics_window_revealer.set_reveal_child(False)
 
 		# revealer
 		self._lyrics_button_revealer=Gtk.Revealer()
@@ -2982,9 +2983,15 @@ class CoverLyricsOSD(Gtk.Overlay):
 		self._lyrics_button_revealer.set_valign(Gtk.Align.START)
 		self._lyrics_button_revealer.add(self._lyrics_button)
 
+		# stack
+		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack.add_named(self._cover_event_box, "cover")
+		self._stack.add_named(self._lyrics_window, "lyrics")
+		self._stack.set_visible_child(self._cover_event_box)
+
 		# packing
-		self.add(self._main_cover)
-		self.add_overlay(self._lyrics_window_revealer)
+		self.add(main_cover)
+		self.add_overlay(self._stack)
 		self.add_overlay(self._lyrics_button_revealer)
 
 		# connect
@@ -3007,10 +3014,10 @@ class CoverLyricsOSD(Gtk.Overlay):
 
 	def _on_lyrics_toggled(self, widget):
 		if widget.get_active():
-			self._lyrics_window_revealer.set_reveal_child(True)
+			self._stack.set_visible_child(self._lyrics_window)
 			self._lyrics_window.enable()
 		else:
-			self._lyrics_window_revealer.set_reveal_child(False)
+			self._stack.set_visible_child(self._cover_event_box)
 			self._lyrics_window.disable()
 
 	def _on_settings_changed(self, *args):
