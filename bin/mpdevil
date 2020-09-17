@@ -3415,26 +3415,36 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 		general_group=Gtk.ShortcutsGroup(title=_("General"), visible=True)
 		window_group=Gtk.ShortcutsGroup(title=_("Window"), visible=True)
 		playback_group=Gtk.ShortcutsGroup(title=_("Playback"), visible=True)
+		items_group=Gtk.ShortcutsGroup(title=_("Search, Album Dialog and Album List"), visible=True)
+		playlist_group=Gtk.ShortcutsGroup(title=_("Playlist"), visible=True)
 		section=Gtk.ShortcutsSection(section_name="shortcuts", visible=True)
 		section.add(general_group)
 		section.add(window_group)
 		section.add(playback_group)
+		section.add(items_group)
+		section.add(playlist_group)
 
 		shortcut_data=[
-			("<Control>m", _("Toggle mini player"), window_group),
-			("<Control>l", _("Toggle lyrics"), window_group),
-			("Escape", _("Back to current album"), window_group),
-			("F1", _("Open online help"), general_group),
-			("<Control>q", _("Quit"), general_group),
-			("space", _("Play/Pause"), playback_group),
-			("KP_Add", _("Next title"), playback_group),
-			("KP_Subtract", _("Previous title"), playback_group),
-			("KP_Multiply", _("Seek forward"), playback_group),
-			("KP_Divide", _("Seek backward"), playback_group),
-			("F5", _("Update database"), playback_group)
+			("<Control>m", _("Toggle mini player"), None, window_group),
+			("<Control>l", _("Toggle lyrics"), None, window_group),
+			("Escape", _("Back to current album"), None, window_group),
+			("F1", _("Open online help"), None, general_group),
+			("<Control>q", _("Quit"), None, general_group),
+			("space", _("Play/Pause"), None, playback_group),
+			("KP_Add", _("Next title"), None, playback_group),
+			("KP_Subtract", _("Previous title"), None, playback_group),
+			("KP_Multiply", _("Seek forward"), None, playback_group),
+			("KP_Divide", _("Seek backward"), None, playback_group),
+			("F5", _("Update database"), None, playback_group),
+			("p", _("Play selected item (next)"), _("Left-click"), items_group),
+			("a", _("Append selected item"), _("Middle-click"), items_group),
+			("Return", _("Play selected item immediately"), _("Double-click"), items_group),
+			("Menu", _("Show additional information"), _("Right-click"), items_group),
+			("Delete", _("Remove selected song"), _("Middle-click"), playlist_group),
+			("Menu", _("Show additional information"), _("Right-click"), playlist_group)
 		]
-		for accel, title, group in shortcut_data:
-			shortcut=Gtk.ShortcutsShortcut(visible=True, accelerator=accel, title=title)
+		for accel, title, subtitle, group in shortcut_data:
+			shortcut=Gtk.ShortcutsShortcut(visible=True, accelerator=accel, title=title, subtitle=subtitle)
 			group.pack_start(shortcut, False, False, 0)
 
 		self.add(section)
