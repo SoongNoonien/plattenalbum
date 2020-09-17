@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-09-17 12:53+0200\n"
-"PO-Revision-Date: 2020-09-17 12:59+0200\n"
+"PO-Revision-Date: 2020-09-17 16:28+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -428,7 +428,7 @@ msgstr "Zeige weitere Informationen"
 
 #: mpdevil:3443 mpdevil:3445
 msgid "Right-click"
-msgstr "Rechstklick"
+msgstr "Rechtsklick"
 
 #: mpdevil:3444
 msgid "Remove selected song"
