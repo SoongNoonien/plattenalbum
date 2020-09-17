@@ -2302,7 +2302,7 @@ class Browser(Gtk.Paned):
 		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window, window)
 
 		# connect
-		self.back_to_current_album_button.connect("clicked", self.back_to_current_album)
+		self.back_to_current_album_button.connect("clicked", self._back_to_current_album)
 		self.search_button.connect("toggled", self._on_search_toggled)
 		self._search_window.search_entry.connect("focus_in_event", lambda *args: self.emit("search_focus_changed", True))
 		self._search_window.search_entry.connect("focus_out_event", lambda *args: self.emit("search_focus_changed", False))
@@ -2337,7 +2337,7 @@ class Browser(Gtk.Paned):
 	def save_settings(self):
 		self._settings.set_int("paned1", self.get_position())
 
-	def back_to_current_album(self, *args):
+	def _back_to_current_album(self, *args):
 		def callback():
 			try:
 				song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
@@ -2378,7 +2378,7 @@ class Browser(Gtk.Paned):
 			self._stack.set_visible_child_name("albums")
 
 	def _on_reconnected(self, *args):
-		self.back_to_current_album()
+		self._back_to_current_album()
 		self.back_to_current_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
 
@@ -3728,7 +3728,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._playback_control.prev_button.emit("clicked")
 
 	def _on_back_to_current_album(self, action, param):
-		self._browser.back_to_current_album()
+		self._browser.back_to_current_album_button.grab_focus()
+		self._browser.back_to_current_album_button.emit("clicked")
 
 	def _on_seek_forward(self, action, param):
 		self._seek_bar.scale.grab_focus()
