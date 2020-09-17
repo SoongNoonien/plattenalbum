@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-16 19:12+0200\n"
-"PO-Revision-Date: 2020-09-16 19:15+0200\n"
+"POT-Creation-Date: 2020-09-17 12:53+0200\n"
+"PO-Revision-Date: 2020-09-17 12:59+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -118,7 +118,7 @@ msgstr "<b>Verhalten</b>"
 msgid "(restart required)"
 msgstr "(Neustart erforderlich)"
 
-#: mpdevil:904 mpdevil:3496
+#: mpdevil:904 mpdevil:3514
 msgid "Connect"
 msgstr "Verbinden"
 
@@ -166,43 +166,43 @@ msgstr ""
 "Lege die Reihenfolge fest, in der Informationen in der Wiedergabeliste "
 "angezeigt werden sollen:"
 
-#: mpdevil:1118 mpdevil:1642 mpdevil:1980 mpdevil:2714
+#: mpdevil:1118 mpdevil:1642 mpdevil:1980 mpdevil:2718
 msgid "No"
 msgstr "Nr."
 
-#: mpdevil:1118 mpdevil:2715
+#: mpdevil:1118 mpdevil:2719
 msgid "Disc"
 msgstr "CD"
 
-#: mpdevil:1118 mpdevil:1647 mpdevil:1985 mpdevil:2716
+#: mpdevil:1118 mpdevil:1647 mpdevil:1985 mpdevil:2720
 msgid "Title"
 msgstr "Titel"
 
-#: mpdevil:1118 mpdevil:1653 mpdevil:1871 mpdevil:2717
+#: mpdevil:1118 mpdevil:1653 mpdevil:1871 mpdevil:2721
 msgid "Artist"
 msgstr "Interpret"
 
-#: mpdevil:1118 mpdevil:1659 mpdevil:2718
+#: mpdevil:1118 mpdevil:1659 mpdevil:2722
 msgid "Album"
 msgstr "Album"
 
-#: mpdevil:1118 mpdevil:1665 mpdevil:1991 mpdevil:2719
+#: mpdevil:1118 mpdevil:1665 mpdevil:1991 mpdevil:2723
 msgid "Length"
 msgstr "Länge"
 
-#: mpdevil:1118 mpdevil:2720
+#: mpdevil:1118 mpdevil:2724
 msgid "Year"
 msgstr "Jahr"
 
-#: mpdevil:1118 mpdevil:2721
+#: mpdevil:1118 mpdevil:2725
 msgid "Genre"
 msgstr "Genre"
 
-#: mpdevil:1234 mpdevil:1242 mpdevil:3579
+#: mpdevil:1234 mpdevil:1242 mpdevil:3597
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: mpdevil:1253 mpdevil:3408
+#: mpdevil:1253 mpdevil:3415
 msgid "General"
 msgstr "Allgemein"
 
@@ -210,7 +210,7 @@ msgstr "Allgemein"
 msgid "Profiles"
 msgstr "Profile"
 
-#: mpdevil:1255
+#: mpdevil:1255 mpdevil:3419
 msgid "Playlist"
 msgstr "Wiedergabeliste"
 
@@ -284,12 +284,12 @@ msgstr "Schließen"
 msgid "%(total_tracks)i titles on %(discs)i discs (%(total_length)s)"
 msgstr "%(total_tracks)i Titel auf %(discs)i CDs (%(total_length)s)"
 
-#: mpdevil:2171 mpdevil:2809
+#: mpdevil:2171 mpdevil:2813
 #, python-format
 msgid "%(total_tracks)i titles (%(total_length)s)"
 msgstr "%(total_tracks)i Titel (%(total_length)s)"
 
-#: mpdevil:2297 mpdevil:3419
+#: mpdevil:2297 mpdevil:3431
 msgid "Back to current album"
 msgstr "Zurück zu aktuellem Album"
 
@@ -314,116 +314,160 @@ msgstr ""
 "%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
 "Kanäle, %(file_type)s"
 
-#: mpdevil:2683
+#: mpdevil:2687
 msgid "Scroll to current song"
 msgstr "Gehe zu aktuellem Lied"
 
-#: mpdevil:2690
+#: mpdevil:2694
 msgid "Clear playlist"
 msgstr "Wiedergabeliste leeren"
 
-#: mpdevil:2965
+#: mpdevil:2970
 msgid "Show lyrics"
 msgstr "Zeige Liedtext"
 
-#: mpdevil:3300
+#: mpdevil:3307
 msgid "Random mode"
 msgstr "Zufallsmodus"
 
-#: mpdevil:3301
+#: mpdevil:3308
 msgid "Repeat mode"
 msgstr "Dauerschleife"
 
-#: mpdevil:3302
+#: mpdevil:3309
 msgid "Single mode"
 msgstr "Einzelstückmodus"
 
-#: mpdevil:3303
+#: mpdevil:3310
 msgid "Consume mode"
 msgstr "Wiedergabeliste verbrauchen"
 
-#: mpdevil:3409
+#: mpdevil:3416
 msgid "Window"
 msgstr "Fenster"
 
-#: mpdevil:3410
+#: mpdevil:3417
 msgid "Playback"
 msgstr "Wiedergabe"
 
-#: mpdevil:3417
+#: mpdevil:3418
+msgid "Search, Album Dialog and Album List"
+msgstr "Suche, Albumdialog und Albumliste"
+
+#: mpdevil:3428
 msgid "Toggle mini player"
 msgstr "Miniplayer ein-/ausschalten"
 
-#: mpdevil:3418
+#: mpdevil:3429
 msgid "Toggle lyrics"
 msgstr "Liedtext ein-/ausblenden"
 
-#: mpdevil:3420
+#: mpdevil:3430
+msgid "Toggle search"
+msgstr "Suche ein-/ausblenden"
+
+#: mpdevil:3432
 msgid "Open online help"
 msgstr "Onlinehilfe öffnen"
 
-#: mpdevil:3421 mpdevil:3583
+#: mpdevil:3433 mpdevil:3601
 msgid "Quit"
 msgstr "Beenden"
 
-#: mpdevil:3422
+#: mpdevil:3434
 msgid "Play/Pause"
 msgstr "Wiedergabe/Pause"
 
-#: mpdevil:3423
+#: mpdevil:3435
 msgid "Next title"
 msgstr "Nächster Titel"
 
-#: mpdevil:3424
+#: mpdevil:3436
 msgid "Previous title"
 msgstr "Vorheriger Titel"
 
-#: mpdevil:3425
+#: mpdevil:3437
 msgid "Seek forward"
 msgstr "Vorspulen"
 
-#: mpdevil:3426
+#: mpdevil:3438
 msgid "Seek backward"
 msgstr "Zurückspulen"
 
-#: mpdevil:3427 mpdevil:3586
+#: mpdevil:3439 mpdevil:3604
 msgid "Update database"
 msgstr "Datenbank aktualisieren"
 
+#: mpdevil:3440
+msgid "Play selected item (next)"
+msgstr "Ausgewähltes Element (als Nächstes) abspielen"
+
+#: mpdevil:3440
+msgid "Left-click"
+msgstr "Linksklick"
+
 #: mpdevil:3441
+msgid "Append selected item"
+msgstr "Ausgewähltes Element anhängen"
+
+#: mpdevil:3441 mpdevil:3444
+msgid "Middle-click"
+msgstr "Mittelklick"
+
+#: mpdevil:3442
+msgid "Play selected item immediately"
+msgstr "Ausgewähltes Element sofort abspielen"
+
+#: mpdevil:3442
+msgid "Double-click"
+msgstr "Doppelklick"
+
+#: mpdevil:3443 mpdevil:3445
+msgid "Show additional information"
+msgstr "Zeige weitere Informationen"
+
+#: mpdevil:3443 mpdevil:3445
+msgid "Right-click"
+msgstr "Rechstklick"
+
+#: mpdevil:3444
+msgid "Remove selected song"
+msgstr "Ausgewählten Titel entfernen"
+
+#: mpdevil:3459
 msgid "Select profile"
 msgstr "Profil auswählen"
 
-#: mpdevil:3517
+#: mpdevil:3535
 #, python-format
 msgid "Connection to \"%(profile)s\" (%(host)s:%(port)s) failed"
 msgstr "Verbindung zu \"%(profile)s\" (%(host)s:%(port)s) fehlgeschlagen"
 
-#: mpdevil:3580
+#: mpdevil:3598
 msgid "Keyboard shortcuts"
 msgstr "Tastenkürzel"
 
-#: mpdevil:3581
+#: mpdevil:3599
 msgid "Help"
 msgstr "Hilfe"
 
-#: mpdevil:3582
+#: mpdevil:3600
 msgid "About"
 msgstr "Über"
 
-#: mpdevil:3587
+#: mpdevil:3605
 msgid "Server stats"
 msgstr "Serverstatistik"
 
-#: mpdevil:3590
+#: mpdevil:3608
 msgid "Save window layout"
 msgstr "Fensterlayout speichern"
 
-#: mpdevil:3591
+#: mpdevil:3609
 msgid "Mini player"
 msgstr "Miniplayer"
 
-#: mpdevil:3595
+#: mpdevil:3613
 msgid "Menu"
 msgstr "Menü"
 
@@ -439,9 +483,6 @@ msgstr "Menü"
 
 #~ msgid "Open"
 #~ msgstr "Öffnen"
-
-#~ msgid "Show additional information"
-#~ msgstr "Zeige weitere Informationen"
 
 #~ msgid "Lyrics"
 #~ msgstr "Liedtext"
@@ -475,9 +516,6 @@ msgstr "Menü"
 
 #~ msgid "Return to album of current title"
 #~ msgstr "Zu Album des aktuellen Titels zurückkehren"
-
-#~ msgid "Title search"
-#~ msgstr "Titelsuche"
 
 #~ msgid "Main menu"
 #~ msgstr "Hauptmenu"
