@@ -3427,6 +3427,7 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 		shortcut_data=[
 			("<Control>m", _("Toggle mini player"), None, window_group),
 			("<Control>l", _("Toggle lyrics"), None, window_group),
+			("<Control>f", _("Toggle search"), None, window_group),
 			("Escape", _("Back to current album"), None, window_group),
 			("F1", _("Open online help"), None, general_group),
 			("<Control>q", _("Quit"), None, general_group),
@@ -3568,7 +3569,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		# actions
 		simple_actions_data=[
 			"save","settings","stats","update","help",
-			"toggle-lyrics","toggle-play","next","prev","back-to-current-album","seek-forward","seek-backward"
+			"toggle-lyrics","toggle-play","next","prev","back-to-current-album","seek-forward","seek-backward","toggle-search"
 		]
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
@@ -3737,6 +3738,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._seek_bar.scale.grab_focus()
 		self._seek_bar.seek_backward()
 
+	def _on_toggle_search(self, action, param):
+		self._browser.search_button.grab_focus()
+		self._browser.search_button.set_active(not(self._browser.search_button.get_active()))
+
 	def _on_save(self, action, param):
 		size=self.get_size()
 		self._settings.set_int("width", size[0])
@@ -3819,6 +3824,7 @@ class mpdevil(Gtk.Application):
 			self.set_accels_for_action("win.seek-forward", ["KP_Multiply"])
 			self.set_accels_for_action("win.seek-backward", ["KP_Divide"])
 			self.set_accels_for_action("win.back-to-current-album", ["Escape"])
+			self.set_accels_for_action("win.toggle-search", ["<control>f"])
 		self._window.present()
 
 	def do_startup(self):
