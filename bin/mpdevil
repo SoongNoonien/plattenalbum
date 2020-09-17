@@ -1526,15 +1526,15 @@ class SongsView(Gtk.TreeView):
 
 	def _on_key_press_event(self, widget, event):
 		self.handler_block(self._key_press_event)
-		if event.keyval == 112:  # p
+		if event.keyval == Gdk.keyval_from_name("p"):
 			treeview, treeiter=self._selection.get_selected()
 			if treeiter is not None:
 				self._client.wrapped_call("files_to_playlist", [self._store.get_value(treeiter, self._file_column_id)])
-		elif event.keyval == 97:  # a
+		elif event.keyval == Gdk.keyval_from_name("a"):
 			treeview, treeiter=self._selection.get_selected()
 			if treeiter is not None:
 				self._client.wrapped_call("files_to_playlist", [self._store.get_value(treeiter, self._file_column_id)], "append")
-		elif event.keyval == 65383:  # menu key
+		elif event.keyval == Gdk.keyval_from_name("Menu"):
 			treeview, treeiter=self._selection.get_selected()
 			if treeiter is not None:
 				path=self._store.get_path(treeiter)
@@ -2238,15 +2238,15 @@ class AlbumWindow(FocusFrame):
 
 	def _on_key_press_event(self, widget, event):
 		self.handler_block(self._key_press_event)
-		if event.keyval == 112:  # p
+		if event.keyval == Gdk.keyval_from_name("p"):
 			paths=self._iconview.get_selected_items()
 			if len(paths) != 0:
 				self._path_to_playlist(paths[0])
-		elif event.keyval == 97:  # a
+		elif event.keyval == Gdk.keyval_from_name("a"):
 			paths=self._iconview.get_selected_items()
 			if len(paths) != 0:
 				self._path_to_playlist(paths[0], "append")
-		elif event.keyval == 65383:  # menu key
+		elif event.keyval == Gdk.keyval_from_name("Menu"):
 			paths=self._iconview.get_selected_items()
 			if len(paths) != 0:
 				self._open_album_dialog(paths[0])
@@ -2838,7 +2838,7 @@ class PlaylistWindow(Gtk.Box):
 
 	def _on_key_press_event(self, widget, event):
 		self._treeview.handler_block(self._key_press_event)
-		if event.keyval == 65535:  # entf
+		if event.keyval == Gdk.keyval_from_name("Delete"):
 			treeview, treeiter=self._selection.get_selected()
 			if treeiter is not None:
 				path=self._store.get_path(treeiter)
@@ -2846,7 +2846,7 @@ class PlaylistWindow(Gtk.Box):
 					self._remove_song(path)
 				except:
 					pass
-		elif event.keyval == 65383:  # menu key
+		elif event.keyval == Gdk.keyval_from_name("Menu"):
 			treeview, treeiter=self._selection.get_selected()
 			if treeiter is not None:
 				path=self._store.get_path(treeiter)
