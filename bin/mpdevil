@@ -3154,7 +3154,6 @@ class SeekBar(Gtk.Box):
 
 		# adding vars
 		self._client=client
-		self._seek_time="10"  # seek increment in seconds
 		self._update=True
 		self._jumped=False
 
@@ -3162,11 +3161,17 @@ class SeekBar(Gtk.Box):
 		self._elapsed=Gtk.Label(width_chars=5)
 		self._rest=Gtk.Label(width_chars=6)
 
+		# event boxes
+		self._elapsed_event_box=Gtk.EventBox()
+		self._rest_event_box=Gtk.EventBox()
+
 		# progress bar
-		self.scale=Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=0, max=100, step=0.001)
+		self.scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL)
 		self.scale.set_show_fill_level(True)
 		self.scale.set_restrict_to_fill_level(False)
 		self.scale.set_draw_value(False)
+		self.scale.set_increments(10, 60)
+		self._adjustment=self.scale.get_adjustment()
 
 		# css (scale)
 		style_context=self.scale.get_style_context()
@@ -3175,19 +3180,16 @@ class SeekBar(Gtk.Box):
 		provider.load_from_data(css)
 		style_context.add_provider(provider, 800)
 
-		# event boxes
-		self._elapsed_event_box=Gtk.EventBox()
-		self._rest_event_box=Gtk.EventBox()
-
 		# connect
-		self._elapsed_event_box.connect("button-press-event", self._on_elapsed_button_press_event)
-		self._rest_event_box.connect("button-press-event", self._on_rest_button_press_event)
+		self._elapsed_event_box.connect("button-release-event", self._on_elapsed_button_release_event)
+		self._elapsed_event_box.connect("button-press-event", lambda *args: self.scale.grab_focus())
+		self._rest_event_box.connect("button-release-event", self._on_rest_button_release_event)
+		self._rest_event_box.connect("button-press-event", lambda *args: self.scale.grab_focus())
 		self.scale.connect("change-value", self._on_change_value)
-		self.scale.connect("scroll-event", self._dummy)  # disable mouse wheel
+		self.scale.connect("scroll-event", lambda *args: True)  # disable mouse wheel
 		self.scale.connect("button-press-event", self._on_scale_button_press_event)
 		self.scale.connect("button-release-event", self._on_scale_button_release_event)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed_changed", self._refresh)
 
@@ -3198,35 +3200,23 @@ class SeekBar(Gtk.Box):
 		self.pack_start(self.scale, True, True, 0)
 		self.pack_end(self._rest_event_box, False, False, 0)
 
-	def _dummy(self, *args):
-		return True
-
-	def seek_forward(self):
-		self._client.wrapped_call("seekcur", "+"+self._seek_time)
-
-	def seek_backward(self):
-		self._client.wrapped_call("seekcur", "-"+self._seek_time)
-
 	def _refresh(self, emitter, elapsed, duration):
+		self.set_sensitive(True)
 		if elapsed > duration:  # fix display error
 			elapsed=duration
-		fraction=(elapsed/duration)*100
+		self._adjustment.set_upper(int(duration))
 		if self._update:
-			self.scale.set_value(fraction)
+			self.scale.set_value(elapsed)
 			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
 			self._rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
-		self.scale.set_fill_level(fraction)
-
-	def _enable(self, *args):
-		self.scale.set_range(0, 100)
-		self.set_sensitive(True)
+		self.scale.set_fill_level(elapsed)
 
 	def _disable(self, *args):
 		self.set_sensitive(False)
 		self.scale.set_fill_level(0)
 		self.scale.set_range(0, 0)
-		self._elapsed.set_text("00:00")
-		self._rest.set_text("-00:00")
+		self._elapsed.set_text("--:--")
+		self._rest.set_text("--:--")
 
 	def _on_scale_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3239,55 +3229,42 @@ class SeekBar(Gtk.Box):
 		if event.button == 1:
 			self._update=True
 			self.scale.set_has_origin(True)
-			status=self._client.wrapped_call("status")
 			if self._jumped:  # actual seek
-				duration=float(status["duration"])
-				factor=(self.scale.get_value()/100)
-				pos=(duration*factor)
-				self._client.wrapped_call("seekcur", pos)
+				self._client.wrapped_call("seekcur", self.scale.get_value())
 				self._jumped=False
-			else:
+			else:  # restore state
+				status=self._client.wrapped_call("status")
 				self._refresh(None, float(status["elapsed"]), float(status["duration"]))
 
-	def _on_change_value(self, range, scroll, value):  # value is inaccurate
-		if scroll == Gtk.ScrollType.STEP_BACKWARD:
-			self.seek_backward()
-		elif scroll == Gtk.ScrollType.STEP_FORWARD:
-			self.seek_forward()
+	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
+		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
+			scroll == Gtk.ScrollType.PAGE_BACKWARD or scroll == Gtk.ScrollType.PAGE_FORWARD):
+			self._client.wrapped_call("seekcur", value)
 		elif scroll == Gtk.ScrollType.JUMP:
-			status=self._client.wrapped_call("status")
-			duration=float(status["duration"])
-			factor=(value/100)
-			if factor > 1:  # fix display error
-				factor=1
-			elapsed=(factor*duration)
+			duration=self._adjustment.get_upper()
+			if value > duration:  # fix display error
+				elapsed=duration
+			else:
+				elapsed=value
 			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
 			self._rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
 			self._jumped=True
 
-	def _on_elapsed_button_press_event(self, widget, event):
-		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self.seek_backward()
-		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self.seek_forward()
+	def _on_elapsed_button_release_event(self, widget, event):
+		if event.button == 1:
+			self._client.wrapped_call("seekcur", "-"+str(self._adjustment.get_property("step-increment")))
+		elif event.button == 3:
+			self._client.wrapped_call("seekcur", "+"+str(self._adjustment.get_property("step-increment")))
 
-	def _on_rest_button_press_event(self, widget, event):
-		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self.seek_forward()
-		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self.seek_backward()
+	def _on_rest_button_release_event(self, widget, event):
+		if event.button == 1:
+			self._client.wrapped_call("seekcur", "+"+str(self._adjustment.get_property("step-increment")))
+		elif event.button == 3:
+			self._client.wrapped_call("seekcur", "-"+str(self._adjustment.get_property("step-increment")))
 
 	def _on_state(self, emitter, state):
 		if state == "stop":
 			self._disable()
-		else:
-			self._enable()
-
-	def _on_reconnected(self, *args):
-		self._enable()
-
-	def _on_disconnected(self, *args):
-		self._disable()
 
 class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings):
@@ -3733,11 +3710,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_seek_forward(self, action, param):
 		self._seek_bar.scale.grab_focus()
-		self._seek_bar.seek_forward()
+		self._client.wrapped_call("seekcur", "+10")
 
 	def _on_seek_backward(self, action, param):
 		self._seek_bar.scale.grab_focus()
-		self._seek_bar.seek_backward()
+		self._client.wrapped_call("seekcur", "-10")
 
 	def _on_toggle_search(self, action, param):
 		self._browser.search_button.grab_focus()
