@@ -3204,7 +3204,7 @@ class SeekBar(Gtk.Box):
 		self.set_sensitive(True)
 		if elapsed > duration:  # fix display error
 			elapsed=duration
-		self._adjustment.set_upper(int(duration))
+		self._adjustment.set_upper(duration)
 		if self._update:
 			self.scale.set_value(elapsed)
 			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
