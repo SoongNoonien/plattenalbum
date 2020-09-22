@@ -2466,10 +2466,7 @@ class LyricsWindow(FocusFrame):
 
 	def _display_lyrics(self, current_song):
 		GLib.idle_add(self._text_buffer.set_text, _("searching..."), -1)
-		try:
-			text=self._get_lyrics(current_song["artist"], current_song["title"])
-		except:
-			text=_("lyrics not found")
+		text=self._get_lyrics(current_song["artist"], current_song["title"])
 		GLib.idle_add(self._text_buffer.set_text, text, -1)
 
 	def _refresh(self, *args):
@@ -2485,10 +2482,12 @@ class LyricsWindow(FocusFrame):
 		)
 		update_thread.start()
 
-	def _get_lyrics(self, singer, song):
-		# Replace spaces with _
-		singer=singer.replace(' ', '_')
-		song=song.replace(' ', '_')
+	def _get_lyrics_lyriki(self, singer, song):
+		print("lyriki")
+		replaces=((' ', '_'),('.', '_'),('@', '_'),(',', '_'),(';', '_'),('&', '_'),('\\', '_'),('/', '_'),('"', '_'))
+		for char1, char2 in replaces:
+			singer.replace(char1, char2)
+			song.replace(char1, char2)
 		r=requests.get('http://www.lyriki.com/{0}:{1}'.format(singer,song))
 		s=BeautifulSoup(r.text)
 		lyrics=s.p
@@ -2496,11 +2495,35 @@ class LyricsWindow(FocusFrame):
 			raise ValueError("Not found")
 		elif str(lyrics).startswith("<p>There is currently no text in this page."):
 			raise ValueError("Not found")
-		output=str(lyrics).encode('utf-8', errors='replace')[3:-4].decode("utf-8").replace('\n','').replace('<br/>','\n')
-		try:
-			return output
-		except:
-			return output.encode('utf-8')
+		output=str(lyrics)[3:-4].replace('\n','').replace('<br/>','\n')
+		return output
+
+	def _get_lyrics_songlyrics(self, singer, song):
+		print("songlyrics")
+		replaces=((' ', '-'),('.', '-'),('_', '-'),('@', '-'),(',', '-'),(';', '-'),('&', '-'),('\\', '-'),('/', '-'),('"', '-'))
+		for char1, char2 in replaces:
+			singer.replace(char1, char2)
+			song.replace(char1, char2)
+		r=requests.get('https://www.songlyrics.com/{0}/{1}-lyrics/'.format(singer,song))
+		s=BeautifulSoup(r.text)
+		lyrics=s.find(id="songLyricsDiv")
+		if lyrics is None:
+			raise ValueError("Not found")
+		elif str(lyrics)[58:-4].startswith("Sorry, we have no"):
+			raise ValueError("Not found")
+		output=str(lyrics)[58:-4].replace('\n','').replace('\r','').replace(' /', '').replace('<br/>','\n')
+		return output
+
+	def _get_lyrics(self, singer, song):
+		providers=[self._get_lyrics_lyriki, self._get_lyrics_songlyrics]
+		text=_("lyrics not found")
+		for provider in providers:
+			try:
+				text=provider(singer, song)
+				break
+			except ValueError:
+				pass
+		return text
 
 	def _on_disconnected(self, *args):
 		self._displayed_song_file=None
