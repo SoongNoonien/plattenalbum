@@ -1624,6 +1624,7 @@ class SearchWindow(Gtk.Box):
 		# store
 		# (track, title, artist, album, duration, file, sort track)
 		self._store=Gtk.ListStore(str, str, str, str, str, str, int)
+		self._store.set_default_sort_func(lambda *args: 0)
 
 		# songs window
 		self._songs_window=SongsWindow(self._client, self._store, 5)
