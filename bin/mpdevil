@@ -41,7 +41,7 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 
-VERSION='0.9.2'  # sync with setup.py
+VERSION='0.9.1-dev'  # sync with setup.py
 COVER_REGEX="^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -471,10 +471,10 @@ class ClientHelper():
 	def extend_song_for_display(song):
 		base_song={
 			"title": _("Unknown Title"),
-			"track": "0",
+			"track": "",
 			"disc": "",
-			"artist": _("Unknown Artist"),
-			"album": _("Unknown Album"),
+			"artist": "",
+			"album": "",
 			"duration": "0.0",
 			"date": "",
 			"genre": ""
@@ -1622,8 +1622,8 @@ class SearchWindow(Gtk.Box):
 		self._hits_label=Gtk.Label(xalign=1)
 
 		# store
-		# (track, title, artist, album, duration, file)
-		self._store=Gtk.ListStore(int, str, str, str, str, str)
+		# (track, title, artist, album, duration, file, sort track)
+		self._store=Gtk.ListStore(str, str, str, str, str, str, int)
 
 		# songs window
 		self._songs_window=SongsWindow(self._client, self._store, 5)
@@ -1667,7 +1667,7 @@ class SearchWindow(Gtk.Box):
 		column_time.set_property("resizable", False)
 		self._songs_view.append_column(column_time)
 
-		column_track.set_sort_column_id(0)
+		column_track.set_sort_column_id(6)
 		column_title.set_sort_column_id(1)
 		column_artist.set_sort_column_id(2)
 		column_album.set_sort_column_id(3)
@@ -1715,10 +1715,15 @@ class SearchWindow(Gtk.Box):
 			songs=self._client.wrapped_call("search", self._tags.get_active_text(), self.search_entry.get_text())
 			for s in songs:
 				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
+				try:
+					sort_track=int(song["track"])
+				except:
+					sort_track=0
 				self._store.append([
-						int(song["track"]), song["title"],
+						song["track"], song["title"],
 						song["artist"], song["album"],
-						song["human_duration"], song["file"]
+						song["human_duration"], song["file"],
+						sort_track
 				])
 			self._hits_label.set_text(_("%i hits") % (self._songs_view.count()))
 		if self._songs_view.count() == 0:
@@ -1944,7 +1949,7 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 
 		# store
 		# (track, title (artist), duration, file)
-		store=Gtk.ListStore(int, str, str, str)
+		store=Gtk.ListStore(str, str, str, str)
 		for s in songs:
 			song=ClientHelper.extend_song_for_display(s)
 			if type(song["title"]) == list:  # could be impossible
@@ -1965,7 +1970,7 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 				title_artist="<b>"+title+"</b> - "+artist
 
 			title_artist=title_artist.replace("&", "&amp;")
-			store.append([int(song["track"]), title_artist, song["human_duration"], song["file"]])
+			store.append([song["track"], title_artist, song["human_duration"], song["file"]])
 
 		# songs window
 		songs_window=SongsWindow(self._client, store, 3)
