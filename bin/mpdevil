@@ -2483,7 +2483,7 @@ class LyricsWindow(FocusFrame):
 		update_thread.start()
 
 	def _get_lyrics_lyriki(self, singer, song):
-		print("lyriki")
+#		print("lyriki")
 		replaces=((' ', '_'),('.', '_'),('@', '_'),(',', '_'),(';', '_'),('&', '_'),('\\', '_'),('/', '_'),('"', '_'))
 		for char1, char2 in replaces:
 			singer.replace(char1, char2)
@@ -2499,7 +2499,7 @@ class LyricsWindow(FocusFrame):
 		return output
 
 	def _get_lyrics_songlyrics(self, singer, song):
-		print("songlyrics")
+#		print("songlyrics")
 		replaces=((' ', '-'),('.', '-'),('_', '-'),('@', '-'),(',', '-'),(';', '-'),('&', '-'),('\\', '-'),('/', '-'),('"', '-'))
 		for char1, char2 in replaces:
 			singer.replace(char1, char2)
@@ -2514,8 +2514,32 @@ class LyricsWindow(FocusFrame):
 		output=str(lyrics)[58:-4].replace('\n','').replace('\r','').replace(' /', '').replace('<br/>','\n')
 		return output
 
+	def _get_lyrics_letras(self, singer, song):
+#		print("letras")
+		replaces=((' ', '+'),('.', '_'),('@', '_'),(',', '_'),(';', '_'),('&', '_'),('\\', '_'),('/', '_'),('"', '_'))
+		for char1, char2 in replaces:
+			singer.replace(char1, char2)
+			song.replace(char1, char2)
+		r=requests.get('https://www.letras.mus.br/winamp.php?musica={1}&artista={0}'.format(singer,song))
+		s=BeautifulSoup(r.text)
+		s=s.find(id="letra-cnt")
+		if s is None:
+			raise ValueError("Not found")
+		pragraphs=[i for i in s.children][2:-1]  # remove unneded pragraphs
+		lyrics=""
+		for p in pragraphs:
+			for line in p.stripped_strings:
+				lyrics+=line+'\n'
+			lyrics+='\n'
+		output=lyrics[:-2]  # omit last two newlines
+		if output != "":  # assume song is instrumental when lyrics are empty
+			return output
+		else:
+			return "Instrumental"
+
 	def _get_lyrics(self, singer, song):
-		providers=[self._get_lyrics_lyriki, self._get_lyrics_songlyrics]
+#		print("fetching lyrics for '"+singer+"' - '"+song+"'")
+		providers=[self._get_lyrics_letras, self._get_lyrics_lyriki, self._get_lyrics_songlyrics]
 		text=_("lyrics not found")
 		for provider in providers:
 			try:
