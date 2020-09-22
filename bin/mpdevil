@@ -2485,31 +2485,18 @@ class LyricsWindow(FocusFrame):
 		)
 		update_thread.start()
 
-	def _get_lyrics(self, singer, song):  # partially copied from PyLyrics 1.1.0
+	def _get_lyrics(self, singer, song):
 		# Replace spaces with _
 		singer=singer.replace(' ', '_')
 		song=song.replace(' ', '_')
-		r=requests.get('http://lyrics.wikia.com/{0}:{1}'.format(singer,song))
+		r=requests.get('http://www.lyriki.com/{0}:{1}'.format(singer,song))
 		s=BeautifulSoup(r.text)
-		# Get main lyrics holder
-		lyrics=s.find("div",{'class':'lyricbox'})
+		lyrics=s.p
 		if lyrics is None:
-			raise ValueError("Song or Singer does not exist or the API does not have Lyrics")
-			return None
-		# Remove Scripts
-		[s.extract() for s in lyrics('script')]
-		# Remove Comments
-		comments=lyrics.findAll(text=lambda text:isinstance(text, Comment))
-		[comment.extract() for comment in comments]
-		# Remove span tag (Needed for instrumantal)
-		if lyrics.span is not None:
-			lyrics.span.extract()
-		# Remove unecessary tags
-		for tag in ['div','i','b','a']:
-			for match in lyrics.findAll(tag):
-				match.replaceWithChildren()
-		# Get output as a string and remove non unicode characters and replace <br> with newlines
-		output=str(lyrics).encode('utf-8', errors='replace')[22:-6:].decode("utf-8").replace('\n','').replace('<br/>','\n')
+			raise ValueError("Not found")
+		elif str(lyrics).startswith("<p>There is currently no text in this page."):
+			raise ValueError("Not found")
+		output=str(lyrics).encode('utf-8', errors='replace')[3:-4].decode("utf-8").replace('\n','').replace('<br/>','\n')
 		try:
 			return output
 		except:
