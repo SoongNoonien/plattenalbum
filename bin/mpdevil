@@ -485,11 +485,7 @@ class ClientHelper():
 	def calc_display_length(songs):
 		length=float(0)
 		for song in songs:
-			try:
-				dura=float(song["duration"])
-			except:
-				dura=0.0
-			length=length+dura
+			length=length+float(song.get("duration", 0.0))
 		return str(datetime.timedelta(seconds=int(length))).lstrip("0").lstrip(":")
 
 class MpdEventEmitter(GObject.Object):
@@ -1432,16 +1428,8 @@ class Cover(object):
 			if regex_str == "":
 				regex=re.compile(r''+COVER_REGEX+'', flags=re.IGNORECASE)
 			else:
-				try:
-					artist=song["albumartist"]
-				except:
-					artist=""
-				try:
-					album=song["album"]
-				except:
-					album=""
-				regex_str=regex_str.replace("%AlbumArtist%", artist)
-				regex_str=regex_str.replace("%Album%", album)
+				regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
+				regex_str=regex_str.replace("%Album%", song.get("album", ""))
 				try:
 					regex=re.compile(r''+regex_str+'', flags=re.IGNORECASE)
 				except:
@@ -1715,15 +1703,11 @@ class SearchWindow(Gtk.Box):
 			songs=self._client.wrapped_call("search", self._tags.get_active_text(), self.search_entry.get_text())
 			for s in songs:
 				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
-				try:
-					sort_track=int(song["track"])
-				except:
-					sort_track=0
 				self._store.append([
 						song["track"], song["title"],
 						song["artist"], song["album"],
 						song["human_duration"], song["file"],
-						sort_track
+						int(song.get("track", 0))
 				])
 			self._hits_label.set_text(_("%i hits") % (self._songs_view.count()))
 		if self._songs_view.count() == 0:
@@ -2078,10 +2062,7 @@ class AlbumWindow(FocusFrame):
 	def scroll_to_current_album(self):
 		def callback():
 			song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
-			try:
-				album=song["album"]
-			except:
-				album=""
+			album=song.get("album", "")
 			self._iconview.unselect_all()
 			row_num=len(self._store)
 			for i in range(0, row_num):
@@ -2165,10 +2146,7 @@ class AlbumWindow(FocusFrame):
 					cover=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
 					# tooltip
 					length_human_readable=ClientHelper.calc_display_length(album["songs"])
-					try:
-						discs=int(album["songs"][-1]["disc"])
-					except:
-						discs=1
+					discs=int(album["songs"][-1].get("disc", 1))
 					if discs > 1:
 						tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)")
 							%{"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
@@ -2355,10 +2333,7 @@ class Browser(Gtk.Paned):
 			try:
 				artist=song[self._settings.get_artist_type()]
 			except:
-				try:
-					artist=song["artist"]
-				except:
-					artist=""
+				artist=song.get("artist", "")
 			# deactivate genre filter to show all artists (if needed)
 			try:
 				if song['genre'] != self.genre_select.get_selected_genre():
@@ -2566,18 +2541,9 @@ class CoverEventBox(Gtk.EventBox):
 				try:
 					artist=song[self._settings.get_artist_type()]
 				except:
-					try:
-						artist=song["artist"]
-					except:
-						artist=""
-				try:
-					album=song["album"]
-				except:
-					album=""
-				try:
-					album_year=song["date"]
-				except:
-					album_year=""
+					artist=song.get("artist", "")
+				album=song.get("album", "")
+				album_year=song.get("date", "")
 				if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 					self._client.wrapped_call("album_to_playlist", album, artist, album_year)
 				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
