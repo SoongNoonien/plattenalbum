@@ -2466,7 +2466,9 @@ class LyricsWindow(FocusFrame):
 
 	def _display_lyrics(self, current_song):
 		GLib.idle_add(self._text_buffer.set_text, _("searching..."), -1)
-		text=self._lyrics_helper.get_lyrics(current_song["artist"], current_song["title"])
+		text=None
+		if current_song.get("artist", "") != "" and current_song.get("title", "") != "":
+			text=self._lyrics_helper.get_lyrics(current_song["artist"], current_song["title"])
 		if text is None:
 			text=_("lyrics not found")
 		GLib.idle_add(self._text_buffer.set_text, text, -1)
@@ -2475,14 +2477,15 @@ class LyricsWindow(FocusFrame):
 		current_song=self._client.wrapped_call("currentsong")
 		if current_song == {}:
 			self._displayed_song_file=None
+			self._text_buffer.set_text("", -1)
 		else:
 			self._displayed_song_file=current_song["file"]
-		update_thread=threading.Thread(
-				target=self._display_lyrics,
-				kwargs={"current_song": ClientHelper.song_to_first_str_dict(current_song)},
-				daemon=True
-		)
-		update_thread.start()
+			update_thread=threading.Thread(
+					target=self._display_lyrics,
+					kwargs={"current_song": ClientHelper.song_to_first_str_dict(current_song)},
+					daemon=True
+			)
+			update_thread.start()
 
 	def _on_disconnected(self, *args):
 		self._displayed_song_file=None
