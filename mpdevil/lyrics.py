@@ -19,7 +19,7 @@
 # USA
 
 import requests
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup
 
 class LyricsHelper(object):
 	def __init__(self, debug=False):
@@ -37,7 +37,7 @@ class LyricsHelper(object):
 			song=song.replace(char1, char2)
 		self._debug_print('http://www.lyriki.com/{0}:{1}'.format(singer,song))
 		r=requests.get('http://www.lyriki.com/{0}:{1}'.format(singer,song))
-		s=BeautifulSoup(r.text)
+		s=BeautifulSoup(r.text, 'html.parser')
 		lyrics=s.p
 		if lyrics is None:
 			raise ValueError("Not found")
@@ -58,7 +58,7 @@ class LyricsHelper(object):
 			song=song.replace(char1, char2)
 		self._debug_print('https://www.songlyrics.com/{0}/{1}-lyrics/'.format(singer,song))
 		r=requests.get('https://www.songlyrics.com/{0}/{1}-lyrics/'.format(singer,song))
-		s=BeautifulSoup(r.text)
+		s=BeautifulSoup(r.text, 'html.parser')
 		lyrics=s.find(id="songLyricsDiv")
 		if lyrics is None:
 			raise ValueError("Not found")
@@ -79,13 +79,13 @@ class LyricsHelper(object):
 			song=song.replace(char1, char2)
 		self._debug_print('https://www.letras.mus.br/winamp.php?musica={1}&artista={0}'.format(singer,song))
 		r=requests.get('https://www.letras.mus.br/winamp.php?musica={1}&artista={0}'.format(singer,song))
-		s=BeautifulSoup(r.text)
+		s=BeautifulSoup(r.text, 'html.parser')
 		s=s.find(id="letra-cnt")
 		if s is None:
 			raise ValueError("Not found")
-		pragraphs=[i for i in s.children][2:-1]  # remove unneded pragraphs
+		paragraphs=[i for i in s.children][1]  # remove unneded paragraphs (NavigableString)
 		lyrics=""
-		for p in pragraphs:
+		for p in paragraphs:
 			for line in p.stripped_strings:
 				lyrics+=line+'\n'
 			lyrics+='\n'
