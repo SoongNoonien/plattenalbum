@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-24 16:49+0200\n"
+"POT-Creation-Date: 2020-09-24 21:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -152,39 +152,39 @@ msgstr ""
 msgid "Choose the order of information to appear in the playlist:"
 msgstr ""
 
-#: mpdevil:1114 mpdevil:1631 mpdevil:1970 mpdevil:2687
+#: mpdevil:1114 mpdevil:1632 mpdevil:1970 mpdevil:2688
 msgid "No"
 msgstr ""
 
-#: mpdevil:1114 mpdevil:2688
+#: mpdevil:1114 mpdevil:2689
 msgid "Disc"
 msgstr ""
 
-#: mpdevil:1114 mpdevil:1636 mpdevil:1975 mpdevil:2689
+#: mpdevil:1114 mpdevil:1637 mpdevil:1975 mpdevil:2690
 msgid "Title"
 msgstr ""
 
-#: mpdevil:1114 mpdevil:1642 mpdevil:1861 mpdevil:2690
+#: mpdevil:1114 mpdevil:1643 mpdevil:1862 mpdevil:2691
 msgid "Artist"
 msgstr ""
 
-#: mpdevil:1114 mpdevil:1648 mpdevil:2691
+#: mpdevil:1114 mpdevil:1649 mpdevil:2692
 msgid "Album"
 msgstr ""
 
-#: mpdevil:1114 mpdevil:1654 mpdevil:1981 mpdevil:2692
+#: mpdevil:1114 mpdevil:1655 mpdevil:1981 mpdevil:2693
 msgid "Length"
 msgstr ""
 
-#: mpdevil:1114 mpdevil:2693
+#: mpdevil:1114 mpdevil:2694
 msgid "Year"
 msgstr ""
 
-#: mpdevil:1114 mpdevil:2694
+#: mpdevil:1114 mpdevil:2695
 msgid "Genre"
 msgstr ""
 
-#: mpdevil:1230 mpdevil:1238 mpdevil:3543
+#: mpdevil:1230 mpdevil:1238 mpdevil:3544
 msgid "Settings"
 msgstr ""
 
@@ -216,46 +216,46 @@ msgstr ""
 msgid "Value"
 msgstr ""
 
-#: mpdevil:1552
+#: mpdevil:1553
 msgid "Append"
 msgstr ""
 
-#: mpdevil:1553
+#: mpdevil:1554
 msgid "Add all titles to playlist"
 msgstr ""
 
-#: mpdevil:1554
+#: mpdevil:1555
 msgid "Play"
 msgstr ""
 
-#: mpdevil:1555
+#: mpdevil:1556
 msgid "Directly play all titles"
 msgstr ""
 
-#: mpdevil:1556
+#: mpdevil:1557
 msgid "Enqueue"
 msgstr ""
 
-#: mpdevil:1557
+#: mpdevil:1558
 msgid ""
 "Append all titles after the currently playing track and clear the playlist "
 "from all other songs"
 msgstr ""
 
-#: mpdevil:1713
-#, python-format
-msgid "%i hits"
+#: mpdevil:1714
+#, python-brace-format
+msgid "{num} hits"
 msgstr ""
 
-#: mpdevil:1751
+#: mpdevil:1752
 msgid "all genres"
 msgstr ""
 
-#: mpdevil:1859
+#: mpdevil:1860
 msgid "Album Artist"
 msgstr ""
 
-#: mpdevil:1862
+#: mpdevil:1863
 msgid "all artists"
 msgstr ""
 
@@ -264,47 +264,47 @@ msgid "Close"
 msgstr ""
 
 #: mpdevil:2152
-#, python-format
-msgid "%(total_tracks)i titles on %(discs)i discs (%(total_length)s)"
+#, python-brace-format
+msgid "{titles} titles on {discs} discs ({length})"
 msgstr ""
 
-#: mpdevil:2155 mpdevil:2782
-#, python-format
-msgid "%(total_tracks)i titles (%(total_length)s)"
+#: mpdevil:2155 mpdevil:2783
+#, python-brace-format
+msgid "{titles} titles ({length})"
 msgstr ""
 
-#: mpdevil:2281 mpdevil:3377
+#: mpdevil:2282 mpdevil:3377
 msgid "Back to current album"
 msgstr ""
 
-#: mpdevil:2282
+#: mpdevil:2283
 msgid "Search"
 msgstr ""
 
-#: mpdevil:2466
+#: mpdevil:2467
 msgid "searching..."
 msgstr ""
 
-#: mpdevil:2471
+#: mpdevil:2472
 msgid "connection error"
 msgstr ""
 
-#: mpdevil:2473
+#: mpdevil:2474
 msgid "lyrics not found"
 msgstr ""
 
-#: mpdevil:2521
-#, python-format
+#: mpdevil:2522
+#, python-brace-format
 msgid ""
-"%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s "
-"channels, %(file_type)s"
+"{bitrate} kb/s, {frequency} kHz, {resolution} bit, {channels} channels, "
+"{file_type}"
 msgstr ""
 
-#: mpdevil:2656
+#: mpdevil:2657
 msgid "Scroll to current song"
 msgstr ""
 
-#: mpdevil:2663
+#: mpdevil:2664
 msgid "Clear playlist"
 msgstr ""
 
@@ -356,7 +356,7 @@ msgstr ""
 msgid "Open online help"
 msgstr ""
 
-#: mpdevil:3379 mpdevil:3547
+#: mpdevil:3379 mpdevil:3548
 msgid "Quit"
 msgstr ""
 
@@ -380,7 +380,7 @@ msgstr ""
 msgid "Seek backward"
 msgstr ""
 
-#: mpdevil:3385 mpdevil:3550
+#: mpdevil:3385 mpdevil:3551
 msgid "Update database"
 msgstr ""
 
@@ -424,35 +424,35 @@ msgstr ""
 msgid "Select profile"
 msgstr ""
 
-#: mpdevil:3481
-#, python-format
-msgid "Connection to \"%(profile)s\" (%(host)s:%(port)s) failed"
-msgstr ""
-
-#: mpdevil:3544
-msgid "Keyboard shortcuts"
+#: mpdevil:3478
+#, python-brace-format
+msgid "Connection to '{profile}' ({host}:{port}) failed"
 msgstr ""
 
 #: mpdevil:3545
-msgid "Help"
+msgid "Keyboard shortcuts"
 msgstr ""
 
 #: mpdevil:3546
+msgid "Help"
+msgstr ""
+
+#: mpdevil:3547
 msgid "About"
 msgstr ""
 
-#: mpdevil:3551
+#: mpdevil:3552
 msgid "Server stats"
 msgstr ""
 
-#: mpdevil:3554
+#: mpdevil:3555
 msgid "Save window layout"
 msgstr ""
 
-#: mpdevil:3555
+#: mpdevil:3556
 msgid "Mini player"
 msgstr ""
 
-#: mpdevil:3559
+#: mpdevil:3560
 msgid "Menu"
 msgstr ""

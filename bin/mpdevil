@@ -19,8 +19,8 @@
 # USA
 
 import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('Notify', '0.7')
+gi.require_version("Gtk", "3.0")
+gi.require_version("Notify", "0.7")
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib, Notify
 from mpd import MPDClient, base as MPDBase
 import requests
@@ -28,7 +28,7 @@ from bs4 import BeautifulSoup
 import threading
 import locale
 import gettext
-gettext.textdomain('mpdevil')
+gettext.textdomain("mpdevil")
 _=gettext.gettext
 import datetime
 import os
@@ -41,8 +41,8 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 
-VERSION='0.9.1-dev'  # sync with setup.py
-COVER_REGEX="^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
+VERSION="0.9.1-dev"  # sync with setup.py
+COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
 #########
@@ -57,27 +57,27 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 
 	# MPRIS allowed metadata tags
 	allowed_tags={
-		'mpris:trackid': dbus.ObjectPath,
-		'mpris:length': dbus.Int64,
-		'mpris:artUrl': str,
-		'xesam:album': str,
-		'xesam:albumArtist': list,
-		'xesam:artist': list,
-		'xesam:asText': str,
-		'xesam:audioBPM': int,
-		'xesam:comment': list,
-		'xesam:composer': list,
-		'xesam:contentCreated': str,
-		'xesam:discNumber': int,
-		'xesam:firstUsed': str,
-		'xesam:genre': list,
-		'xesam:lastUsed': str,
-		'xesam:lyricist': str,
-		'xesam:title': str,
-		'xesam:trackNumber': int,
-		'xesam:url': str,
-		'xesam:useCount': int,
-		'xesam:userRating': float,
+		"mpris:trackid": dbus.ObjectPath,
+		"mpris:length": dbus.Int64,
+		"mpris:artUrl": str,
+		"xesam:album": str,
+		"xesam:albumArtist": list,
+		"xesam:artist": list,
+		"xesam:asText": str,
+		"xesam:audioBPM": int,
+		"xesam:comment": list,
+		"xesam:composer": list,
+		"xesam:contentCreated": str,
+		"xesam:discNumber": int,
+		"xesam:firstUsed": str,
+		"xesam:genre": list,
+		"xesam:lastUsed": str,
+		"xesam:lyricist": str,
+		"xesam:title": str,
+		"xesam:trackNumber": int,
+		"xesam:url": str,
+		"xesam:useCount": int,
+		"xesam:userRating": float,
 	}
 
 	def __init__(self, window, client, settings):
@@ -120,74 +120,74 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		mpd_meta=self._client.wrapped_call("currentsong")
 		self._metadata={}
 
-		for tag in ('album', 'title'):
+		for tag in ("album", "title"):
 			if tag in mpd_meta:
-				self._metadata['xesam:%s' % tag]=mpd_meta[tag]
+				self._metadata["xesam:{}".format(tag)]=mpd_meta[tag]
 
-		if 'id' in mpd_meta:
-			self._metadata['mpris:trackid']="/org/mpris/MediaPlayer2/Track/%s" % mpd_meta['id']
+		if "id" in mpd_meta:
+			self._metadata["mpris:trackid"]="/org/mpris/MediaPlayer2/Track/{}".format(mpd_meta["id"])
 
-		if 'time' in mpd_meta:
-			self._metadata['mpris:length']=int(mpd_meta['time']) * 1000000
+		if "time" in mpd_meta:
+			self._metadata["mpris:length"]=int(mpd_meta["time"]) * 1000000
 
-		if 'date' in mpd_meta:
-			self._metadata['xesam:contentCreated']=mpd_meta['date'][0:4]
+		if "date" in mpd_meta:
+			self._metadata["xesam:contentCreated"]=mpd_meta["date"][0:4]
 
-		if 'track' in mpd_meta:
-			# TODO: Is it even *possible* for mpd_meta['track'] to be a list?
-			if type(mpd_meta['track']) == list and len(mpd_meta['track']) > 0:
-				track=str(mpd_meta['track'][0])
+		if "track" in mpd_meta:
+			# TODO: Is it even *possible* for mpd_meta["track"] to be a list?
+			if type(mpd_meta["track"]) == list and len(mpd_meta["track"]) > 0:
+				track=str(mpd_meta["track"][0])
 			else:
-				track=str(mpd_meta['track'])
+				track=str(mpd_meta["track"])
 
-			m=re.match('^([0-9]+)', track)
+			m=re.match("^([0-9]+)", track)
 			if m:
-				self._metadata['xesam:trackNumber']=int(m.group(1))
+				self._metadata["xesam:trackNumber"]=int(m.group(1))
 				# Ensure the integer is signed 32bit
-				if self._metadata['xesam:trackNumber'] & 0x80000000:
-					self._metadata['xesam:trackNumber'] += -0x100000000
+				if self._metadata["xesam:trackNumber"] & 0x80000000:
+					self._metadata["xesam:trackNumber"] += -0x100000000
 			else:
-				self._metadata['xesam:trackNumber']=0
+				self._metadata["xesam:trackNumber"]=0
 
-		if 'disc' in mpd_meta:
+		if "disc" in mpd_meta:
 			# TODO: Same as above. When is it a list?
-			if type(mpd_meta['disc']) == list and len(mpd_meta['disc']) > 0:
-				disc=str(mpd_meta['disc'][0])
+			if type(mpd_meta["disc"]) == list and len(mpd_meta["disc"]) > 0:
+				disc=str(mpd_meta["disc"][0])
 			else:
-				disc=str(mpd_meta['disc'])
+				disc=str(mpd_meta["disc"])
 
-			m=re.match('^([0-9]+)', disc)
+			m=re.match("^([0-9]+)", disc)
 			if m:
-				self._metadata['xesam:discNumber']=int(m.group(1))
+				self._metadata["xesam:discNumber"]=int(m.group(1))
 
-		if 'artist' in mpd_meta:
-			if type(mpd_meta['artist']) == list:
-				self._metadata['xesam:artist']=mpd_meta['artist']
+		if "artist" in mpd_meta:
+			if type(mpd_meta["artist"]) == list:
+				self._metadata["xesam:artist"]=mpd_meta["artist"]
 			else:
-				self._metadata['xesam:artist']=[mpd_meta['artist']]
+				self._metadata["xesam:artist"]=[mpd_meta["artist"]]
 
-		if 'composer' in mpd_meta:
-			if type(mpd_meta['composer']) == list:
-				self._metadata['xesam:composer']=mpd_meta['composer']
+		if "composer" in mpd_meta:
+			if type(mpd_meta["composer"]) == list:
+				self._metadata["xesam:composer"]=mpd_meta["composer"]
 			else:
-				self._metadata['xesam:composer']=[mpd_meta['composer']]
+				self._metadata["xesam:composer"]=[mpd_meta["composer"]]
 
 		# Stream: populate some missings tags with stream's name
-		if 'name' in mpd_meta:
-			if 'xesam:title' not in self._metadata:
-				self._metadata['xesam:title']=mpd_meta['name']
-			elif 'xesam:album' not in self._metadata:
-				self._metadata['xesam:album']=mpd_meta['name']
+		if "name" in mpd_meta:
+			if "xesam:title" not in self._metadata:
+				self._metadata["xesam:title"]=mpd_meta["name"]
+			elif "xesam:album" not in self._metadata:
+				self._metadata["xesam:album"]=mpd_meta["name"]
 
-		if 'file' in mpd_meta:
-			song_file=mpd_meta['file']
+		if "file" in mpd_meta:
+			song_file=mpd_meta["file"]
 			lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
-			self._metadata['xesam:url']="file://"+os.path.join(lib_path, song_file)
+			self._metadata["xesam:url"]="file://{}".format(os.path.join(lib_path, song_file))
 			cover=Cover(self._settings, mpd_meta)
 			if cover.path is None:
-				self._metadata['mpris:artUrl']=None
+				self._metadata["mpris:artUrl"]=None
 			else:
-				self._metadata['mpris:artUrl']="file://"+cover.path
+				self._metadata["mpris:artUrl"]="file://{}".format(cover.path)
 
 		# Cast self._metadata to the correct type, or discard it
 		for key, value in self._metadata.items():
@@ -209,7 +209,7 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 
 	def __get_playback_status(self):
 		status=self._client.wrapped_call("status")
-		return {'play': 'Playing', 'pause': 'Paused', 'stop': 'Stopped'}[status['state']]
+		return {"play": "Playing", "pause": "Paused", "stop": "Stopped"}[status["state"]]
 
 	def __set_loop_status(self, value):
 		if value == "Playlist":
@@ -222,13 +222,13 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 			self._client.wrapped_call("repeat", 0)
 			self._client.wrapped_call("single", 0)
 		else:
-			raise dbus.exceptions.DBusException("Loop mode %r not supported" % value)
+			raise dbus.exceptions.DBusException("Loop mode '{}' not supported".format(value))
 		return
 
 	def __get_loop_status(self):
 		status=self._client.wrapped_call("status")
-		if int(status['repeat']) == 1:
-			if int(status.get('single', 0)) == 1:
+		if int(status["repeat"]) == 1:
+			if int(status.get("single", 0)) == 1:
 				return "Track"
 			else:
 				return "Playlist"
@@ -240,16 +240,16 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		return
 
 	def __get_shuffle(self):
-		if int(self._client.wrapped_call("status")['random']) == 1:
+		if int(self._client.wrapped_call("status")["random"]) == 1:
 			return True
 		else:
 			return False
 
 	def __get_metadata(self):
-		return dbus.Dictionary(self._metadata, signature='sv')
+		return dbus.Dictionary(self._metadata, signature="sv")
 
 	def __get_volume(self):
-		vol=float(self._client.wrapped_call("status").get('volume', 0))
+		vol=float(self._client.wrapped_call("status").get("volume", 0))
 		if vol > 0:
 			return vol / 100.0
 		else:
@@ -262,15 +262,15 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 
 	def __get_position(self):
 		status=self._client.wrapped_call("status")
-		if 'time' in status:
-			current, end=status['time'].split(':')
+		if "time" in status:
+			current, end=status["time"].split(":")
 			return dbus.Int64((int(current) * 1000000))
 		else:
 			return dbus.Int64(0)
 
 	def __get_can_next_prev(self):
 		status=self._client.wrapped_call("status")
-		if status['state'] == "stop":
+		if status["state"] == "stop":
 			return False
 		else:
 			return True
@@ -336,103 +336,103 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		return value
 
 	# Root methods
-	@dbus.service.method(__root_interface, in_signature='', out_signature='')
+	@dbus.service.method(__root_interface, in_signature="", out_signature="")
 	def Raise(self):
 		self._window.present()
 		return
 
-	@dbus.service.method(__root_interface, in_signature='', out_signature='')
+	@dbus.service.method(__root_interface, in_signature="", out_signature="")
 	def Quit(self):
 		return
 
 	# Player methods
-	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="", out_signature="")
 	def Next(self):
 		self._client.wrapped_call("next")
 		return
 
-	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="", out_signature="")
 	def Previous(self):
 		self._client.wrapped_call("previous")
 		return
 
-	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="", out_signature="")
 	def Pause(self):
 		self._client.wrapped_call("pause", 1)
 		return
 
-	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="", out_signature="")
 	def PlayPause(self):
 		status=self._client.wrapped_call("status")
-		if status['state'] == 'play':
+		if status["state"] == "play":
 			self._client.wrapped_call("pause", 1)
 		else:
 			self._client.wrapped_call("play")
 		return
 
-	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="", out_signature="")
 	def Stop(self):
 		self._client.wrapped_call("stop")
 		return
 
-	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="", out_signature="")
 	def Play(self):
 		self._client.wrapped_call("play")
 		return
 
-	@dbus.service.method(__player_interface, in_signature='x', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="x", out_signature="")
 	def Seek(self, offset):  # TODO
 		status=self._client.wrapped_call("status")
-		current, end=status['time'].split(':')
+		current, end=status["time"].split(":")
 		current=int(current)
 		end=int(end)
 		offset=int(offset) / 1000000
-		if current + offset <= end:
-			position=current + offset
+		if current+offset <= end:
+			position=current+offset
 			if position < 0:
 				position=0
-			self._client.wrapped_call("seekid", int(status['songid']), position)
+			self._client.wrapped_call("seekid", int(status["songid"]), position)
 			self.Seeked(position * 1000000)
 		return
 
-	@dbus.service.method(__player_interface, in_signature='ox', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="ox", out_signature="")
 	def SetPosition(self, trackid, position):
 		song=self._client.wrapped_call("currentsong")
 		# FIXME: use real dbus objects
-		if str(trackid) != '/org/mpris/MediaPlayer2/Track/%s' % song['id']:
+		if str(trackid) != "/org/mpris/MediaPlayer2/Track/{}".format(song["id"]):
 			return
 		# Convert position to seconds
 		position=int(position) / 1000000
-		if position <= int(song['time']):
-			self._client.wrapped_call("seekid", int(song['id']), position)
+		if position <= int(song["time"]):
+			self._client.wrapped_call("seekid", int(song["id"]), position)
 			self.Seeked(position * 1000000)
 		return
 
-	@dbus.service.signal(__player_interface, signature='x')
+	@dbus.service.signal(__player_interface, signature="x")
 	def Seeked(self, position):
 		return float(position)
 
-	@dbus.service.method(__player_interface, in_signature='', out_signature='')
+	@dbus.service.method(__player_interface, in_signature="", out_signature="")
 	def OpenUri(self):
 		return
 
 	def _on_state_changed(self, *args):
-		self.update_property('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
-		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoNext')
-		self.update_property('org.mpris.MediaPlayer2.Player', 'CanGoPrevious')
+		self.update_property("org.mpris.MediaPlayer2.Player", "PlaybackStatus")
+		self.update_property("org.mpris.MediaPlayer2.Player", "CanGoNext")
+		self.update_property("org.mpris.MediaPlayer2.Player", "CanGoPrevious")
 
 	def _on_song_changed(self, *args):
 		self.update_metadata()
-		self.update_property('org.mpris.MediaPlayer2.Player', 'Metadata')
+		self.update_property("org.mpris.MediaPlayer2.Player", "Metadata")
 
 	def _on_volume_changed(self, *args):
-		self.update_property('org.mpris.MediaPlayer2.Player', 'Volume')
+		self.update_property("org.mpris.MediaPlayer2.Player", "Volume")
 
 	def _on_loop_changed(self, *args):
-		self.update_property('org.mpris.MediaPlayer2.Player', 'LoopStatus')
+		self.update_property("org.mpris.MediaPlayer2.Player", "LoopStatus")
 
 	def _on_random_changed(self, *args):
-		self.update_property('org.mpris.MediaPlayer2.Player', 'Shuffle')
+		self.update_property("org.mpris.MediaPlayer2.Player", "Shuffle")
 
 	def _on_reconnected(self, *args):
 		self.acquire_name()
@@ -458,7 +458,7 @@ class ClientHelper():
 		return_song=song
 		for tag, value in return_song.items():
 			if type(value) == list:
-				return_song[tag]=(', '.join(value))
+				return_song[tag]=(", ".join(value))
 		return return_song
 
 	def song_to_first_str_dict(song):  # extracts the first value of multiple value tags
@@ -491,21 +491,21 @@ class ClientHelper():
 
 class MpdEventEmitter(GObject.Object):
 	__gsignals__={
-		'update': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'disconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'reconnected': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'connection_error': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'current_song_changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
-		'state': (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-		'elapsed_changed': (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
-		'volume_changed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
-		'playlist_changed': (GObject.SignalFlags.RUN_FIRST, None, (int,)),
-		'repeat': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		'random': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		'single': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		'consume': (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		'audio': (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
-		'bitrate': (GObject.SignalFlags.RUN_FIRST, None, (float,))
+		"update": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"reconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"current_song_changed": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+		"elapsed_changed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
+		"volume_changed": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
+		"playlist_changed": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
+		"repeat": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"single": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"audio": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
+		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (float,))
 	}
 
 	def __init__(self):
@@ -606,7 +606,7 @@ class Client(MPDClient):
 
 	def album_to_playlist(self, album, artist, year, mode="default"):
 		songs=self.find("album", album, "date", year, self._settings.get_artist_type(), artist)
-		self.files_to_playlist([song['file'] for song in songs], mode)
+		self.files_to_playlist([song["file"] for song in songs], mode)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
@@ -639,7 +639,7 @@ class Client(MPDClient):
 					self.emitter.emit("state", val)
 				elif key == "audio":
 					# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
-					samplerate, bits, channels=val.split(':')
+					samplerate, bits, channels=val.split(":")
 					if bits == "f":
 						bits="32fp"
 					self.emitter.emit("audio", samplerate, bits, channels)
@@ -687,12 +687,12 @@ class Settings(Gio.Settings):
 		if len(self.get_value("profiles")) < (self.get_int("active-profile")+1):
 			self.set_int("active-profile", 0)
 		profile_keys=[
-			('as', "profiles", "new profile"),
-			('as', "hosts", "localhost"),
-			('ai', "ports", 6600),
-			('as', "passwords", ""),
-			('as', "paths", ""),
-			('as', "regex", "")
+			("as", "profiles", "new profile"),
+			("as", "hosts", "localhost"),
+			("ai", "ports", 6600),
+			("as", "passwords", ""),
+			("as", "paths", ""),
+			("as", "regex", "")
 		]
 		profile_arrays=[]
 		for vtype, key, default in profile_keys:
@@ -756,7 +756,7 @@ class GeneralSettings(Gtk.Box):
 			int_settings[key][1].set_value(self._settings.get_int(key))
 			int_settings[key][1].connect("value-changed", self._on_int_changed, key)
 			self._settings_handlers.append(
-				self._settings.connect("changed::"+key, self._on_int_settings_changed, int_settings[key][1])
+				self._settings.connect("changed::{}".format(key), self._on_int_settings_changed, int_settings[key][1])
 			)
 
 		# combo_settings
@@ -775,7 +775,7 @@ class GeneralSettings(Gtk.Box):
 				combo_settings[key][1].set_active(0)
 			combo_settings[key][1].connect("changed", self._on_combo_changed, key)
 			self._settings_handlers.append(
-				self._settings.connect("changed::"+key, self._on_combo_settings_changed, combo_settings[key][1])
+				self._settings.connect("changed::{}".format(key), self._on_combo_settings_changed, combo_settings[key][1])
 			)
 
 		# check buttons
@@ -798,7 +798,7 @@ class GeneralSettings(Gtk.Box):
 			check_buttons[key].set_margin_start(12)
 			check_buttons[key].connect("toggled", self._on_toggled, key)
 			self._settings_handlers.append(
-				self._settings.connect("changed::"+key, self._on_check_settings_changed, check_buttons[key])
+				self._settings.connect("changed::{}".format(key), self._on_check_settings_changed, check_buttons[key])
 			)
 
 		# headings
@@ -997,24 +997,24 @@ class ProfileSettings(Gtk.Grid):
 
 	def _on_add_button_clicked(self, *args):
 		model=self._profiles_combo.get_model()
-		self._settings.array_append('as', "profiles", "new profile ("+str(len(model))+")")
-		self._settings.array_append('as', "hosts", "localhost")
-		self._settings.array_append('ai', "ports", 6600)
-		self._settings.array_append('as', "passwords", "")
-		self._settings.array_append('as', "paths", "")
-		self._settings.array_append('as', "regex", "")
+		self._settings.array_append("as", "profiles", "new profile ({})".format(len(model)))
+		self._settings.array_append("as", "hosts", "localhost")
+		self._settings.array_append("ai", "ports", 6600)
+		self._settings.array_append("as", "passwords", "")
+		self._settings.array_append("as", "paths", "")
+		self._settings.array_append("as", "regex", "")
 		self._profiles_combo_reload()
 		new_pos=len(model)-1
 		self._profiles_combo.set_active(new_pos)
 
 	def _on_delete_button_clicked(self, *args):
 		pos=self._profiles_combo.get_active()
-		self._settings.array_delete('as', "profiles", pos)
-		self._settings.array_delete('as', "hosts", pos)
-		self._settings.array_delete('ai', "ports", pos)
-		self._settings.array_delete('as', "passwords", pos)
-		self._settings.array_delete('as', "paths", pos)
-		self._settings.array_delete('as', "regex", pos)
+		self._settings.array_delete("as", "profiles", pos)
+		self._settings.array_delete("as", "hosts", pos)
+		self._settings.array_delete("ai", "ports", pos)
+		self._settings.array_delete("as", "passwords", pos)
+		self._settings.array_delete("as", "paths", pos)
+		self._settings.array_delete("as", "regex", pos)
 		if len(self._settings.get_value("profiles")) == 0:
 			self._on_add_button_clicked()
 		else:
@@ -1029,29 +1029,29 @@ class ProfileSettings(Gtk.Grid):
 	def _on_profile_entry_changed(self, *args):
 		self._gui_modification=True
 		pos=self._profiles_combo.get_active()
-		self._settings.array_modify('as', "profiles", pos, self._profile_entry.get_text())
+		self._settings.array_modify("as", "profiles", pos, self._profile_entry.get_text())
 		self._profiles_combo_reload()
 		self._profiles_combo.set_active(pos)
 
 	def _on_host_entry_changed(self, *args):
 		self._gui_modification=True
-		self._settings.array_modify('as', "hosts", self._profiles_combo.get_active(), self._host_entry.get_text())
+		self._settings.array_modify("as", "hosts", self._profiles_combo.get_active(), self._host_entry.get_text())
 
 	def _on_port_entry_changed(self, *args):
 		self._gui_modification=True
-		self._settings.array_modify('ai', "ports", self._profiles_combo.get_active(), int(self._port_entry.get_value()))
+		self._settings.array_modify("ai", "ports", self._profiles_combo.get_active(), int(self._port_entry.get_value()))
 
 	def _on_password_entry_changed(self, *args):
 		self._gui_modification=True
-		self._settings.array_modify('as', "passwords", self._profiles_combo.get_active(), self._password_entry.get_text())
+		self._settings.array_modify("as", "passwords", self._profiles_combo.get_active(), self._password_entry.get_text())
 
 	def _on_path_entry_changed(self, *args):
 		self._gui_modification=True
-		self._settings.array_modify('as', "paths", self._profiles_combo.get_active(), self._path_entry.get_text())
+		self._settings.array_modify("as", "paths", self._profiles_combo.get_active(), self._path_entry.get_text())
 
 	def _on_regex_entry_changed(self, *args):
 		self._gui_modification=True
-		self._settings.array_modify('as', "regex", self._profiles_combo.get_active(), self._regex_entry.get_text())
+		self._settings.array_modify("as", "regex", self._profiles_combo.get_active(), self._regex_entry.get_text())
 
 	def _on_path_select_button_clicked(self, widget, parent):
 		dialog=Gtk.FileChooserDialog(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
@@ -1062,7 +1062,7 @@ class ProfileSettings(Gtk.Grid):
 		response=dialog.run()
 		if response == Gtk.ResponseType.OK:
 			self._gui_modification=True
-			self._settings.array_modify('as', "paths", self._profiles_combo.get_active(), dialog.get_filename())
+			self._settings.array_modify("as", "paths", self._profiles_combo.get_active(), dialog.get_filename())
 			self._path_entry.set_text(dialog.get_filename())
 		dialog.destroy()
 
@@ -1186,7 +1186,7 @@ class PlaylistSettings(Gtk.Box):
 
 	def _on_cell_toggled(self, widget, path):
 		self._store[path][0]=not self._store[path][0]
-		self._settings.array_modify('ab', "column-visibilities", self._store[path][2], self._store[path][0])
+		self._settings.array_modify("ab", "column-visibilities", self._store[path][2], self._store[path][0])
 
 	def _on_up_button_clicked(self, *args):
 		treeiter=self._selection.get_selected()[1]
@@ -1409,8 +1409,8 @@ class SongPopover(Gtk.Popover):
 			if tag == "time":
 				store.append([tag+":", str(datetime.timedelta(seconds=int(value))), tooltip])
 			elif tag == "last-modified":
-				time=datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
-				store.append([tag+":", time.strftime('%a %d %B %Y, %H:%M UTC'), tooltip])
+				time=datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+				store.append([tag+":", time.strftime("%a %d %B %Y, %H:%M UTC"), tooltip])
 			else:
 				store.append([tag+":", value, tooltip])
 		frame.show_all()
@@ -1427,14 +1427,15 @@ class Cover(object):
 			regex_str=settings.get_value("regex")[active_profile]
 
 			if regex_str == "":
-				regex=re.compile(r''+COVER_REGEX+'', flags=re.IGNORECASE)
+				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
 			else:
 				regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
 				regex_str=regex_str.replace("%Album%", song.get("album", ""))
 				try:
-					regex=re.compile(r''+regex_str+'', flags=re.IGNORECASE)
+					regex=re.compile(regex_str, flags=re.IGNORECASE)
 				except:
 					print("illegal regex:", regex_str)
+					return
 
 			if song_file is not None:
 				head, tail=os.path.split(song_file)
@@ -1710,14 +1711,14 @@ class SearchWindow(Gtk.Box):
 						song["human_duration"], song["file"],
 						int(song.get("track", 0))
 				])
-			self._hits_label.set_text(_("%i hits") % (self._songs_view.count()))
+			self._hits_label.set_text(_("{num} hits").format(num=self._songs_view.count()))
 		if self._songs_view.count() == 0:
 			self._action_bar.set_sensitive(False)
 		else:
 			self._action_bar.set_sensitive(True)
 
 class GenreSelect(Gtk.ComboBoxText):
-	__gsignals__={'genre_changed': (GObject.SignalFlags.RUN_FIRST, None, ())}
+	__gsignals__={"genre_changed": (GObject.SignalFlags.RUN_FIRST, None, ())}
 
 	def __init__(self, client):
 		super().__init__()
@@ -1766,7 +1767,7 @@ class GenreSelect(Gtk.ComboBoxText):
 		self.set_sensitive(True)
 
 class ArtistWindow(FocusFrame):
-	__gsignals__={'artists_changed': (GObject.SignalFlags.RUN_FIRST, None, ())}
+	__gsignals__={"artists_changed": (GObject.SignalFlags.RUN_FIRST, None, ())}
 
 	def __init__(self, client, settings, genre_select):
 		super().__init__()
@@ -1926,11 +1927,11 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 		self.set_default_size(w, h)
 
 		# title
-		album_duration=ClientHelper.calc_display_length(songs)
+		duration=ClientHelper.calc_display_length(songs)
 		if year == "":
-			self.set_title(album_artist+" - "+album+" ("+album_duration+")")
+			self.set_title("{} - {} ({})".format(album_artist, album, duration))
 		else:
-			self.set_title(album_artist+" - "+album+" ("+year+") ("+album_duration+")")
+			self.set_title("{} - {} ({}) ({})".format(album_artist, album, year, duration))
 
 		# store
 		# (track, title (artist), duration, file)
@@ -1938,7 +1939,7 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 		for s in songs:
 			song=ClientHelper.extend_song_for_display(s)
 			if type(song["title"]) == list:  # could be impossible
-				title=(', '.join(song["title"]))
+				title=(", ".join(song["title"]))
 			else:
 				title=song["title"]
 			if type(song["artist"]) == list:
@@ -1946,14 +1947,13 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 					song["artist"].remove(album_artist)
 				except:
 					pass
-				artist=(', '.join(song["artist"]))
+				artist=(", ".join(song["artist"]))
 			else:
 				artist=song["artist"]
 			if artist == album_artist:
-				title_artist="<b>"+title+"</b>"
+				title_artist="<b>{}</b>".format(title)
 			else:
-				title_artist="<b>"+title+"</b> - "+artist
-
+				title_artist="<b>{}</b> - {}".format(title, artist)
 			title_artist=title_artist.replace("&", "&amp;")
 			store.append([song["track"], title_artist, song["human_duration"], song["file"]])
 
@@ -2136,9 +2136,9 @@ class AlbumWindow(FocusFrame):
 					return
 			# display albums
 			if self._settings.get_boolean("sort-albums-by-year"):
-				albums=sorted(albums, key=lambda k: k['year'])
+				albums=sorted(albums, key=lambda k: k["year"])
 			else:
-				albums=sorted(albums, key=lambda k: k['album'])
+				albums=sorted(albums, key=lambda k: k["album"])
 			size=self._settings.get_int("album-cover")
 			for i, album in enumerate(albums):
 				if self.stop_flag:
@@ -2149,15 +2149,16 @@ class AlbumWindow(FocusFrame):
 					length_human_readable=ClientHelper.calc_display_length(album["songs"])
 					discs=int(album["songs"][-1].get("disc", 1))
 					if discs > 1:
-						tooltip=(_("%(total_tracks)i titles on %(discs)i discs (%(total_length)s)")
-							%{"total_tracks": len(album["songs"]), "discs": discs, "total_length": length_human_readable})
+						tooltip=_("{titles} titles on {discs} discs ({length})").format(
+							titles=len(album["songs"]), discs=discs, length=length_human_readable)
 					else:
-						tooltip=(_("%(total_tracks)i titles (%(total_length)s)")
-							%{"total_tracks": len(album["songs"]), "total_length": length_human_readable})
+						tooltip=_("{titles} titles ({length})").format(
+							titles=len(album["songs"]), length=length_human_readable)
 					# album label
-					display_label="<b>"+album["album"]+"</b>"
-					if album["year"] != "":
-						display_label=display_label+" ("+album["year"]+")"
+					if album["year"] == "":
+						display_label="<b>{}</b>".format(album["album"])
+					else:
+						display_label="<b>{}</b> ({})".format(album["album"], album["year"])
 					display_label_artist=display_label+"\n"+album["artist"]
 					display_label=display_label.replace("&", "&amp;")
 					display_label_artist=display_label_artist.replace("&", "&amp;")
@@ -2257,7 +2258,7 @@ class AlbumWindow(FocusFrame):
 		GLib.idle_add(callback)
 
 class Browser(Gtk.Paned):
-	__gsignals__={'search_focus_changed': (GObject.SignalFlags.RUN_FIRST, None, (bool,))}
+	__gsignals__={"search_focus_changed": (GObject.SignalFlags.RUN_FIRST, None, (bool,))}
 
 	def __init__(self, client, settings, window):
 		super().__init__(orientation=Gtk.Orientation.HORIZONTAL)  # paned1
@@ -2337,7 +2338,7 @@ class Browser(Gtk.Paned):
 				artist=song.get("artist", "")
 			# deactivate genre filter to show all artists (if needed)
 			try:
-				if song['genre'] != self.genre_select.get_selected_genre():
+				if song["genre"] != self.genre_select.get_selected_genre():
 					self.genre_select.deactivate()
 			except:
 				self.genre_select.deactivate()
@@ -2441,12 +2442,12 @@ class LyricsWindow(FocusFrame):
 		self._client.emitter.handler_block(self._song_changed)
 
 	def _get_lyrics(self, title, artist):
-		replaces=((' ', '+'),('.', '_'),('@', '_'),(',', '_'),(';', '_'),('&', '_'),('\\', '_'),('/', '_'),('"', '_'),('(', '_'),(')', '_'))
+		replaces=((" ", "+"),(".", "_"),("@", "_"),(",", "_"),(";", "_"),("&", "_"),("\\", "_"),("/", "_"),('"', "_"),("(", "_"),(")", "_"))
 		for char1, char2 in replaces:
 			title=title.replace(char1, char2)
 			artist=artist.replace(char1, char2)
-		req=requests.get('https://www.letras.mus.br/winamp.php?musica={0}&artista={1}'.format(title,artist))
-		soup=BeautifulSoup(req.text, 'html.parser')
+		req=requests.get("https://www.letras.mus.br/winamp.php?musica={0}&artista={1}".format(title,artist))
+		soup=BeautifulSoup(req.text, "html.parser")
 		soup=soup.find(id="letra-cnt")
 		if soup is None:
 			raise ValueError("Not found")
@@ -2454,8 +2455,8 @@ class LyricsWindow(FocusFrame):
 		lyrics=""
 		for paragraph in paragraphs:
 			for line in paragraph.stripped_strings:
-				lyrics+=line+'\n'
-			lyrics+='\n'
+				lyrics+=line+"\n"
+			lyrics+="\n"
 		output=lyrics[:-2]  # omit last two newlines
 		if output == "":  # assume song is instrumental when lyrics are empty
 			return "Instrumental"
@@ -2518,8 +2519,8 @@ class AudioType(Gtk.Label):
 		self.file_type=""
 
 	def _refresh(self, *args):
-		string=(_("%(bitrate)s kb/s, %(frequency)s kHz, %(resolution)s bit, %(channels)s channels, %(file_type)s")
-			%{"bitrate": self.brate, "frequency": self.freq, "resolution": self.res, "channels": self.chan, "file_type": self.file_type})
+		string=_("{bitrate} kb/s, {frequency} kHz, {resolution} bit, {channels} channels, {file_type}").format(
+			bitrate=self.brate, frequency=self.freq, resolution=self.res, channels=self.chan, file_type=self.file_type)
 		self.set_text(string)
 
 	def _on_audio(self, emitter, freq, res, chan):
@@ -2537,7 +2538,7 @@ class AudioType(Gtk.Label):
 
 	def _on_song_changed(self, *args):
 		try:
-			self.file_type=self._client.wrapped_call("currentsong")["file"].split('.')[-1]
+			self.file_type=self._client.wrapped_call("currentsong")["file"].split(".")[-1]
 			self._refresh()
 		except:
 			pass
@@ -2778,9 +2779,8 @@ class PlaylistWindow(Gtk.Box):
 		if songs == []:
 			self._playlist_info.set_text("")
 		else:
-			whole_length_human_readable=ClientHelper.calc_display_length(songs)
-			self._playlist_info.set_text(_("%(total_tracks)i titles (%(total_length)s)")
-							%{"total_tracks": len(songs), "total_length": whole_length_human_readable})
+			length_human_readable=ClientHelper.calc_display_length(songs)
+			self._playlist_info.set_text(_("{titles} titles ({length})").format(titles=len(songs), length=length_human_readable))
 
 	def _scroll_to_selected_title(self, *args):
 		treeview, treeiter=self._selection.get_selected()
@@ -3475,10 +3475,11 @@ class ConnectionNotify(Gtk.Revealer):
 
 	def _on_connection_error(self, *args):
 		active=self._settings.get_int("active-profile")
-		profile=self._settings.get_value("profiles")[active]
-		host=self._settings.get_value("hosts")[active]
-		port=self._settings.get_value("ports")[active]
-		string=_('Connection to "%(profile)s" (%(host)s:%(port)s) failed') % {"profile": profile, "host": host, "port": port}
+		string=_("Connection to '{profile}' ({host}:{port}) failed").format(
+			profile=self._settings.get_value("profiles")[active],
+			host=self._settings.get_value("hosts")[active],
+			port=self._settings.get_value("ports")[active]
+		)
 		self._label.set_text(string)
 		self.set_reveal_child(True)
 
@@ -3800,7 +3801,7 @@ class mpdevil(Gtk.Application):
 			self._client.wrapped_call("stop")
 		self.quit()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 	app=mpdevil()
 	app.run(sys.argv)
 
