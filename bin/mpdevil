@@ -23,6 +23,8 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib, Notify
 from mpd import MPDClient, base as MPDBase
+import requests
+from bs4 import BeautifulSoup
 import threading
 import locale
 import gettext
@@ -32,7 +34,6 @@ import datetime
 import os
 import sys
 import re
-from mpdevil.lyrics import LyricsHelper
 
 # MPRIS modules
 import dbus
@@ -2394,7 +2395,6 @@ class LyricsWindow(FocusFrame):
 		self._settings=settings
 		self._client=client
 		self._displayed_song_file=None
-		self._lyrics_helper=LyricsHelper(debug=False)
 
 		# text view
 		self._text_view=Gtk.TextView(
@@ -2405,6 +2405,7 @@ class LyricsWindow(FocusFrame):
 			opacity=0.9
 		)
 		self._text_view.set_left_margin(5)
+		self._text_view.set_right_margin(5)
 		self._text_view.set_bottom_margin(5)
 		self._text_view.set_top_margin(3)
 		self.set_widget(self._text_view)
@@ -2439,12 +2440,36 @@ class LyricsWindow(FocusFrame):
 	def disable(self, *args):
 		self._client.emitter.handler_block(self._song_changed)
 
+	def _get_lyrics(self, title, artist):
+		replaces=((' ', '+'),('.', '_'),('@', '_'),(',', '_'),(';', '_'),('&', '_'),('\\', '_'),('/', '_'),('"', '_'),('(', '_'),(')', '_'))
+		for char1, char2 in replaces:
+			title=title.replace(char1, char2)
+			artist=artist.replace(char1, char2)
+		req=requests.get('https://www.letras.mus.br/winamp.php?musica={0}&artista={1}'.format(title,artist))
+		soup=BeautifulSoup(req.text, 'html.parser')
+		soup=soup.find(id="letra-cnt")
+		if soup is None:
+			raise ValueError("Not found")
+		paragraphs=[i for i in soup.children][1]  # remove unneded paragraphs (NavigableString)
+		lyrics=""
+		for paragraph in paragraphs:
+			for line in paragraph.stripped_strings:
+				lyrics+=line+'\n'
+			lyrics+='\n'
+		output=lyrics[:-2]  # omit last two newlines
+		if output == "":  # assume song is instrumental when lyrics are empty
+			return "Instrumental"
+		else:
+			return output
+
 	def _display_lyrics(self, current_song):
 		GLib.idle_add(self._text_buffer.set_text, _("searching..."), -1)
-		text=None
-		if current_song.get("artist", "") != "" and current_song.get("title", "") != "":
-			text=self._lyrics_helper.get_lyrics(current_song["artist"], current_song["title"])
-		if text is None:
+		try:
+			text=self._get_lyrics(current_song.get("title", ""), current_song.get("artist", ""))
+		except requests.exceptions.ConnectionError:
+			self._displayed_song_file=None
+			text=_("connection error")
+		except ValueError:
 			text=_("lyrics not found")
 		GLib.idle_add(self._text_buffer.set_text, text, -1)
 
