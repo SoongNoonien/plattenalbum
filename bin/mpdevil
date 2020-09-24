@@ -511,10 +511,6 @@ class MpdEventEmitter(GObject.Object):
 	def __init__(self):
 		super().__init__()
 
-	# gsignals
-	def do_connection_error(self):
-		print("Connection error!")
-
 class Client(MPDClient):
 	def __init__(self, settings):
 		super().__init__()
