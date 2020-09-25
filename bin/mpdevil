@@ -64,6 +64,9 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		self._metadata={}
 		self._bus=dbus.SessionBus()
 
+		# start
+		self._bus_name=dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)  # TODO
+
 		# connect
 		self._client.emitter.connect("state", self._on_state_changed)
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
@@ -71,7 +74,7 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		self._client.emitter.connect("repeat", self._on_loop_changed)
 		self._client.emitter.connect("single", self._on_loop_changed)
 		self._client.emitter.connect("random", self._on_random_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connection_error", self._on_connection_error)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 	# Interfaces
@@ -88,72 +91,82 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 	}
 
 	def __get_playback_status(self):
-		status=self._client.wrapped_call("status")
-		return {"play": "Playing", "pause": "Paused", "stop": "Stopped"}[status["state"]]
+		if self._client.connected():
+			status=self._client.wrapped_call("status")
+			return {"play": "Playing", "pause": "Paused", "stop": "Stopped"}[status["state"]]
+		return "Stopped"
 
 	def __set_loop_status(self, value):
-		if value == "Playlist":
-			self._client.wrapped_call("repeat", 1)
-			self._client.wrapped_call("single", 0)
-		elif value == "Track":
-			self._client.wrapped_call("repeat", 1)
-			self._client.wrapped_call("single", 1)
-		elif value == "None":
-			self._client.wrapped_call("repeat", 0)
-			self._client.wrapped_call("single", 0)
-		else:
-			raise dbus.exceptions.DBusException("Loop mode '{}' not supported".format(value))
+		if self._client.connected():
+			if value == "Playlist":
+				self._client.wrapped_call("repeat", 1)
+				self._client.wrapped_call("single", 0)
+			elif value == "Track":
+				self._client.wrapped_call("repeat", 1)
+				self._client.wrapped_call("single", 1)
+			elif value == "None":
+				self._client.wrapped_call("repeat", 0)
+				self._client.wrapped_call("single", 0)
+			else:
+				raise dbus.exceptions.DBusException("Loop mode '{}' not supported".format(value))
 		return
 
 	def __get_loop_status(self):
-		status=self._client.wrapped_call("status")
-		if int(status["repeat"]) == 1:
-			if int(status.get("single", 0)) == 1:
-				return "Track"
+		if self._client.connected():
+			status=self._client.wrapped_call("status")
+			if int(status["repeat"]) == 1:
+				if int(status.get("single", 0)) == 1:
+					return "Track"
+				else:
+					return "Playlist"
 			else:
-				return "Playlist"
-		else:
-			return "None"
+				return "None"
+		return "None"
 
 	def __set_shuffle(self, value):
-		self._client.wrapped_call("random", value)
+		if self._client.connected():
+			self._client.wrapped_call("random", value)
 		return
 
 	def __get_shuffle(self):
-		if int(self._client.wrapped_call("status")["random"]) == 1:
-			return True
-		else:
-			return False
+		if self._client.connected():
+			if int(self._client.wrapped_call("status")["random"]) == 1:
+				return True
+			else:
+				return False
+		return False
 
 	def __get_metadata(self):
 		return dbus.Dictionary(self._metadata, signature="sv")
 
 	def __get_volume(self):
-		vol=float(self._client.wrapped_call("status").get("volume", 0))
-		if vol > 0:
-			return vol / 100.0
-		else:
-			return 0.0
+		if self._client.connected():
+			return float(self._client.wrapped_call("status").get("volume", 0))/100
+		return 0.0
 
 	def __set_volume(self, value):
-		if value >= 0 and value <= 1:
-			self._client.wrapped_call("setvol", int(value * 100))
+		if self._client.connected():
+			if value >= 0 and value <= 1:
+				self._client.wrapped_call("setvol", int(value * 100))
 		return
 
 	def __get_position(self):
-		status=self._client.wrapped_call("status")
-		if "time" in status:
-			current, end=status["time"].split(":")
-			return dbus.Int64((int(current) * 1000000))
-		else:
-			return dbus.Int64(0)
+		if self._client.connected():
+			status=self._client.wrapped_call("status")
+			return dbus.Int64(float(status.get("elapsed", 0))*1000000)
+		return dbus.Int64(0)
 
 	def __get_can_next_prev(self):
-		status=self._client.wrapped_call("status")
-		if status["state"] == "stop":
-			return False
-		else:
-			return True
+		if self._client.connected():
+			status=self._client.wrapped_call("status")
+			if status["state"] == "stop":
+				return False
+			else:
+				return True
+		return False
+
+	def __get_can_play_pause_seek(self):
+		return self._client.connected()
 
 	__player_interface="org.mpris.MediaPlayer2.Player"
 	__player_props={
@@ -168,9 +181,9 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		"MaximumRate": (1.0, None),
 		"CanGoNext": (__get_can_next_prev, None),
 		"CanGoPrevious": (__get_can_next_prev, None),
-		"CanPlay": (True, None),
-		"CanPause": (True, None),
-		"CanSeek": (True, None),
+		"CanPlay": (__get_can_play_pause_seek, None),
+		"CanPause": (__get_can_play_pause_seek, None),
+		"CanSeek": (__get_can_play_pause_seek, None),
 		"CanControl": (True, None),
 	}
 	__prop_mapping={
@@ -357,12 +370,15 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		self._update_property("org.mpris.MediaPlayer2.Player", "Shuffle")
 
 	def _on_reconnected(self, *args):
-		self._bus_name=dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)  # TODO
+		properties=("CanPlay","CanPause","CanSeek")
+		for p in properties:
+			self._update_property("org.mpris.MediaPlayer2.Player", p)
 
-	def _on_disconnected(self, *args):
-		if hasattr(self, "_bus_name"):
-			del self._bus_name
+	def _on_connection_error(self, *args):
 		self._metadata={}
+		properties=("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle","CanPlay","CanPause","CanSeek")
+		for p in properties:
+			self._update_property("org.mpris.MediaPlayer2.Player", p)
 
 ######################
 # MPD client wrapper #
