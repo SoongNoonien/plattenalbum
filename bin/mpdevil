@@ -53,46 +53,16 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 	"""
 	based on 'mpDris2' (master 19.03.2020) by Jean-Philippe Braun <eon@patapon.info>, Mantas Mikulėnas <grawity@gmail.com>
 	"""
-	__prop_interface=dbus.PROPERTIES_IFACE
-
-	# MPRIS allowed metadata tags
-	allowed_tags={
-		"mpris:trackid": dbus.ObjectPath,
-		"mpris:length": dbus.Int64,
-		"mpris:artUrl": str,
-		"xesam:album": str,
-		"xesam:albumArtist": list,
-		"xesam:artist": list,
-		"xesam:asText": str,
-		"xesam:audioBPM": int,
-		"xesam:comment": list,
-		"xesam:composer": list,
-		"xesam:contentCreated": str,
-		"xesam:discNumber": int,
-		"xesam:firstUsed": str,
-		"xesam:genre": list,
-		"xesam:lastUsed": str,
-		"xesam:lyricist": str,
-		"xesam:title": str,
-		"xesam:trackNumber": int,
-		"xesam:url": str,
-		"xesam:useCount": int,
-		"xesam:userRating": float,
-	}
-
 	def __init__(self, window, client, settings):
 		super().__init__(dbus.SessionBus(), "/org/mpris/MediaPlayer2")
 		self._name="org.mpris.MediaPlayer2.mpdevil"
 
-		self._bus=dbus.SessionBus()
-		self._uname=self._bus.get_unique_name()
-		self._dbus_obj=self._bus.get_object("org.freedesktop.DBus", "/org/freedesktop/DBus")
-		self._dbus_obj.connect_to_signal("NameOwnerChanged", self._name_owner_changed_callback, arg0=self._name)
-
+		# adding vars
 		self._window=window
 		self._client=client
 		self._settings=settings
 		self._metadata={}
+		self._bus=dbus.SessionBus()
 
 		# connect
 		self._client.emitter.connect("state", self._on_state_changed)
@@ -104,98 +74,8 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
-	def acquire_name(self):
-		self._bus_name=dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)
-
-	def release_name(self):
-		if hasattr(self, "_bus_name"):
-			del self._bus_name
-
-	def update_metadata(self):  # TODO
-		"""
-		Translate metadata returned by MPD to the MPRIS v2 syntax.
-		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
-		"""
-
-		mpd_meta=self._client.wrapped_call("currentsong")
-		self._metadata={}
-
-		for tag in ("album", "title"):
-			if tag in mpd_meta:
-				self._metadata["xesam:{}".format(tag)]=mpd_meta[tag]
-
-		if "id" in mpd_meta:
-			self._metadata["mpris:trackid"]="/org/mpris/MediaPlayer2/Track/{}".format(mpd_meta["id"])
-
-		if "time" in mpd_meta:
-			self._metadata["mpris:length"]=int(mpd_meta["time"]) * 1000000
-
-		if "date" in mpd_meta:
-			self._metadata["xesam:contentCreated"]=mpd_meta["date"][0:4]
-
-		if "track" in mpd_meta:
-			# TODO: Is it even *possible* for mpd_meta["track"] to be a list?
-			if type(mpd_meta["track"]) == list and len(mpd_meta["track"]) > 0:
-				track=str(mpd_meta["track"][0])
-			else:
-				track=str(mpd_meta["track"])
-
-			m=re.match("^([0-9]+)", track)
-			if m:
-				self._metadata["xesam:trackNumber"]=int(m.group(1))
-				# Ensure the integer is signed 32bit
-				if self._metadata["xesam:trackNumber"] & 0x80000000:
-					self._metadata["xesam:trackNumber"] += -0x100000000
-			else:
-				self._metadata["xesam:trackNumber"]=0
-
-		if "disc" in mpd_meta:
-			# TODO: Same as above. When is it a list?
-			if type(mpd_meta["disc"]) == list and len(mpd_meta["disc"]) > 0:
-				disc=str(mpd_meta["disc"][0])
-			else:
-				disc=str(mpd_meta["disc"])
-
-			m=re.match("^([0-9]+)", disc)
-			if m:
-				self._metadata["xesam:discNumber"]=int(m.group(1))
-
-		if "artist" in mpd_meta:
-			if type(mpd_meta["artist"]) == list:
-				self._metadata["xesam:artist"]=mpd_meta["artist"]
-			else:
-				self._metadata["xesam:artist"]=[mpd_meta["artist"]]
-
-		if "composer" in mpd_meta:
-			if type(mpd_meta["composer"]) == list:
-				self._metadata["xesam:composer"]=mpd_meta["composer"]
-			else:
-				self._metadata["xesam:composer"]=[mpd_meta["composer"]]
-
-		# Stream: populate some missings tags with stream's name
-		if "name" in mpd_meta:
-			if "xesam:title" not in self._metadata:
-				self._metadata["xesam:title"]=mpd_meta["name"]
-			elif "xesam:album" not in self._metadata:
-				self._metadata["xesam:album"]=mpd_meta["name"]
-
-		if "file" in mpd_meta:
-			song_file=mpd_meta["file"]
-			lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
-			self._metadata["xesam:url"]="file://{}".format(os.path.join(lib_path, song_file))
-			cover=Cover(self._settings, mpd_meta)
-			if cover.path is None:
-				self._metadata["mpris:artUrl"]=None
-			else:
-				self._metadata["mpris:artUrl"]="file://{}".format(cover.path)
-
-		# Cast self._metadata to the correct type, or discard it
-		for key, value in self._metadata.items():
-			try:
-				self._metadata[key]=self.allowed_tags[key](value)
-			except ValueError:
-				del self._metadata[key]
-
+	# Interfaces
+	__prop_interface=dbus.PROPERTIES_IFACE
 	__root_interface="org.mpris.MediaPlayer2"
 	__root_props={
 		"CanQuit": (False, None),
@@ -293,12 +173,12 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		"CanSeek": (True, None),
 		"CanControl": (True, None),
 	}
-
 	__prop_mapping={
 		__player_interface: __player_props,
 		__root_interface: __root_props,
 	}
 
+	# Prop methods
 	@dbus.service.signal(__prop_interface, signature="sa{sv}as")
 	def PropertiesChanged(self, interface, changed_properties, invalidated_properties):
 		pass
@@ -326,15 +206,6 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 			read_props[key]=getter
 		return read_props
 
-	def update_property(self, interface, prop):
-		getter, setter=self.__prop_mapping[interface][prop]
-		if callable(getter):
-			value=getter(self)
-		else:
-			value=getter
-		self.PropertiesChanged(interface, {prop: value}, [])
-		return value
-
 	# Root methods
 	@dbus.service.method(__root_interface, in_signature="", out_signature="")
 	def Raise(self):
@@ -346,6 +217,10 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		return
 
 	# Player methods
+	@dbus.service.signal(__player_interface, signature="x")
+	def Seeked(self, position):
+		return float(position)
+
 	@dbus.service.method(__player_interface, in_signature="", out_signature="")
 	def Next(self):
 		self._client.wrapped_call("next")
@@ -381,73 +256,113 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		return
 
 	@dbus.service.method(__player_interface, in_signature="x", out_signature="")
-	def Seek(self, offset):  # TODO
-		status=self._client.wrapped_call("status")
-		current, end=status["time"].split(":")
-		current=int(current)
-		end=int(end)
-		offset=int(offset) / 1000000
-		if current+offset <= end:
-			position=current+offset
-			if position < 0:
-				position=0
-			self._client.wrapped_call("seekid", int(status["songid"]), position)
-			self.Seeked(position * 1000000)
+	def Seek(self, offset):
+		if offset > 0:
+			offset="+"+str(offset/1000000)
+		else:
+			offset=str(offset/1000000)
+		self._client.wrapped_call("seekcur", offset)
 		return
 
 	@dbus.service.method(__player_interface, in_signature="ox", out_signature="")
 	def SetPosition(self, trackid, position):
 		song=self._client.wrapped_call("currentsong")
-		# FIXME: use real dbus objects
-		if str(trackid) != "/org/mpris/MediaPlayer2/Track/{}".format(song["id"]):
+		if str(trackid).split("/")[-1] != song["id"]:
 			return
-		# Convert position to seconds
-		position=int(position) / 1000000
-		if position <= int(song["time"]):
-			self._client.wrapped_call("seekid", int(song["id"]), position)
-			self.Seeked(position * 1000000)
+		mpd_pos=position/1000000
+		if mpd_pos >= 0 and mpd_pos <= float(song["duration"]):
+			self._client.wrapped_call("seekcur", str(mpd_pos))
 		return
 
-	@dbus.service.signal(__player_interface, signature="x")
-	def Seeked(self, position):
-		return float(position)
-
-	@dbus.service.method(__player_interface, in_signature="", out_signature="")
-	def OpenUri(self):
+	@dbus.service.method(__player_interface, in_signature="s", out_signature="")
+	def OpenUri(self, uri):
 		return
+
+	# MPRIS implemented metadata tags (all: http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata)
+	implemented_tags={
+		"mpris:trackid": dbus.ObjectPath,
+		"mpris:length": dbus.Int64,
+		"mpris:artUrl": str,
+		"xesam:album": str,
+		"xesam:albumArtist": list,
+		"xesam:artist": list,
+		"xesam:composer": list,
+		"xesam:contentCreated": str,
+		"xesam:discNumber": int,
+		"xesam:genre": list,
+		"xesam:title": str,
+		"xesam:trackNumber": int,
+		"xesam:url": str,
+	}
+
+	def _update_metadata(self):
+		"""
+		Translate metadata returned by MPD to the MPRIS v2 syntax.
+		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
+		"""
+		mpd_meta=self._client.wrapped_call("currentsong")
+		self._metadata={"xesam:title": _("Unknown Title")}  # fallback
+		for tag, xesam_tag in (("album","album"),("title","title"),("track","trackNumber"),("disc","discNumber"),("date","contentCreated")):
+			if tag in mpd_meta:
+				self._metadata["xesam:{}".format(xesam_tag)]=mpd_meta[tag]
+		for tag, xesam_tag in (("albumartist","albumArtist"),("artist","artist"),("composer","composer"),("genre","genre")):
+			if tag in mpd_meta:
+				if type(mpd_meta[tag]) == list:
+					self._metadata["xesam:{}".format(xesam_tag)]=mpd_meta[tag]
+				else:
+					self._metadata["xesam:{}".format(xesam_tag)]=[mpd_meta[tag]]
+		if "id" in mpd_meta:
+			self._metadata["mpris:trackid"]="/org/mpris/MediaPlayer2/Track/{}".format(mpd_meta["id"])
+		if "time" in mpd_meta:
+			self._metadata["mpris:length"]=float(mpd_meta["duration"]) * 1000000
+		if "file" in mpd_meta:
+			song_file=mpd_meta["file"]
+			lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
+			self._metadata["xesam:url"]="file://{}".format(os.path.join(lib_path, song_file))
+			cover=Cover(self._settings, mpd_meta)
+			if cover.path is not None:
+				self._metadata["mpris:artUrl"]="file://{}".format(cover.path)
+		# Cast self._metadata to the correct type, or discard it
+		for key, value in self._metadata.items():
+			try:
+				self._metadata[key]=self.implemented_tags[key](value)
+			except ValueError:
+				del self._metadata[key]
+
+	def _update_property(self, interface, prop):
+		getter, setter=self.__prop_mapping[interface][prop]
+		if callable(getter):
+			value=getter(self)
+		else:
+			value=getter
+		self.PropertiesChanged(interface, {prop: value}, [])
+		return value
 
 	def _on_state_changed(self, *args):
-		self.update_property("org.mpris.MediaPlayer2.Player", "PlaybackStatus")
-		self.update_property("org.mpris.MediaPlayer2.Player", "CanGoNext")
-		self.update_property("org.mpris.MediaPlayer2.Player", "CanGoPrevious")
+		self._update_property("org.mpris.MediaPlayer2.Player", "PlaybackStatus")
+		self._update_property("org.mpris.MediaPlayer2.Player", "CanGoNext")
+		self._update_property("org.mpris.MediaPlayer2.Player", "CanGoPrevious")
 
 	def _on_song_changed(self, *args):
-		self.update_metadata()
-		self.update_property("org.mpris.MediaPlayer2.Player", "Metadata")
+		self._update_metadata()
+		self._update_property("org.mpris.MediaPlayer2.Player", "Metadata")
 
 	def _on_volume_changed(self, *args):
-		self.update_property("org.mpris.MediaPlayer2.Player", "Volume")
+		self._update_property("org.mpris.MediaPlayer2.Player", "Volume")
 
 	def _on_loop_changed(self, *args):
-		self.update_property("org.mpris.MediaPlayer2.Player", "LoopStatus")
+		self._update_property("org.mpris.MediaPlayer2.Player", "LoopStatus")
 
 	def _on_random_changed(self, *args):
-		self.update_property("org.mpris.MediaPlayer2.Player", "Shuffle")
+		self._update_property("org.mpris.MediaPlayer2.Player", "Shuffle")
 
 	def _on_reconnected(self, *args):
-		self.acquire_name()
+		self._bus_name=dbus.service.BusName(self._name, bus=self._bus, allow_replacement=True, replace_existing=True)  # TODO
 
 	def _on_disconnected(self, *args):
-		self.release_name()
+		if hasattr(self, "_bus_name"):
+			del self._bus_name
 		self._metadata={}
-
-	def _name_owner_changed_callback(self, name, old_owner, new_owner):
-		if name == self._name and old_owner == self._uname and new_owner != "":
-			try:
-				pid=self._dbus_obj.GetConnectionUnixProcessID(new_owner)
-			except:
-				pid=None
-			loop.quit()
 
 ######################
 # MPD client wrapper #
