@@ -314,7 +314,6 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
 		"""
 		mpd_meta=self._client.wrapped_call("currentsong")
-		self._metadata={"xesam:title": _("Unknown Title")}  # fallback
 		for tag, xesam_tag in (("album","album"),("title","title"),("track","trackNumber"),("disc","discNumber"),("date","contentCreated")):
 			if tag in mpd_meta:
 				self._metadata["xesam:{}".format(xesam_tag)]=mpd_meta[tag]
