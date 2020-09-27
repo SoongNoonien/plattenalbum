@@ -14,7 +14,7 @@ Features
 - control with media keys
 - displays covers
 - sends notifications on title change
-- fetches lyrics from the web (based on PyLyrics) (broken since 21.9.2020 lyricwiki is offline)
+- fetches lyrics from 'www.letras.mus.br'
 - MPRIS interface (based on mpDris2)
 
 See: https://github.com/SoongNoonien/mpdevil/wiki/Usage
