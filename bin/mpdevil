@@ -563,7 +563,7 @@ class Client(MPDClient):
 			except:
 				pass
 
-	def toggle_option(self, option):
+	def toggle_option(self, option):  # repeat, random, single, consume
 		new_state=(int(self.status()[option])+1)%2  # toggle 0,1
 		func=getattr(self, option)
 		func(new_state)
@@ -1224,7 +1224,8 @@ class ServerStats(Gtk.Dialog):
 		store=Gtk.ListStore(str, str)
 
 		# TreeView
-		treeview=Gtk.TreeView(model=store, headers_visible=False, can_focus=False)
+		treeview=Gtk.TreeView(model=store, headers_visible=False)
+		treeview.set_can_focus(False)
 		treeview.set_search_column(-1)
 
 		# selection
@@ -1325,7 +1326,8 @@ class SongPopover(Gtk.Popover):
 		store=Gtk.ListStore(str, str, str)
 
 		# TreeView
-		treeview=Gtk.TreeView(model=store, headers_visible=False, can_focus=False, search_column=-1, tooltip_column=2)
+		treeview=Gtk.TreeView(model=store, headers_visible=False, search_column=-1, tooltip_column=2)
+		treeview.set_can_focus(False)
 		sel=treeview.get_selection()
 		sel.set_mode(Gtk.SelectionMode.NONE)
 
@@ -2219,20 +2221,14 @@ class Browser(Gtk.Paned):
 
 		# widgets
 		self._icons={}
-		icons_data=["go-previous-symbolic", "system-search-symbolic"]
+		icons_data=("go-previous-symbolic", "system-search-symbolic")
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self.back_to_current_album_button=Gtk.Button(
-			image=self._icons["go-previous-symbolic"],
-			tooltip_text=_("Back to current album"),
-			can_focus=False
-		)
-		self.search_button=Gtk.ToggleButton(
-			image=self._icons["system-search-symbolic"],
-			tooltip_text=_("Search"),
-			can_focus=False
-		)
+		self.back_to_current_album_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Back to current album"))
+		self.back_to_current_album_button.set_can_focus(False)
+		self.search_button=Gtk.ToggleButton(image=self._icons["system-search-symbolic"], tooltip_text=_("Search"))
+		self.search_button.set_can_focus(False)
 		self.genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self.genre_select)
 		self._search_window=SearchWindow(self._client)
@@ -2596,7 +2592,7 @@ class PlaylistWindow(Gtk.Box):
 
 		# buttons
 		self._icons={}
-		icons_data=["go-previous-symbolic", "edit-clear-symbolic"]
+		icons_data=("go-previous-symbolic", "edit-clear-symbolic")
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
@@ -2607,17 +2603,17 @@ class PlaylistWindow(Gtk.Box):
 		self._back_to_current_song_button=Gtk.Button(
 			image=self._icons["go-previous-symbolic"],
 			tooltip_text=_("Scroll to current song"),
-			relief=Gtk.ReliefStyle.NONE,
-			can_focus=False
+			relief=Gtk.ReliefStyle.NONE
 		)
+		self._back_to_current_song_button.set_can_focus(False)
 		style_context=self._back_to_current_song_button.get_style_context()
 		style_context.add_provider(provider, 800)
 		self._clear_button=Gtk.Button(
 			image=self._icons["edit-clear-symbolic"],
 			tooltip_text=_("Clear playlist"),
-			relief=Gtk.ReliefStyle.NONE,
-			can_focus=False
+			relief=Gtk.ReliefStyle.NONE
 		)
+		self._clear_button.set_can_focus(False)
 		style_context=self._clear_button.get_style_context()
 		style_context.add_class("destructive-action")
 		style_context.add_provider(provider, 800)
@@ -2893,9 +2889,9 @@ class CoverPlaylistWindow(Gtk.Paned):
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(
 			image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON),
-			tooltip_text=_("Show lyrics"),
-			can_focus=False
+			tooltip_text=_("Show lyrics")
 		)
+		self.lyrics_button.set_can_focus(False)
 		self.lyrics_button.set_margin_top(6)
 		self.lyrics_button.set_margin_end(6)
 		style_context=self.lyrics_button.get_style_context()
@@ -2973,18 +2969,22 @@ class PlaybackControl(Gtk.ButtonBox):
 
 		# widgets
 		self._icons={}
-		icons_data=[
+		icons_data=(
 			"media-playback-start-symbolic", "media-playback-stop-symbolic",
 			"media-playback-pause-symbolic", "media-skip-backward-symbolic",
 			"media-skip-forward-symbolic"
-		]
+		)
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self._play_button=Gtk.Button(image=self._icons["media-playback-start-symbolic"], can_focus=False)
-		self._stop_button=Gtk.Button(image=self._icons["media-playback-stop-symbolic"], can_focus=False)
-		self._prev_button=Gtk.Button(image=self._icons["media-skip-backward-symbolic"], can_focus=False)
-		self._next_button=Gtk.Button(image=self._icons["media-skip-forward-symbolic"], can_focus=False)
+		self._play_button=Gtk.Button(image=self._icons["media-playback-start-symbolic"])
+		self._play_button.set_can_focus(False)
+		self._stop_button=Gtk.Button(image=self._icons["media-playback-stop-symbolic"])
+		self._stop_button.set_can_focus(False)
+		self._prev_button=Gtk.Button(image=self._icons["media-skip-backward-symbolic"])
+		self._prev_button.set_can_focus(False)
+		self._next_button=Gtk.Button(image=self._icons["media-skip-forward-symbolic"])
+		self._next_button.set_can_focus(False)
 
 		# connect
 		self._play_button.connect("clicked", self._on_play_clicked)
@@ -3006,20 +3006,16 @@ class PlaybackControl(Gtk.ButtonBox):
 		self.pack_start(self._next_button, True, True, 0)
 
 	def _on_play_clicked(self, widget):
-		if self._client.connected():
-			self._client.wrapped_call("toggle_play")
+		self._client.wrapped_call("toggle_play")
 
 	def _on_stop_clicked(self, widget):
-		if self._client.connected():
-			self._client.wrapped_call("stop")
+		self._client.wrapped_call("stop")
 
 	def _on_prev_clicked(self, widget):
-		if self._client.connected():
-			self._client.wrapped_call("previous")
+		self._client.wrapped_call("previous")
 
 	def _on_next_clicked(self, widget):
-		if self._client.connected():
-			self._client.wrapped_call("next")
+		self._client.wrapped_call("next")
 
 	def _on_state(self, emitter, state):
 		if state == "play":
@@ -3072,7 +3068,8 @@ class SeekBar(Gtk.Box):
 		self._rest_event_box=Gtk.EventBox()
 
 		# progress bar
-		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, can_focus=False)
+		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL)
+		self._scale.set_can_focus(False)
 		self._scale.set_show_fill_level(True)
 		self._scale.set_restrict_to_fill_level(False)
 		self._scale.set_draw_value(False)
@@ -3183,35 +3180,20 @@ class PlaybackOptions(Gtk.Box):
 
 		# widgets
 		self._icons={}
-		icons_data=["media-playlist-shuffle-symbolic", "media-playlist-repeat-symbolic", "zoom-original-symbolic", "edit-cut-symbolic"]
+		icons_data=("media-playlist-shuffle-symbolic", "media-playlist-repeat-symbolic", "zoom-original-symbolic", "edit-cut-symbolic")
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self._random_button=Gtk.ToggleButton(
-			image=self._icons["media-playlist-shuffle-symbolic"],
-			tooltip_text=_("Random mode"),
-			can_focus=False
-		)
-		self._repeat_button=Gtk.ToggleButton(
-			image=self._icons["media-playlist-repeat-symbolic"],
-			tooltip_text=_("Repeat mode"),
-			can_focus=False
-		)
-		self._single_button=Gtk.ToggleButton(
-			image=self._icons["zoom-original-symbolic"],
-			tooltip_text=_("Single mode"),
-			can_focus=False
-		)
-		self._consume_button=Gtk.ToggleButton(
-			image=self._icons["edit-cut-symbolic"],
-			tooltip_text=_("Consume mode"),
-			can_focus=False
-		)
-		self._volume_button=Gtk.VolumeButton(
-			use_symbolic=True,
-			size=self._settings.get_gtk_icon_size("icon-size"),
-			can_focus=False
-		)
+		self._random_button=Gtk.ToggleButton(image=self._icons["media-playlist-shuffle-symbolic"], tooltip_text=_("Random mode"))
+		self._random_button.set_can_focus(False)
+		self._repeat_button=Gtk.ToggleButton(image=self._icons["media-playlist-repeat-symbolic"], tooltip_text=_("Repeat mode"))
+		self._repeat_button.set_can_focus(False)
+		self._single_button=Gtk.ToggleButton(image=self._icons["zoom-original-symbolic"], tooltip_text=_("Single mode"))
+		self._single_button.set_can_focus(False)
+		self._consume_button=Gtk.ToggleButton(image=self._icons["edit-cut-symbolic"], tooltip_text=_("Consume mode"))
+		self._consume_button.set_can_focus(False)
+		self._volume_button=Gtk.VolumeButton(use_symbolic=True, size=self._settings.get_gtk_icon_size("icon-size"))
+		self._volume_button.set_can_focus(False)
 		self._volume_button.set_sensitive(False)  # do not allow volume change by user when MPD has not yet reported volume
 		adj=self._volume_button.get_adjustment()
 		adj.set_step_increment(0.05)
@@ -3558,10 +3540,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.insert_action_group("mpd", self._mpd_action_group)
 
 		# widgets
-		self._icons={}
-		icons_data=["open-menu-symbolic"]
-		for data in icons_data:
-			self._icons[data]=PixelSizedIcon(data, self._icon_size)
+		self._icons={"open-menu-symbolic": PixelSizedIcon("open-menu-symbolic", self._icon_size)}
 
 		self._browser=Browser(self._client, self._settings, self)
 		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings, self)
@@ -3589,7 +3568,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
-		self._menu_button=Gtk.MenuButton(image=self._icons["open-menu-symbolic"], tooltip_text=_("Menu"), can_focus=False)
+		self._menu_button=Gtk.MenuButton(image=self._icons["open-menu-symbolic"], tooltip_text=_("Menu"))
+		self._menu_button.set_can_focus(False)
 		menu_popover=Gtk.Popover.new_from_model(self._menu_button, menu)
 		self._menu_button.set_popover(menu_popover)
 
