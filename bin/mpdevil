@@ -3415,51 +3415,6 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 # main window #
 ###############
 
-class ProfileSelect(Gtk.ComboBoxText):
-	def __init__(self, settings):
-		super().__init__(tooltip_text=_("Select profile"))
-		self.set_property("no-show-all", not(len(settings.get_value("profiles")) > 1))
-
-		# adding vars
-		self._settings=settings
-
-		# connect
-		self._changed=self.connect("changed", self._on_changed)
-		self._settings.connect("changed::profiles", self._refresh)
-		self._settings.connect("changed::hosts", self._refresh)
-		self._settings.connect("changed::ports", self._refresh)
-		self._settings.connect("changed::passwords", self._refresh)
-		self._settings.connect("changed::paths", self._refresh)
-		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
-		self._settings.connect("changed::profiles", self._on_profiles_changed)
-
-		self._refresh()
-
-	def _refresh(self, *args):
-		self.handler_block(self._changed)
-		self.remove_all()
-		for profile in self._settings.get_value("profiles"):
-			self.append_text(profile)
-		self.set_active(self._settings.get_int("active-profile"))
-		self.handler_unblock(self._changed)
-
-	def _on_changed(self, *args):
-		active=self.get_active()
-		self._settings.set_int("active-profile", active)
-
-	def _on_active_profile_changed(self, *args):
-		self.handler_block(self._changed)
-		self.set_active(self._settings.get_int("active-profile"))
-		self.handler_unblock(self._changed)
-
-	def _on_profiles_changed(self, *args):
-		if len(self._settings.get_value("profiles")) > 1:
-			self.set_property("no-show-all", False)
-			self.set_property("visible", True)
-		else:
-			self.set_property("no-show-all", True)
-			self.set_property("visible", False)
-
 class ConnectionNotify(Gtk.Revealer):
 	def __init__(self, client, settings):
 		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.CENTER)
@@ -3524,6 +3479,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._icon_size=0
 		else:
 			self._icon_size=self._settings.get_int("icon-size")
+		self._icons={"open-menu-symbolic": PixelSizedIcon("open-menu-symbolic", self._icon_size)}
 		self._tmp_saved_size=None  # needed to restore size after leaving mini player mode
 		self._tmp_saved_maximized=None  # needed to restore maximize state after leaving mini player mode
 
@@ -3538,15 +3494,15 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.add_action(action)
 		mini_player_action=Gio.PropertyAction.new("mini-player", self._settings, "mini-player")
 		self.add_action(mini_player_action)
+		self._profiles_action=Gio.SimpleAction.new_stateful("profiles", GLib.VariantType.new("i"), GLib.Variant("i", 0))
+		self._profiles_action.connect("change-state", self._on_profiles)
+		self.add_action(self._profiles_action)
 		self._mpd_action_group=MPDActionGroup(self._client)
 		self.insert_action_group("mpd", self._mpd_action_group)
 
 		# widgets
-		self._icons={"open-menu-symbolic": PixelSizedIcon("open-menu-symbolic", self._icon_size)}
-
 		self._browser=Browser(self._client, self._settings, self)
 		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings, self)
-		self._profile_select=ProfileSelect(self._settings)
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		playback_options=PlaybackOptions(self._client, self._settings)
@@ -3559,17 +3515,19 @@ class MainWindow(Gtk.ApplicationWindow):
 		subsection.append(_("Help"), "win.help")
 		subsection.append(_("About"), "app.about")
 		subsection.append(_("Quit"), "app.quit")
-
 		mpd_subsection=Gio.Menu()
 		mpd_subsection.append(_("Update database"), "mpd.update")
 		mpd_subsection.append(_("Server stats"), "win.stats")
-
+		self._profiles_submenu=Gio.Menu()
+		self._refresh_profiles_menu()
 		menu=Gio.Menu()
-		menu.append(_("Save window layout"), "win.save")
+		menu.append_submenu(_("Profiles"), self._profiles_submenu)
 		menu.append(_("Mini player"), "win.mini-player")
+		menu.append(_("Save window layout"), "win.save")
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
+		# menu button / popover
 		self._menu_button=Gtk.MenuButton(image=self._icons["open-menu-symbolic"], tooltip_text=_("Menu"))
 		self._menu_button.set_can_focus(False)
 		menu_popover=Gtk.Popover.new_from_model(self._menu_button, menu)
@@ -3582,6 +3540,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.pack_start(playback_options)
 
 		# connect
+		self._settings.connect("changed::profiles", self._refresh_profiles_menu)
+		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
 		self._settings.connect_after("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
 		if not self._use_csd:
@@ -3611,11 +3571,9 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._header_bar.pack_start(self._browser.back_to_current_album_button)
 			self._header_bar.pack_start(self._browser.genre_select)
 			self._header_bar.pack_end(self._menu_button)
-			self._header_bar.pack_end(self._profile_select)
 			self._header_bar.pack_end(self._browser.search_button)
 		else:
 			action_bar.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.VERTICAL))
-			action_bar.pack_start(self._profile_select)
 			action_bar.pack_start(self._menu_button)
 
 		self.add(overlay)
@@ -3657,6 +3615,10 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_menu(self, action, param):
 		self._menu_button.emit("clicked")
+
+	def _on_profiles(self, action, param):
+		self._settings.set_int("active-profile", param.unpack())
+		action.set_state(param)
 
 	def _on_song_changed(self, *args):
 		song=self._client.wrapped_call("currentsong")
@@ -3721,6 +3683,17 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			self._cover_playlist_window.set_orientation(Gtk.Orientation.HORIZONTAL)
 			self._paned2.set_orientation(Gtk.Orientation.VERTICAL)
+
+	def _refresh_profiles_menu(self, *args):
+		self._profiles_submenu.remove_all()
+		for num, profile in enumerate(self._settings.get_value("profiles")):
+			item=Gio.MenuItem.new(profile, None)
+			item.set_action_and_target_value("win.profiles", GLib.Variant("i", num))
+			self._profiles_submenu.append_item(item)
+		self._profiles_action.set_state(GLib.Variant("i", self._settings.get_int("active-profile")))
+
+	def _on_active_profile_changed(self, *args):
+		self._profiles_action.set_state(GLib.Variant("i", self._settings.get_int("active-profile")))
 
 	def _on_icon_size_changed(self, *args):
 		pixel_size=self._settings.get_int("icon-size")
