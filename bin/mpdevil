@@ -41,7 +41,7 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 
-VERSION="0.9.3"  # sync with setup.py
+VERSION="0.9.3-dev"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -550,6 +550,23 @@ class Client(MPDClient):
 		meta_extra=self.readcomments(uri)  # contains comment tag
 		meta_base.update(meta_extra)
 		return meta_base
+
+	def toggle_play(self):
+		status=self.status()
+		if status["state"] == "play":
+			self.pause(1)
+		elif status["state"] == "pause":
+			self.pause(0)
+		else:
+			try:
+				self.play()
+			except:
+				pass
+
+	def toggle_option(self, option):
+		new_state=(int(self.status()[option])+1)%2  # toggle 0,1
+		func=getattr(self, option)
+		func(new_state)
 
 	def _main_loop(self, *args):
 		try:
@@ -2206,8 +2223,16 @@ class Browser(Gtk.Paned):
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self.back_to_current_album_button=Gtk.Button(image=self._icons["go-previous-symbolic"], tooltip_text=_("Back to current album"))
-		self.search_button=Gtk.ToggleButton(image=self._icons["system-search-symbolic"], tooltip_text=_("Search"))
+		self.back_to_current_album_button=Gtk.Button(
+			image=self._icons["go-previous-symbolic"],
+			tooltip_text=_("Back to current album"),
+			can_focus=False
+		)
+		self.search_button=Gtk.ToggleButton(
+			image=self._icons["system-search-symbolic"],
+			tooltip_text=_("Search"),
+			can_focus=False
+		)
 		self.genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self.genre_select)
 		self._search_window=SearchWindow(self._client)
@@ -2582,14 +2607,16 @@ class PlaylistWindow(Gtk.Box):
 		self._back_to_current_song_button=Gtk.Button(
 			image=self._icons["go-previous-symbolic"],
 			tooltip_text=_("Scroll to current song"),
-			relief=Gtk.ReliefStyle.NONE
+			relief=Gtk.ReliefStyle.NONE,
+			can_focus=False
 		)
 		style_context=self._back_to_current_song_button.get_style_context()
 		style_context.add_provider(provider, 800)
 		self._clear_button=Gtk.Button(
 			image=self._icons["edit-clear-symbolic"],
 			tooltip_text=_("Clear playlist"),
-			relief=Gtk.ReliefStyle.NONE
+			relief=Gtk.ReliefStyle.NONE,
+			can_focus=False
 		)
 		style_context=self._clear_button.get_style_context()
 		style_context.add_class("destructive-action")
@@ -2866,7 +2893,8 @@ class CoverPlaylistWindow(Gtk.Paned):
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(
 			image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON),
-			tooltip_text=_("Show lyrics")
+			tooltip_text=_("Show lyrics"),
+			can_focus=False
 		)
 		self.lyrics_button.set_margin_top(6)
 		self.lyrics_button.set_margin_end(6)
@@ -2953,54 +2981,33 @@ class PlaybackControl(Gtk.ButtonBox):
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self.play_button=Gtk.Button(image=self._icons["media-playback-start-symbolic"])
-		self.stop_button=Gtk.Button(image=self._icons["media-playback-stop-symbolic"])
-		self.prev_button=Gtk.Button(image=self._icons["media-skip-backward-symbolic"])
-		self.next_button=Gtk.Button(image=self._icons["media-skip-forward-symbolic"])
+		self._play_button=Gtk.Button(image=self._icons["media-playback-start-symbolic"], can_focus=False)
+		self._stop_button=Gtk.Button(image=self._icons["media-playback-stop-symbolic"], can_focus=False)
+		self._prev_button=Gtk.Button(image=self._icons["media-skip-backward-symbolic"], can_focus=False)
+		self._next_button=Gtk.Button(image=self._icons["media-skip-forward-symbolic"], can_focus=False)
 
 		# connect
-		self.play_button.connect("clicked", self._on_play_clicked)
-		self.stop_button.connect("clicked", self._on_stop_clicked)
-		self.stop_button.set_property("no-show-all", not(self._settings.get_boolean("show-stop")))
-		self.prev_button.connect("clicked", self._on_prev_clicked)
-		self.next_button.connect("clicked", self._on_next_clicked)
+		self._play_button.connect("clicked", self._on_play_clicked)
+		self._stop_button.connect("clicked", self._on_stop_clicked)
+		self._stop_button.set_property("no-show-all", not(self._settings.get_boolean("show-stop")))
+		self._prev_button.connect("clicked", self._on_prev_clicked)
+		self._next_button.connect("clicked", self._on_next_clicked)
 		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::show-stop", self._on_show_stop_changed)
 		self._settings.connect("changed::icon-size", self._on_icon_size_changed)
 		self._client.emitter.connect("state", self._on_state)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 		# packing
-		self.pack_start(self.prev_button, True, True, 0)
-		self.pack_start(self.play_button, True, True, 0)
-		self.pack_start(self.stop_button, True, True, 0)
-		self.pack_start(self.next_button, True, True, 0)
-
-	def _on_state(self, emitter, state):
-		if state == "play":
-			self.play_button.set_image(self._icons["media-playback-pause-symbolic"])
-			self.prev_button.set_sensitive(True)
-			self.next_button.set_sensitive(True)
-		elif state == "pause":
-			self.play_button.set_image(self._icons["media-playback-start-symbolic"])
-			self.prev_button.set_sensitive(True)
-			self.next_button.set_sensitive(True)
-		else:
-			self.play_button.set_image(self._icons["media-playback-start-symbolic"])
-			self.prev_button.set_sensitive(False)
-			self.next_button.set_sensitive(False)
+		self.pack_start(self._prev_button, True, True, 0)
+		self.pack_start(self._play_button, True, True, 0)
+		self.pack_start(self._stop_button, True, True, 0)
+		self.pack_start(self._next_button, True, True, 0)
 
 	def _on_play_clicked(self, widget):
 		if self._client.connected():
-			status=self._client.wrapped_call("status")
-			if status["state"] == "play":
-				self._client.wrapped_call("pause", 1)
-			elif status["state"] == "pause":
-				self._client.wrapped_call("pause", 0)
-			else:
-				try:
-					self._client.wrapped_call("play")
-				except:
-					pass
+			self._client.wrapped_call("toggle_play")
 
 	def _on_stop_clicked(self, widget):
 		if self._client.connected():
@@ -3014,13 +3021,33 @@ class PlaybackControl(Gtk.ButtonBox):
 		if self._client.connected():
 			self._client.wrapped_call("next")
 
+	def _on_state(self, emitter, state):
+		if state == "play":
+			self._play_button.set_image(self._icons["media-playback-pause-symbolic"])
+			self._prev_button.set_sensitive(True)
+			self._next_button.set_sensitive(True)
+		elif state == "pause":
+			self._play_button.set_image(self._icons["media-playback-start-symbolic"])
+			self._prev_button.set_sensitive(True)
+			self._next_button.set_sensitive(True)
+		else:
+			self._play_button.set_image(self._icons["media-playback-start-symbolic"])
+			self._prev_button.set_sensitive(False)
+			self._next_button.set_sensitive(False)
+
+	def _on_disconnected(self, *args):
+		self.set_sensitive(False)
+
+	def _on_reconnected(self, *args):
+		self.set_sensitive(True)
+
 	def _on_mini_player(self, obj, typestring):
 		self._on_show_stop_changed()
 
 	def _on_show_stop_changed(self, *args):
 		visibility=(self._settings.get_boolean("show-stop") and not self._settings.get_property("mini-player"))
-		self.stop_button.set_property("visible", visibility)
-		self.stop_button.set_property("no-show-all", not(visibility))
+		self._stop_button.set_property("visible", visibility)
+		self._stop_button.set_property("no-show-all", not(visibility))
 
 	def _on_icon_size_changed(self, *args):
 		pixel_size=self._settings.get_int("icon-size")
@@ -3045,15 +3072,15 @@ class SeekBar(Gtk.Box):
 		self._rest_event_box=Gtk.EventBox()
 
 		# progress bar
-		self.scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL)
-		self.scale.set_show_fill_level(True)
-		self.scale.set_restrict_to_fill_level(False)
-		self.scale.set_draw_value(False)
-		self.scale.set_increments(10, 60)
-		self._adjustment=self.scale.get_adjustment()
+		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, can_focus=False)
+		self._scale.set_show_fill_level(True)
+		self._scale.set_restrict_to_fill_level(False)
+		self._scale.set_draw_value(False)
+		self._scale.set_increments(10, 60)
+		self._adjustment=self._scale.get_adjustment()
 
 		# css (scale)
-		style_context=self.scale.get_style_context()
+		style_context=self._scale.get_style_context()
 		provider=Gtk.CssProvider()
 		css=b"""scale fill { background-color: @theme_selected_bg_color; }"""
 		provider.load_from_data(css)
@@ -3061,13 +3088,13 @@ class SeekBar(Gtk.Box):
 
 		# connect
 		self._elapsed_event_box.connect("button-release-event", self._on_elapsed_button_release_event)
-		self._elapsed_event_box.connect("button-press-event", lambda *args: self.scale.grab_focus())
+		self._elapsed_event_box.connect("button-press-event", lambda *args: self._scale.grab_focus())
 		self._rest_event_box.connect("button-release-event", self._on_rest_button_release_event)
-		self._rest_event_box.connect("button-press-event", lambda *args: self.scale.grab_focus())
-		self.scale.connect("change-value", self._on_change_value)
-		self.scale.connect("scroll-event", lambda *args: True)  # disable mouse wheel
-		self.scale.connect("button-press-event", self._on_scale_button_press_event)
-		self.scale.connect("button-release-event", self._on_scale_button_release_event)
+		self._rest_event_box.connect("button-press-event", lambda *args: self._scale.grab_focus())
+		self._scale.connect("change-value", self._on_change_value)
+		self._scale.connect("scroll-event", lambda *args: True)  # disable mouse wheel
+		self._scale.connect("button-press-event", self._on_scale_button_press_event)
+		self._scale.connect("button-release-event", self._on_scale_button_release_event)
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed_changed", self._refresh)
@@ -3076,7 +3103,7 @@ class SeekBar(Gtk.Box):
 		self._elapsed_event_box.add(self._elapsed)
 		self._rest_event_box.add(self._rest)
 		self.pack_start(self._elapsed_event_box, False, False, 0)
-		self.pack_start(self.scale, True, True, 0)
+		self.pack_start(self._scale, True, True, 0)
 		self.pack_end(self._rest_event_box, False, False, 0)
 
 	def _refresh(self, emitter, elapsed, duration):
@@ -3085,31 +3112,31 @@ class SeekBar(Gtk.Box):
 			elapsed=duration
 		self._adjustment.set_upper(duration)
 		if self._update:
-			self.scale.set_value(elapsed)
+			self._scale.set_value(elapsed)
 			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
 			self._rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
-		self.scale.set_fill_level(elapsed)
+		self._scale.set_fill_level(elapsed)
 
 	def _disable(self, *args):
 		self.set_sensitive(False)
-		self.scale.set_fill_level(0)
-		self.scale.set_range(0, 0)
+		self._scale.set_fill_level(0)
+		self._scale.set_range(0, 0)
 		self._elapsed.set_text("--:--")
 		self._rest.set_text("--:--")
 
 	def _on_scale_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self._update=False
-			self.scale.set_has_origin(False)
+			self._scale.set_has_origin(False)
 		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self._jumped=False
 
 	def _on_scale_button_release_event(self, widget, event):
 		if event.button == 1:
 			self._update=True
-			self.scale.set_has_origin(True)
+			self._scale.set_has_origin(True)
 			if self._jumped:  # actual seek
-				self._client.wrapped_call("seekcur", self.scale.get_value())
+				self._client.wrapped_call("seekcur", self._scale.get_value())
 				self._jumped=False
 			else:  # restore state
 				status=self._client.wrapped_call("status")
@@ -3160,11 +3187,31 @@ class PlaybackOptions(Gtk.Box):
 		for data in icons_data:
 			self._icons[data]=PixelSizedIcon(data, self._icon_size)
 
-		self._random_button=Gtk.ToggleButton(image=self._icons["media-playlist-shuffle-symbolic"], tooltip_text=_("Random mode"))
-		self._repeat_button=Gtk.ToggleButton(image=self._icons["media-playlist-repeat-symbolic"], tooltip_text=_("Repeat mode"))
-		self._single_button=Gtk.ToggleButton(image=self._icons["zoom-original-symbolic"], tooltip_text=_("Single mode"))
-		self._consume_button=Gtk.ToggleButton(image=self._icons["edit-cut-symbolic"], tooltip_text=_("Consume mode"))
-		self._volume_button=Gtk.VolumeButton(use_symbolic=True, size=self._settings.get_gtk_icon_size("icon-size"))
+		self._random_button=Gtk.ToggleButton(
+			image=self._icons["media-playlist-shuffle-symbolic"],
+			tooltip_text=_("Random mode"),
+			can_focus=False
+		)
+		self._repeat_button=Gtk.ToggleButton(
+			image=self._icons["media-playlist-repeat-symbolic"],
+			tooltip_text=_("Repeat mode"),
+			can_focus=False
+		)
+		self._single_button=Gtk.ToggleButton(
+			image=self._icons["zoom-original-symbolic"],
+			tooltip_text=_("Single mode"),
+			can_focus=False
+		)
+		self._consume_button=Gtk.ToggleButton(
+			image=self._icons["edit-cut-symbolic"],
+			tooltip_text=_("Consume mode"),
+			can_focus=False
+		)
+		self._volume_button=Gtk.VolumeButton(
+			use_symbolic=True,
+			size=self._settings.get_gtk_icon_size("icon-size"),
+			can_focus=False
+		)
 		self._volume_button.set_sensitive(False)  # do not allow volume change by user when MPD has not yet reported volume
 		adj=self._volume_button.get_adjustment()
 		adj.set_step_increment(0.05)
@@ -3261,6 +3308,74 @@ class PlaybackOptions(Gtk.Box):
 			icon.set_pixel_size(pixel_size)
 		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
 
+###################
+# MPD gio actions #
+###################
+class MPDActionGroup(Gio.SimpleActionGroup):
+	def __init__(self, client):
+		super().__init__()
+
+		# adding vars
+		self._client=client
+
+		# actions
+		self._simple_actions_data=(
+			"toggle-play","stop","next","prev","seek-forward","seek-backward","clear","update",
+			"repeat","random","single","consume"
+		)
+		for name in self._simple_actions_data:
+			action=Gio.SimpleAction.new(name, None)
+			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
+			self.add_action(action)
+
+		# connect
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
+
+	def _on_toggle_play(self, action, param):
+		self._client.wrapped_call("toggle_play")
+
+	def _on_stop(self, action, param):
+		self._client.wrapped_call("stop")
+
+	def _on_next(self, action, param):
+		self._client.wrapped_call("next")
+
+	def _on_prev(self, action, param):
+		self._client.wrapped_call("previous")
+
+	def _on_seek_forward(self, action, param):
+		self._client.wrapped_call("seekcur", "+10")
+
+	def _on_seek_backward(self, action, param):
+		self._client.wrapped_call("seekcur", "-10")
+
+	def _on_clear(self, action, param):
+		self._client.wrapped_call("clear")
+
+	def _on_update(self, action, param):
+		self._client.wrapped_call("update")
+
+	def _on_repeat(self, action, param):
+		self._client.wrapped_call("toggle_option", "repeat")
+
+	def _on_random(self, action, param):
+		self._client.wrapped_call("toggle_option", "random")
+
+	def _on_single(self, action, param):
+		self._client.wrapped_call("toggle_option", "single")
+
+	def _on_consume(self, action, param):
+		self._client.wrapped_call("toggle_option", "consume")
+
+	def _on_disconnected(self, *args):
+		for action in self._simple_actions_data:
+			self.lookup_action(action).set_enabled(False)
+
+	def _on_reconnected(self, *args):
+		for action in self._simple_actions_data:
+			self.lookup_action(action).set_enabled(True)
+
 ####################
 # shortcuts window #
 ####################
@@ -3280,26 +3395,34 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 		section.add(items_group)
 		section.add(playlist_group)
 
-		shortcut_data=[
+		shortcut_data=(
+			("F1", _("Open online help"), None, general_group),
+			("<Control>question", _("Open shortcuts window"), None, general_group),
+			("F10", _("Open menu"), None, general_group),
+			("F5", _("Update database"), None, general_group),
+			("<Control>q", _("Quit"), None, general_group),
 			("<Control>m", _("Toggle mini player"), None, window_group),
 			("<Control>l", _("Toggle lyrics"), None, window_group),
 			("<Control>f", _("Toggle search"), None, window_group),
 			("Escape", _("Back to current album"), None, window_group),
-			("F1", _("Open online help"), None, general_group),
-			("<Control>q", _("Quit"), None, general_group),
 			("space", _("Play/Pause"), None, playback_group),
+			("<Control>space", _("Stop"), None, playback_group),
 			("KP_Add", _("Next title"), None, playback_group),
 			("KP_Subtract", _("Previous title"), None, playback_group),
 			("KP_Multiply", _("Seek forward"), None, playback_group),
 			("KP_Divide", _("Seek backward"), None, playback_group),
-			("F5", _("Update database"), None, playback_group),
+			("<Control>r", _("Toggle repeat mode"), None, playback_group),
+			("<Control>s", _("Toggle random mode"), None, playback_group),
+			("<Control>1", _("Toggle single mode"), None, playback_group),
+			("<Control>o", _("Toggle consume mode"), None, playback_group),
 			("p", _("Play selected item (next)"), _("Left-click"), items_group),
 			("a", _("Append selected item"), _("Middle-click"), items_group),
 			("Return", _("Play selected item immediately"), _("Double-click"), items_group),
 			("Menu", _("Show additional information"), _("Right-click"), items_group),
 			("Delete", _("Remove selected song"), _("Middle-click"), playlist_group),
+			("<Shift>Delete", _("Clear playlist"), None, playlist_group),
 			("Menu", _("Show additional information"), _("Right-click"), playlist_group)
-		]
+		)
 		for accel, title, subtitle, group in shortcut_data:
 			shortcut=Gtk.ShortcutsShortcut(visible=True, accelerator=accel, title=title, subtitle=subtitle)
 			group.pack_start(shortcut, False, False, 0)
@@ -3424,16 +3547,15 @@ class MainWindow(Gtk.ApplicationWindow):
 		dbus_service=MPRISInterface(self, self._client, self._settings)
 
 		# actions
-		simple_actions_data=[
-			"save","settings","stats","update","help",
-			"toggle-lyrics","toggle-play","next","prev","back-to-current-album","seek-forward","seek-backward","toggle-search"
-		]
+		simple_actions_data=("save","settings","stats","help","menu","toggle-lyrics","back-to-current-album","toggle-search")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
 		mini_player_action=Gio.PropertyAction.new("mini-player", self._settings, "mini-player")
 		self.add_action(mini_player_action)
+		self._mpd_action_group=MPDActionGroup(self._client)
+		self.insert_action_group("mpd", self._mpd_action_group)
 
 		# widgets
 		self._icons={}
@@ -3444,8 +3566,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._browser=Browser(self._client, self._settings, self)
 		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings, self)
 		self._profile_select=ProfileSelect(self._settings)
-		self._playback_control=PlaybackControl(self._client, self._settings)
-		self._seek_bar=SeekBar(self._client)
+		playback_control=PlaybackControl(self._client, self._settings)
+		seek_bar=SeekBar(self._client)
 		playback_options=PlaybackOptions(self._client, self._settings)
 		connection_notify=ConnectionNotify(self._client, self._settings)
 
@@ -3458,7 +3580,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		subsection.append(_("Quit"), "app.quit")
 
 		mpd_subsection=Gio.Menu()
-		mpd_subsection.append(_("Update database"), "win.update")
+		mpd_subsection.append(_("Update database"), "mpd.update")
 		mpd_subsection.append(_("Server stats"), "win.stats")
 
 		menu=Gio.Menu()
@@ -3467,14 +3589,14 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
-		menu_button=Gtk.MenuButton(image=self._icons["open-menu-symbolic"], tooltip_text=_("Menu"))
-		menu_popover=Gtk.Popover.new_from_model(menu_button, menu)
-		menu_button.set_popover(menu_popover)
+		self._menu_button=Gtk.MenuButton(image=self._icons["open-menu-symbolic"], tooltip_text=_("Menu"), can_focus=False)
+		menu_popover=Gtk.Popover.new_from_model(self._menu_button, menu)
+		self._menu_button.set_popover(menu_popover)
 
 		# action bar
 		action_bar=Gtk.ActionBar()
-		action_bar.pack_start(self._playback_control)
-		action_bar.pack_start(self._seek_bar)
+		action_bar.pack_start(playback_control)
+		action_bar.pack_start(seek_bar)
 		action_bar.pack_start(playback_options)
 
 		# connect
@@ -3506,13 +3628,13 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_start(self._browser.back_to_current_album_button)
 			self._header_bar.pack_start(self._browser.genre_select)
-			self._header_bar.pack_end(menu_button)
+			self._header_bar.pack_end(self._menu_button)
 			self._header_bar.pack_end(self._profile_select)
 			self._header_bar.pack_end(self._browser.search_button)
 		else:
 			action_bar.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.VERTICAL))
 			action_bar.pack_start(self._profile_select)
-			action_bar.pack_start(menu_button)
+			action_bar.pack_start(self._menu_button)
 
 		self.add(overlay)
 
@@ -3520,6 +3642,39 @@ class MainWindow(Gtk.ApplicationWindow):
 		if self._settings.get_boolean("maximize"):
 			self.maximize()
 		self._client.start()  # connect client
+
+	def _on_toggle_lyrics(self, action, param):
+		self._cover_playlist_window.lyrics_button.set_active(not(self._cover_playlist_window.lyrics_button.get_active()))
+
+	def _on_back_to_current_album(self, action, param):
+		self._browser.back_to_current_album_button.emit("clicked")
+
+	def _on_toggle_search(self, action, param):
+		self._browser.search_button.set_active(not(self._browser.search_button.get_active()))
+
+	def _on_save(self, action, param):
+		size=self.get_size()
+		self._settings.set_int("width", size[0])
+		self._settings.set_int("height", size[1])
+		self._settings.set_boolean("maximize", self.is_maximized())
+		self._browser.save_settings()
+		self._cover_playlist_window.save_settings()
+		self._settings.set_int("paned2", self._paned2.get_position())
+
+	def _on_settings(self, action, param):
+		settings=SettingsDialog(self, self._client, self._settings)
+		settings.run()
+		settings.destroy()
+
+	def _on_stats(self, action, param):
+		stats=ServerStats(self, self._client, self._settings)
+		stats.destroy()
+
+	def _on_help(self, action, param):
+		Gtk.show_uri_on_window(self, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
+
+	def _on_menu(self, action, param):
+		self._menu_button.emit("clicked")
 
 	def _on_song_changed(self, *args):
 		song=self._client.wrapped_call("currentsong")
@@ -3548,95 +3703,29 @@ class MainWindow(Gtk.ApplicationWindow):
 					notify.show()
 
 	def _on_reconnected(self, *args):
-		self._playback_control.set_sensitive(True)
-		self.action_enabled_changed
-		self.lookup_action("update").set_enabled(True)
-		self.lookup_action("stats").set_enabled(True)
-		self.lookup_action("toggle-lyrics").set_enabled(True)
+		for action in ("save","stats","toggle-lyrics","back-to-current-album","toggle-search"):
+			self.lookup_action(action).set_enabled(True)
 
 	def _on_disconnected(self, *args):
 		self.set_title("mpdevil")
 		if self._use_csd:
 			self._header_bar.set_subtitle("")
-		self._playback_control.set_sensitive(False)
-		self.lookup_action("update").set_enabled(False)
-		self.lookup_action("stats").set_enabled(False)
-		self.lookup_action("toggle-lyrics").set_enabled(False)
+		for action in ("save","stats","toggle-lyrics","back-to-current-album","toggle-search"):
+			self.lookup_action(action).set_enabled(False)
 
 	def _on_search_focus_changed(self, obj, focus):
-		if focus:
-			self.lookup_action("toggle-play").set_enabled(False)
-		else:
-			self.lookup_action("toggle-play").set_enabled(True)
-
-	def _on_toggle_lyrics(self, action, param):
-		self._cover_playlist_window.lyrics_button.grab_focus()
-		self._cover_playlist_window.lyrics_button.set_active(not(self._cover_playlist_window.lyrics_button.get_active()))
-
-	def _on_toggle_play(self, action, param):
-		self._playback_control.play_button.grab_focus()
-		self._playback_control.play_button.emit("clicked")
-
-	def _on_next(self, action, param):
-		self._playback_control.next_button.grab_focus()
-		self._playback_control.next_button.emit("clicked")
-
-	def _on_prev(self, action, param):
-		self._playback_control.prev_button.grab_focus()
-		self._playback_control.prev_button.emit("clicked")
-
-	def _on_back_to_current_album(self, action, param):
-		self._browser.back_to_current_album_button.grab_focus()
-		self._browser.back_to_current_album_button.emit("clicked")
-
-	def _on_seek_forward(self, action, param):
-		self._seek_bar.scale.grab_focus()
-		self._client.wrapped_call("seekcur", "+10")
-
-	def _on_seek_backward(self, action, param):
-		self._seek_bar.scale.grab_focus()
-		self._client.wrapped_call("seekcur", "-10")
-
-	def _on_toggle_search(self, action, param):
-		self._browser.search_button.grab_focus()
-		self._browser.search_button.set_active(not(self._browser.search_button.get_active()))
-
-	def _on_save(self, action, param):
-		size=self.get_size()
-		self._settings.set_int("width", size[0])
-		self._settings.set_int("height", size[1])
-		self._settings.set_boolean("maximize", self.is_maximized())
-		self._browser.save_settings()
-		self._cover_playlist_window.save_settings()
-		self._settings.set_int("paned2", self._paned2.get_position())
-
-	def _on_settings(self, action, param):
-		settings=SettingsDialog(self, self._client, self._settings)
-		settings.run()
-		settings.destroy()
-
-	def _on_stats(self, action, param):
-		stats=ServerStats(self, self._client, self._settings)
-		stats.destroy()
-
-	def _on_update(self, action, param):
-		self._client.wrapped_call("update")
-
-	def _on_help(self, action, param):
-		Gtk.show_uri_on_window(self, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
+		self._mpd_action_group.lookup_action("toggle-play").set_enabled(not(focus))
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
+			self.lookup_action("save").set_enabled(False)
 			self._tmp_saved_size=self.get_size()
 			self._tmp_saved_miximized=self.is_maximized()
-			self.lookup_action("save").set_enabled(False)
-			self.lookup_action("back-to-current-album").set_enabled(False)
 			if self._tmp_saved_miximized:
 				self.unmaximize()
 			self.resize(1,1)
 		else:
 			self.lookup_action("save").set_enabled(True)
-			self.lookup_action("back-to-current-album").set_enabled(True)
 			self.resize(self._tmp_saved_size[0], self._tmp_saved_size[1])
 			if self._tmp_saved_miximized:
 				self.maximize()
@@ -3672,18 +3761,17 @@ class mpdevil(Gtk.Application):
 			self._window=MainWindow(self, self._client, self._settings)
 			self._window.connect("delete-event", self._on_delete_event)
 			# accelerators
-			self.set_accels_for_action("app.quit", ["<Control>q"])
-			self.set_accels_for_action("win.mini-player", ["<Control>m"])
-			self.set_accels_for_action("win.update", ["F5"])
-			self.set_accels_for_action("win.help", ["F1"])
-			self.set_accels_for_action("win.toggle-lyrics", ["<Control>l"])
-			self.set_accels_for_action("win.toggle-play", ["space"])
-			self.set_accels_for_action("win.next", ["KP_Add"])
-			self.set_accels_for_action("win.prev", ["KP_Subtract",])
-			self.set_accels_for_action("win.seek-forward", ["KP_Multiply"])
-			self.set_accels_for_action("win.seek-backward", ["KP_Divide"])
-			self.set_accels_for_action("win.back-to-current-album", ["Escape"])
-			self.set_accels_for_action("win.toggle-search", ["<control>f"])
+			action_accels=(
+				("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
+				("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
+				("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<control>f"]),
+				("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),
+				("mpd.stop", ["<Control>space"]),("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),
+				("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>s"]),("mpd.single", ["<Control>1"]),
+				("mpd.consume", ["<Control>o"]),("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"])
+			)
+			for action, accels in action_accels:
+				self.set_accels_for_action(action, accels)
 		self._window.present()
 
 	def do_startup(self):
