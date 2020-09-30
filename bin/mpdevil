@@ -385,6 +385,11 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 ######################
 
 class ClientHelper():
+	def seconds_to_display_time(seconds):
+		raw_time_string=str(datetime.timedelta(seconds=seconds))
+		stript_time_string=raw_time_string.lstrip("0").lstrip(":")
+		return stript_time_string.replace(":", "∶")  # use 'ratio' as delimiter
+
 	def song_to_str_dict(song):  # converts tags with multiple values to comma separated strings
 		return_song=song
 		for tag, value in return_song.items():
@@ -411,14 +416,14 @@ class ClientHelper():
 			"genre": ""
 		}
 		base_song.update(song)
-		base_song["human_duration"]=str(datetime.timedelta(seconds=int(float(base_song["duration"])))).lstrip("0").lstrip(":")
+		base_song["human_duration"]=ClientHelper.seconds_to_display_time(int(float(base_song["duration"])))
 		return base_song
 
 	def calc_display_length(songs):
 		length=float(0)
 		for song in songs:
 			length=length+float(song.get("duration", 0.0))
-		return str(datetime.timedelta(seconds=int(length))).lstrip("0").lstrip(":")
+		return ClientHelper.seconds_to_display_time(int(length))
 
 class MpdEventEmitter(GObject.Object):
 	__gsignals__={
@@ -730,7 +735,7 @@ class GeneralSettings(Gtk.Box):
 			(_("Show lyrics button"), "show-lyrics-button"),
 			(_("Show initials in artist view"), "show-initials"),
 			(_("Show tooltips in album view"), "show-album-view-tooltips"),
-			(_("Use 'Album Artist' tag"), "use-album-artist"),
+			(_("Use “Album Artist” tag"), "use-album-artist"),
 			(_("Send notification on title change"), "send-notify"),
 			(_("Stop playback on quit"), "stop-on-quit"),
 			(_("Play selected albums and titles immediately"), "force-mode")
@@ -1248,9 +1253,9 @@ class ServerStats(Gtk.Dialog):
 		for key in stats:
 			print_key=key+":"
 			if key == "uptime" or key == "playtime" or key == "db_playtime":
-				store.append([print_key, str(datetime.timedelta(seconds=int(stats[key])))])
+				store.append([print_key, ClientHelper.seconds_to_display_time(int(stats[key]))])
 			elif key == "db_update":
-				store.append([print_key, str(datetime.datetime.fromtimestamp(int(stats[key])))])
+				store.append([print_key, str(datetime.datetime.fromtimestamp(int(stats[key]))).replace(":", "∶")])
 			else:
 				store.append([print_key, stats[key]])
 		frame=Gtk.Frame()
@@ -1353,10 +1358,10 @@ class SongPopover(Gtk.Popover):
 		for tag, value in song.items():
 			tooltip=value.replace("&", "&amp;")
 			if tag == "time":
-				store.append([tag+":", str(datetime.timedelta(seconds=int(value))), tooltip])
+				store.append([tag+":", ClientHelper.seconds_to_display_time(int(value)), tooltip])
 			elif tag == "last-modified":
 				time=datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
-				store.append([tag+":", time.strftime("%a %d %B %Y, %H:%M UTC"), tooltip])
+				store.append([tag+":", time.strftime("%a %d %B %Y, %H∶%M UTC"), tooltip])
 			else:
 				store.append([tag+":", value, tooltip])
 		frame.show_all()
@@ -3110,16 +3115,16 @@ class SeekBar(Gtk.Box):
 		self._adjustment.set_upper(duration)
 		if self._update:
 			self._scale.set_value(elapsed)
-			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
-			self._rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
+			self._elapsed.set_text(ClientHelper.seconds_to_display_time(int(elapsed)))
+			self._rest.set_text("-"+ClientHelper.seconds_to_display_time(int(duration-elapsed)))
 		self._scale.set_fill_level(elapsed)
 
 	def _disable(self, *args):
 		self.set_sensitive(False)
 		self._scale.set_fill_level(0)
 		self._scale.set_range(0, 0)
-		self._elapsed.set_text("--:--")
-		self._rest.set_text("--:--")
+		self._elapsed.set_text("––∶––")
+		self._rest.set_text("––∶––")
 
 	def _on_scale_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3149,8 +3154,8 @@ class SeekBar(Gtk.Box):
 				elapsed=duration
 			else:
 				elapsed=value
-			self._elapsed.set_text(str(datetime.timedelta(seconds=int(elapsed))).lstrip("0").lstrip(":"))
-			self._rest.set_text("-"+str(datetime.timedelta(seconds=int(duration-elapsed))).lstrip("0").lstrip(":"))
+			self._elapsed.set_text(ClientHelper.seconds_to_display_time(int(elapsed)))
+			self._rest.set_text("-"+ClientHelper.seconds_to_display_time(int(duration-elapsed)))
 			self._jumped=True
 
 	def _on_elapsed_button_release_event(self, widget, event):
@@ -3446,7 +3451,7 @@ class ConnectionNotify(Gtk.Revealer):
 
 	def _on_connection_error(self, *args):
 		active=self._settings.get_int("active-profile")
-		string=_("Connection to '{profile}' ({host}:{port}) failed").format(
+		string=_("Connection to “{profile}” ({host}:{port}) failed").format(
 			profile=self._settings.get_value("profiles")[active],
 			host=self._settings.get_value("hosts")[active],
 			port=self._settings.get_value("ports")[active]
