@@ -3383,6 +3383,7 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 			("F10", _("Open menu"), None, general_group),
 			("F5", _("Update database"), None, general_group),
 			("<Control>q", _("Quit"), None, general_group),
+			("<Control>p <Shift><Control>p", _("Cycle through profiles"), None, window_group),
 			("<Control>m", _("Toggle mini player"), None, window_group),
 			("<Control>l", _("Toggle lyrics"), None, window_group),
 			("<Control>f", _("Toggle search"), None, window_group),
@@ -3487,7 +3488,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		dbus_service=MPRISInterface(self, self._client, self._settings)
 
 		# actions
-		simple_actions_data=("save","settings","stats","help","menu","toggle-lyrics","back-to-current-album","toggle-search")
+		simple_actions_data=(
+			"save","settings","stats","help","menu",
+			"toggle-lyrics","back-to-current-album","toggle-search",
+			"profile-next","profile-prev"
+		)
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -3616,6 +3621,16 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_menu(self, action, param):
 		self._menu_button.emit("clicked")
 
+	def _on_profile_next(self, action, param):
+		total_profiles=len(self._settings.get_value("profiles"))
+		current_profile=self._settings.get_int("active-profile")
+		self._settings.set_int("active-profile", (current_profile+1)%total_profiles)
+
+	def _on_profile_prev(self, action, param):
+		total_profiles=len(self._settings.get_value("profiles"))
+		current_profile=self._settings.get_int("active-profile")
+		self._settings.set_int("active-profile", (current_profile-1)%total_profiles)
+
 	def _on_profiles(self, action, param):
 		self._settings.set_int("active-profile", param.unpack())
 		action.set_state(param)
@@ -3723,7 +3738,8 @@ class mpdevil(Gtk.Application):
 				("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),
 				("mpd.stop", ["<Control>space"]),("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),
 				("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>s"]),("mpd.single", ["<Control>1"]),
-				("mpd.consume", ["<Control>o"]),("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"])
+				("mpd.consume", ["<Control>o"]),("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
+				("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"])
 			)
 			for action, accels in action_accels:
 				self.set_accels_for_action(action, accels)
