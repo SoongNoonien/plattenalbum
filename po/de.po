@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-30 11:04+0200\n"
-"PO-Revision-Date: 2020-09-30 11:05+0200\n"
+"POT-Creation-Date: 2020-09-30 12:57+0200\n"
+"PO-Revision-Date: 2020-09-30 12:59+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -110,7 +110,7 @@ msgstr "<b>Verhalten</b>"
 msgid "(restart required)"
 msgstr "(Neustart erforderlich)"
 
-#: mpdevil:849 mpdevil:3436
+#: mpdevil:849 mpdevil:3444
 msgid "Connect"
 msgstr "Verbinden"
 
@@ -190,19 +190,19 @@ msgstr "Jahr"
 msgid "Genre"
 msgstr "Genre"
 
-#: mpdevil:1179 mpdevil:1187 mpdevil:3523
+#: mpdevil:1179 mpdevil:1187 mpdevil:3531
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: mpdevil:1198 mpdevil:3373
+#: mpdevil:1198 mpdevil:3380
 msgid "General"
 msgstr "Allgemein"
 
-#: mpdevil:1199 mpdevil:3534
+#: mpdevil:1199 mpdevil:3542
 msgid "Profiles"
 msgstr "Profile"
 
-#: mpdevil:1200 mpdevil:3377
+#: mpdevil:1200 mpdevil:3384
 msgid "Playlist"
 msgstr "Wiedergabeliste"
 
@@ -281,7 +281,7 @@ msgstr "{titles} Titel auf {discs} CDs ({length})"
 msgid "{titles} titles ({length})"
 msgstr "{titles} Titel ({length})"
 
-#: mpdevil:2233 mpdevil:3395
+#: mpdevil:2233 mpdevil:3403
 msgid "Back to current album"
 msgstr "Zurück zu aktuellem Album"
 
@@ -314,184 +314,188 @@ msgstr ""
 msgid "Scroll to current song"
 msgstr "Gehe zu aktuellem Lied"
 
-#: mpdevil:2618 mpdevil:3411
+#: mpdevil:2618 mpdevil:3419
 msgid "Clear playlist"
 msgstr "Wiedergabeliste leeren"
 
-#: mpdevil:2897
+#: mpdevil:2898
 msgid "Show lyrics"
 msgstr "Zeige Liedtext"
 
-#: mpdevil:3192
+#: mpdevil:3193
 msgid "Random mode"
 msgstr "Zufallsmodus"
 
-#: mpdevil:3194
+#: mpdevil:3195
 msgid "Repeat mode"
 msgstr "Dauerschleife"
 
-#: mpdevil:3196
+#: mpdevil:3197
 msgid "Single mode"
 msgstr "Einzelstückmodus"
 
-#: mpdevil:3198
+#: mpdevil:3199
 msgid "Consume mode"
 msgstr "Wiedergabeliste verbrauchen"
 
-#: mpdevil:3374
+#: mpdevil:3381
 msgid "Window"
 msgstr "Fenster"
 
-#: mpdevil:3375
+#: mpdevil:3382
 msgid "Playback"
 msgstr "Wiedergabe"
 
-#: mpdevil:3376
+#: mpdevil:3383
 msgid "Search, Album Dialog and Album List"
 msgstr "Suche, Albumdialog und Albumliste"
 
-#: mpdevil:3386
+#: mpdevil:3393
 msgid "Open online help"
 msgstr "Onlinehilfe öffnen"
 
-#: mpdevil:3387
+#: mpdevil:3394
 msgid "Open shortcuts window"
 msgstr "Tastenkürzelfenster öffnen"
 
-#: mpdevil:3388
+#: mpdevil:3395
 msgid "Open menu"
 msgstr "Menü öffnen"
 
-#: mpdevil:3389 mpdevil:3529
+#: mpdevil:3396 mpdevil:3537
 msgid "Update database"
 msgstr "Datenbank aktualisieren"
 
-#: mpdevil:3390 mpdevil:3527
+#: mpdevil:3397 mpdevil:3535
 msgid "Quit"
 msgstr "Beenden"
 
-#: mpdevil:3391
+#: mpdevil:3398
 msgid "Cycle through profiles"
 msgstr "Profile durchschalten"
 
-#: mpdevil:3392
+#: mpdevil:3399
+msgid "Cycle through profiles in reversed order"
+msgstr "Profile rückwärts durchschalten"
+
+#: mpdevil:3400
 msgid "Toggle mini player"
 msgstr "Miniplayer ein-/ausschalten"
 
-#: mpdevil:3393
+#: mpdevil:3401
 msgid "Toggle lyrics"
 msgstr "Liedtext ein-/ausblenden"
 
-#: mpdevil:3394
+#: mpdevil:3402
 msgid "Toggle search"
 msgstr "Suche ein-/ausblenden"
 
-#: mpdevil:3396
+#: mpdevil:3404
 msgid "Play/Pause"
 msgstr "Wiedergabe/Pause"
 
-#: mpdevil:3397
+#: mpdevil:3405
 msgid "Stop"
 msgstr "Stopp"
 
-#: mpdevil:3398
+#: mpdevil:3406
 msgid "Next title"
 msgstr "Nächster Titel"
 
-#: mpdevil:3399
+#: mpdevil:3407
 msgid "Previous title"
 msgstr "Vorheriger Titel"
 
-#: mpdevil:3400
+#: mpdevil:3408
 msgid "Seek forward"
 msgstr "Vorspulen"
 
-#: mpdevil:3401
+#: mpdevil:3409
 msgid "Seek backward"
 msgstr "Zurückspulen"
 
-#: mpdevil:3402
+#: mpdevil:3410
 msgid "Toggle repeat mode"
 msgstr "Dauerschleife ein-/ausschalten"
 
-#: mpdevil:3403
+#: mpdevil:3411
 msgid "Toggle random mode"
 msgstr "Zufallsmodus ein-/ausschalten"
 
-#: mpdevil:3404
+#: mpdevil:3412
 msgid "Toggle single mode"
 msgstr "Einzelstückmodus ein-/ausschalten"
 
-#: mpdevil:3405
+#: mpdevil:3413
 msgid "Toggle consume mode"
 msgstr "Wiedergabeliste verbrauchen ein-/ausschalten"
 
-#: mpdevil:3406
+#: mpdevil:3414
 msgid "Play selected item (next)"
 msgstr "Ausgewähltes Element (als Nächstes) abspielen"
 
-#: mpdevil:3406
+#: mpdevil:3414
 msgid "Left-click"
 msgstr "Linksklick"
 
-#: mpdevil:3407
+#: mpdevil:3415
 msgid "Append selected item"
 msgstr "Ausgewähltes Element anhängen"
 
-#: mpdevil:3407 mpdevil:3410
+#: mpdevil:3415 mpdevil:3418
 msgid "Middle-click"
 msgstr "Mittelklick"
 
-#: mpdevil:3408
+#: mpdevil:3416
 msgid "Play selected item immediately"
 msgstr "Ausgewähltes Element sofort abspielen"
 
-#: mpdevil:3408
+#: mpdevil:3416
 msgid "Double-click"
 msgstr "Doppelklick"
 
-#: mpdevil:3409 mpdevil:3412
+#: mpdevil:3417 mpdevil:3420
 msgid "Show additional information"
 msgstr "Zeige weitere Informationen"
 
-#: mpdevil:3409 mpdevil:3412
+#: mpdevil:3417 mpdevil:3420
 msgid "Right-click"
 msgstr "Rechtsklick"
 
-#: mpdevil:3410
+#: mpdevil:3418
 msgid "Remove selected song"
 msgstr "Ausgewählten Titel entfernen"
 
-#: mpdevil:3454
+#: mpdevil:3462
 #, python-brace-format
 msgid "Connection to “{profile}” ({host}:{port}) failed"
 msgstr "Verbindung zu „{profile}“ ({host}:{port}) fehlgeschlagen"
 
-#: mpdevil:3524
+#: mpdevil:3532
 msgid "Keyboard shortcuts"
 msgstr "Tastenkürzel"
 
-#: mpdevil:3525
+#: mpdevil:3533
 msgid "Help"
 msgstr "Hilfe"
 
-#: mpdevil:3526
+#: mpdevil:3534
 msgid "About"
 msgstr "Über"
 
-#: mpdevil:3530
+#: mpdevil:3538
 msgid "Server stats"
 msgstr "Serverstatistik"
 
-#: mpdevil:3535
+#: mpdevil:3543
 msgid "Mini player"
 msgstr "Miniplayer"
 
-#: mpdevil:3536
+#: mpdevil:3544
 msgid "Save window layout"
 msgstr "Fensterlayout speichern"
 
-#: mpdevil:3541
+#: mpdevil:3549
 msgid "Menu"
 msgstr "Menü"
 
