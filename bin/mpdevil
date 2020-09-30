@@ -2846,6 +2846,7 @@ class PlaylistWindow(Gtk.Box):
 			self._scroll_to_selected_title()
 
 	def _on_back_to_current_song_button_clicked(self, *args):
+		self._treeview.set_cursor(Gtk.TreePath(len(self._store)), None, False)  # set to invalid TreePath (needed to unset cursor)
 		for path, row in enumerate(self._store):
 			if row[9] == Pango.Weight.BOLD:
 				self._selection.select_path(path)
