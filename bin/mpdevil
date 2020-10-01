@@ -1501,11 +1501,14 @@ class SongsWindow(Gtk.Box):
 		scroll.add(self._songs_view)
 
 		# buttons
-		append_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-add", Gtk.IconSize.BUTTON), label=_("Append"))
+		append_button=Gtk.Button.new_with_mnemonic(_("_Append"))
+		append_button.set_image(Gtk.Image.new_from_icon_name("list-add", Gtk.IconSize.BUTTON))
 		append_button.set_tooltip_text(_("Add all titles to playlist"))
-		play_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("media-playback-start", Gtk.IconSize.BUTTON), label=_("Play"))
+		play_button=Gtk.Button.new_with_mnemonic(_("_Play"))
+		play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start", Gtk.IconSize.BUTTON))
 		play_button.set_tooltip_text(_("Directly play all titles"))
-		enqueue_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("insert-object", Gtk.IconSize.BUTTON), label=_("Enqueue"))
+		enqueue_button=Gtk.Button.new_with_mnemonic(_("_Enqueue"))
+		enqueue_button.set_image(Gtk.Image.new_from_icon_name("insert-object", Gtk.IconSize.BUTTON))
 		enqueue_button.set_tooltip_text(_("Append all titles after the currently playing track and clear the playlist from all other songs"))
 
 		# button box
