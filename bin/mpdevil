@@ -1672,7 +1672,7 @@ class GenreSelect(Gtk.ComboBoxText):
 	__gsignals__={"genre_changed": (GObject.SignalFlags.RUN_FIRST, None, ())}
 
 	def __init__(self, client):
-		super().__init__()
+		super().__init__(wrap_width=3)
 
 		# adding vars
 		self._client=client
@@ -1733,7 +1733,7 @@ class ArtistWindow(FocusFrame):
 		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
 
 		# TreeView
-		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, search_column=0)
+		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, search_column=0, headers_visible=False)
 		self._treeview.columns_autosize()
 
 		# Selection
@@ -1807,10 +1807,6 @@ class ArtistWindow(FocusFrame):
 	def _refresh(self, *args):
 		self._selection.set_mode(Gtk.SelectionMode.NONE)
 		self._clear()
-		if self._settings.get_artist_type() == "albumartist":
-			self._column_name.set_title(_("Album Artist"))
-		else:
-			self._column_name.set_title(_("Artist"))
 		self._store.append([_("all artists"), Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		genre=self._genre_select.get_selected_genre()
 		if genre is None:
@@ -2234,8 +2230,8 @@ class Browser(Gtk.Paned):
 		self.back_to_current_album_button.set_can_focus(False)
 		self.search_button=Gtk.ToggleButton(image=self._icons["system-search-symbolic"], tooltip_text=_("Search"))
 		self.search_button.set_can_focus(False)
-		self.genre_select=GenreSelect(self._client)
-		self._artist_window=ArtistWindow(self._client, self._settings, self.genre_select)
+		self._genre_select=GenreSelect(self._client)
+		self._artist_window=ArtistWindow(self._client, self._settings, self._genre_select)
 		self._search_window=SearchWindow(self._client)
 		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window, window)
 
@@ -2256,18 +2252,18 @@ class Browser(Gtk.Paned):
 		self._stack.add_named(self._album_window, "albums")
 		self._stack.add_named(self._search_window, "search")
 
+		hbox=Gtk.Box(spacing=6, border_width=6)
 		if self._use_csd:
-			self.pack1(self._artist_window, False, False)
+			hbox.pack_start(self._genre_select, True, True, 0)
 		else:
-			hbox=Gtk.Box(spacing=6, border_width=6)
 			hbox.pack_start(self.back_to_current_album_button, False, False, 0)
-			hbox.pack_start(self.genre_select, True, True, 0)
+			hbox.pack_start(self._genre_select, True, True, 0)
 			hbox.pack_start(self.search_button, False, False, 0)
-			box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-			box1.pack_start(hbox, False, False, 0)
-			box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-			box1.pack_start(self._artist_window, True, True, 0)
-			self.pack1(box1, False, False)
+		box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box1.pack_start(hbox, False, False, 0)
+		box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		box1.pack_start(self._artist_window, True, True, 0)
+		self.pack1(box1, False, False)
 		self.pack2(self._stack, True, False)
 
 		self.set_position(self._settings.get_int("paned1"))
@@ -2291,10 +2287,10 @@ class Browser(Gtk.Paned):
 				artist=song.get("artist", "")
 			# deactivate genre filter to show all artists (if needed)
 			try:
-				if song["genre"] != self.genre_select.get_selected_genre():
-					self.genre_select.deactivate()
+				if song["genre"] != self._genre_select.get_selected_genre():
+					self._genre_select.deactivate()
 			except:
-				self.genre_select.deactivate()
+				self._genre_select.deactivate()
 			# select artist
 			if len(self._artist_window.get_selected_artists()[1]) <= 1:  # one artist selected
 				self._artist_window.select(artist)
@@ -2330,7 +2326,6 @@ class Browser(Gtk.Paned):
 		self.set_property("visible", visibility)
 		self.back_to_current_album_button.set_property("visible", visibility)
 		self.search_button.set_property("visible", visibility)
-		self.genre_select.set_property("visible", visibility)
 
 	def _on_icon_size_changed(self, *args):
 		pixel_size=self._settings.get_int("icon-size-sec")
@@ -3587,7 +3582,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._header_bar.set_show_close_button(True)
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_start(self._browser.back_to_current_album_button)
-			self._header_bar.pack_start(self._browser.genre_select)
 			self._header_bar.pack_end(self._menu_button)
 			self._header_bar.pack_end(self._browser.search_button)
 		else:
