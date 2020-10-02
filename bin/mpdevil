@@ -415,6 +415,10 @@ class ClientHelper():
 			"date": "",
 			"genre": ""
 		}
+		if "range" in song:  # translate .cue 'range' to 'duration' if needed
+			start, end=song["range"].split("-")
+			if start != "" and end != "":
+				base_song["duration"]=str((float(end)-float(start)))
 		base_song.update(song)
 		base_song["human_duration"]=ClientHelper.seconds_to_display_time(int(float(base_song["duration"])))
 		return base_song
@@ -552,8 +556,11 @@ class Client(MPDClient):
 
 	def get_metadata(self, uri):
 		meta_base=self.lsinfo(uri)[0]
-		meta_extra=self.readcomments(uri)  # contains comment tag
-		meta_base.update(meta_extra)
+		try:  # .cue files produce an error here
+			meta_extra=self.readcomments(uri)  # contains comment tag
+			meta_base.update(meta_extra)
+		except:
+			pass
 		return meta_base
 
 	def toggle_play(self):
@@ -1389,8 +1396,9 @@ class Cover(object):
 					return
 
 			if song_file is not None:
-				head, tail=os.path.split(song_file)
-				song_dir=os.path.join(lib_path, head)
+				song_dir=os.path.join(lib_path, os.path.dirname(song_file))
+				if song_dir.endswith(".cue"):
+					song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
 				if os.path.exists(song_dir):
 					for f in os.listdir(song_dir):
 						if regex.match(f):
