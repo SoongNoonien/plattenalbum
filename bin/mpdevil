@@ -1926,18 +1926,15 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 
 		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
-		column_track.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		column_track.set_property("resizable", False)
 		songs_view.append_column(column_track)
 
 		column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
-		column_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		column_title.set_property("resizable", False)
 		column_title.set_property("expand", True)
 		songs_view.append_column(column_title)
 
-		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text, text=2)
-		column_time.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_ralign, text=2)
 		column_time.set_property("resizable", False)
 		songs_view.append_column(column_time)
 
