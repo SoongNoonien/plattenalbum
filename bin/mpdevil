@@ -2494,7 +2494,7 @@ class AudioType(Gtk.Label):
 
 	def _on_song_changed(self, *args):
 		try:
-			self.file_type=self._client.wrapped_call("currentsong")["file"].split(".")[-1]
+			self.file_type=self._client.wrapped_call("currentsong")["file"].split(".")[-1].split("/")[0]
 			self._refresh()
 		except:
 			pass
