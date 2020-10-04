@@ -7,7 +7,7 @@
       <description></description>
     </key>
     <key type="i" name="width">
-      <default>1000</default>
+      <default>1006</default>
       <summary>Default width of window</summary>
       <description></description>
     </key>
@@ -32,7 +32,7 @@
       <description></description>
     </key>
     <key type="i" name="album-cover">
-      <default>130</default>
+      <default>170</default>
       <summary>Size of covers in album view</summary>
       <description></description>
     </key>
