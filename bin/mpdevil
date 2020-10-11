@@ -3484,6 +3484,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		super().__init__(title=("mpdevil"), icon_name="mpdevil", application=app)
 		Notify.init("mpdevil")
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
+		if settings.get_boolean("maximize"):
+			self.maximize()  # request maximize
 		shortcuts_window=ShortcutsWindow()
 		self.set_help_overlay(shortcuts_window)
 		shortcuts_window.set_modal(False)
@@ -3601,8 +3603,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.emit("disconnected")  # bring player in defined state
 		self.show_all()
 		def callback(*args):
-			if self._settings.get_boolean("maximize"):
-				self.maximize()
 			self._client.start()  # connect client
 			return False
 		GLib.idle_add(callback)
