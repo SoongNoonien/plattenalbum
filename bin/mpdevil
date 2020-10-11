@@ -3601,6 +3601,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.add(overlay)
 
 		self._client.emitter.emit("disconnected")  # bring player in defined state
+		# indicate connection process in window title
+		if self._use_csd:
+			self._header_bar.set_subtitle(_("connecting…"))
+		else:
+			self.set_title("mpdevil "+_("connecting…"))
 		self.show_all()
 		def callback(*args):
 			self._client.start()  # connect client
