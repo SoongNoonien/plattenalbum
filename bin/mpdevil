@@ -41,7 +41,7 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 
-VERSION="0.9.4"  # sync with setup.py
+VERSION="0.9.4-dev"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -3599,9 +3599,12 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.add(overlay)
 
 		self.show_all()
-		if self._settings.get_boolean("maximize"):
-			self.maximize()
-		self._client.start()  # connect client
+		def callback(*args):
+			if self._settings.get_boolean("maximize"):
+				self.maximize()
+			self._client.start()  # connect client
+			return False
+		GLib.idle_add(callback)
 
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_playlist_window.lyrics_button.set_active(not(self._cover_playlist_window.lyrics_button.get_active()))
