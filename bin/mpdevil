@@ -461,7 +461,7 @@ class Client(MPDClient):
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
 
-		#connect
+		# connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
 
 	def wrapped_call(self, name, *args):
@@ -698,7 +698,7 @@ class GeneralSettings(Gtk.Box):
 		self._settings=settings
 		self._settings_handlers=[]
 
-		# int_settings
+		# int settings
 		int_settings={}
 		int_settings_data=[
 			(_("Main cover size:"), (100, 1200, 10), "track-cover"),
@@ -1049,24 +1049,17 @@ class PlaylistSettings(Gtk.Box):
 		# label
 		label=Gtk.Label(label=_("Choose the order of information to appear in the playlist:"), wrap=True, xalign=0)
 
-		# Store
+		# treeview
 		# (toggle, header, actual_index)
 		self._store=Gtk.ListStore(bool, str, int)
-
-		# TreeView
-		treeview=Gtk.TreeView(model=self._store, reorderable=True, headers_visible=False)
-		treeview.set_search_column(-1)
-
-		# selection
+		treeview=Gtk.TreeView(model=self._store, reorderable=True, headers_visible=False, search_column=-1)
 		self._selection=treeview.get_selection()
 
-		# Column
+		# columns
 		renderer_text=Gtk.CellRendererText()
 		renderer_toggle=Gtk.CellRendererToggle()
-
 		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
 		treeview.append_column(column_toggle)
-
 		column_text=Gtk.TreeViewColumn("", renderer_text, text=1)
 		treeview.append_column(column_text)
 
@@ -1078,10 +1071,8 @@ class PlaylistSettings(Gtk.Box):
 		scroll=Gtk.ScrolledWindow()
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scroll.add(treeview)
-		frame=Gtk.Frame()
-		frame.add(scroll)
 
-		# Toolbar
+		# toolbar
 		toolbar=Gtk.Toolbar()
 		style_context=toolbar.get_style_context()
 		style_context.add_class("inline-toolbar")
@@ -1093,6 +1084,8 @@ class PlaylistSettings(Gtk.Box):
 		toolbar.insert(self._down_button, 1)
 
 		# column chooser
+		frame=Gtk.Frame()
+		frame.add(scroll)
 		column_chooser=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		column_chooser.pack_start(frame, True, True, 0)
 		column_chooser.pack_start(toolbar, False, False, 0)
@@ -1235,31 +1228,23 @@ class ServerStats(Gtk.Dialog):
 			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 		self.set_resizable(False)
 
-		# Store
+		# treeview
 		# (tag, value)
 		store=Gtk.ListStore(str, str)
-
-		# TreeView
-		treeview=Gtk.TreeView(model=store, headers_visible=False)
+		treeview=Gtk.TreeView(model=store, headers_visible=False, search_column=-1)
 		treeview.set_can_focus(False)
-		treeview.set_search_column(-1)
+		treeview.get_selection().set_mode(Gtk.SelectionMode.NONE)
 
-		# selection
-		sel=treeview.get_selection()
-		sel.set_mode(Gtk.SelectionMode.NONE)
-
-		# Column
+		# columns
 		renderer_text=Gtk.CellRendererText()
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-
 		column_tag=Gtk.TreeViewColumn("", renderer_text_ralign, text=0)
 		treeview.append_column(column_tag)
-
 		column_value=Gtk.TreeViewColumn("", renderer_text, text=1)
 		treeview.append_column(column_value)
 
+		# populate
 		store.append(["protocol:", str(client.mpd_version)])
-
 		stats=client.wrapped_call("stats")
 		for key in stats:
 			print_key=key+":"
@@ -1269,10 +1254,13 @@ class ServerStats(Gtk.Dialog):
 				store.append([print_key, str(datetime.datetime.fromtimestamp(int(stats[key]))).replace(":", "∶")])
 			else:
 				store.append([print_key, stats[key]])
+
+		# packing
 		frame=Gtk.Frame()
 		frame.add(treeview)
 		self.vbox.pack_start(frame, True, True, 0)
 		self.vbox.set_spacing(6)
+
 		self.show_all()
 		self.run()
 
@@ -1337,34 +1325,24 @@ class SongPopover(Gtk.Popover):
 		self.set_pointing_to(rect)
 		self.set_relative_to(relative)
 
-		# Store
+		# treeview
 		# (tag, display-value, tooltip)
 		store=Gtk.ListStore(str, str, str)
-
-		# TreeView
 		treeview=Gtk.TreeView(model=store, headers_visible=False, search_column=-1, tooltip_column=2)
 		treeview.set_can_focus(False)
-		sel=treeview.get_selection()
-		sel.set_mode(Gtk.SelectionMode.NONE)
+		treeview.get_selection().set_mode(Gtk.SelectionMode.NONE)
 
-		frame=Gtk.Frame(border_width=3)
-		frame.add(treeview)
-
-		# Column
+		# columns
 		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-
 		column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text_ralign, text=0)
 		column_tag.set_property("resizable", False)
 		treeview.append_column(column_tag)
-
 		column_value=Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
 		column_value.set_property("resizable", False)
 		treeview.append_column(column_value)
 
-		# packing
-		self.add(frame)
-
+		# populate
 		song=ClientHelper.song_to_str_dict(song)
 		for tag, value in song.items():
 			tooltip=value.replace("&", "&amp;")
@@ -1375,6 +1353,12 @@ class SongPopover(Gtk.Popover):
 				store.append([tag+":", time.strftime("%a %d %B %Y, %H∶%M UTC"), tooltip])
 			else:
 				store.append([tag+":", value, tooltip])
+
+		# packing
+		frame=Gtk.Frame(border_width=3)
+		frame.add(treeview)
+		self.add(frame)
+
 		frame.show_all()
 
 class Cover(object):
@@ -1420,8 +1404,7 @@ class Cover(object):
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
-		super().__init__(model=store)
-		self.set_search_column(-1)
+		super().__init__(model=store, search_column=-1)
 		self.columns_autosize()
 
 		# add vars
@@ -1743,19 +1726,15 @@ class ArtistWindow(FocusFrame):
 		self._settings=settings
 		self._genre_select=genre_select
 
-		# artistStore
+		# treeview
 		# (name, weight, initial-letter, weight-initials)
 		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
-
-		# TreeView
 		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, search_column=0, headers_visible=False)
 		self._treeview.columns_autosize()
-
-		# Selection
 		self._selection=self._treeview.get_selection()
 		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
 
-		# Columns
+		# columns
 		renderer_text_malign=Gtk.CellRendererText(xalign=0.5)
 		self._column_initials=Gtk.TreeViewColumn("", renderer_text_malign, text=2, weight=3)
 		self._column_initials.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
@@ -1928,16 +1907,13 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 		# columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-
 		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
 		column_track.set_property("resizable", False)
 		songs_view.append_column(column_track)
-
 		column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
 		column_title.set_property("resizable", False)
 		column_title.set_property("expand", True)
 		songs_view.append_column(column_title)
-
 		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_ralign, text=2)
 		column_time.set_property("resizable", False)
 		songs_view.append_column(column_time)
@@ -2630,31 +2606,26 @@ class PlaylistWindow(Gtk.Box):
 		style_context.add_class("destructive-action")
 		style_context.add_provider(provider, 800)
 
-		# Store
+		# treeview
 		# (track, disc, title, artist, album, duration, date, genre, file, weight)
 		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
-
-		# TreeView
-		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True)
-		self._treeview.set_search_column(2)
-
-		# selection
+		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, search_column=2)
 		self._selection=self._treeview.get_selection()
 		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
 
-		# Columns
+		# columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-		self._columns=[None, None, None, None, None, None, None, None]
-
-		self._columns[0]=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=9)
-		self._columns[1]=Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9)
-		self._columns[2]=Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9)
-		self._columns[3]=Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9)
-		self._columns[4]=Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9)
-		self._columns[5]=Gtk.TreeViewColumn(_("Length"), renderer_text, text=5, weight=9)
-		self._columns[6]=Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9)
-		self._columns[7]=Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
+		self._columns=(
+			Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=9),
+			Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9),
+			Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9),
+			Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9),
+			Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9),
+			Gtk.TreeViewColumn(_("Length"), renderer_text, text=5, weight=9),
+			Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9),
+			Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
+		)
 
 		for column in self._columns:
 			column.set_property("resizable", True)
