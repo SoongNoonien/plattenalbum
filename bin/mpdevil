@@ -1256,10 +1256,8 @@ class ServerStats(Gtk.Dialog):
 				store.append([print_key, stats[key]])
 
 		# packing
-		frame=Gtk.Frame()
-		frame.add(treeview)
-		self.vbox.pack_start(frame, True, True, 0)
 		self.vbox.set_spacing(6)
+		self.vbox.pack_start(treeview, True, True, 0)
 
 		self.show_all()
 		self.run()
