@@ -886,7 +886,7 @@ class ProfileSettings(Gtk.Grid):
 		delete_button.connect("clicked", self._on_delete_button_clicked)
 		connect_button.connect("clicked", self._on_connect_button_clicked)
 		self._path_select_button.connect("clicked", self._on_path_select_button_clicked, parent)
-		self._profiles_combo.connect("changed", self._on_profiles_changed)
+		self._profiles_changed=self._profiles_combo.connect("changed", self._on_profiles_changed)
 		self.entry_changed_handlers=[]
 		self.entry_changed_handlers.append((self._profile_entry, self._profile_entry.connect("changed", self._on_profile_entry_changed)))
 		self.entry_changed_handlers.append((self._host_entry, self._host_entry.connect("changed", self._on_host_entry_changed)))
@@ -932,13 +932,13 @@ class ProfileSettings(Gtk.Grid):
 			obj.handler_unblock(handler)
 
 	def _profiles_combo_reload(self, *args):
-		self._block_entry_changed_handlers()
+		self._profiles_combo.handler_block(self._profiles_changed)
 
 		self._profiles_combo.remove_all()
 		for profile in self._settings.get_value("profiles"):
 			self._profiles_combo.append_text(profile)
 
-		self._unblock_entry_changed_handlers()
+		self._profiles_combo.handler_unblock(self._profiles_changed)
 
 	def _remove_handlers(self, *args):
 		for handler in self._settings_handlers:
@@ -987,7 +987,9 @@ class ProfileSettings(Gtk.Grid):
 		pos=self._profiles_combo.get_active()
 		self._settings.array_modify("as", "profiles", pos, self._profile_entry.get_text())
 		self._profiles_combo_reload()
+		self._profiles_combo.handler_block(self._profiles_changed)  # do not reload all settings
 		self._profiles_combo.set_active(pos)
+		self._profiles_combo.handler_unblock(self._profiles_changed)
 
 	def _on_host_entry_changed(self, *args):
 		self._gui_modification=True
@@ -1028,16 +1030,15 @@ class ProfileSettings(Gtk.Grid):
 
 	def _on_profiles_changed(self, *args):
 		active=self._profiles_combo.get_active()
-		self._block_entry_changed_handlers()
-
-		self._profile_entry.set_text(self._settings.get_value("profiles")[active])
-		self._host_entry.set_text(self._settings.get_value("hosts")[active])
-		self._port_entry.set_value(self._settings.get_value("ports")[active])
-		self._password_entry.set_text(self._settings.get_value("passwords")[active])
-		self._path_entry.set_text(self._settings.get_value("paths")[active])
-		self._regex_entry.set_text(self._settings.get_value("regex")[active])
-
-		self._unblock_entry_changed_handlers()
+		if active >= 0:
+			self._block_entry_changed_handlers()
+			self._profile_entry.set_text(self._settings.get_value("profiles")[active])
+			self._host_entry.set_text(self._settings.get_value("hosts")[active])
+			self._port_entry.set_value(self._settings.get_value("ports")[active])
+			self._password_entry.set_text(self._settings.get_value("passwords")[active])
+			self._path_entry.set_text(self._settings.get_value("paths")[active])
+			self._regex_entry.set_text(self._settings.get_value("regex")[active])
+			self._unblock_entry_changed_handlers()
 
 class PlaylistSettings(Gtk.Box):
 	def __init__(self, settings):
