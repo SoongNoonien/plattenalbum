@@ -862,7 +862,7 @@ class ProfileSettings(Gtk.Grid):
 		address_entry.pack_start(self._host_entry, True, True, 0)
 		address_entry.pack_start(self._port_entry, False, False, 0)
 		self._password_entry=Gtk.Entry(hexpand=True, visibility=False)
-		self._path_entry=Gtk.Entry(hexpand=True)
+		self._path_entry=Gtk.Entry(hexpand=True, placeholder_text=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC))
 		self._path_select_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open", Gtk.IconSize.BUTTON))
 		path_box=Gtk.Box(spacing=6)
 		path_box.pack_start(self._path_entry, True, True, 0)
@@ -1014,7 +1014,11 @@ class ProfileSettings(Gtk.Grid):
 		dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
 		dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 		dialog.set_default_size(800, 400)
-		dialog.set_current_folder(self._settings.get_value("paths")[self._profiles_combo.get_active()])
+		folder=self._settings.get_value("paths")[self._profiles_combo.get_active()]
+		if folder == "":
+			dialog.set_current_folder(GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC))
+		else:
+			dialog.set_current_folder(folder)
 		response=dialog.run()
 		if response == Gtk.ResponseType.OK:
 			self._gui_modification=True
@@ -1378,10 +1382,10 @@ class Cover(object):
 		self.path=None
 		if song != {}:
 			song_file=song["file"]
-
 			active_profile=settings.get_int("active-profile")
-
 			lib_path=settings.get_value("paths")[active_profile]
+			if lib_path == "":
+				lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 			regex_str=settings.get_value("regex")[active_profile]
 
 			if regex_str == "":
