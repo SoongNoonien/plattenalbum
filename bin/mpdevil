@@ -1220,11 +1220,7 @@ class SettingsDialog(Gtk.Dialog):
 class ServerStats(Gtk.Dialog):
 	def __init__(self, parent, client, settings):
 		use_csd=settings.get_boolean("use-csd")
-		if use_csd:
-			super().__init__(title=_("Stats"), transient_for=parent, use_header_bar=True)
-		else:
-			super().__init__(title=_("Stats"), transient_for=parent)
-			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+		super().__init__(title=_("Stats"), transient_for=parent, use_header_bar=use_csd)
 		self.set_resizable(False)
 
 		# treeview
@@ -1256,7 +1252,6 @@ class ServerStats(Gtk.Dialog):
 
 		# packing
 		vbox=self.get_content_area()
-		vbox.set_spacing(6)
 		vbox.set_property("border-width", 0)
 		vbox.pack_start(treeview, True, True, 0)
 
