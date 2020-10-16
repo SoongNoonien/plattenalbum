@@ -1181,12 +1181,6 @@ class SettingsDialog(Gtk.Dialog):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
 			super().__init__(title=_("Settings"), transient_for=parent, use_header_bar=True)
-			# css
-			style_context=self.get_style_context()
-			provider=Gtk.CssProvider()
-			css=b"""* {-GtkDialog-content-area-border: 0px;}"""
-			provider.load_from_data(css)
-			style_context.add_provider(provider, 800)
 		else:
 			super().__init__(title=_("Settings"), transient_for=parent)
 			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
@@ -1198,13 +1192,24 @@ class SettingsDialog(Gtk.Dialog):
 		playlist=PlaylistSettings(settings)
 
 		# packing
-		tabs=Gtk.Notebook()
-		tabs.append_page(general, Gtk.Label(label=_("General")))
-		tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
-		tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
 		vbox=self.get_content_area()
-		vbox.set_spacing(6)
-		vbox.pack_start(tabs, True, True, 0)
+		if use_csd:
+			stack=Gtk.Stack()
+			stack.add_titled(general, "general", _("General"))
+			stack.add_titled(profiles, "profiles", _("Profiles"))
+			stack.add_titled(playlist, "playlist", _("Playlist"))
+			stack_switcher=Gtk.StackSwitcher(stack=stack)
+			vbox.pack_start(stack, True, True, 0)
+			header_bar=self.get_header_bar()
+			header_bar.set_custom_title(stack_switcher)
+		else:
+			tabs=Gtk.Notebook()
+			tabs.append_page(general, Gtk.Label(label=_("General")))
+			tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
+			tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
+			vbox.set_property("spacing", 6)
+			vbox.set_property("border-width", 6)
+			vbox.pack_start(tabs, True, True, 0)
 
 		self.show_all()
 
@@ -1217,12 +1222,6 @@ class ServerStats(Gtk.Dialog):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
 			super().__init__(title=_("Stats"), transient_for=parent, use_header_bar=True)
-			# css
-			style_context=self.get_style_context()
-			provider=Gtk.CssProvider()
-			css=b"""* {-GtkDialog-content-area-border: 0px;}"""
-			provider.load_from_data(css)
-			style_context.add_provider(provider, 800)
 		else:
 			super().__init__(title=_("Stats"), transient_for=parent)
 			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
@@ -1256,8 +1255,10 @@ class ServerStats(Gtk.Dialog):
 				store.append([print_key, stats[key]])
 
 		# packing
-		self.vbox.set_spacing(6)
-		self.vbox.pack_start(treeview, True, True, 0)
+		vbox=self.get_content_area()
+		vbox.set_spacing(6)
+		vbox.set_property("border-width", 0)
+		vbox.pack_start(treeview, True, True, 0)
 
 		self.show_all()
 		self.run()
@@ -1843,16 +1844,6 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 		else:
 			super().__init__(transient_for=parent)
 
-		# css
-		style_context=self.get_style_context()
-		provider=Gtk.CssProvider()
-		if use_csd:
-			css=b"""* {-GtkDialog-content-area-border: 0px;}"""
-		else:
-			css=b"""* {-GtkDialog-action-area-border: 0px;}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
-
 		# adding vars
 		self._client=client
 		self._settings=settings
@@ -1927,7 +1918,9 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 		close_button.connect("clicked", self._on_close_button_clicked)
 
 		# packing
-		self.vbox.pack_start(songs_window, True, True, 0)  # vbox default widget of dialogs
+		vbox=self.get_content_area()
+		vbox.set_property("border-width", 0)
+		vbox.pack_start(songs_window, True, True, 0)
 		self.show_all()
 
 	def open(self):
