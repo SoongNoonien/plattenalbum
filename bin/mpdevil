@@ -1073,12 +1073,12 @@ class PlaylistSettings(Gtk.Box):
 		scroll.add(treeview)
 
 		# toolbar
-		toolbar=Gtk.Toolbar()
+		toolbar=Gtk.Toolbar(icon_size=Gtk.IconSize.SMALL_TOOLBAR)
 		style_context=toolbar.get_style_context()
 		style_context.add_class("inline-toolbar")
-		self._up_button=Gtk.ToolButton.new(Gtk.Image.new_from_icon_name("go-up-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+		self._up_button=Gtk.ToolButton(icon_name="go-up-symbolic")
 		self._up_button.set_sensitive(False)
-		self._down_button=Gtk.ToolButton.new(Gtk.Image.new_from_icon_name("go-down-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+		self._down_button=Gtk.ToolButton(icon_name="go-down-symbolic")
 		self._down_button.set_sensitive(False)
 		toolbar.insert(self._up_button, 0)
 		toolbar.insert(self._down_button, 1)
