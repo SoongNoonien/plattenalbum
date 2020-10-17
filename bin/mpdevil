@@ -312,23 +312,21 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		Translate metadata returned by MPD to the MPRIS v2 syntax.
 		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
 		"""
-		mpd_meta=self._client.wrapped_call("currentsong")
+		mpd_meta=self._client.wrapped_call("currentsong")  # raw values needed for cover
+		song=ClientHelper.song_to_list_dict(mpd_meta)
 		self._metadata={}
 		for tag, xesam_tag in (("album","album"),("title","title"),("track","trackNumber"),("disc","discNumber"),("date","contentCreated")):
-			if tag in mpd_meta:
-				self._metadata["xesam:{}".format(xesam_tag)]=mpd_meta[tag]
+			if tag in song:
+				self._metadata["xesam:{}".format(xesam_tag)]=song[tag][0]
 		for tag, xesam_tag in (("albumartist","albumArtist"),("artist","artist"),("composer","composer"),("genre","genre")):
-			if tag in mpd_meta:
-				if type(mpd_meta[tag]) == list:
-					self._metadata["xesam:{}".format(xesam_tag)]=mpd_meta[tag]
-				else:
-					self._metadata["xesam:{}".format(xesam_tag)]=[mpd_meta[tag]]
-		if "id" in mpd_meta:
-			self._metadata["mpris:trackid"]="/org/mpris/MediaPlayer2/Track/{}".format(mpd_meta["id"])
-		if "time" in mpd_meta:
-			self._metadata["mpris:length"]=float(mpd_meta["duration"]) * 1000000
-		if "file" in mpd_meta:
-			song_file=mpd_meta["file"]
+			if tag in song:
+				self._metadata["xesam:{}".format(xesam_tag)]=song[tag]
+		if "id" in song:
+			self._metadata["mpris:trackid"]="/org/mpris/MediaPlayer2/Track/{}".format(song["id"][0])
+		if "time" in song:
+			self._metadata["mpris:length"]=float(song["duration"][0]) * 1000000
+		if "file" in song:
+			song_file=song["file"][0]
 			lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
 			self._metadata["xesam:url"]="file://{}".format(os.path.join(lib_path, song_file))
 			cover=Cover(self._settings, mpd_meta)
@@ -338,8 +336,8 @@ class MPRISInterface(dbus.service.Object):  # TODO emit Seeked if needed
 		for key, value in self._metadata.items():
 			try:
 				self._metadata[key]=self.implemented_tags[key](value)
-			except ValueError:
-				del self._metadata[key]
+			except:
+				self._metadata[key]=""
 
 	def _update_property(self, interface, prop):
 		getter, setter=self.__prop_mapping[interface][prop]
@@ -390,20 +388,33 @@ class ClientHelper():
 		return stript_time_string.replace(":", "∶")  # use 'ratio' as delimiter
 
 	def song_to_str_dict(song):  # converts tags with multiple values to comma separated strings
-		return_song=song
-		for tag, value in return_song.items():
+		return_song={}
+		for tag, value in song.items():
 			if type(value) == list:
 				return_song[tag]=(", ".join(value))
+			else:
+				return_song[tag]=value
 		return return_song
 
 	def song_to_first_str_dict(song):  # extracts the first value of multiple value tags
-		return_song=song
-		for tag, value in return_song.items():
+		return_song={}
+		for tag, value in song.items():
 			if type(value) == list:
 				return_song[tag]=value[0]
+			else:
+				return_song[tag]=value
 		return return_song
 
-	def extend_song_for_display(song):
+	def song_to_list_dict(song):  # converts all values to lists
+		return_song={}
+		for tag, value in song.items():
+			if type(value) != list:
+				return_song[tag]=[value]
+			else:
+				return_song[tag]=value
+		return return_song
+
+	def pepare_song_for_display(song):
 		base_song={
 			"title": _("Unknown Title"),
 			"track": "",
@@ -420,6 +431,10 @@ class ClientHelper():
 				base_song["duration"]=str((float(end)-float(start)))
 		base_song.update(song)
 		base_song["human_duration"]=ClientHelper.seconds_to_display_time(int(float(base_song["duration"])))
+		for tag in ("disc", "track"):  # remove confusing multiple tags
+			if tag in song:
+				if type(song[tag]) == list:
+					base_song[tag]=song[tag][0]
 		return base_song
 
 	def calc_display_length(songs):
@@ -1356,8 +1371,9 @@ class SongPopover(Gtk.Popover):
 		frame.show_all()
 
 class Cover(object):
-	def __init__(self, settings, song):
+	def __init__(self, settings, raw_song):
 		self.path=None
+		song=ClientHelper.song_to_first_str_dict(raw_song)
 		if song != {}:
 			song_file=song["file"]
 			active_profile=settings.get_int("active-profile")
@@ -1647,7 +1663,7 @@ class SearchWindow(Gtk.Box):
 		if len(self.search_entry.get_text()) > 1:
 			songs=self._client.wrapped_call("search", self._tags.get_active_text(), self.search_entry.get_text())
 			for s in songs:
-				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
+				song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
 				self._store.append([
 						song["track"], song["title"],
 						song["artist"], song["album"],
@@ -1862,25 +1878,21 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 		# (track, title (artist), duration, file)
 		store=Gtk.ListStore(str, str, str, str)
 		for s in songs:
-			song=ClientHelper.extend_song_for_display(s)
-			if type(song["title"]) == list:  # could be impossible
-				title=(", ".join(song["title"]))
-			else:
-				title=song["title"]
-			if type(song["artist"]) == list:
-				try:
-					song["artist"].remove(album_artist)
-				except:
-					pass
-				artist=(", ".join(song["artist"]))
-			else:
-				artist=song["artist"]
-			if artist == album_artist:
+			song=ClientHelper.song_to_list_dict(ClientHelper.pepare_song_for_display(s))
+			track=song["track"][0]
+			title=(", ".join(song["title"]))
+			# only show artists =/= albumartist
+			try:
+				song["artist"].remove(album_artist)
+			except:
+				pass
+			artist=(", ".join(song["artist"]))
+			if artist == album_artist or artist == "":
 				title_artist="<b>{}</b>".format(title)
 			else:
 				title_artist="<b>{}</b> - {}".format(title, artist)
 			title_artist=title_artist.replace("&", "&amp;")
-			store.append([song["track"], title_artist, song["human_duration"], song["file"]])
+			store.append([track, title_artist, song["human_duration"][0], song["file"][0]])
 
 		# songs window
 		songs_window=SongsWindow(self._client, store, 3)
@@ -2068,7 +2080,11 @@ class AlbumWindow(FocusFrame):
 					cover=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
 					# tooltip
 					length_human_readable=ClientHelper.calc_display_length(album["songs"])
-					discs=int(album["songs"][-1].get("disc", 1))
+					discs=album["songs"][-1].get("disc", 1)
+					if type(discs) == list:
+						discs=int(discs[0])
+					else:
+						discs=int(discs)
 					if discs > 1:
 						tooltip=_("{titles} titles on {discs} discs ({length})").format(
 							titles=len(album["songs"]), discs=discs, length=length_human_readable)
@@ -2772,7 +2788,7 @@ class PlaylistWindow(Gtk.Box):
 		if songs != []:
 			self._playlist_info.set_text("")
 			for s in songs:
-				song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(s))
+				song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
 				try:
 					treeiter=self._store.get_iter(song["pos"])
 					self._store.set(treeiter,
@@ -3629,7 +3645,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			else:
 				self.set_title("mpdevil")
 		else:
-			song=ClientHelper.extend_song_for_display(ClientHelper.song_to_str_dict(song))
+			song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(song))
 			if song["date"] == "":
 				date=""
 			else:
