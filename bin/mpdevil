@@ -1561,7 +1561,7 @@ class SearchWindow(Gtk.Box):
 		self._client=client
 
 		# tag switcher
-		self._tags=Gtk.ComboBoxText()
+		self._tag_combo_box=Gtk.ComboBoxText()
 
 		# search entry
 		self.search_entry=Gtk.SearchEntry()
@@ -1624,14 +1624,14 @@ class SearchWindow(Gtk.Box):
 
 		# connect
 		self.search_entry.connect("search-changed", self._on_search_changed)
-		self._tags.connect("changed", self._on_search_changed)
+		self._tag_combo_box.connect("changed", self._on_search_changed)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 		# packing
 		hbox=Gtk.Box(spacing=6, border_width=6)
 		hbox.pack_start(self.search_entry, True, True, 0)
-		hbox.pack_end(self._tags, False, False, 0)
+		hbox.pack_end(self._tag_combo_box, False, False, 0)
 		self._hits_label.set_margin_end(6)
 		self._action_bar.pack_end(self._hits_label)
 		self.pack_start(hbox, False, False, 0)
@@ -1641,27 +1641,30 @@ class SearchWindow(Gtk.Box):
 	def clear(self, *args):
 		self._songs_view.clear()
 		self.search_entry.set_text("")
-		self._tags.remove_all()
+		self._tag_combo_box.remove_all()
 
 	def _on_disconnected(self, *args):
-		self._tags.set_sensitive(False)
+		self._tag_combo_box.set_sensitive(False)
 		self.search_entry.set_sensitive(False)
 		self.clear()
 
 	def _on_reconnected(self, *args):
-		self._tags.append_text("any")
+		self._tag_combo_box.append_text(_("all tags"))
 		for tag in self._client.wrapped_call("tagtypes"):
 			if not tag.startswith("MUSICBRAINZ"):
-				self._tags.append_text(tag)
-		self._tags.set_active(0)
-		self._tags.set_sensitive(True)
+				self._tag_combo_box.append_text(tag)
+		self._tag_combo_box.set_active(0)
+		self._tag_combo_box.set_sensitive(True)
 		self.search_entry.set_sensitive(True)
 
 	def _on_search_changed(self, widget):
 		self._songs_view.clear()
 		self._hits_label.set_text("")
-		if len(self.search_entry.get_text()) > 1:
-			songs=self._client.wrapped_call("search", self._tags.get_active_text(), self.search_entry.get_text())
+		if len(self.search_entry.get_text()) > 0:
+			if self._tag_combo_box.get_active() == 0:
+				songs=self._client.wrapped_call("search", "any", self.search_entry.get_text())
+			else:
+				songs=self._client.wrapped_call("search", self._tag_combo_box.get_active_text(), self.search_entry.get_text())
 			for s in songs:
 				song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
 				self._store.append([
