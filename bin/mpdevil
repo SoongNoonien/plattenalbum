@@ -1869,10 +1869,18 @@ class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
 
 		# title
 		duration=ClientHelper.calc_display_length(songs)
-		if year == "":
-			self.set_title("{} - {} ({})".format(album_artist, album, duration))
+		if use_csd:
+			if year == "":
+				self.set_title(album)
+			else:
+				self.set_title("{} ({})".format(album, year))
+			header_bar=self.get_header_bar()
+			header_bar.set_subtitle("{} ({})".format(album_artist, duration))
 		else:
-			self.set_title("{} - {} ({}) ({})".format(album_artist, album, year, duration))
+			if year == "":
+				self.set_title("{} - {} ({})".format(album, album_artist, duration))
+			else:
+				self.set_title("{} ({}) - {} ({})".format(album, year, album_artist, duration))
 
 		# store
 		# (track, title (artist), duration, file)
