@@ -1236,39 +1236,38 @@ class ServerStats(Gtk.Dialog):
 	def __init__(self, parent, client, settings):
 		use_csd=settings.get_boolean("use-csd")
 		super().__init__(title=_("Stats"), transient_for=parent, use_header_bar=use_csd)
+		if not use_csd:
+			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 		self.set_resizable(False)
 
-		# treeview
-		# (tag, value)
-		store=Gtk.ListStore(str, str)
-		treeview=Gtk.TreeView(model=store, headers_visible=False, search_column=-1)
-		treeview.set_can_focus(False)
-		treeview.get_selection().set_mode(Gtk.SelectionMode.NONE)
-
-		# columns
-		renderer_text=Gtk.CellRendererText()
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-		column_tag=Gtk.TreeViewColumn("", renderer_text_ralign, text=0)
-		treeview.append_column(column_tag)
-		column_value=Gtk.TreeViewColumn("", renderer_text, text=1)
-		treeview.append_column(column_value)
+		# grid
+		grid=Gtk.Grid(row_spacing=6, column_spacing=12, border_width=6)
 
 		# populate
-		store.append(["protocol:", str(client.mpd_version)])
+		display_str={
+			"protocol": _("<b>Protocol:</b>"),
+			"uptime": _("<b>Uptime:</b>"),
+			"playtime": _("<b>Playtime:</b>"),
+			"artists": _("<b>Artists:</b>"),
+			"albums": _("<b>Albums:</b>"),
+			"songs": _("<b>Songs:</b>"),
+			"db_playtime": _("<b>Total Playtime:</b>"),
+			"db_update": _("<b>Database Update:</b>")
+		}
 		stats=client.wrapped_call("stats")
-		for key in stats:
-			print_key=key+":"
-			if key == "uptime" or key == "playtime" or key == "db_playtime":
-				store.append([print_key, ClientHelper.seconds_to_display_time(int(stats[key]))])
-			elif key == "db_update":
-				store.append([print_key, str(datetime.datetime.fromtimestamp(int(stats[key]))).replace(":", "∶")])
-			else:
-				store.append([print_key, stats[key]])
+		stats["protocol"]=str(client.mpd_version)
+		for key in ("uptime","playtime","db_playtime"):
+			stats[key]=ClientHelper.seconds_to_display_time(int(stats[key]))
+		stats["db_update"]=str(datetime.datetime.fromtimestamp(int(stats["db_update"]))).replace(":", "∶")
+
+		for i, key in enumerate(("protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs")):
+			grid.attach(Gtk.Label(label=display_str[key], use_markup=True, xalign=1), 0, i, 1, 1)
+			grid.attach(Gtk.Label(label=stats[key], xalign=0), 1, i, 1, 1)
 
 		# packing
 		vbox=self.get_content_area()
-		vbox.set_property("border-width", 0)
-		vbox.pack_start(treeview, True, True, 0)
+		vbox.set_property("border-width", 6)
+		vbox.pack_start(grid, True, True, 0)
 
 		self.show_all()
 		self.run()
