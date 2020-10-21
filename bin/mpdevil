@@ -1434,7 +1434,6 @@ class SongsView(Gtk.TreeView):
 
 		# selection
 		self._selection=self.get_selection()
-		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
@@ -1755,7 +1754,6 @@ class ArtistWindow(FocusFrame):
 		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, search_column=0, headers_visible=False)
 		self._treeview.columns_autosize()
 		self._selection=self._treeview.get_selection()
-		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		# columns
 		renderer_text_malign=Gtk.CellRendererText(xalign=0.5)
