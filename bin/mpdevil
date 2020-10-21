@@ -1287,16 +1287,13 @@ class AboutDialog(Gtk.AboutDialog):
 # small general purpose widgets #
 #################################
 
-class PixelSizedIcon(Gtk.Image):
-	def __init__(self, icon_name, pixel_size):
+class AutoSizedIcon(Gtk.Image):
+	def __init__(self, icon_name, settings_key, settings):
 		super().__init__()
 		self.set_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
+		pixel_size=settings.get_int(settings_key)
 		if pixel_size > 0:
 			self.set_pixel_size(pixel_size)
-
-class AutoSizedIcon(PixelSizedIcon):
-	def __init__(self, icon_name, settings_key, settings):
-		super().__init__(icon_name, settings.get_int(settings_key))
 
 		# adding vars
 		self._settings=settings
