@@ -1308,10 +1308,7 @@ class AutoSizedIcon(Gtk.Image):
 class FocusFrame(Gtk.Overlay):
 	def __init__(self):
 		super().__init__()
-
-		self._frame=Gtk.Frame()
-		self._frame.set_no_show_all(True)
-		self._widget=None
+		self._frame=Gtk.Frame(no_show_all=True)
 
 		# css
 		style_context=self._frame.get_style_context()
@@ -1332,14 +1329,8 @@ class FocusFrame(Gtk.Overlay):
 
 	def set_widget(self, widget):
 		self._widget=widget
-		widget.connect("focus-in-event", self._on_focus_in_event)
-		widget.connect("focus-out-event", self._on_focus_out_event)
-
-	def _on_focus_in_event(self, *args):
-		self._frame.show()
-
-	def _on_focus_out_event(self, *args):
-		self._frame.hide()
+		self._widget.connect("focus-in-event", lambda *args: self._frame.show())
+		self._widget.connect("focus-out-event", lambda *args: self._frame.hide())
 
 class SongPopover(Gtk.Popover):
 	def __init__(self, song, relative, x, y):
