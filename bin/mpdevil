@@ -2795,10 +2795,8 @@ class PlaylistWindow(Gtk.Box):
 			path=path-1
 		if path < self._inserted_path:
 			self._inserted_path=self._inserted_path-1
-		try:
-			self._client.wrapped_call("move", path, self._inserted_path)
-		except:
-			self._client.wrapped_call("move", path, self._inserted_path-1)
+		self._client.wrapped_call("move", path, self._inserted_path)
+		self._inserted_path=None
 
 	def _on_row_inserted(self, model, path, treeiter):
 		self._inserted_path=int(path.to_string())
