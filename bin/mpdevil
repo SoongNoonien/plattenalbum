@@ -1311,6 +1311,7 @@ class FocusFrame(Gtk.Overlay):
 
 		self._frame=Gtk.Frame()
 		self._frame.set_no_show_all(True)
+		self._widget=None
 
 		# css
 		style_context=self._frame.get_style_context()
@@ -1322,7 +1323,15 @@ class FocusFrame(Gtk.Overlay):
 		self.add_overlay(self._frame)
 		self.set_overlay_pass_through(self._frame, True)
 
+	def disable(self):
+		self._frame.hide()
+
+	def enable(self):
+		if self._widget.has_focus():
+			self._frame.show()
+
 	def set_widget(self, widget):
+		self._widget=widget
 		widget.connect("focus-in-event", self._on_focus_in_event)
 		widget.connect("focus-out-event", self._on_focus_out_event)
 
@@ -2592,6 +2601,7 @@ class PlaylistWindow(Gtk.Box):
 		self._settings=settings
 		self._playlist_version=None
 		self._icon_size=self._settings.get_int("icon-size-sec")
+		self._inserted_path=None  # needed for drag and drop
 
 		# buttons
 		provider=Gtk.CssProvider()
@@ -2619,9 +2629,8 @@ class PlaylistWindow(Gtk.Box):
 		# treeview
 		# (track, disc, title, artist, album, duration, date, genre, file, weight)
 		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
-		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, search_column=2)
+		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, reorderable=True, search_column=-1)
 		self._selection=self._treeview.get_selection()
-		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 		# columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
@@ -2649,9 +2658,9 @@ class PlaylistWindow(Gtk.Box):
 		scroll.add(self._treeview)
 
 		# frame
-		frame=FocusFrame()
-		frame.set_widget(self._treeview)
-		frame.add(scroll)
+		self._frame=FocusFrame()
+		self._frame.set_widget(self._treeview)
+		self._frame.add(scroll)
 
 		# audio infos
 		audio=AudioType(self._client)
@@ -2675,6 +2684,10 @@ class PlaylistWindow(Gtk.Box):
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._key_press_event=self._treeview.connect("key-press-event", self._on_key_press_event)
 		self._treeview.connect("button-press-event", self._on_button_press_event)
+		self._treeview.connect("drag-begin", lambda *args: self._frame.disable())
+		self._treeview.connect("drag-end", lambda *args: self._frame.enable())
+		self._row_deleted=self._store.connect("row-deleted", self._on_row_deleted)
+		self._row_inserted=self._store.connect("row-inserted", self._on_row_inserted)
 		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
 		self._clear_button.connect("clicked", self._on_clear_button_clicked)
 
@@ -2688,7 +2701,7 @@ class PlaylistWindow(Gtk.Box):
 		self._settings.connect("changed::column-permutation", self._load_settings)
 
 		# packing
-		self.pack_start(frame, True, True, 0)
+		self.pack_start(self._frame, True, True, 0)
 		self.pack_end(action_bar, False, False, 0)
 
 	def save_settings(self):  # only saves the column sizes
@@ -2743,9 +2756,13 @@ class PlaylistWindow(Gtk.Box):
 			self._selection.unselect_all()
 
 	def _remove_song(self, path):
+		self._store.handler_block(self._row_inserted)
+		self._store.handler_block(self._row_deleted)
 		self._client.wrapped_call("delete", path)  # bad song index possible
 		self._store.remove(self._store.get_iter(path))
 		self._playlist_version=self._client.wrapped_call("status")["playlist"]
+		self._store.handler_unblock(self._row_inserted)
+		self._store.handler_unblock(self._row_deleted)
 
 	def _on_key_press_event(self, widget, event):
 		self._treeview.handler_block(self._key_press_event)
@@ -2783,10 +2800,26 @@ class PlaylistWindow(Gtk.Box):
 			except:
 				pass
 
+	def _on_row_deleted(self, model, path):
+		path=int(path.to_string())
+		if path > self._inserted_path:
+			path=path-1
+		if path < self._inserted_path:
+			self._inserted_path=self._inserted_path-1
+		try:
+			self._client.wrapped_call("move", path, self._inserted_path)
+		except:
+			self._client.wrapped_call("move", path, self._inserted_path-1)
+
+	def _on_row_inserted(self, model, path, treeiter):
+		self._inserted_path=int(path.to_string())
+
 	def _on_row_activated(self, widget, path, view_column):
 		self._client.wrapped_call("play", path)
 
 	def _on_playlist_changed(self, emitter, version):
+		self._store.handler_block(self._row_inserted)
+		self._store.handler_block(self._row_deleted)
 		songs=[]
 		if self._playlist_version is not None:
 			songs=self._client.wrapped_call("plchanges", self._playlist_version)
@@ -2826,6 +2859,8 @@ class PlaylistWindow(Gtk.Box):
 			self._refresh_selection()
 			self._scroll_to_selected_title()
 		self._playlist_version=version
+		self._store.handler_unblock(self._row_inserted)
+		self._store.handler_unblock(self._row_deleted)
 
 	def _on_song_changed(self, *args):
 		self._refresh_selection()
