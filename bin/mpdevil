@@ -2744,23 +2744,13 @@ class PlaylistWindow(Gtk.Box):
 		except:
 			self._selection.unselect_all()
 
-	def _remove_song(self, path):
-		self._store.handler_block(self._row_inserted)
-		self._store.handler_block(self._row_deleted)
-		self._client.wrapped_call("delete", path)  # bad song index possible
-		self._store.remove(self._store.get_iter(path))
-		self._playlist_version=self._client.wrapped_call("status")["playlist"]
-		self._store.handler_unblock(self._row_inserted)
-		self._store.handler_unblock(self._row_deleted)
-
 	def _on_key_press_event(self, widget, event):
 		self._treeview.handler_block(self._key_press_event)
 		if event.keyval == Gdk.keyval_from_name("Delete"):
 			treeview, treeiter=self._selection.get_selected()
 			if treeiter is not None:
-				path=self._store.get_path(treeiter)
 				try:
-					self._remove_song(path)
+					self._store.remove(treeiter)
 				except:
 					pass
 		elif event.keyval == Gdk.keyval_from_name("Menu"):
@@ -2778,7 +2768,7 @@ class PlaylistWindow(Gtk.Box):
 		if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 			try:
 				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				self._remove_song(path)
+				self._store.remove(self._store.get_iter(path))
 			except:
 				pass
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -2789,14 +2779,18 @@ class PlaylistWindow(Gtk.Box):
 			except:
 				pass
 
-	def _on_row_deleted(self, model, path):
-		path=int(path.to_string())
-		if path > self._inserted_path:
-			path=path-1
-		if path < self._inserted_path:
-			self._inserted_path=self._inserted_path-1
-		self._client.wrapped_call("move", path, self._inserted_path)
-		self._inserted_path=None
+	def _on_row_deleted(self, model, path):  # sync treeview to mpd
+		if self._inserted_path is not None:  # move
+			path=int(path.to_string())
+			if path > self._inserted_path:
+				path=path-1
+			if path < self._inserted_path:
+				self._inserted_path=self._inserted_path-1
+			self._client.wrapped_call("move", path, self._inserted_path)
+			self._inserted_path=None
+		else:  # delete
+			self._client.wrapped_call("delete", path)  # bad song index possible
+		self._playlist_version=self._client.wrapped_call("status")["playlist"]
 
 	def _on_row_inserted(self, model, path, treeiter):
 		self._inserted_path=int(path.to_string())
