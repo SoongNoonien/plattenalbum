@@ -2715,8 +2715,12 @@ class PlaylistWindow(Gtk.Box):
 
 	def _clear(self, *args):
 		self._playlist_info.set_text("")
-		self._store.clear()
 		self._playlist_version=None
+		self._store.handler_block(self._row_inserted)
+		self._store.handler_block(self._row_deleted)
+		self._store.clear()
+		self._store.handler_unblock(self._row_inserted)
+		self._store.handler_unblock(self._row_deleted)
 
 	def _refresh_playlist_info(self):
 		songs=self._client.wrapped_call("playlistinfo")
@@ -2861,9 +2865,9 @@ class PlaylistWindow(Gtk.Box):
 
 	def _on_disconnected(self, *args):
 		self._treeview.set_sensitive(False)
-		self._clear()
 		self._back_to_current_song_button.set_sensitive(False)
 		self._clear_button.set_sensitive(False)
+		self._clear()
 
 	def _on_reconnected(self, *args):
 		self._back_to_current_song_button.set_sensitive(True)
