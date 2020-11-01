@@ -1474,7 +1474,6 @@ class SongsView(Gtk.TreeView):
 				file_name=self._store[path][self._file_column_id]
 				pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, int(event.x), int(event.y))
 				pop.popup()
-				pop.show_all()
 			except:
 				pass
 
@@ -1496,7 +1495,6 @@ class SongsView(Gtk.TreeView):
 				file_name=self._store[path][self._file_column_id]
 				pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, int(cell.x), int(cell.y))
 				pop.popup()
-				pop.show_all()
 		self.handler_unblock(self._key_press_event)
 
 class SongsWindow(Gtk.Box):
@@ -2765,7 +2763,6 @@ class PlaylistWindow(Gtk.Box):
 				file_name=self._store[path][8]
 				pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, int(cell.x), int(cell.y))
 				pop.popup()
-				pop.show_all()
 		self._treeview.handler_unblock(self._key_press_event)
 
 	def _on_button_press_event(self, widget, event):
