@@ -456,7 +456,7 @@ class MpdEventEmitter(GObject.Object):
 		"playlist_changed": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
 		"repeat": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"single": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"single": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"audio": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (float,))
@@ -590,7 +590,10 @@ class Client(MPDClient):
 				pass
 
 	def toggle_option(self, option):  # repeat, random, single, consume
-		new_state=(int(self.status()[option])+1)%2  # toggle 0,1
+		state=self.status()[option]
+		if state != "1" and state != "0":  # support single oneshot
+			state="1"
+		new_state=(int(state)+1)%2  # toggle 0,1
 		func=getattr(self, option)
 		func(new_state)
 
@@ -605,8 +608,8 @@ class Client(MPDClient):
 					self.emitter.emit("bitrate", float(val))
 				elif key == "songid":
 					self.emitter.emit("current_song_changed")
-				elif key == "state":
-					self.emitter.emit("state", val)
+				elif key in ["state", "single"]:
+					self.emitter.emit(key, val)
 				elif key == "audio":
 					# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
 					samplerate, bits, channels=val.split(":")
@@ -617,7 +620,7 @@ class Client(MPDClient):
 					self.emitter.emit("volume_changed", float(val))
 				elif key == "playlist":
 					self.emitter.emit("playlist_changed", int(val))
-				elif key in ["repeat", "random", "single", "consume"]:
+				elif key in ["repeat", "random", "consume"]:
 					if val == "1":
 						self.emitter.emit(key, True)
 					else:
@@ -3226,6 +3229,7 @@ class PlaybackOptions(Gtk.Box):
 		self._single_changed=self._client.emitter.connect("single", self._single_refresh)
 		self._consume_changed=self._client.emitter.connect("consume", self._consume_refresh)
 		self._volume_changed=self._client.emitter.connect("volume_changed", self._volume_refresh)
+		self._single_button.connect("button-press-event", self._on_single_button_press_event)
 		self._volume_button.connect("button-press-event", self._on_volume_button_press_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
@@ -3262,7 +3266,15 @@ class PlaybackOptions(Gtk.Box):
 
 	def _single_refresh(self, emitter, val):
 		self._single_button.handler_block(self._single_button_toggled)
-		self._single_button.set_active(val)
+		if val == "1":
+			self._single_button.get_style_context().remove_class("destructive-action")
+			self._single_button.set_active(True)
+		elif val == "oneshot":
+			self._single_button.get_style_context().add_class("destructive-action")
+			self._single_button.set_active(False)
+		else:
+			self._single_button.get_style_context().remove_class("destructive-action")
+			self._single_button.set_active(False)
 		self._single_button.handler_unblock(self._single_button_toggled)
 
 	def _consume_refresh(self, emitter, val):
@@ -3285,6 +3297,14 @@ class PlaybackOptions(Gtk.Box):
 			pop=OutputPopover(self._client, self._volume_button)
 			pop.popup()
 
+	def _on_single_button_press_event(self, widget, event):
+		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+			state=self._client.wrapped_call("status")["single"]
+			if state == "oneshot":
+				self._client.wrapped_call("single", "0")
+			else:
+				self._client.wrapped_call("single", "oneshot")
+
 	def _on_reconnected(self, *args):
 		self._repeat_button.set_sensitive(True)
 		self._random_button.set_sensitive(True)
@@ -3300,7 +3320,7 @@ class PlaybackOptions(Gtk.Box):
 		self._volume_button.set_sensitive(False)
 		self._repeat_refresh(None, False)
 		self._random_refresh(None, False)
-		self._single_refresh(None, False)
+		self._single_refresh(None, "0")
 		self._consume_refresh(None, False)
 		self._volume_refresh(None, -1)
 
