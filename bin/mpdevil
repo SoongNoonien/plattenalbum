@@ -3172,7 +3172,7 @@ class OutputPopover(Gtk.Popover):
 		self._client=client
 
 		# widgets
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=3)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=6)
 		for output in self._client.wrapped_call("outputs"):
 			button=Gtk.CheckButton(label="{} ({})".format(output["outputname"], output["plugin"]))
 			if output["outputenabled"] == "1":
