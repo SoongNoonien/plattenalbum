@@ -3116,7 +3116,7 @@ class SeekBar(Gtk.Box):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self._update=False
 			self._scale.set_has_origin(False)
-		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			self._jumped=False
 
 	def _on_scale_button_release_event(self, widget, event):
