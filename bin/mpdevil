@@ -1282,6 +1282,7 @@ class AboutDialog(Gtk.AboutDialog):
 		self.set_version(VERSION)
 		self.set_comments(_("A simple music browser for MPD"))
 		self.set_authors(["Martin Wagner"])
+		self.set_translator_credits("Martin de Reuver\nMartin Wagner")
 		self.set_website("https://github.com/SoongNoonien/mpdevil")
 		self.set_copyright("\xa9 2020 Martin Wagner")
 		self.set_logo_icon_name("mpdevil")
