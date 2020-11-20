@@ -1394,28 +1394,27 @@ class Cover(object):
 			lib_path=settings.get_value("paths")[active_profile]
 			if lib_path == "":
 				lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
-			regex_str=settings.get_value("regex")[active_profile]
-
-			if regex_str == "":
-				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
-			else:
-				regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
-				regex_str=regex_str.replace("%Album%", song.get("album", ""))
-				try:
-					regex=re.compile(regex_str, flags=re.IGNORECASE)
-				except:
-					print("illegal regex:", regex_str)
-					return
-
-			if song_file is not None:
-				song_dir=os.path.join(lib_path, os.path.dirname(song_file))
-				if song_dir.endswith(".cue"):
-					song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
-				if os.path.exists(song_dir):
-					for f in os.listdir(song_dir):
-						if regex.match(f):
-							self.path=os.path.join(song_dir, f)
-							break
+			if lib_path is not None:
+				regex_str=settings.get_value("regex")[active_profile]
+				if regex_str == "":
+					regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
+				else:
+					regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
+					regex_str=regex_str.replace("%Album%", song.get("album", ""))
+					try:
+						regex=re.compile(regex_str, flags=re.IGNORECASE)
+					except:
+						print("illegal regex:", regex_str)
+						return
+				if song_file is not None:
+					song_dir=os.path.join(lib_path, os.path.dirname(song_file))
+					if song_dir.endswith(".cue"):
+						song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
+					if os.path.exists(song_dir):
+						for f in os.listdir(song_dir):
+							if regex.match(f):
+								self.path=os.path.join(song_dir, f)
+								break
 
 	def get_pixbuf(self, size):
 		if self.path is None:  # fallback needed
