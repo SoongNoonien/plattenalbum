@@ -1846,7 +1846,6 @@ class ArtistWindow(FocusFrame):
 			except:
 				self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
-		self.emit("artists_changed")
 
 	def _on_row_activated(self, widget, path, view_column):
 		for row in self._store:  # reset bold text
