@@ -1287,9 +1287,9 @@ class AboutDialog(Gtk.AboutDialog):
 		self.set_copyright("\xa9 2020 Martin Wagner")
 		self.set_logo_icon_name("mpdevil")
 
-#################################
-# small general purpose widgets #
-#################################
+###########################
+# general purpose widgets #
+###########################
 
 class AutoSizedIcon(Gtk.Image):
 	def __init__(self, icon_name, settings_key, settings):
@@ -1341,10 +1341,10 @@ class SongPopover(Gtk.Popover):
 		super().__init__()
 		rect=Gdk.Rectangle()
 		rect.x=x
-		# Gtk places popovers 26px above the given position for no obvious reasons, so I move them 26px
+		# Gtk places popovers in treeviews 26px above the given position for no obvious reasons, so I move them 26px
 		rect.y=y+26
-		rect.width = 1
-		rect.height = 1
+		rect.width=1
+		rect.height=1
 		self.set_pointing_to(rect)
 		self.set_relative_to(relative)
 
@@ -1383,53 +1383,6 @@ class SongPopover(Gtk.Popover):
 		self.add(frame)
 
 		frame.show_all()
-
-class Cover(object):
-	def __init__(self, settings, raw_song):
-		self.path=None
-		song=ClientHelper.song_to_first_str_dict(raw_song)
-		if song != {}:
-			song_file=song["file"]
-			active_profile=settings.get_int("active-profile")
-			lib_path=settings.get_value("paths")[active_profile]
-			if lib_path == "":
-				lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
-			if lib_path is not None:
-				regex_str=settings.get_value("regex")[active_profile]
-				if regex_str == "":
-					regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
-				else:
-					regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
-					regex_str=regex_str.replace("%Album%", song.get("album", ""))
-					try:
-						regex=re.compile(regex_str, flags=re.IGNORECASE)
-					except:
-						print("illegal regex:", regex_str)
-						return
-				if song_file is not None:
-					song_dir=os.path.join(lib_path, os.path.dirname(song_file))
-					if song_dir.endswith(".cue"):
-						song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
-					if os.path.exists(song_dir):
-						for f in os.listdir(song_dir):
-							if regex.match(f):
-								self.path=os.path.join(song_dir, f)
-								break
-
-	def get_pixbuf(self, size):
-		if self.path is None:  # fallback needed
-			path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
-			return GdkPixbuf.Pixbuf.new_from_file_at_size(path, size, size)
-		else:
-			try:
-				return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
-			except:  # load fallback if cover can't be loaded (GLib: Couldn’t recognize the image file format for file...)
-				path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
-				return GdkPixbuf.Pixbuf.new_from_file_at_size(path, size, size)
-
-###########
-# browser #
-###########
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
@@ -1507,7 +1460,7 @@ class SongsView(Gtk.TreeView):
 		self.handler_unblock(self._key_press_event)
 
 class SongsWindow(Gtk.Box):
-	def __init__(self, client, store, file_column_id):
+	def __init__(self, client, store, file_column_id, focus_indicator=True):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 
 		# adding vars
@@ -1517,9 +1470,9 @@ class SongsWindow(Gtk.Box):
 		self._songs_view=SongsView(client, store, file_column_id)
 
 		# scroll
-		scroll=Gtk.ScrolledWindow()
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self._songs_view)
+		self._scroll=Gtk.ScrolledWindow()
+		self._scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		self._scroll.add(self._songs_view)
 
 		# buttons
 		append_button=Gtk.Button.new_with_mnemonic(_("_Append"))
@@ -1544,10 +1497,13 @@ class SongsWindow(Gtk.Box):
 		enqueue_button.connect("clicked", self._on_enqueue_button_clicked)
 
 		# packing
-		frame=FocusFrame()
-		frame.set_widget(self._songs_view)
-		frame.add(scroll)
-		self.pack_start(frame, True, True, 0)
+		if focus_indicator:
+			frame=FocusFrame()
+			frame.set_widget(self._songs_view)
+			frame.add(self._scroll)
+			self.pack_start(frame, True, True, 0)
+		else:
+			self.pack_start(self._scroll, True, True, 0)
 		button_box.pack_start(append_button, True, True, 0)
 		button_box.pack_start(play_button, True, True, 0)
 		button_box.pack_start(enqueue_button, True, True, 0)
@@ -1560,6 +1516,9 @@ class SongsWindow(Gtk.Box):
 	def get_action_bar(self):
 		return self._action_bar
 
+	def get_scroll(self):
+		return self._scroll
+
 	def _on_append_button_clicked(self, *args):
 		self._client.wrapped_call("files_to_playlist", self._songs_view.get_files(), "append")
 
@@ -1568,6 +1527,123 @@ class SongsWindow(Gtk.Box):
 
 	def _on_enqueue_button_clicked(self, *args):
 		self._client.wrapped_call("files_to_playlist", self._songs_view.get_files(), "enqueue")
+
+class AlbumPopover(Gtk.Popover):
+	def __init__(self, client, settings, album, album_artist, year, relative, x, y):
+		super().__init__()
+		rect=Gdk.Rectangle()
+		rect.x=x
+		rect.y=y
+		rect.width=1
+		rect.height=1
+		self.set_pointing_to(rect)
+		self.set_relative_to(relative)
+
+		# adding vars
+		self._client=client
+		self._settings=settings
+		songs=self._client.wrapped_call("find", "album", album, "date", year, self._settings.get_artist_type(), album_artist)
+
+		# store
+		# (track, title (artist), duration, file)
+		store=Gtk.ListStore(str, str, str, str)
+		for s in songs:
+			song=ClientHelper.song_to_list_dict(ClientHelper.pepare_song_for_display(s))
+			track=song["track"][0]
+			title=(", ".join(song["title"]))
+			# only show artists =/= albumartist
+			try:
+				song["artist"].remove(album_artist)
+			except:
+				pass
+			artist=(", ".join(song["artist"]))
+			if artist == album_artist or artist == "":
+				title_artist="<b>{}</b>".format(title)
+			else:
+				title_artist="<b>{}</b> - {}".format(title, artist)
+			title_artist=title_artist.replace("&", "&amp;")
+			store.append([track, title_artist, song["human_duration"][0], song["file"][0]])
+
+		# songs window
+		songs_window=SongsWindow(self._client, store, 3, focus_indicator=False)
+
+		# scroll
+		scroll=songs_window.get_scroll()
+		scroll.set_max_content_height(self._settings.get_int("height")//3)  # TODO
+		scroll.set_propagate_natural_height(True)
+		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		scroll.set_property("margin-start", 3)
+		scroll.set_property("margin-end", 3)
+		scroll.set_property("margin-top", 3)
+
+		# songs view
+		songs_view=songs_window.get_treeview()
+
+		# columns
+		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
+		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
+		column_track.set_property("resizable", False)
+		songs_view.append_column(column_track)
+		column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
+		column_title.set_property("resizable", False)
+		column_title.set_property("expand", True)
+		songs_view.append_column(column_title)
+		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_ralign, text=2)
+		column_time.set_property("resizable", False)
+		songs_view.append_column(column_time)
+
+		# packing
+		self.add(songs_window)
+
+		songs_window.show_all()
+
+class Cover(object):
+	def __init__(self, settings, raw_song):
+		self.path=None
+		song=ClientHelper.song_to_first_str_dict(raw_song)
+		if song != {}:
+			song_file=song["file"]
+			active_profile=settings.get_int("active-profile")
+			lib_path=settings.get_value("paths")[active_profile]
+			if lib_path == "":
+				lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
+			if lib_path is not None:
+				regex_str=settings.get_value("regex")[active_profile]
+				if regex_str == "":
+					regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
+				else:
+					regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
+					regex_str=regex_str.replace("%Album%", song.get("album", ""))
+					try:
+						regex=re.compile(regex_str, flags=re.IGNORECASE)
+					except:
+						print("illegal regex:", regex_str)
+						return
+				if song_file is not None:
+					song_dir=os.path.join(lib_path, os.path.dirname(song_file))
+					if song_dir.endswith(".cue"):
+						song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
+					if os.path.exists(song_dir):
+						for f in os.listdir(song_dir):
+							if regex.match(f):
+								self.path=os.path.join(song_dir, f)
+								break
+
+	def get_pixbuf(self, size):
+		if self.path is None:  # fallback needed
+			path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
+			return GdkPixbuf.Pixbuf.new_from_file_at_size(path, size, size)
+		else:
+			try:
+				return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
+			except:  # load fallback if cover can't be loaded (GLib: Couldn’t recognize the image file format for file...)
+				path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
+				return GdkPixbuf.Pixbuf.new_from_file_at_size(path, size, size)
+
+###########
+# browser #
+###########
 
 class SearchWindow(Gtk.Box):
 	def __init__(self, client):
@@ -1864,112 +1940,14 @@ class ArtistWindow(FocusFrame):
 	def _on_show_initials_changed(self, *args):
 		self._column_initials.set_visible(self._settings.get_boolean("show-initials"))
 
-class AlbumDialog(Gtk.Dialog):  # also used by 'MainCover'
-	def __init__(self, parent, client, settings, album, album_artist, year):
-		use_csd=settings.get_boolean("use-csd")
-		if use_csd:
-			super().__init__(transient_for=parent, use_header_bar=True)
-		else:
-			super().__init__(transient_for=parent)
-
-		# adding vars
-		self._client=client
-		self._settings=settings
-		songs=self._client.wrapped_call("find", "album", album, "date", year, self._settings.get_artist_type(), album_artist)
-
-		# determine size
-		size=parent.get_size()
-		diagonal=(size[0]**2+size[1]**2)**(0.5)
-		h=diagonal//4
-		w=h*5//4
-		self.set_default_size(w, h)
-
-		# title
-		duration=ClientHelper.calc_display_length(songs)
-		if use_csd:
-			if year == "":
-				self.set_title(album)
-			else:
-				self.set_title("{} ({})".format(album, year))
-			header_bar=self.get_header_bar()
-			header_bar.set_subtitle("{} ({})".format(album_artist, duration))
-		else:
-			if year == "":
-				self.set_title("{} - {} ({})".format(album, album_artist, duration))
-			else:
-				self.set_title("{} ({}) - {} ({})".format(album, year, album_artist, duration))
-
-		# store
-		# (track, title (artist), duration, file)
-		store=Gtk.ListStore(str, str, str, str)
-		for s in songs:
-			song=ClientHelper.song_to_list_dict(ClientHelper.pepare_song_for_display(s))
-			track=song["track"][0]
-			title=(", ".join(song["title"]))
-			# only show artists =/= albumartist
-			try:
-				song["artist"].remove(album_artist)
-			except:
-				pass
-			artist=(", ".join(song["artist"]))
-			if artist == album_artist or artist == "":
-				title_artist="<b>{}</b>".format(title)
-			else:
-				title_artist="<b>{}</b> - {}".format(title, artist)
-			title_artist=title_artist.replace("&", "&amp;")
-			store.append([track, title_artist, song["human_duration"][0], song["file"][0]])
-
-		# songs window
-		songs_window=SongsWindow(self._client, store, 3)
-
-		# songs view
-		songs_view=songs_window.get_treeview()
-
-		# columns
-		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
-		column_track.set_property("resizable", False)
-		songs_view.append_column(column_track)
-		column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
-		column_title.set_property("resizable", False)
-		column_title.set_property("expand", True)
-		songs_view.append_column(column_title)
-		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_ralign, text=2)
-		column_time.set_property("resizable", False)
-		songs_view.append_column(column_time)
-
-		# close button
-		close_button=Gtk.ToggleButton(image=Gtk.Image.new_from_icon_name("window-close", Gtk.IconSize.BUTTON), label=_("Close"))
-
-		# action bar
-		action_bar=songs_window.get_action_bar()
-		action_bar.pack_end(close_button)
-
-		# connect
-		close_button.connect("clicked", self._on_close_button_clicked)
-
-		# packing
-		vbox=self.get_content_area()
-		vbox.set_property("border-width", 0)
-		vbox.pack_start(songs_window, True, True, 0)
-		self.show_all()
-
-	def open(self):
-		response=self.run()
-
-	def _on_close_button_clicked(self, *args):
-		self.destroy()
-
 class AlbumWindow(FocusFrame):
-	def __init__(self, client, settings, artist_window, window):
+	def __init__(self, client, settings, artist_window):
 		super().__init__()
 
 		# adding vars
 		self._settings=settings
 		self._client=client
 		self._artist_window=artist_window
-		self._window=window
 		self._button_event=(None, None)
 		self.stop_flag=False
 		self._done=True
@@ -1987,6 +1965,8 @@ class AlbumWindow(FocusFrame):
 		scroll=Gtk.ScrolledWindow()
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scroll.add(self._iconview)
+		self._scroll_vadj=scroll.get_vadjustment()
+		self._scroll_hadj=scroll.get_hadjustment()
 
 		# connect
 		self._iconview.connect("item-activated", self._on_item_activated)
@@ -2146,15 +2126,6 @@ class AlbumWindow(FocusFrame):
 		artist=self._store[path][6]
 		self._client.wrapped_call("album_to_playlist", album, artist, year, mode)
 
-	def _open_album_dialog(self, path):
-		if self._client.connected():
-			album=self._store[path][4]
-			year=self._store[path][5]
-			artist=self._store[path][6]
-			album_dialog=AlbumDialog(self._window, self._client, self._settings, album, artist, year)
-			album_dialog.open()
-			album_dialog.destroy()
-
 	def _done_callback(self, *args):
 		self.stop_flag=False
 		self._done=True
@@ -2181,7 +2152,13 @@ class AlbumWindow(FocusFrame):
 				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					self._path_to_playlist(path, "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._open_album_dialog(path)
+					album=self._store[path][4]
+					year=self._store[path][5]
+					artist=self._store[path][6]
+					v=self._scroll_vadj.get_value()
+					h=self._scroll_hadj.get_value()
+					pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, int(event.x-h), int(event.y-v))
+					pop.popup()
 
 	def _on_key_press_event(self, widget, event):
 		self.handler_block(self._key_press_event)
@@ -2196,7 +2173,14 @@ class AlbumWindow(FocusFrame):
 		elif event.keyval == Gdk.keyval_from_name("Menu"):
 			paths=self._iconview.get_selected_items()
 			if len(paths) != 0:
-				self._open_album_dialog(paths[0])
+					album=self._store[paths[0]][4]
+					year=self._store[paths[0]][5]
+					artist=self._store[paths[0]][6]
+					rect=self._iconview.get_cell_rect(paths[0], None)[1]
+					x=rect.x+rect.width//2
+					y=rect.y+rect.height//2
+					pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, x, y)
+					pop.popup()
 		self.handler_unblock(self._key_press_event)
 
 	def _on_item_activated(self, widget, path):
@@ -2247,7 +2231,7 @@ class Browser(Gtk.Paned):
 		self._genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self._genre_select)
 		self._search_window=SearchWindow(self._client)
-		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window, window)
+		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window)
 
 		# connect
 		self.back_to_current_album_button.connect("clicked", self._back_to_current_album)
@@ -2503,13 +2487,12 @@ class AudioType(Gtk.Label):
 			self.clear()
 
 class CoverEventBox(Gtk.EventBox):
-	def __init__(self, client, settings, window):
+	def __init__(self, client, settings):
 		super().__init__()
 
 		# adding vars
 		self._client=client
 		self._settings=settings
-		self._window=window
 
 		# connect
 		self._button_press_event=self.connect("button-press-event", self._on_button_press_event)
@@ -2530,9 +2513,8 @@ class CoverEventBox(Gtk.EventBox):
 				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 					self._client.wrapped_call("album_to_playlist", album, artist, album_year, "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-					album_dialog=AlbumDialog(self._window, self._client, self._settings, album, artist, album_year)
-					album_dialog.open()
-					album_dialog.destroy()
+					pop=AlbumPopover(self._client, self._settings, album, artist, album_year, widget, int(event.x), int(event.y))
+					pop.popup()
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
@@ -2890,11 +2872,10 @@ class CoverPlaylistWindow(Gtk.Paned):
 		# adding vars
 		self._client=client
 		self._settings=settings
-		self._window=window
 
 		# cover
 		main_cover=MainCover(self._client, self._settings)
-		self._cover_event_box=CoverEventBox(self._client, self._settings, self._window)
+		self._cover_event_box=CoverEventBox(self._client, self._settings)
 
 		# playlist
 		self._playlist_window=PlaylistWindow(self._client, self._settings)
