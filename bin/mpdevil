@@ -1343,6 +1343,7 @@ class SongPopover(Gtk.Popover):
 		rect=Gdk.Rectangle()
 		rect.x=x
 		# Gtk places popovers in treeviews 26px above the given position for no obvious reasons, so I move them 26px
+		# This seems to be related to the width/height of the headers in treeviews
 		rect.y=y+offset
 		rect.width=1
 		rect.height=1
