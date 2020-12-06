@@ -1393,6 +1393,7 @@ class SongsView(Gtk.TreeView):
 		self._client=client
 		self._store=store
 		self._file_column_id=file_column_id
+		self._button_event=(None, None)
 
 		# selection
 		self._selection=self.get_selection()
@@ -1400,7 +1401,8 @@ class SongsView(Gtk.TreeView):
 		# connect
 		self.connect("row-activated", self._on_row_activated)
 		self.connect("button-press-event", self._on_button_press_event)
-		self._key_press_event=self.connect("key-press-event", self._on_key_press_event)
+		self.connect("button-release-event", self._on_button_release_event)
+		self.connect("key-release-event", self._on_key_release_event)
 
 	def clear(self):
 		self._store.clear()
@@ -1418,46 +1420,39 @@ class SongsView(Gtk.TreeView):
 		self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]], "play")
 
 	def _on_button_press_event(self, widget, event):
-		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-			try:
-				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]])
-			except:
-				pass
-		elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-			try:
-				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]], "append")
-			except:
-				pass
-		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			try:
-				path=widget.get_path_at_pos(int(event.x), int(event.y))[0]
-				file_name=self._store[path][self._file_column_id]
-				pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, int(event.x), int(event.y))
-				pop.popup()
-			except:
-				pass
+		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
+		if path_re is not None:
+			if event.type == Gdk.EventType.BUTTON_PRESS:
+				self._button_event=(event.button, path_re[0])
 
-	def _on_key_press_event(self, widget, event):
-		self.handler_block(self._key_press_event)
-		if event.keyval == Gdk.keyval_from_name("p"):
-			treeview, treeiter=self._selection.get_selected()
-			if treeiter is not None:
+	def _on_button_release_event(self, widget, event):
+		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
+		if path_re is not None:
+			path=path_re[0]
+			if self._button_event == (event.button, path):
+				if event.button == 1 and event.type == Gdk.EventType.BUTTON_RELEASE:
+					self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]])
+				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
+					self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]], "append")
+				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
+					file_name=self._store[path][self._file_column_id]
+					pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, int(event.x), int(event.y))
+					pop.popup()
+		self._button_event=(None, None)
+
+	def _on_key_release_event(self, widget, event):
+		treeview, treeiter=self._selection.get_selected()
+		if treeiter is not None:
+			if event.keyval == Gdk.keyval_from_name("p"):
 				self._client.wrapped_call("files_to_playlist", [self._store.get_value(treeiter, self._file_column_id)])
-		elif event.keyval == Gdk.keyval_from_name("a"):
-			treeview, treeiter=self._selection.get_selected()
-			if treeiter is not None:
+			elif event.keyval == Gdk.keyval_from_name("a"):
 				self._client.wrapped_call("files_to_playlist", [self._store.get_value(treeiter, self._file_column_id)], "append")
-		elif event.keyval == Gdk.keyval_from_name("Menu"):
-			treeview, treeiter=self._selection.get_selected()
-			if treeiter is not None:
+			elif event.keyval == Gdk.keyval_from_name("Menu"):
 				path=self._store.get_path(treeiter)
 				cell=self.get_cell_area(path, None)
 				file_name=self._store[path][self._file_column_id]
-				pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, int(cell.x), int(cell.y))
+				pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, cell.x, cell.y)
 				pop.popup()
-		self.handler_unblock(self._key_press_event)
 
 class SongsWindow(Gtk.Box):
 	def __init__(self, client, store, file_column_id, focus_indicator=True):
@@ -1949,6 +1944,7 @@ class AlbumWindow(FocusFrame):
 		self._client=client
 		self._artist_window=artist_window
 		self._button_event=(None, None)
+		self._key_event=(None, None)
 		self.stop_flag=False
 		self._done=True
 		self._pending=[]
@@ -1970,9 +1966,10 @@ class AlbumWindow(FocusFrame):
 
 		# connect
 		self._iconview.connect("item-activated", self._on_item_activated)
-		self._iconview.connect("button-release-event", self._on_button_release_event)
 		self._iconview.connect("button-press-event", self._on_button_press_event)
-		self._key_press_event=self.connect("key-press-event", self._on_key_press_event)
+		self._iconview.connect("button-release-event", self._on_button_release_event)
+		self._iconview.connect("key-press-event", self._on_key_press_event)
+		self._iconview.connect("key-release-event", self._on_key_release_event)
 		self._client.emitter.connect("update", self._clear)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
@@ -2159,29 +2156,33 @@ class AlbumWindow(FocusFrame):
 					h=self._scroll_hadj.get_value()
 					pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, int(event.x-h), int(event.y-v))
 					pop.popup()
+		self._button_event=(None, None)
 
 	def _on_key_press_event(self, widget, event):
-		self.handler_block(self._key_press_event)
-		if event.keyval == Gdk.keyval_from_name("p"):
-			paths=self._iconview.get_selected_items()
+		if event.keyval in (Gdk.keyval_from_name("p"),Gdk.keyval_from_name("a"),Gdk.keyval_from_name("Menu")):
+			paths=widget.get_selected_items()
 			if len(paths) != 0:
-				self._path_to_playlist(paths[0])
-		elif event.keyval == Gdk.keyval_from_name("a"):
-			paths=self._iconview.get_selected_items()
+				self._key_event=(event.keyval, paths[0])
+
+	def _on_key_release_event(self, widget, event):
+		if event.keyval in (Gdk.keyval_from_name("p"),Gdk.keyval_from_name("a"),Gdk.keyval_from_name("Menu")):
+			paths=widget.get_selected_items()
 			if len(paths) != 0:
-				self._path_to_playlist(paths[0], "append")
-		elif event.keyval == Gdk.keyval_from_name("Menu"):
-			paths=self._iconview.get_selected_items()
-			if len(paths) != 0:
-					album=self._store[paths[0]][4]
-					year=self._store[paths[0]][5]
-					artist=self._store[paths[0]][6]
-					rect=self._iconview.get_cell_rect(paths[0], None)[1]
-					x=rect.x+rect.width//2
-					y=rect.y+rect.height//2
-					pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, x, y)
-					pop.popup()
-		self.handler_unblock(self._key_press_event)
+				if self._key_event == (event.keyval, paths[0]):
+					if event.keyval == Gdk.keyval_from_name("p"):
+						self._path_to_playlist(paths[0])
+					elif event.keyval == Gdk.keyval_from_name("a"):
+						self._path_to_playlist(paths[0], "append")
+					elif event.keyval == Gdk.keyval_from_name("Menu"):
+						album=self._store[paths[0]][4]
+						year=self._store[paths[0]][5]
+						artist=self._store[paths[0]][6]
+						rect=widget.get_cell_rect(paths[0], None)[1]
+						x=rect.x+rect.width//2
+						y=rect.y+rect.height//2
+						pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, x, y)
+						pop.popup()
+		self._key_event=(None, None)
 
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
