@@ -1338,16 +1338,23 @@ class FocusFrame(Gtk.Overlay):
 		self._widget.connect("focus-out-event", lambda *args: self._frame.hide())
 
 class SongPopover(Gtk.Popover):
-	def __init__(self, song, relative, x, y):
+	def __init__(self, song, relative, x, y, offset=26):
 		super().__init__()
 		rect=Gdk.Rectangle()
 		rect.x=x
 		# Gtk places popovers in treeviews 26px above the given position for no obvious reasons, so I move them 26px
-		rect.y=y+26
+		rect.y=y+offset
 		rect.width=1
 		rect.height=1
 		self.set_pointing_to(rect)
 		self.set_relative_to(relative)
+
+		# css
+		style_context=self.get_style_context()
+		provider=Gtk.CssProvider()
+		css=b"""* {background-color: @theme_base_color}"""
+		provider.load_from_data(css)
+		style_context.add_provider(provider, 800)
 
 		# treeview
 		# (tag, display-value, tooltip)
@@ -1358,7 +1365,7 @@ class SongPopover(Gtk.Popover):
 
 		# columns
 		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0, weight=Pango.Weight.BOLD)
 		column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text_ralign, text=0)
 		column_tag.set_property("resizable", False)
 		treeview.append_column(column_tag)
@@ -1379,11 +1386,14 @@ class SongPopover(Gtk.Popover):
 				store.append([tag+":", value, tooltip])
 
 		# packing
-		frame=Gtk.Frame(border_width=3)
-		frame.add(treeview)
-		self.add(frame)
+		scroll=Gtk.ScrolledWindow(border_width=3)
+		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		scroll.set_max_content_height(600)  # TODO
+		scroll.set_propagate_natural_height(True)
+		scroll.add(treeview)
+		self.add(scroll)
 
-		frame.show_all()
+		scroll.show_all()
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
@@ -1436,8 +1446,11 @@ class SongsView(Gtk.TreeView):
 				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]], "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					file_name=self._store[path][self._file_column_id]
-					pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, int(event.x), int(event.y))
+					song=self._client.wrapped_call("get_metadata", self._store[path][self._file_column_id])
+					if self.get_property("headers-visible"):
+						pop=SongPopover(song, widget, int(event.x), int(event.y))
+					else:
+						pop=SongPopover(song, widget, int(event.x), int(event.y), offset=0)
 					pop.popup()
 		self._button_event=(None, None)
 
@@ -1574,6 +1587,7 @@ class AlbumPopover(Gtk.Popover):
 
 		# songs view
 		songs_view=songs_window.get_treeview()
+		songs_view.set_property("headers_visible", False)
 
 		# columns
 		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
