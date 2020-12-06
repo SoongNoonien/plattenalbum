@@ -653,6 +653,7 @@ class Settings(Gio.Settings):
 	BASE_KEY="org.mpdevil"
 	# temp settings
 	mini_player=GObject.Property(type=bool, default=False)
+	cursor_watch=GObject.Property(type=bool, default=False)
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
 
@@ -2031,8 +2032,11 @@ class AlbumWindow(FocusFrame):
 		return False  # stop after one run
 
 	def _refresh(self, *args):
-		def callback():
-			GLib.idle_add(self._workaround_clear)
+		if self._done:
+			self._done=False
+			self._settings.set_property("cursor-watch", True)
+			GLib.idle_add(self._store.clear)
+			self._iconview.set_model(None)
 			try:  # self._artist_window could still be empty
 				genre, artists=self._artist_window.get_selected_artists()
 			except:
@@ -2069,50 +2073,55 @@ class AlbumWindow(FocusFrame):
 				except MPDBase.ConnectionError:
 					GLib.idle_add(self._done_callback)
 					return
-			# display albums
-			if self._settings.get_boolean("sort-albums-by-year"):
-				albums=sorted(albums, key=lambda k: k["year"])
-			else:
-				albums=sorted(albums, key=lambda k: k["album"])
-			size=self._settings.get_int("album-cover")
-			for i, album in enumerate(albums):
+
+			def display_albums():
+				for i, album in enumerate(albums):
+					if self.stop_flag:
+						break
+					else:
+						# tooltip
+						length_human_readable=ClientHelper.calc_display_length(album["songs"])
+						discs=album["songs"][-1].get("disc", 1)
+						if type(discs) == list:
+							discs=int(discs[0])
+						else:
+							discs=int(discs)
+						if discs > 1:
+							tooltip=_("{titles} titles on {discs} discs ({length})").format(
+								titles=len(album["songs"]), discs=discs, length=length_human_readable)
+						else:
+							tooltip=_("{titles} titles ({length})").format(
+								titles=len(album["songs"]), length=length_human_readable)
+						# album label
+						if album["year"] == "":
+							display_label="<b>{}</b>".format(album["album"])
+						else:
+							display_label="<b>{}</b> ({})".format(album["album"], album["year"])
+						display_label_artist=display_label+"\n"+album["artist"]
+						display_label=display_label.replace("&", "&amp;")
+						display_label_artist=display_label_artist.replace("&", "&amp;")
+						# add album
+						self._store.append(
+							[album["cover"], display_label, display_label_artist,
+							tooltip, album["album"], album["year"], album["artist"]]
+						)
+				self._iconview.set_model(self._store)
+				GLib.idle_add(self._done_callback)
+				return False
+
+			def load_covers():
+				size=self._settings.get_int("album-cover")
+				for album in albums:
+					if self.stop_flag:
+						break
+					album["cover"]=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
 				if self.stop_flag:
-					break
+					GLib.idle_add(self._done_callback)
 				else:
-					cover=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
-					# tooltip
-					length_human_readable=ClientHelper.calc_display_length(album["songs"])
-					discs=album["songs"][-1].get("disc", 1)
-					if type(discs) == list:
-						discs=int(discs[0])
-					else:
-						discs=int(discs)
-					if discs > 1:
-						tooltip=_("{titles} titles on {discs} discs ({length})").format(
-							titles=len(album["songs"]), discs=discs, length=length_human_readable)
-					else:
-						tooltip=_("{titles} titles ({length})").format(
-							titles=len(album["songs"]), length=length_human_readable)
-					# album label
-					if album["year"] == "":
-						display_label="<b>{}</b>".format(album["album"])
-					else:
-						display_label="<b>{}</b> ({})".format(album["album"], album["year"])
-					display_label_artist=display_label+"\n"+album["artist"]
-					display_label=display_label.replace("&", "&amp;")
-					display_label_artist=display_label_artist.replace("&", "&amp;")
-					# add album
-					GLib.idle_add(self._add_row,
-						[cover, display_label, display_label_artist, tooltip, album["album"], album["year"], album["artist"]]
-					)
-					# execute pending events
-					if i%16 == 0:
-						while Gtk.events_pending():
-							Gtk.main_iteration_do(True)
-			GLib.idle_add(self._done_callback)
-		if self._done:
-			self._done=False
-			callback()
+					GLib.idle_add(display_albums)
+
+			cover_thread=threading.Thread(target=load_covers, daemon=True)
+			cover_thread.start()
 		elif not self._refresh in self._pending:
 			self.stop_flag=True
 			self._pending.append(self._refresh)
@@ -2124,6 +2133,7 @@ class AlbumWindow(FocusFrame):
 		self._client.wrapped_call("album_to_playlist", album, artist, year, mode)
 
 	def _done_callback(self, *args):
+		self._settings.set_property("cursor-watch", False)
 		self.stop_flag=False
 		self._done=True
 		pending=self._pending
@@ -3585,6 +3595,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.connect("changed::profiles", self._refresh_profiles_menu)
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
 		self._settings.connect_after("notify::mini-player", self._on_mini_player)
+		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -3731,6 +3742,13 @@ class MainWindow(Gtk.ApplicationWindow):
 				self.maximize()
 			self._tmp_saved_size=None
 			self._tmp_saved_maximized=None
+
+	def _on_cursor_watch(self, obj, typestring):
+		if obj.get_property("cursor-watch"):
+			watch_cursor = Gdk.Cursor(Gdk.CursorType.WATCH)
+			self.get_window().set_cursor(watch_cursor)
+		else:
+			self.get_window().set_cursor(None)
 
 	def _on_playlist_pos_changed(self, *args):
 		if self._settings.get_boolean("playlist-right"):
