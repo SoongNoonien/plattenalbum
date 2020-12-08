@@ -1540,7 +1540,7 @@ class SongsWindow(Gtk.Box):
 		self._client.wrapped_call("files_to_playlist", self._songs_view.get_files(), "enqueue")
 
 class AlbumPopover(Gtk.Popover):
-	def __init__(self, client, settings, album, album_artist, year, relative, x, y):
+	def __init__(self, client, settings, album, album_artist, year, widget, x, y):
 		super().__init__()
 		rect=Gdk.Rectangle()
 		rect.x=x
@@ -1548,7 +1548,7 @@ class AlbumPopover(Gtk.Popover):
 		rect.width=1
 		rect.height=1
 		self.set_pointing_to(rect)
-		self.set_relative_to(relative)
+		self.set_relative_to(widget)
 
 		# adding vars
 		self._client=client
@@ -1579,8 +1579,7 @@ class AlbumPopover(Gtk.Popover):
 
 		# scroll
 		scroll=songs_window.get_scroll()
-		window=self.get_toplevel()
-		scroll.set_max_content_height(window.get_size()[1]//3)
+		scroll.set_max_content_height(4*widget.get_allocated_height()//7)
 		scroll.set_propagate_natural_height(True)
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		scroll.set_property("margin-start", 3)
