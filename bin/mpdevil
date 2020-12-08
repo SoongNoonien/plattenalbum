@@ -1390,7 +1390,7 @@ class SongPopover(Gtk.Popover):
 		scroll=Gtk.ScrolledWindow(border_width=3)
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		window=self.get_toplevel()
-		scroll.set_max_content_height(window.get_size()[1]//3)
+		scroll.set_max_content_height(window.get_size()[1]//2)
 		scroll.set_propagate_natural_height(True)
 		scroll.add(treeview)
 		self.add(scroll)
