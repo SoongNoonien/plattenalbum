@@ -1320,7 +1320,7 @@ class FocusFrame(Gtk.Overlay):
 		provider=Gtk.CssProvider()
 		css=b"""* {border-color: @theme_selected_bg_color; border-width: 2px;}"""
 		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
+		style_context.add_provider(provider, 600)
 
 		self.add_overlay(self._frame)
 		self.set_overlay_pass_through(self._frame, True)
@@ -1355,7 +1355,7 @@ class SongPopover(Gtk.Popover):
 		provider=Gtk.CssProvider()
 		css=b"""* {background-color: @theme_base_color}"""
 		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
+		style_context.add_provider(provider, 600)
 
 		# treeview
 		# (tag, display-value, tooltip)
@@ -2557,7 +2557,7 @@ class MainCover(Gtk.Frame):
 		provider=Gtk.CssProvider()
 		css=b"""* {background-color: @theme_base_color; border-width: 0px}"""
 		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
+		style_context.add_provider(provider, 600)
 
 		# adding vars
 		self._client=client
@@ -2618,7 +2618,7 @@ class PlaylistWindow(Gtk.Box):
 		)
 		self._back_to_current_song_button.set_can_focus(False)
 		style_context=self._back_to_current_song_button.get_style_context()
-		style_context.add_provider(provider, 800)
+		style_context.add_provider(provider, 600)
 		self._clear_button=Gtk.Button(
 			image=AutoSizedIcon("edit-clear-symbolic", "icon-size-sec", self._settings),
 			tooltip_text=_("Clear playlist"),
@@ -2627,7 +2627,7 @@ class PlaylistWindow(Gtk.Box):
 		self._clear_button.set_can_focus(False)
 		style_context=self._clear_button.get_style_context()
 		style_context.add_class("destructive-action")
-		style_context.add_provider(provider, 800)
+		style_context.add_provider(provider, 600)
 
 		# treeview
 		# (track, disc, title, artist, album, duration, date, genre, file, weight)
@@ -3087,7 +3087,7 @@ class SeekBar(Gtk.Box):
 		provider=Gtk.CssProvider()
 		css=b"""scale fill { background-color: @theme_selected_bg_color; }"""
 		provider.load_from_data(css)
-		style_context.add_provider(provider, 800)
+		style_context.add_provider(provider, 600)
 
 		# connect
 		self._elapsed_event_box.connect("button-release-event", self._on_elapsed_button_release_event)
