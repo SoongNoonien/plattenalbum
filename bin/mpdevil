@@ -1318,7 +1318,7 @@ class FocusFrame(Gtk.Overlay):
 		# css
 		style_context=self._frame.get_style_context()
 		provider=Gtk.CssProvider()
-		css=b"""* {border-color: @theme_selected_bg_color; border-width: 2px;}"""
+		css=b"""* {border-color: @theme_selected_bg_color; border-width: 0px; border-top-width: 3px;}"""
 		provider.load_from_data(css)
 		style_context.add_provider(provider, 600)
 
