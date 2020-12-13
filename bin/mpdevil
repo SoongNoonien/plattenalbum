@@ -2050,10 +2050,11 @@ class AlbumWindow(FocusFrame):
 			self._settings.set_property("cursor-watch", True)
 			GLib.idle_add(self._store.clear)
 			self._iconview.set_model(None)
-			try:  # self._artist_window could still be empty
+			try:  # self._artist_window can still be empty (e.g. when client is not connected and cover size gets changed)
 				genre, artists=self._artist_window.get_selected_artists()
 			except:
 				GLib.idle_add(self._done_callback)
+				return
 			# show artist names if all albums are shown
 			if len(artists) > 1:
 				self._iconview.set_markup_column(2)
