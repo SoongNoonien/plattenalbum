@@ -2089,35 +2089,32 @@ class AlbumWindow(FocusFrame):
 
 			def display_albums():
 				for i, album in enumerate(albums):
-					if self.stop_flag:
-						break
+					# tooltip
+					length_human_readable=ClientHelper.calc_display_length(album["songs"])
+					discs=album["songs"][-1].get("disc", 1)
+					if type(discs) == list:
+						discs=int(discs[0])
 					else:
-						# tooltip
-						length_human_readable=ClientHelper.calc_display_length(album["songs"])
-						discs=album["songs"][-1].get("disc", 1)
-						if type(discs) == list:
-							discs=int(discs[0])
-						else:
-							discs=int(discs)
-						if discs > 1:
-							tooltip=_("{titles} titles on {discs} discs ({length})").format(
-								titles=len(album["songs"]), discs=discs, length=length_human_readable)
-						else:
-							tooltip=_("{titles} titles ({length})").format(
-								titles=len(album["songs"]), length=length_human_readable)
-						# album label
-						if album["year"] == "":
-							display_label="<b>{}</b>".format(album["album"])
-						else:
-							display_label="<b>{}</b> ({})".format(album["album"], album["year"])
-						display_label_artist=display_label+"\n"+album["artist"]
-						display_label=display_label.replace("&", "&amp;")
-						display_label_artist=display_label_artist.replace("&", "&amp;")
-						# add album
-						self._store.append(
-							[album["cover"], display_label, display_label_artist,
-							tooltip, album["album"], album["year"], album["artist"]]
-						)
+						discs=int(discs)
+					if discs > 1:
+						tooltip=_("{titles} titles on {discs} discs ({length})").format(
+							titles=len(album["songs"]), discs=discs, length=length_human_readable)
+					else:
+						tooltip=_("{titles} titles ({length})").format(
+							titles=len(album["songs"]), length=length_human_readable)
+					# album label
+					if album["year"] == "":
+						display_label="<b>{}</b>".format(album["album"])
+					else:
+						display_label="<b>{}</b> ({})".format(album["album"], album["year"])
+					display_label_artist=display_label+"\n"+album["artist"]
+					display_label=display_label.replace("&", "&amp;")
+					display_label_artist=display_label_artist.replace("&", "&amp;")
+					# add album
+					self._store.append(
+						[album["cover"], display_label, display_label_artist,
+						tooltip, album["album"], album["year"], album["artist"]]
+					)
 				self._iconview.set_model(self._store)
 				GLib.idle_add(self._done_callback)
 				return False
