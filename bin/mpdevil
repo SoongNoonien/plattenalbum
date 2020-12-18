@@ -3010,12 +3010,16 @@ class PlaybackControl(Gtk.ButtonBox):
 		self.pack_start(self._next_button, True, True, 0)
 
 	def _refresh_tooltips(self, *args):
-		songs=self._client.wrapped_call("playlistinfo")
-		song=int(self._client.wrapped_call("status")["song"])
-		elapsed=ClientHelper.calc_display_length(songs[:song])
-		rest=ClientHelper.calc_display_length(songs[song+1:])
-		self._prev_button.set_tooltip_text(_("{titles} titles ({length})").format(titles=song, length=elapsed))
-		self._next_button.set_tooltip_text(_("{titles} titles ({length})").format(titles=(len(songs)-(song+1)), length=rest))
+		try:
+			songs=self._client.wrapped_call("playlistinfo")
+			song=int(self._client.wrapped_call("status")["song"])
+			elapsed=ClientHelper.calc_display_length(songs[:song])
+			rest=ClientHelper.calc_display_length(songs[song+1:])
+			self._prev_button.set_tooltip_text(_("{titles} titles ({length})").format(titles=song, length=elapsed))
+			self._next_button.set_tooltip_text(_("{titles} titles ({length})").format(titles=(len(songs)-(song+1)), length=rest))
+		except:
+			self._prev_button.set_tooltip_text("")
+			self._next_button.set_tooltip_text("")
 
 	def _on_play_clicked(self, widget):
 		self._client.wrapped_call("toggle_play")
