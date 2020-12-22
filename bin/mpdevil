@@ -497,9 +497,15 @@ class Client(MPDClient):
 			self.emitter.emit("connection_error")
 			return False
 		# connect successful
-		self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
-		self.emitter.emit("reconnected")
-		return True
+		if "status" in self.commands():
+			self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
+			self.emitter.emit("reconnected")
+			return True
+		else:
+			self.disconnect()
+			self.emitter.emit("connection_error")
+			print("No read permission, check your mpd config.")
+			return False
 
 	def reconnect(self):
 		if self._main_timeout_id is not None:
@@ -2788,17 +2794,22 @@ class PlaylistWindow(Gtk.Box):
 				pop.popup()
 
 	def _on_row_deleted(self, model, path):  # sync treeview to mpd
-		if self._inserted_path is not None:  # move
-			path=int(path.to_string())
-			if path > self._inserted_path:
-				path=path-1
-			if path < self._inserted_path:
-				self._inserted_path=self._inserted_path-1
-			self._client.wrapped_call("move", path, self._inserted_path)
-			self._inserted_path=None
-		else:  # delete
-			self._client.wrapped_call("delete", path)  # bad song index possible
-		self._playlist_version=self._client.wrapped_call("status")["playlist"]
+		try:
+			if self._inserted_path is not None:  # move
+				path=int(path.to_string())
+				if path > self._inserted_path:
+					path=path-1
+				if path < self._inserted_path:
+					self._inserted_path=self._inserted_path-1
+				self._client.wrapped_call("move", path, self._inserted_path)
+				self._inserted_path=None
+			else:  # delete
+				self._client.wrapped_call("delete", path)  # bad song index possible
+			self._playlist_version=int(self._client.wrapped_call("status")["playlist"])
+		except MPDBase.CommandError as e:
+			self._playlist_version=None
+			self._client.emitter.emit("playlist_changed", int(self._client.wrapped_call("status")["playlist"]))
+			raise e  # propagate exception
 
 	def _on_row_inserted(self, model, path, treeiter):
 		self._inserted_path=int(path.to_string())
