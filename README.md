@@ -61,7 +61,6 @@ Python modules:
 - gi (Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib, Notify)
 - requests
 - bs4 (beautifulsoup)
-- dbus
 
 Run:
 ```bash
