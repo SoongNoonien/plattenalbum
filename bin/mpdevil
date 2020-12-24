@@ -327,11 +327,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._client.wrapped_call("pause", 1)
 
 	def PlayPause(self):
-		status=self._client.wrapped_call("status")
-		if status["state"] == "play":
-			self._client.wrapped_call("pause", 1)
-		else:
-			self._client.wrapped_call("play")
+		self._client.wrapped_call("toggle_play")
 
 	def Stop(self):
 		self._client.wrapped_call("stop")
