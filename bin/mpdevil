@@ -214,11 +214,11 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _get_loop_status(self):
 		if self._client.connected():
 			status=self._client.wrapped_call("status")
-			if int(status["repeat"]) == 1:
-				if int(status.get("single", 0)) == 1:
-					return GLib.Variant("s", "Track")
-				else:
+			if status["repeat"] == "1":
+				if status.get("single", "0") == "0":
 					return GLib.Variant("s", "Playlist")
+				else:
+					return GLib.Variant("s", "Track")
 			else:
 				return GLib.Variant("s", "None")
 		return GLib.Variant("s", "None")
