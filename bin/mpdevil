@@ -1830,11 +1830,15 @@ class SearchWindow(Gtk.Box):
 				songs=self._client.wrapped_call("search", self._tag_combo_box.get_active_text(), self.search_entry.get_text())
 			for s in songs:
 				song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
+				try:
+					int_track=int(song["track"])
+				except:
+					int_track=0
 				self._store.append([
 						song["track"], song["title"],
 						song["artist"], song["album"],
 						song["human_duration"], song["file"],
-						int(song.get("track", 0))
+						int_track
 				])
 			self._hits_label.set_text(_("{num} hits").format(num=self._songs_view.count()))
 		if self._songs_view.count() == 0:
