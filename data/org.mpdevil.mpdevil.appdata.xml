@@ -22,6 +22,12 @@
       <li>manage multiple mpd servers</li>
     </ul>
   </description>
+  <releases>
+    <release version="0.9.8" date="2020-12-27">
+      <description>
+      </description>
+    </release>
+  </releases>
   <launchable type="desktop-id">org.mpdevil.mpdevil.desktop</launchable>
   <screenshots>
     <screenshot type="default">
@@ -30,6 +36,7 @@
   </screenshots>
   <url type="homepage">https://github.com/SoongNoonien/mpdevil</url>
   <url type="bugtracker">https://github.com/SoongNoonien/mpdevil/issues</url>
+  <content_rating type="oars-1.1" />
   <provides>
     <binary>mpdevil</binary>
   </provides>
