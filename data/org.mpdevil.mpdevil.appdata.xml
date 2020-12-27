@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2020 Martin Wagner <martin.wagner.dev@gmail.com> -->
+<component type="desktop-application">
+  <id>org.mpdevil.mpdevil</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <name>mpdevil</name>
+  <summary>A simple music browser for MPD</summary>
+  <description>
+    <p>Mpdevil is focused on playing your local music directly instead of managing playlists or playing network streams. So it neither supports saving playlists nor restoring them. Therefore mpdevil is mainly a simple music browser which aims to be easy to use. Instead of maintaining a client side database of your music library mpdevil loads all tags and covers on demand. So you'll never see any outdated information in your browser. Mpdevil strongly relies on tags.</p>
+    <ul>
+      <li>display large covers</li>
+      <li>play songs without doubleclick</li>
+      <li>fetch lyrics</li>
+      <li>MPRIS interface</li>
+      <li>notifications on title change</li>
+      <li>basic queue manipulation (move and delete single tracks)</li>
+      <li>search songs</li>
+      <li>filter by genre</li>
+      <li>media keys support</li>
+      <li>many shortcuts</li>
+      <li>manage multiple mpd servers</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">org.mpdevil.mpdevil.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image type="source" width="1016" height="1024">https://raw.githubusercontent.com/SoongNoonien/mpdevil/v0.9.7/screenshots/mainwindow_0.9.5.png</image>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://github.com/SoongNoonien/mpdevil</url>
+  <url type="bugtracker">https://github.com/SoongNoonien/mpdevil/issues</url>
+  <provides>
+    <binary>mpdevil</binary>
+  </provides>
+  <update_contact>martin.wagner.dev@gmail.com</update_contact>
+</component>

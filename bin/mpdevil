@@ -143,7 +143,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				"CanRaise": (GLib.Variant("b", True), None),
 				"HasTrackList": (GLib.Variant("b", False), None),
 				"Identity": (GLib.Variant("s", "mpdevil"), None),
-				"DesktopEntry": (GLib.Variant("s", "mpdevil"), None),
+				"DesktopEntry": (GLib.Variant("s", "org.mpdevil.mpdevil"), None),
 				"SupportedUriSchemes": (GLib.Variant("s", "None"), None),
 				"SupportedMimeTypes": (GLib.Variant("s", "None"), None)},
 			self._MPRIS_PLAYER_IFACE:
@@ -706,7 +706,7 @@ class Client(MPDClient):
 ########################
 
 class Settings(Gio.Settings):
-	BASE_KEY="org.mpdevil"
+	BASE_KEY="org.mpdevil.mpdevil"
 	# temp settings
 	mini_player=GObject.Property(type=bool, default=False)
 	cursor_watch=GObject.Property(type=bool, default=False)
@@ -1342,7 +1342,7 @@ class AboutDialog(Gtk.AboutDialog):
 		self.set_translator_credits("Martin de Reuver\nMartin Wagner")
 		self.set_website("https://github.com/SoongNoonien/mpdevil")
 		self.set_copyright("\xa9 2020 Martin Wagner")
-		self.set_logo_icon_name("mpdevil")
+		self.set_logo_icon_name("org.mpdevil.mpdevil")
 
 ###########################
 # general purpose widgets #
@@ -3597,7 +3597,7 @@ class ConnectionNotify(Gtk.Revealer):
 
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings):
-		super().__init__(title=("mpdevil"), icon_name="mpdevil", application=app)
+		super().__init__(title=("mpdevil"), icon_name="org.mpdevil.mpdevil", application=app)
 		Notify.init("mpdevil")
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
 		if settings.get_boolean("maximize"):
@@ -3862,7 +3862,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 class mpdevil(Gtk.Application):
 	def __init__(self, *args, **kwargs):
-		super().__init__(*args, application_id="org.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
+		super().__init__(*args, application_id="org.mpdevil.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
 		self._settings=Settings()
 		self._client=Client(self._settings)
 		self._window=None
