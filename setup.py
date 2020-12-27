@@ -4,7 +4,7 @@ import DistUtilsExtra.auto
 
 DistUtilsExtra.auto.setup(
 	name='mpdevil',
-	version='0.9.7',  # sync with bin/mpdevil
+	version='0.9.8',  # sync with bin/mpdevil
 	author="Martin Wagner",
 	author_email="martin.wagner.dev@gmail.com",
 	description=('A simple music browser for MPD'),

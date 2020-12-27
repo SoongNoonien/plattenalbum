@@ -36,7 +36,7 @@ if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
 	gettext.bindtextdomain("mpdevil", "/app/share/locale")
 _=gettext.gettext
 
-VERSION="0.9.7-dev"  # sync with setup.py
+VERSION="0.9.8"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
