@@ -3598,6 +3598,7 @@ class ConnectionNotify(Gtk.Revealer):
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, app, client, settings):
 		super().__init__(title=("mpdevil"), icon_name="org.mpdevil.mpdevil", application=app)
+		self.set_default_icon_name("org.mpdevil.mpdevil")
 		Notify.init("mpdevil")
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
 		if settings.get_boolean("maximize"):
