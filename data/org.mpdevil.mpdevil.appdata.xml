@@ -7,7 +7,7 @@
   <name>mpdevil</name>
   <summary>A simple music browser for MPD</summary>
   <description>
-    <p>Mpdevil is a simple music browser for the Music Player Demon (MPD) which is focused on playing local music without the need to manage playlists. Instead of maintaining a client side database of your music library mpdevil loads all tags and covers on demand. So you'll never see any outdated information in the browser. Mpdevil strongly relies on tags.</p>
+    <p>Mpdevil is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need to manage playlists. Instead of maintaining a client side database of your music library mpdevil loads all tags and covers on demand. So you'll never see any outdated information in the browser. Mpdevil strongly relies on tags.</p>
     <ul>
       <li>display large covers</li>
       <li>play songs without doubleclick</li>
