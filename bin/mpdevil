@@ -26,13 +26,15 @@ from mpd import MPDClient, base as MPDBase
 import requests
 from bs4 import BeautifulSoup
 import threading
-import gettext
-gettext.textdomain("mpdevil")
-_=gettext.gettext
 import datetime
 import os
 import sys
 import re
+import gettext
+gettext.textdomain("mpdevil")
+if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
+	gettext.bindtextdomain("mpdevil", "/app/share/locale")
+_=gettext.gettext
 
 VERSION="0.9.7-dev"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
