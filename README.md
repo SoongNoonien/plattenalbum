@@ -46,6 +46,10 @@ Gentoo (see: https://wiki.gentoo.org/wiki/Custom_repository):
 - Generate manifest file
 - Run: `emerge mpdevil`
 
+Flatpak:
+
+<a href='https://flathub.org/apps/details/org.mpdevil.mpdevil'><img width='240' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
+
 Building
 --------
 
