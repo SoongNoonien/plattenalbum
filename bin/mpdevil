@@ -36,7 +36,7 @@ if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
 	gettext.bindtextdomain("mpdevil", "/app/share/locale")
 _=gettext.gettext
 
-VERSION="0.9.8"  # sync with setup.py
+VERSION="0.9.8-dev"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -1088,17 +1088,14 @@ class ProfileSettings(Gtk.Grid):
 		self._settings.array_modify("as", "regex", self._profiles_combo.get_active(), self._regex_entry.get_text())
 
 	def _on_path_select_button_clicked(self, widget, parent):
-		dialog=Gtk.FileChooserDialog(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
-		dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
-		dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
-		dialog.set_default_size(800, 400)
+		dialog=Gtk.FileChooserNative(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
 		folder=self._settings.get_value("paths")[self._profiles_combo.get_active()]
 		if folder == "":
 			dialog.set_current_folder(GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC))
 		else:
 			dialog.set_current_folder(folder)
 		response=dialog.run()
-		if response == Gtk.ResponseType.OK:
+		if response == Gtk.ResponseType.ACCEPT:
 			self._gui_modification=True
 			self._settings.array_modify("as", "paths", self._profiles_combo.get_active(), dialog.get_filename())
 			self._path_entry.set_text(dialog.get_filename())
