@@ -2056,6 +2056,9 @@ class AlbumWindow(FocusFrame):
 		self._scroll_vadj=scroll.get_vadjustment()
 		self._scroll_hadj=scroll.get_hadjustment()
 
+		# progress bar
+		self._progress_bar=Gtk.ProgressBar(no_show_all=True)
+
 		# connect
 		self._iconview.connect("item-activated", self._on_item_activated)
 		self._iconview.connect("button-press-event", self._on_button_press_event)
@@ -2070,8 +2073,12 @@ class AlbumWindow(FocusFrame):
 		self._settings.connect("changed::use-album-artist", self._clear)
 		self._artist_window.connect("artists_changed", self._refresh)
 
+		# packing
 		self.set_widget(self._iconview)
-		self.add(scroll)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box.pack_start(scroll, True, True, 0)
+		box.pack_start(self._progress_bar, False, False, 0)
+		self.add(box)
 
 	def _workaround_clear(self):
 		self._store.clear()
@@ -2125,6 +2132,7 @@ class AlbumWindow(FocusFrame):
 		if self._done:
 			self._done=False
 			self._settings.set_property("cursor-watch", True)
+			self._progress_bar.show()
 			GLib.idle_add(self._store.clear)
 			self._iconview.set_model(None)
 			try:  # self._artist_window can still be empty (e.g. when client is not connected and cover size gets changed)
@@ -2140,12 +2148,14 @@ class AlbumWindow(FocusFrame):
 			# prepare albmus list (run all mpd related commands)
 			albums=[]
 			artist_type=self._settings.get_artist_type()
-			for artist in artists:
+			for i, artist in enumerate(artists):
 				try:  # client cloud meanwhile disconnect
 					if self.stop_flag:
 						GLib.idle_add(self._done_callback)
 						return
 					else:
+						if i > 0:  # more than one artist to show (all artists)
+							GLib.idle_add(self._progress_bar.pulse)
 						if genre is None:
 							album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist)
 						else:
@@ -2199,10 +2209,12 @@ class AlbumWindow(FocusFrame):
 
 			def load_covers():
 				size=self._settings.get_int("album-cover")
-				for album in albums:
+				total_albums=len(albums)
+				for i, album in enumerate(albums):
 					if self.stop_flag:
 						break
 					album["cover"]=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
+					GLib.idle_add(self._progress_bar.set_fraction, (i+1)/total_albums)
 				if self.stop_flag:
 					GLib.idle_add(self._done_callback)
 				else:
@@ -2222,6 +2234,8 @@ class AlbumWindow(FocusFrame):
 
 	def _done_callback(self, *args):
 		self._settings.set_property("cursor-watch", False)
+		self._progress_bar.hide()
+		self._progress_bar.set_fraction(0)
 		self.stop_flag=False
 		self._done=True
 		pending=self._pending
