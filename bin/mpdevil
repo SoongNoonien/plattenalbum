@@ -937,7 +937,7 @@ class ProfileSettings(Gtk.Grid):
 		address_entry=Gtk.Box(spacing=6)
 		address_entry.pack_start(self._host_entry, True, True, 0)
 		address_entry.pack_start(self._port_entry, False, False, 0)
-		self._password_entry=Gtk.Entry(hexpand=True, visibility=False)
+		self._password_entry=PasswordEntry(hexpand=True)
 		self._path_entry=Gtk.Entry(hexpand=True, placeholder_text=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC))
 		self._path_select_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open", Gtk.IconSize.BUTTON))
 		path_box=Gtk.Box(spacing=6)
@@ -961,6 +961,8 @@ class ProfileSettings(Gtk.Grid):
 		add_button.connect("clicked", self._on_add_button_clicked)
 		delete_button.connect("clicked", self._on_delete_button_clicked)
 		connect_button.connect("clicked", self._on_connect_button_clicked)
+		style_context=connect_button.get_style_context()
+		style_context.add_class("suggested-action")
 		self._path_select_button.connect("clicked", self._on_path_select_button_clicked, parent)
 		self._profiles_changed=self._profiles_combo.connect("changed", self._on_profiles_changed)
 		self.entry_changed_handlers=[]
@@ -1364,6 +1366,22 @@ class AutoSizedIcon(Gtk.Image):
 
 	def _on_icon_size_changed(self, *args):
 		self.set_pixel_size(self._settings.get_int(self._settings_key))
+
+class PasswordEntry(Gtk.Entry):
+	def __init__(self, **kwargs):
+		super().__init__(visibility=False, caps_lock_warning=False, input_purpose=Gtk.InputPurpose.PASSWORD, **kwargs)
+		self.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "view-conceal-symbolic")
+
+		# connect
+		self.connect("icon-release", self._on_icon_release)
+
+	def _on_icon_release(self, *args):
+		if self.get_icon_name(Gtk.EntryIconPosition.SECONDARY) == "view-conceal-symbolic":
+			self.set_visibility(True)
+			self.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "view-reveal-symbolic")
+		else:
+			self.set_visibility(False)
+			self.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "view-conceal-symbolic")
 
 class FocusFrame(Gtk.Overlay):
 	def __init__(self):
