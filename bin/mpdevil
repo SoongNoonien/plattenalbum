@@ -635,6 +635,13 @@ class Client(MPDClient):
 			pass
 		return meta_base
 
+	def get_absolute_path(self, uri):
+		path=os.path.join(self._settings.get_lib_path(), uri)
+		if os.path.isfile(path):
+			return path
+		else:
+			return None
+
 	def toggle_play(self):
 		status=self.status()
 		if status["state"] == "play":
@@ -762,6 +769,13 @@ class Settings(Gio.Settings):
 			return ("albumartist")
 		else:
 			return ("artist")
+
+	def get_lib_path(self):
+		active_profile=self.get_int("active-profile")
+		lib_path=self.get_value("paths")[active_profile]
+		if lib_path == "":
+			lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
+		return lib_path
 
 ###################
 # settings dialog #
@@ -1411,7 +1425,7 @@ class FocusFrame(Gtk.Overlay):
 		self._widget.connect("focus-out-event", lambda *args: self._frame.hide())
 
 class SongPopover(Gtk.Popover):
-	def __init__(self, song, relative, x, y, offset=26):
+	def __init__(self, song, abs_path, relative, x, y, offset=26):
 		super().__init__()
 		rect=Gdk.Rectangle()
 		rect.x=x
@@ -1460,15 +1474,32 @@ class SongPopover(Gtk.Popover):
 				store.append([tag+":", value, tooltip])
 
 		# packing
-		scroll=Gtk.ScrolledWindow(border_width=3)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=3)
+		scroll=Gtk.ScrolledWindow()
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		window=self.get_toplevel()
 		scroll.set_max_content_height(window.get_size()[1]//2)
 		scroll.set_propagate_natural_height(True)
 		scroll.add(treeview)
-		self.add(scroll)
+		box.pack_start(scroll, True, True, 0)
+		if abs_path is not None:  # show open with button when song is on the same computer
+			open_button=Gtk.Button(label=_("Open with…"), image=Gtk.Image.new_from_icon_name("document-open", Gtk.IconSize.BUTTON))
+			open_button.connect("clicked", self._on_open_button_clicked)
+			self._gfile=Gio.File.new_for_path(abs_path)
+			box.pack_start(open_button, False, False, 0)
+		self.add(box)
 
-		scroll.show_all()
+		box.show_all()
+
+	def _on_open_button_clicked(self, *args):
+		self.popdown()
+		dialog=Gtk.AppChooserDialog(gfile=self._gfile)
+		app_chooser=dialog.get_widget()
+		response=dialog.run()
+		if response == Gtk.ResponseType.OK:
+			app=app_chooser.get_app_info()
+			app.launch([self._gfile], None)
+		dialog.destroy()
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
@@ -1522,10 +1553,11 @@ class SongsView(Gtk.TreeView):
 					self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]], "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					song=self._client.wrapped_call("get_metadata", self._store[path][self._file_column_id])
+					abs_song_path=self._client.wrapped_call("get_absolute_path", self._store[path][self._file_column_id])
 					if self.get_property("headers-visible"):
-						pop=SongPopover(song, widget, int(event.x), int(event.y))
+						pop=SongPopover(song, abs_song_path, widget, int(event.x), int(event.y))
 					else:
-						pop=SongPopover(song, widget, int(event.x), int(event.y), offset=0)
+						pop=SongPopover(song, abs_song_path, widget, int(event.x), int(event.y), offset=0)
 					pop.popup()
 		self._button_event=(None, None)
 
@@ -1539,8 +1571,9 @@ class SongsView(Gtk.TreeView):
 			elif event.keyval == Gdk.keyval_from_name("Menu"):
 				path=self._store.get_path(treeiter)
 				cell=self.get_cell_area(path, None)
-				file_name=self._store[path][self._file_column_id]
-				pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, cell.x, cell.y)
+				song=self._client.wrapped_call("get_metadata", self._store[path][self._file_column_id])
+				abs_song_path=self._client.wrapped_call("get_absolute_path", self._store[path][self._file_column_id])
+				pop=SongPopover(song, abs_song_path, widget, cell.x, cell.y)
 				pop.popup()
 
 class SongsWindow(Gtk.Box):
@@ -1689,9 +1722,7 @@ class Cover(object):
 		if song != {}:
 			song_file=song["file"]
 			active_profile=settings.get_int("active-profile")
-			lib_path=settings.get_value("paths")[active_profile]
-			if lib_path == "":
-				lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
+			lib_path=settings.get_lib_path()
 			if lib_path is not None:
 				regex_str=settings.get_value("regex")[active_profile]
 				if regex_str == "":
@@ -2857,7 +2888,8 @@ class PlaylistWindow(Gtk.Box):
 					self._store.remove(self._store.get_iter(path))
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					song=self._client.wrapped_call("get_metadata", self._store[path][8])
-					pop=SongPopover(song, widget, int(event.x), int(event.y))
+					abs_song_path=self._client.wrapped_call("get_absolute_path", self._store[path][8])
+					pop=SongPopover(song, abs_song_path, widget, int(event.x), int(event.y))
 					pop.popup()
 		self._button_event=(None, None)
 
@@ -2874,8 +2906,9 @@ class PlaylistWindow(Gtk.Box):
 			if treeiter is not None:
 				path=self._store.get_path(treeiter)
 				cell=self._treeview.get_cell_area(path, None)
-				file_name=self._store[path][8]
-				pop=SongPopover(self._client.wrapped_call("get_metadata", file_name), widget, int(cell.x), int(cell.y))
+				song=self._client.wrapped_call("get_metadata", self._store[path][8])
+				abs_song_path=self._client.wrapped_call("get_absolute_path", self._store[path][8])
+				pop=SongPopover(song, abs_song_path, widget, int(cell.x), int(cell.y))
 				pop.popup()
 
 	def _on_row_deleted(self, model, path):  # sync treeview to mpd
