@@ -1493,7 +1493,7 @@ class SongPopover(Gtk.Popover):
 
 	def _on_open_button_clicked(self, *args):
 		self.popdown()
-		dialog=Gtk.AppChooserDialog(gfile=self._gfile)
+		dialog=Gtk.AppChooserDialog(gfile=self._gfile, transient_for=self.get_toplevel())
 		app_chooser=dialog.get_widget()
 		response=dialog.run()
 		if response == Gtk.ResponseType.OK:
