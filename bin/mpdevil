@@ -3951,6 +3951,8 @@ class mpdevil(Gtk.Application):
 			)
 			for action, accels in action_accels:
 				self.set_accels_for_action(action, accels)
+			# disable item activation on space key pressed in treeviews
+			Gtk.binding_entry_remove(Gtk.binding_set_find('GtkTreeView'), Gdk.keyval_from_name("space"), Gdk.ModifierType.MOD2_MASK)
 		self._window.present()
 
 	def do_startup(self):
