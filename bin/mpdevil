@@ -1441,12 +1441,21 @@ class SongPopover(Gtk.Popover):
 		song=client.wrapped_call("get_metadata", uri)
 		abs_path=client.wrapped_call("get_absolute_path", uri)
 
-		# css
+		# popover css
 		style_context=self.get_style_context()
 		provider=Gtk.CssProvider()
 		css=b"""* {background-color: @theme_base_color}"""
 		provider.load_from_data(css)
 		style_context.add_provider(provider, 600)
+
+		# open with button
+		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
+		style_context=open_button.get_style_context()
+		style_context.add_class("circular")
+		open_button_revealer=Gtk.Revealer()  # needed for open_button tooltip
+		open_button_revealer.set_halign(Gtk.Align.END)
+		open_button_revealer.set_valign(Gtk.Align.END)
+		open_button_revealer.add(open_button)
 
 		# treeview
 		# (tag, display-value, tooltip)
@@ -1478,22 +1487,21 @@ class SongPopover(Gtk.Popover):
 				store.append([tag+":", value, tooltip])
 
 		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=3)
-		scroll=Gtk.ScrolledWindow()
+		overlay=Gtk.Overlay()
+		scroll=Gtk.ScrolledWindow(border_width=3)
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		window=self.get_toplevel()
 		scroll.set_max_content_height(window.get_size()[1]//2)
 		scroll.set_propagate_natural_height(True)
 		scroll.add(treeview)
-		box.pack_start(scroll, True, True, 0)
+		overlay.add(scroll)
+		overlay.add_overlay(open_button_revealer)
 		if abs_path is not None:  # show open with button when song is on the same computer
-			open_button=Gtk.Button(label=_("Open with…"),image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON))
-			open_button.connect("clicked", self._on_open_button_clicked)
 			self._gfile=Gio.File.new_for_path(abs_path)
-			box.pack_start(open_button, False, False, 0)
-		self.add(box)
-
-		box.show_all()
+			open_button.connect("clicked", self._on_open_button_clicked)
+			open_button_revealer.set_reveal_child(True)
+		self.add(overlay)
+		overlay.show_all()
 
 	def _on_open_button_clicked(self, *args):
 		self.popdown()
