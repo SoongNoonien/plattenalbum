@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-01-01 12:34+0100\n"
-"PO-Revision-Date: 2021-01-01 12:34+0100\n"
+"PO-Revision-Date: 2021-01-01 14:33+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -150,7 +150,7 @@ msgstr "Cover-Regex:"
 
 #: mpdevil:1107
 msgid "Choose directory"
-msgstr "Verzeichnis Wählen"
+msgstr "Verzeichnis wählen"
 
 #: mpdevil:1140
 msgid "Choose the order of information to appear in the playlist:"
