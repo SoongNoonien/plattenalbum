@@ -1299,7 +1299,6 @@ class SettingsDialog(Gtk.Dialog):
 			vbox.set_property("spacing", 6)
 			vbox.set_property("border-width", 6)
 			vbox.pack_start(tabs, True, True, 0)
-
 		self.show_all()
 
 #################
@@ -1342,7 +1341,6 @@ class ServerStats(Gtk.Dialog):
 		vbox=self.get_content_area()
 		vbox.set_property("border-width", 6)
 		vbox.pack_start(grid, True, True, 0)
-
 		self.show_all()
 		self.run()
 
@@ -1721,7 +1719,6 @@ class AlbumPopover(Gtk.Popover):
 
 		# packing
 		self.add(songs_window)
-
 		songs_window.show_all()
 
 class Cover(object):
@@ -2391,7 +2388,6 @@ class Browser(Gtk.Paned):
 		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
 		self._stack.add_named(self._album_window, "albums")
 		self._stack.add_named(self._search_window, "search")
-
 		hbox=Gtk.Box(spacing=6, border_width=6)
 		if self._use_csd:
 			hbox.pack_start(self._genre_select, True, True, 0)
@@ -2405,7 +2401,6 @@ class Browser(Gtk.Paned):
 		box1.pack_start(self._artist_window, True, True, 0)
 		self.pack1(box1, False, False)
 		self.pack2(self._stack, True, False)
-
 		self.set_position(self._settings.get_int("paned1"))
 
 	def save_settings(self):
@@ -3070,7 +3065,6 @@ class CoverPlaylistWindow(Gtk.Paned):
 		overlay.add_overlay(self._lyrics_button_revealer)
 		self.pack1(overlay, False, False)
 		self.pack2(self._playlist_window, True, False)
-
 		self.set_position(self._settings.get_int("paned0"))
 		self._on_settings_changed()  # hide lyrics button
 
@@ -3335,7 +3329,6 @@ class OutputPopover(Gtk.Popover):
 
 		# packing
 		self.add(box)
-
 		box.show_all()
 
 	def _on_button_toggled(self, button, out_id):
@@ -3771,7 +3764,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		overlay=Gtk.Overlay()
 		overlay.add(vbox)
 		overlay.add_overlay(connection_notify)
-
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar()
 			self._header_bar.set_show_close_button(True)
@@ -3782,9 +3774,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			action_bar.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.VERTICAL))
 			action_bar.pack_start(self._menu_button)
-
 		self.add(overlay)
-
 		self._client.emitter.emit("disconnected")  # bring player in defined state
 		# indicate connection process in window title
 		if self._use_csd:
@@ -3792,6 +3782,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			self.set_title("mpdevil "+_("connecting…"))
 		self.show_all()
+		while Gtk.events_pending():  # ensure window is visible
+			Gtk.main_iteration_do(True)
+
+		# start client
 		def callback(*args):
 			self._client.start()  # connect client
 			return False
