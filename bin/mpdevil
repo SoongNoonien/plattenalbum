@@ -937,13 +937,13 @@ class ProfileSettings(Gtk.Grid):
 		# widgets
 		self._profiles_combo=Gtk.ComboBoxText(entry_text_column=0, hexpand=True)
 
-		add_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-add", Gtk.IconSize.BUTTON))
-		delete_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-remove", Gtk.IconSize.BUTTON))
+		add_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON))
+		delete_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-remove-symbolic", Gtk.IconSize.BUTTON))
 		add_delete_buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		add_delete_buttons.pack_start(add_button, True, True, 0)
 		add_delete_buttons.pack_start(delete_button, True, True, 0)
 
-		connect_button=Gtk.Button(label=_("Connect"), image=Gtk.Image.new_from_icon_name("system-run", Gtk.IconSize.BUTTON))
+		connect_button=Gtk.Button.new_with_mnemonic(_("_Connect"))
 
 		self._profile_entry=Gtk.Entry(hexpand=True)
 		self._host_entry=Gtk.Entry(hexpand=True)
@@ -953,7 +953,7 @@ class ProfileSettings(Gtk.Grid):
 		address_entry.pack_start(self._port_entry, False, False, 0)
 		self._password_entry=PasswordEntry(hexpand=True)
 		self._path_entry=Gtk.Entry(hexpand=True, placeholder_text=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC))
-		self._path_select_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open", Gtk.IconSize.BUTTON))
+		self._path_select_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open-symbolic", Gtk.IconSize.BUTTON))
 		path_box=Gtk.Box(spacing=6)
 		path_box.pack_start(self._path_entry, True, True, 0)
 		path_box.pack_start(self._path_select_button, False, False, 0)
@@ -1487,7 +1487,7 @@ class SongPopover(Gtk.Popover):
 		scroll.add(treeview)
 		box.pack_start(scroll, True, True, 0)
 		if abs_path is not None:  # show open with button when song is on the same computer
-			open_button=Gtk.Button(label=_("Open with…"), image=Gtk.Image.new_from_icon_name("document-open", Gtk.IconSize.BUTTON))
+			open_button=Gtk.Button(label=_("Open with…"),image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON))
 			open_button.connect("clicked", self._on_open_button_clicked)
 			self._gfile=Gio.File.new_for_path(abs_path)
 			box.pack_start(open_button, False, False, 0)
@@ -1594,13 +1594,13 @@ class SongsWindow(Gtk.Box):
 
 		# buttons
 		append_button=Gtk.Button.new_with_mnemonic(_("_Append"))
-		append_button.set_image(Gtk.Image.new_from_icon_name("list-add", Gtk.IconSize.BUTTON))
+		append_button.set_image(Gtk.Image.new_from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON))
 		append_button.set_tooltip_text(_("Add all titles to playlist"))
 		play_button=Gtk.Button.new_with_mnemonic(_("_Play"))
-		play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start", Gtk.IconSize.BUTTON))
+		play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.BUTTON))
 		play_button.set_tooltip_text(_("Directly play all titles"))
 		enqueue_button=Gtk.Button.new_with_mnemonic(_("_Enqueue"))
-		enqueue_button.set_image(Gtk.Image.new_from_icon_name("insert-object", Gtk.IconSize.BUTTON))
+		enqueue_button.set_image(Gtk.Image.new_from_icon_name("insert-object-symbolic", Gtk.IconSize.BUTTON))
 		enqueue_button.set_tooltip_text(_("Append all titles after the currently playing track and clear the playlist from all other songs"))
 
 		# button box
