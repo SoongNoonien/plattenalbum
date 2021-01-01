@@ -635,9 +635,13 @@ class Client(MPDClient):
 		return meta_base
 
 	def get_absolute_path(self, uri):
-		path=os.path.join(self._settings.get_lib_path(), uri)
-		if os.path.isfile(path):
-			return path
+		lib_path=self._settings.get_lib_path()
+		if lib_path is not None:
+			path=os.path.join(lib_path, uri)
+			if os.path.isfile(path):
+				return path
+			else:
+				return None
 		else:
 			return None
 
@@ -769,9 +773,10 @@ class Settings(Gio.Settings):
 		else:
 			return ("artist")
 
-	def get_lib_path(self):
-		active_profile=self.get_int("active-profile")
-		lib_path=self.get_value("paths")[active_profile]
+	def get_lib_path(self, profile=None):
+		if profile is None:  # use current profile if none is given
+			profile=self.get_int("active-profile")
+		lib_path=self.get_value("paths")[profile]
 		if lib_path == "":
 			lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 		return lib_path
@@ -1104,10 +1109,8 @@ class ProfileSettings(Gtk.Grid):
 
 	def _on_path_select_button_clicked(self, widget, parent):
 		dialog=Gtk.FileChooserNative(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
-		folder=self._settings.get_value("paths")[self._profiles_combo.get_active()]
-		if folder == "":
-			dialog.set_current_folder(GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC))
-		else:
+		folder=self._settings.get_lib_path(self._profiles_combo.get_active())
+		if folder is not None:
 			dialog.set_current_folder(folder)
 		response=dialog.run()
 		if response == Gtk.ResponseType.ACCEPT:
