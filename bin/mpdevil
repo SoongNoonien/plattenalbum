@@ -29,13 +29,12 @@ import datetime
 import os
 import sys
 import re
-import gettext
-gettext.textdomain("mpdevil")
+from gettext import gettext as _, ngettext, textdomain, bindtextdomain
+textdomain("mpdevil")
 if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
-	gettext.bindtextdomain("mpdevil", "/app/share/locale")
-_=gettext.gettext
+	bindtextdomain("mpdevil", "/app/share/locale")
 
-VERSION="1.0.0"  # sync with setup.py
+VERSION="1.0.0-dev"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -434,9 +433,13 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 class ClientHelper():
 	def seconds_to_display_time(seconds):
-		raw_time_string=str(datetime.timedelta(seconds=seconds))
-		stript_time_string=raw_time_string.lstrip("0").lstrip(":")
-		return stript_time_string.replace(":", "∶")  # use 'ratio' as delimiter
+		delta=datetime.timedelta(seconds=seconds)
+		if delta.days > 0:
+			days=ngettext("{days} day", "{days} days", delta.days).format(days=delta.days)
+			time_string=days+", "+str(datetime.timedelta(seconds=delta.seconds))
+		else:
+			time_string=str(delta).lstrip("0").lstrip(":")
+		return time_string.replace(":", "∶")  # use 'ratio' as delimiter
 
 	def song_to_str_dict(song):  # converts tags with multiple values to comma separated strings
 		return_song={}
@@ -1893,7 +1896,8 @@ class SearchWindow(Gtk.Box):
 						song["human_duration"], song["file"],
 						int_track
 				])
-			self._hits_label.set_text(_("{num} hits").format(num=self._songs_view.count()))
+			hits=self._songs_view.count()
+			self._hits_label.set_text(ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
 		if self._songs_view.count() == 0:
 			self._action_bar.set_sensitive(False)
 		else:
@@ -2219,17 +2223,16 @@ class AlbumWindow(FocusFrame):
 				for i, album in enumerate(albums):
 					# tooltip
 					length_human_readable=ClientHelper.calc_display_length(album["songs"])
+					titles=len(album["songs"])
 					discs=album["songs"][-1].get("disc", 1)
 					if type(discs) == list:
 						discs=int(discs[0])
 					else:
 						discs=int(discs)
+					tooltip=ngettext("{titles} title", "{titles} titles", titles).format(titles=titles)
 					if discs > 1:
-						tooltip=_("{titles} titles on {discs} discs ({length})").format(
-							titles=len(album["songs"]), discs=discs, length=length_human_readable)
-					else:
-						tooltip=_("{titles} titles ({length})").format(
-							titles=len(album["songs"]), length=length_human_readable)
+						tooltip=" ".join((tooltip, _("on {discs} discs").format(discs=discs)))
+					tooltip=" ".join((tooltip, "({length})".format(length=length_human_readable)))
 					# album label
 					if album["year"] == "":
 						display_label="<b>{}</b>".format(album["album"])
@@ -2860,7 +2863,8 @@ class PlaylistWindow(Gtk.Box):
 			self._playlist_info.set_text("")
 		else:
 			length_human_readable=ClientHelper.calc_display_length(songs)
-			self._playlist_info.set_text(_("{titles} titles ({length})").format(titles=len(songs), length=length_human_readable))
+			titles=ngettext("{titles} title", "{titles} titles", len(songs)).format(titles=len(songs))
+			self._playlist_info.set_text(" ".join((titles, "({length})".format(length=length_human_readable))))
 
 	def _scroll_to_selected_title(self, *args):
 		treeview, treeiter=self._selection.get_selected()
@@ -3146,8 +3150,10 @@ class PlaybackControl(Gtk.ButtonBox):
 			song=int(self._client.wrapped_call("status")["song"])
 			elapsed=ClientHelper.calc_display_length(songs[:song])
 			rest=ClientHelper.calc_display_length(songs[song+1:])
-			self._prev_button.set_tooltip_text(_("{titles} titles ({length})").format(titles=song, length=elapsed))
-			self._next_button.set_tooltip_text(_("{titles} titles ({length})").format(titles=(len(songs)-(song+1)), length=rest))
+			elapsed_titles=ngettext("{titles} title", "{titles} titles", song).format(titles=song)
+			rest_titles=ngettext("{titles} title", "{titles} titles", (len(songs)-(song+1))).format(titles=(len(songs)-(song+1)))
+			self._prev_button.set_tooltip_text(" ".join((elapsed_titles, "({length})".format(length=elapsed))))
+			self._next_button.set_tooltip_text(" ".join((rest_titles, "({length})".format(length=rest))))
 		except:
 			self._prev_button.set_tooltip_text("")
 			self._next_button.set_tooltip_text("")
