@@ -2582,7 +2582,7 @@ class AudioType(Gtk.Label):
 
 		# adding vars
 		self._client=client
-		self._init_vars()
+		self.freq, self.res, self.chan, self.brate, self.file_type=(0, 0, 0, 0, "")
 
 		# connect
 		self._client.emitter.connect("audio", self._on_audio)
@@ -2593,18 +2593,15 @@ class AudioType(Gtk.Label):
 
 	def clear(self, *args):
 		self.set_text("")
-		self._init_vars()
-
-	def _init_vars(self):
-		self.freq=0
-		self.res=0
-		self.chan=0
-		self.brate=0
-		self.file_type=""
+		self.freq, self.res, self.chan, self.brate, self.file_type=(0, 0, 0, 0, "")
 
 	def _refresh(self, *args):
-		string=_("{bitrate} kb/s, {frequency} kHz, {resolution} bit, {channels} channels, {file_type}").format(
-			bitrate=self.brate, frequency=self.freq, resolution=self.res, channels=self.chan, file_type=self.file_type)
+		try:
+			int_chan=int(self.chan)
+		except:
+			int_chan=0
+		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=self.chan)
+		string="{} kb/s, {} kHz, {} bit, {}, {}".format(self.brate, self.freq, self.res, channels, self.file_type)
 		self.set_text(string)
 
 	def _on_audio(self, emitter, freq, res, chan):
