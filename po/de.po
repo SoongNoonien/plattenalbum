@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-01-16 23:02+0100\n"
-"PO-Revision-Date: 2021-01-16 23:04+0100\n"
+"PO-Revision-Date: 2021-01-23 12:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -243,7 +243,7 @@ msgstr "<b>Titel:</b>"
 
 #: mpdevil:1333
 msgid "<b>Total Playtime:</b>"
-msgstr "<b>Gesamt Wiedergabezeit:</b>"
+msgstr "<b>Gesamtwiedergabezeit:</b>"
 
 #: mpdevil:1334
 msgid "<b>Database Update:</b>"
