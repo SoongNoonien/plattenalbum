@@ -13,7 +13,6 @@ DistUtilsExtra.auto.setup(
 	data_files=[
 		('share/metainfo/', ['data/org.mpdevil.mpdevil.appdata.xml']),
 		('share/icons/hicolor/16x16/apps/', ['data/icons/16x16/org.mpdevil.mpdevil.png']),
-		('share/icons/hicolor/22x22/apps/', ['data/icons/22x22/org.mpdevil.mpdevil.png']),
 		('share/icons/hicolor/24x24/apps/', ['data/icons/24x24/org.mpdevil.mpdevil.png']),
 		('share/icons/hicolor/32x32/apps/', ['data/icons/32x32/org.mpdevil.mpdevil.png']),
 		('share/icons/hicolor/48x48/apps/', ['data/icons/48x48/org.mpdevil.mpdevil.png']),
