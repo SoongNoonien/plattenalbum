@@ -2309,7 +2309,7 @@ class AlbumWindow(FocusFrame):
 					artist=self._store[path][6]
 					v=self._scroll_vadj.get_value()
 					h=self._scroll_hadj.get_value()
-					pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, int(event.x-h), int(event.y-v))
+					pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, event.x-h, event.y-v)
 					pop.popup()
 		self._button_event=(None, None)
 
@@ -2638,31 +2638,29 @@ class CoverEventBox(Gtk.EventBox):
 
 		# connect
 		self._button_press_event=self.connect("button-press-event", self._on_button_press_event)
-		self._settings.connect("notify::mini-player", self._on_mini_player)
 
 	def _on_button_press_event(self, widget, event):
-		if self._client.connected():
-			song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
-			if song != {}:
-				try:
-					artist=song[self._settings.get_artist_type()]
-				except:
-					artist=song.get("artist", "")
-				album=song.get("album", "")
-				album_year=song.get("date", "")
-				if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-					self._client.wrapped_call("album_to_playlist", album, artist, album_year)
-				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-					self._client.wrapped_call("album_to_playlist", album, artist, album_year, "append")
-				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-					pop=AlbumPopover(self._client, self._settings, album, artist, album_year, widget, int(event.x), int(event.y))
-					pop.popup()
-
-	def _on_mini_player(self, obj, typestring):
-		if obj.get_property("mini-player"):
-			self.handler_block(self._button_press_event)
+		if self._settings.get_property("mini-player"):
+			if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+				window=self.get_toplevel()
+				window.begin_move_drag(1, event.x_root, event.y_root, Gdk.CURRENT_TIME)
 		else:
-			self.handler_unblock(self._button_press_event)
+			if self._client.connected():
+				song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
+				if song != {}:
+					try:
+						artist=song[self._settings.get_artist_type()]
+					except:
+						artist=song.get("artist", "")
+					album=song.get("album", "")
+					album_year=song.get("date", "")
+					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+						self._client.wrapped_call("album_to_playlist", album, artist, album_year)
+					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+						self._client.wrapped_call("album_to_playlist", album, artist, album_year, "append")
+					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+						pop=AlbumPopover(self._client, self._settings, album, artist, album_year, widget, event.x, event.y)
+						pop.popup()
 
 class MainCover(Gtk.Frame):
 	def __init__(self, client, settings):
