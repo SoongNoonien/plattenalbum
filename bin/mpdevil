@@ -2354,7 +2354,7 @@ class Browser(Gtk.Paned):
 	__gsignals__={"search_focus_changed": (GObject.SignalFlags.RUN_FIRST, None, (bool,))}
 
 	def __init__(self, client, settings):
-		super().__init__(orientation=Gtk.Orientation.HORIZONTAL)  # paned1
+		super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
 
 		# adding vars
 		self._client=client
@@ -2407,10 +2407,6 @@ class Browser(Gtk.Paned):
 		box1.pack_start(self._artist_window, True, True, 0)
 		self.pack1(box1, False, False)
 		self.pack2(self._stack, True, False)
-		self.set_position(self._settings.get_int("paned1"))
-
-	def save_settings(self):
-		self._settings.set_int("paned1", self.get_position())
 
 	def _back_to_current_album(self, *args):
 		def callback():
@@ -2763,11 +2759,10 @@ class PlaylistWindow(Gtk.Box):
 			Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9),
 			Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
 		)
-
-		for column in self._columns:
+		for i, column in enumerate(self._columns):
 			column.set_property("resizable", True)
 			column.set_min_width(30)
-
+			column.connect("notify::width", self._on_column_width, i)
 		self._load_settings()
 
 		# scroll
@@ -2823,13 +2818,8 @@ class PlaylistWindow(Gtk.Box):
 		self.pack_start(self._frame, True, True, 0)
 		self.pack_end(action_bar, False, False, 0)
 
-	def save_settings(self):  # only saves the column sizes
-		columns=self._treeview.get_columns()
-		permutation=self._settings.get_value("column-permutation").unpack()
-		sizes=[0] * len(permutation)
-		for i in range(len(permutation)):
-			sizes[permutation[i]]=columns[i].get_width()
-		self._settings.set_value("column-sizes", GLib.Variant("ai", sizes))
+	def _on_column_width(self, obj, typestring, pos):
+		self._settings.array_modify("ai", "column-sizes", pos, obj.get_property("width"))
 
 	def _load_settings(self, *args):
 		columns=self._treeview.get_columns()
@@ -3067,12 +3057,7 @@ class CoverPlaylistWindow(Gtk.Paned):
 		overlay.add_overlay(self._lyrics_button_revealer)
 		self.pack1(overlay, False, False)
 		self.pack2(self._playlist_window, True, False)
-		self.set_position(self._settings.get_int("paned0"))
 		self._on_settings_changed()  # hide lyrics button
-
-	def save_settings(self):
-		self._settings.set_int("paned0", self.get_position())
-		self._playlist_window.save_settings()
 
 	def _on_reconnected(self, *args):
 		self.lyrics_button.set_sensitive(True)
@@ -3686,7 +3671,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# actions
 		simple_actions_data=(
-			"save","settings","stats","help","menu",
+			"settings","stats","help","menu",
 			"toggle-lyrics","back-to-current-album","toggle-search",
 			"profile-next","profile-prev"
 		)
@@ -3708,6 +3693,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			icons={"open-menu-symbolic": AutoSizedIcon("open-menu-symbolic", "icon-size", self._settings)}
 
+		self._paned=Gtk.Paned()
 		self._browser=Browser(self._client, self._settings)
 		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings)
 		playback_control=PlaybackControl(self._client, self._settings)
@@ -3730,7 +3716,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu=Gio.Menu()
 		menu.append_submenu(_("Profiles"), self._profiles_submenu)
 		menu.append(_("Mini player"), "win.mini-player")
-		menu.append(_("Save window layout"), "win.save")
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
@@ -3756,15 +3741,19 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._browser.connect("search_focus_changed", self._on_search_focus_changed)
+		# auto save window dimensions
+		self.connect("size-allocate", self._on_size_allocate)
+		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)
+		self._cover_playlist_window.connect("notify::position", self._on_paned_position, "paned0")
+		self._browser.connect("notify::position", self._on_paned_position, "paned1")
+		self._paned.connect("notify::position", self._on_paned_position, "paned2")
 
 		# packing
-		self._paned2=Gtk.Paned()
-		self._paned2.set_position(self._settings.get_int("paned2"))
 		self._on_playlist_pos_changed()  # set orientation
-		self._paned2.pack1(self._browser, True, False)
-		self._paned2.pack2(self._cover_playlist_window, False, False)
+		self._paned.pack1(self._browser, True, False)
+		self._paned.pack2(self._cover_playlist_window, False, False)
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		vbox.pack_start(self._paned2, True, True, 0)
+		vbox.pack_start(self._paned, True, True, 0)
 		vbox.pack_start(action_bar, False, False, 0)
 		overlay=Gtk.Overlay()
 		overlay.add(vbox)
@@ -3780,6 +3769,9 @@ class MainWindow(Gtk.ApplicationWindow):
 			action_bar.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.VERTICAL))
 			action_bar.pack_start(self._menu_button)
 		self.add(overlay)
+		self._cover_playlist_window.set_position(self._settings.get_int("paned0"))
+		self._browser.set_position(self._settings.get_int("paned1"))
+		self._paned.set_position(self._settings.get_int("paned2"))
 		self._client.emitter.emit("disconnected")  # bring player in defined state
 		# indicate connection process in window title
 		if self._use_csd:
@@ -3796,6 +3788,15 @@ class MainWindow(Gtk.ApplicationWindow):
 			return False
 		GLib.idle_add(callback)
 
+	def _on_size_allocate(self, widget, rect):
+		if not self.is_maximized() and not self._settings.get_property("mini-player"):
+			size=self.get_size()
+			self._settings.set_int("width", size[0])
+			self._settings.set_int("height", size[1])
+
+	def _on_paned_position(self, obj, typestring, key):
+		self._settings.set_int(key, obj.get_position())
+
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_playlist_window.lyrics_button.set_active(not(self._cover_playlist_window.lyrics_button.get_active()))
 
@@ -3804,15 +3805,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_toggle_search(self, action, param):
 		self._browser.search_button.set_active(not(self._browser.search_button.get_active()))
-
-	def _on_save(self, action, param):
-		size=self.get_size()
-		self._settings.set_int("width", size[0])
-		self._settings.set_int("height", size[1])
-		self._settings.set_boolean("maximize", self.is_maximized())
-		self._browser.save_settings()
-		self._cover_playlist_window.save_settings()
-		self._settings.set_int("paned2", self._paned2.get_position())
 
 	def _on_settings(self, action, param):
 		settings=SettingsDialog(self, self._client, self._settings)
@@ -3870,14 +3862,14 @@ class MainWindow(Gtk.ApplicationWindow):
 					notify.show()
 
 	def _on_reconnected(self, *args):
-		for action in ("save","stats","toggle-lyrics","back-to-current-album","toggle-search"):
+		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 
 	def _on_disconnected(self, *args):
 		self.set_title("mpdevil")
 		if self._use_csd:
 			self._header_bar.set_subtitle("")
-		for action in ("save","stats","toggle-lyrics","back-to-current-album","toggle-search"):
+		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
 			self.lookup_action(action).set_enabled(False)
 
 	def _on_search_focus_changed(self, obj, focus):
@@ -3885,14 +3877,12 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
-			self.lookup_action("save").set_enabled(False)
 			self._tmp_saved_size=self.get_size()
 			self._tmp_saved_miximized=self.is_maximized()
 			if self._tmp_saved_miximized:
 				self.unmaximize()
 			self.resize(1,1)
 		else:
-			self.lookup_action("save").set_enabled(True)
 			self.resize(self._tmp_saved_size[0], self._tmp_saved_size[1])
 			if self._tmp_saved_miximized:
 				self.maximize()
@@ -3909,10 +3899,10 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_playlist_pos_changed(self, *args):
 		if self._settings.get_boolean("playlist-right"):
 			self._cover_playlist_window.set_orientation(Gtk.Orientation.VERTICAL)
-			self._paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self._paned.set_orientation(Gtk.Orientation.HORIZONTAL)
 		else:
 			self._cover_playlist_window.set_orientation(Gtk.Orientation.HORIZONTAL)
-			self._paned2.set_orientation(Gtk.Orientation.VERTICAL)
+			self._paned.set_orientation(Gtk.Orientation.VERTICAL)
 
 	def _refresh_profiles_menu(self, *args):
 		self._profiles_submenu.remove_all()
@@ -3986,4 +3976,3 @@ class mpdevil(Gtk.Application):
 if __name__ == "__main__":
 	app=mpdevil()
 	app.run(sys.argv)
-
