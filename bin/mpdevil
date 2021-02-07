@@ -2761,8 +2761,9 @@ class PlaylistWindow(Gtk.Box):
 		)
 		for i, column in enumerate(self._columns):
 			column.set_property("resizable", True)
+			column.set_property("sizing", Gtk.TreeViewColumnSizing.FIXED)
 			column.set_min_width(30)
-			column.connect("notify::width", self._on_column_width, i)
+			column.connect("notify::fixed-width", self._on_column_width, i)
 		self._load_settings()
 
 		# scroll
@@ -2819,7 +2820,7 @@ class PlaylistWindow(Gtk.Box):
 		self.pack_end(action_bar, False, False, 0)
 
 	def _on_column_width(self, obj, typestring, pos):
-		self._settings.array_modify("ai", "column-sizes", pos, obj.get_property("width"))
+		self._settings.array_modify("ai", "column-sizes", pos, obj.get_property("fixed-width"))
 
 	def _load_settings(self, *args):
 		columns=self._treeview.get_columns()
