@@ -20,7 +20,10 @@ DistUtilsExtra.auto.setup(
 		('share/icons/hicolor/128x128/apps/', ['data/icons/128x128/org.mpdevil.mpdevil.png']),
 		('share/icons/hicolor/256x256/apps/', ['data/icons/256x256/org.mpdevil.mpdevil.png']),
 		('share/icons/hicolor/scalable/apps/', ['data/icons/scalable/org.mpdevil.mpdevil.svg']),
-		('share/icons/hicolor/scalable/apps/', ['data/icons/scalable/org.mpdevil.mpdevil-symbolic.svg'])
+		('share/icons/hicolor/scalable/apps/', ['data/icons/scalable/org.mpdevil.mpdevil-symbolic.svg']),
+		('share/icons/hicolor/scalable/status/', ['data/icons/scalable/org.mpdevil.mpdevil-single-symbolic.svg']),
+		('share/icons/hicolor/scalable/status/', ['data/icons/scalable/org.mpdevil.mpdevil-consume-symbolic.svg']),
+		('share/icons/hicolor/scalable/status/', ['data/icons/scalable/org.mpdevil.mpdevil-consume-symbolic-rtl.svg']),
 	],
 )
 

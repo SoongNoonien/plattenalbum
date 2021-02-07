@@ -3351,15 +3351,16 @@ class PlaybackOptions(Gtk.Box):
 
 		# widgets
 		icons={}
-		for icon_name in ("media-playlist-shuffle-symbolic","media-playlist-repeat-symbolic","zoom-original-symbolic","edit-cut-symbolic"):
+		for icon_name in ("media-playlist-shuffle-symbolic","media-playlist-repeat-symbolic",
+					"org.mpdevil.mpdevil-single-symbolic","org.mpdevil.mpdevil-consume-symbolic"):
 			icons[icon_name]=AutoSizedIcon(icon_name, "icon-size", self._settings)
 		self._random_button=Gtk.ToggleButton(image=icons["media-playlist-shuffle-symbolic"], tooltip_text=_("Random mode"))
 		self._random_button.set_can_focus(False)
 		self._repeat_button=Gtk.ToggleButton(image=icons["media-playlist-repeat-symbolic"], tooltip_text=_("Repeat mode"))
 		self._repeat_button.set_can_focus(False)
-		self._single_button=Gtk.ToggleButton(image=icons["zoom-original-symbolic"], tooltip_text=_("Single mode"))
+		self._single_button=Gtk.ToggleButton(image=icons["org.mpdevil.mpdevil-single-symbolic"], tooltip_text=_("Single mode"))
 		self._single_button.set_can_focus(False)
-		self._consume_button=Gtk.ToggleButton(image=icons["edit-cut-symbolic"], tooltip_text=_("Consume mode"))
+		self._consume_button=Gtk.ToggleButton(image=icons["org.mpdevil.mpdevil-consume-symbolic"], tooltip_text=_("Consume mode"))
 		self._consume_button.set_can_focus(False)
 		self._volume_button=Gtk.VolumeButton(use_symbolic=True, size=self._settings.get_gtk_icon_size("icon-size"))
 		self._volume_button.set_can_focus(False)
