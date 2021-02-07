@@ -3663,8 +3663,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client=client
 		self._settings=settings
 		self._use_csd=self._settings.get_boolean("use-csd")
-		self._tmp_saved_size=None  # needed to restore size after leaving mini player mode
-		self._tmp_saved_maximized=None  # needed to restore maximize state after leaving mini player mode
 
 		# MPRIS
 		dbus_service=MPRISInterface(self, self._client, self._settings)
@@ -3877,17 +3875,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
-			self._tmp_saved_size=self.get_size()
-			self._tmp_saved_miximized=self.is_maximized()
-			if self._tmp_saved_miximized:
+			if self.is_maximized():
 				self.unmaximize()
 			self.resize(1,1)
 		else:
-			self.resize(self._tmp_saved_size[0], self._tmp_saved_size[1])
-			if self._tmp_saved_miximized:
-				self.maximize()
-			self._tmp_saved_size=None
-			self._tmp_saved_maximized=None
+			self.resize(self._settings.get_int("width"), self._settings.get_int("height"))
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
