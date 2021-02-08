@@ -3740,12 +3740,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._browser.connect("search_focus_changed", self._on_search_focus_changed)
-		# auto save window dimensions
+		# auto save window state and size
 		self.connect("size-allocate", self._on_size_allocate)
 		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)
-		self._cover_playlist_window.connect("notify::position", self._on_paned_position, "paned0")
-		self._browser.connect("notify::position", self._on_paned_position, "paned1")
-		self._paned.connect("notify::position", self._on_paned_position, "paned2")
 
 		# packing
 		self._on_playlist_pos_changed()  # set orientation
@@ -3768,9 +3765,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			action_bar.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.VERTICAL))
 			action_bar.pack_start(self._menu_button)
 		self.add(overlay)
-		self._cover_playlist_window.set_position(self._settings.get_int("paned0"))
-		self._browser.set_position(self._settings.get_int("paned1"))
-		self._paned.set_position(self._settings.get_int("paned2"))
 		self._client.emitter.emit("disconnected")  # bring player in defined state
 		# indicate connection process in window title
 		if self._use_csd:
@@ -3780,21 +3774,21 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.show_all()
 		while Gtk.events_pending():  # ensure window is visible
 			Gtk.main_iteration_do(True)
+		# restore paned settings when window is visible (fixes a bug when window is maximized)
+		self._cover_playlist_window.set_position(self._settings.get_int("paned0"))
+		self._browser.set_position(self._settings.get_int("paned1"))
+		self._paned.set_position(self._settings.get_int("paned2"))
+
+		# auto save paned positions
+		self._cover_playlist_window.connect("notify::position", self._on_paned_position, "paned0")
+		self._browser.connect("notify::position", self._on_paned_position, "paned1")
+		self._paned.connect("notify::position", self._on_paned_position, "paned2")
 
 		# start client
 		def callback(*args):
 			self._client.start()  # connect client
 			return False
 		GLib.idle_add(callback)
-
-	def _on_size_allocate(self, widget, rect):
-		if not self.is_maximized() and not self._settings.get_property("mini-player"):
-			size=self.get_size()
-			self._settings.set_int("width", size[0])
-			self._settings.set_int("height", size[1])
-
-	def _on_paned_position(self, obj, typestring, key):
-		self._settings.set_int(key, obj.get_position())
 
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_playlist_window.lyrics_button.set_active(not(self._cover_playlist_window.lyrics_button.get_active()))
@@ -3873,6 +3867,15 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_search_focus_changed(self, obj, focus):
 		self._mpd_action_group.lookup_action("toggle-play").set_enabled(not(focus))
+
+	def _on_size_allocate(self, widget, rect):
+		if not self.is_maximized() and not self._settings.get_property("mini-player"):
+			size=self.get_size()
+			self._settings.set_int("width", size[0])
+			self._settings.set_int("height", size[1])
+
+	def _on_paned_position(self, obj, typestring, key):
+		self._settings.set_int(key, obj.get_position())
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
