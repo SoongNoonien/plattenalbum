@@ -2459,10 +2459,15 @@ class Browser(Gtk.Paned):
 		self.search_button.set_active(False)
 
 	def _on_mini_player(self, obj, typestring):
-		visibility=not(obj.get_property("mini-player"))
-		self.set_property("visible", visibility)
-		self.back_to_current_album_button.set_property("visible", visibility)
-		self.search_button.set_property("visible", visibility)
+		state=obj.get_property("mini-player")
+		self.set_property("no-show-all", state)
+		self.back_to_current_album_button.set_property("no-show-all", state)
+		self.search_button.set_property("no-show-all", state)
+		self.set_property("visible", not(state))
+		self.back_to_current_album_button.set_property("visible", not(state))
+		self.search_button.set_property("visible", not(state))
+		if not state:
+			self.show_all()
 
 ######################
 # playlist and cover #
@@ -3001,8 +3006,12 @@ class PlaylistWindow(Gtk.Box):
 		self._treeview.set_sensitive(True)
 
 	def _on_mini_player(self, obj, typestring):
-		visibility=not(obj.get_property("mini-player"))
-		self.set_property("visible", visibility)
+		if obj.get_property("mini-player"):
+			self.set_property("no-show-all", True)
+			self.set_property("visible", False)
+		else:
+			self.set_property("no-show-all", False)
+			self.show_all()
 
 class CoverPlaylistWindow(Gtk.Paned):
 	def __init__(self, client, settings):
@@ -3462,8 +3471,12 @@ class PlaybackOptions(Gtk.Box):
 		self._volume_refresh(None, -1)
 
 	def _on_mini_player(self, obj, typestring):
-		visibility=not(obj.get_property("mini-player"))
-		self._button_box.set_property("visible", visibility)
+		if obj.get_property("mini-player"):
+			self._button_box.set_property("no-show-all", True)
+			self._button_box.set_property("visible", False)
+		else:
+			self._button_box.set_property("no-show-all", False)
+			self._button_box.show_all()
 
 	def _on_icon_size_changed(self, *args):
 		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
@@ -3743,6 +3756,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		# auto save window state and size
 		self.connect("size-allocate", self._on_size_allocate)
 		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)
+		# save and restore mini player
+		self._settings.bind("mini-player", self._settings, "mini-player", Gio.SettingsBindFlags.DEFAULT)
 
 		# packing
 		self._on_playlist_pos_changed()  # set orientation

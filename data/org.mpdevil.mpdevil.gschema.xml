@@ -31,6 +31,11 @@
       <summary>Default position of paned1/paned0 separator</summary>
       <description></description>
     </key>
+    <key type="b" name="mini-player">
+      <default>false</default>
+      <summary>Start player in mini player mode</summary>
+      <description></description>
+    </key>
     <key type="i" name="album-cover">
       <default>170</default>
       <summary>Size of covers in album view</summary>
