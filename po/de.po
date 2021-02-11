@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-02-11 19:07+0100\n"
-"PO-Revision-Date: 2021-02-11 19:08+0100\n"
+"PO-Revision-Date: 2021-02-11 22:18+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -47,31 +47,31 @@ msgstr "Sekundäre Symbolgröße:"
 
 #: mpdevil:818
 msgid "Use Client-side decoration"
-msgstr "Benutze „Client-side decoration“"
+msgstr "„Client-side decoration“ benutzen"
 
 #: mpdevil:819
 msgid "Show stop button"
-msgstr "Zeige Stopp-Knopf"
+msgstr "Stopp-Knopf anzeigen"
 
 #: mpdevil:820
 msgid "Show lyrics button"
-msgstr "Zeige Liedtext-Knopf"
+msgstr "Liedtext-Knopf anzeigen"
 
 #: mpdevil:821
 msgid "Show initials in artist view"
-msgstr "Zeige Anfangsbuchstaben in Interpretenliste"
+msgstr "Anfangsbuchstaben in Interpretenliste anzeigen"
 
 #: mpdevil:822
 msgid "Place playlist at the side"
-msgstr "Wiedergabeliste seitlich platzieren"
+msgstr "Wiedergabeliste seitlich anzeigen"
 
 #: mpdevil:823
 msgid "Use “Album Artist” tag"
-msgstr "Benutze „Album Artist“ Tag"
+msgstr "„Album Artist“ Tag benutzen"
 
 #: mpdevil:824
 msgid "Send notification on title change"
-msgstr "Sende Benachrichtigung bei Titelwechsel"
+msgstr "Über Titelwechsel benachrichtigen"
 
 #: mpdevil:825
 msgid "Stop playback on quit"
