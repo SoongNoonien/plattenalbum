@@ -838,7 +838,6 @@ class GeneralSettings(Gtk.Box):
 			(_("Show stop button"), "show-stop"),
 			(_("Show lyrics button"), "show-lyrics-button"),
 			(_("Show initials in artist view"), "show-initials"),
-			(_("Show tooltips in album view"), "show-album-view-tooltips"),
 			(_("Use “Album Artist” tag"), "use-album-artist"),
 			(_("Send notification on title change"), "send-notify"),
 			(_("Stop playback on quit"), "stop-on-quit"),
@@ -894,7 +893,6 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(check_buttons["show-stop"], False, False, 0)
 		self.pack_start(check_buttons["show-lyrics-button"], False, False, 0)
 		self.pack_start(check_buttons["show-initials"], False, False, 0)
-		self.pack_start(check_buttons["show-album-view-tooltips"], False, False, 0)
 		self.pack_start(view_grid, False, False, 0)
 		self.pack_start(behavior_heading, False, False, 0)
 		self.pack_start(check_buttons["use-album-artist"], False, False, 0)
@@ -2090,8 +2088,7 @@ class AlbumWindow(FocusFrame):
 		self._sort_settings()
 
 		# iconview
-		self._iconview=Gtk.IconView(model=self._store, item_width=0, pixbuf_column=0, markup_column=1)
-		self._tooltip_settings()
+		self._iconview=Gtk.IconView(model=self._store, item_width=0, pixbuf_column=0, markup_column=1, tooltip_column=3)
 
 		# scroll
 		scroll=Gtk.ScrolledWindow()
@@ -2111,7 +2108,6 @@ class AlbumWindow(FocusFrame):
 		self._client.emitter.connect("update", self._clear)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
-		self._settings.connect("changed::show-album-view-tooltips", self._tooltip_settings)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
 		self._settings.connect("changed::use-album-artist", self._clear)
@@ -2155,12 +2151,6 @@ class AlbumWindow(FocusFrame):
 			callback()
 		elif not self.scroll_to_current_album in self._pending:
 			self._pending.append(self.scroll_to_current_album)
-
-	def _tooltip_settings(self, *args):
-		if self._settings.get_boolean("show-album-view-tooltips"):
-			self._iconview.set_tooltip_column(3)
-		else:
-			self._iconview.set_tooltip_column(-1)
 
 	def _sort_settings(self, *args):
 		if self._settings.get_boolean("sort-albums-by-year"):

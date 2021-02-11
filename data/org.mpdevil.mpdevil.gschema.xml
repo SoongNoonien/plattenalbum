@@ -76,11 +76,6 @@
       <summary>Show initial letters in artist-view</summary>
       <description></description>
     </key>
-    <key type="b" name="show-album-view-tooltips">
-      <default>true</default>
-      <summary>Show tooltips in album-view</summary>
-      <description></description>
-    </key>
     <key type="b" name="sort-albums-by-year">
       <default>true</default>
       <summary>Sort albums by year</summary>
