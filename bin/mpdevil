@@ -812,40 +812,22 @@ class GeneralSettings(Gtk.Box):
 				self._settings.connect("changed::{}".format(key), self._on_int_settings_changed, int_settings[key][1])
 			)
 
-		# combo_settings
-		combo_settings={}
-		combo_settings_data=[
-			(_("Sort albums by:"), _("name"), _("year"), "sort-albums-by-year"),
-			(_("Position of playlist:"), _("bottom"), _("right"), "playlist-right")
-		]
-		for label, vfalse, vtrue, key in combo_settings_data:
-			combo_settings[key]=(Gtk.Label(label=label, xalign=0), Gtk.ComboBoxText(entry_text_column=0))
-			combo_settings[key][1].append_text(vfalse)
-			combo_settings[key][1].append_text(vtrue)
-			if self._settings.get_boolean(key):
-				combo_settings[key][1].set_active(1)
-			else:
-				combo_settings[key][1].set_active(0)
-			combo_settings[key][1].connect("changed", self._on_combo_changed, key)
-			self._settings_handlers.append(
-				self._settings.connect("changed::{}".format(key), self._on_combo_settings_changed, combo_settings[key][1])
-			)
-
 		# check buttons
 		check_buttons={}
 		check_buttons_data=[
-			(_("Use Client-side decoration"), "use-csd"),
-			(_("Show stop button"), "show-stop"),
-			(_("Show lyrics button"), "show-lyrics-button"),
-			(_("Show initials in artist view"), "show-initials"),
-			(_("Use “Album Artist” tag"), "use-album-artist"),
-			(_("Send notification on title change"), "send-notify"),
-			(_("Stop playback on quit"), "stop-on-quit"),
-			(_("Play selected albums and titles immediately"), "force-mode")
+			(_("Use Client-side decoration"), None, "use-csd"),
+			(_("Show stop button"), None, "show-stop"),
+			(_("Show lyrics button"), None, "show-lyrics-button"),
+			(_("Show initials in artist view"), None, "show-initials"),
+			(_("Place playlist at the side"), None, "playlist-right"),
+			(_("Use “Album Artist” tag"), None, "use-album-artist"),
+			(_("Send notification on title change"), None, "send-notify"),
+			(_("Stop playback on quit"), None, "stop-on-quit"),
+			(_("Play selected albums and titles immediately"), None, "force-mode"),
+			(_("Sort albums in chronological order"), None, "sort-albums-by-year"),
 		]
-
-		for label, key in check_buttons_data:
-			check_buttons[key]=Gtk.CheckButton(label=label)
+		for label, tooltip, key in check_buttons_data:
+			check_buttons[key]=Gtk.CheckButton(label=label, tooltip_text=tooltip)
 			check_buttons[key].set_active(self._settings.get_boolean(key))
 			check_buttons[key].set_margin_start(12)
 			check_buttons[key].connect("toggled", self._on_toggled, key)
@@ -864,22 +846,10 @@ class GeneralSettings(Gtk.Box):
 		view_grid.attach_next_to(int_settings["album-cover"][0], int_settings["track-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size"][0], int_settings["album-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size-sec"][0], int_settings["icon-size"][0], Gtk.PositionType.BOTTOM, 1, 1)
-		view_grid.attach_next_to(combo_settings["playlist-right"][0], int_settings["icon-size-sec"][0], Gtk.PositionType.BOTTOM, 1, 1)
 		view_grid.attach_next_to(int_settings["track-cover"][1], int_settings["track-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(int_settings["album-cover"][1], int_settings["album-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size"][1], int_settings["icon-size"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size-sec"][1], int_settings["icon-size-sec"][0], Gtk.PositionType.RIGHT, 1, 1)
-		view_grid.attach_next_to(combo_settings["playlist-right"][1], combo_settings["playlist-right"][0], Gtk.PositionType.RIGHT, 1, 1)
-
-		# behavior grid
-		behavior_grid=Gtk.Grid(row_spacing=6, column_spacing=12)
-		behavior_grid.set_margin_start(12)
-		behavior_grid.add(combo_settings["sort-albums-by-year"][0])
-		behavior_grid.attach_next_to(
-			combo_settings["sort-albums-by-year"][1],
-			combo_settings["sort-albums-by-year"][0],
-			Gtk.PositionType.RIGHT, 1, 1
-		)
 
 		# connect
 		self.connect("destroy", self._remove_handlers)
@@ -893,13 +863,14 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(check_buttons["show-stop"], False, False, 0)
 		self.pack_start(check_buttons["show-lyrics-button"], False, False, 0)
 		self.pack_start(check_buttons["show-initials"], False, False, 0)
+		self.pack_start(check_buttons["playlist-right"], False, False, 0)
 		self.pack_start(view_grid, False, False, 0)
 		self.pack_start(behavior_heading, False, False, 0)
 		self.pack_start(check_buttons["use-album-artist"], False, False, 0)
 		self.pack_start(check_buttons["send-notify"], False, False, 0)
 		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
 		self.pack_start(check_buttons["force-mode"], False, False, 0)
-		self.pack_start(behavior_grid, False, False, 0)
+		self.pack_start(check_buttons["sort-albums-by-year"], False, False, 0)
 
 	def _remove_handlers(self, *args):
 		for handler in self._settings_handlers:
@@ -908,24 +879,11 @@ class GeneralSettings(Gtk.Box):
 	def _on_int_settings_changed(self, settings, key, entry):
 		entry.set_value(settings.get_int(key))
 
-	def _on_combo_settings_changed(self, settings, key, combo):
-		if settings.get_boolean(key):
-			combo.set_active(1)
-		else:
-			combo.set_active(0)
-
 	def _on_check_settings_changed(self, settings, key, button):
 		button.set_active(settings.get_boolean(key))
 
 	def _on_int_changed(self, widget, key):
 		self._settings.set_int(key, int(widget.get_value()))
-
-	def _on_combo_changed(self, box, key):
-		active=box.get_active()
-		if active == 0:
-			self._settings.set_boolean(key, False)
-		else:
-			self._settings.set_boolean(key, True)
 
 	def _on_toggled(self, widget, key):
 		self._settings.set_boolean(key, widget.get_active())

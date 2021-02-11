@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-01-16 23:02+0100\n"
+"POT-Creation-Date: 2021-02-11 19:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -46,497 +46,473 @@ msgid "Secondary icon size:"
 msgstr ""
 
 #: mpdevil:818
-msgid "Sort albums by:"
-msgstr ""
-
-#: mpdevil:818
-msgid "name"
-msgstr ""
-
-#: mpdevil:818
-msgid "year"
-msgstr ""
-
-#: mpdevil:819
-msgid "Position of playlist:"
-msgstr ""
-
-#: mpdevil:819
-msgid "bottom"
-msgstr ""
-
-#: mpdevil:819
-msgid "right"
-msgstr ""
-
-#: mpdevil:837
 msgid "Use Client-side decoration"
 msgstr ""
 
-#: mpdevil:838
+#: mpdevil:819
 msgid "Show stop button"
 msgstr ""
 
-#: mpdevil:839
+#: mpdevil:820
 msgid "Show lyrics button"
 msgstr ""
 
-#: mpdevil:840
+#: mpdevil:821
 msgid "Show initials in artist view"
 msgstr ""
 
-#: mpdevil:841
-msgid "Show tooltips in album view"
+#: mpdevil:822
+msgid "Place playlist at the side"
 msgstr ""
 
-#: mpdevil:842
+#: mpdevil:823
 msgid "Use “Album Artist” tag"
 msgstr ""
 
-#: mpdevil:843
+#: mpdevil:824
 msgid "Send notification on title change"
 msgstr ""
 
-#: mpdevil:844
+#: mpdevil:825
 msgid "Stop playback on quit"
 msgstr ""
 
-#: mpdevil:845
+#: mpdevil:826
 msgid "Play selected albums and titles immediately"
 msgstr ""
 
-#: mpdevil:858
+#: mpdevil:827
+msgid "Sort albums in chronological order"
+msgstr ""
+
+#: mpdevil:839
 msgid "<b>View</b>"
 msgstr ""
 
-#: mpdevil:859
+#: mpdevil:840
 msgid "<b>Behavior</b>"
 msgstr ""
 
-#: mpdevil:891
+#: mpdevil:860
 msgid "(restart required)"
 msgstr ""
 
-#: mpdevil:953
+#: mpdevil:909
 msgid "_Connect"
 msgstr ""
 
-#: mpdevil:969
+#: mpdevil:925
 msgid ""
 "The first image in the same directory as the song file matching this regex "
 "will be displayed. %AlbumArtist% and %Album% will be replaced by the "
 "corresponding tags of the song."
 msgstr ""
 
-#: mpdevil:974
+#: mpdevil:930
 msgid "Profile:"
 msgstr ""
 
-#: mpdevil:975
+#: mpdevil:931
 msgid "Name:"
 msgstr ""
 
-#: mpdevil:976
+#: mpdevil:932
 msgid "Host:"
 msgstr ""
 
-#: mpdevil:977
+#: mpdevil:933
 msgid "Password:"
 msgstr ""
 
-#: mpdevil:978
+#: mpdevil:934
 msgid "Music lib:"
 msgstr ""
 
-#: mpdevil:979
+#: mpdevil:935
 msgid "Cover regex:"
 msgstr ""
 
-#: mpdevil:1114
+#: mpdevil:1070
 msgid "Choose directory"
 msgstr ""
 
-#: mpdevil:1145
+#: mpdevil:1101
 msgid "Choose the order of information to appear in the playlist:"
 msgstr ""
 
-#: mpdevil:1162 mpdevil:1715 mpdevil:1810 mpdevil:2759
+#: mpdevil:1118 mpdevil:1671 mpdevil:1766 mpdevil:2706
 msgid "No"
 msgstr ""
 
-#: mpdevil:1162 mpdevil:2760
+#: mpdevil:1118 mpdevil:2707
 msgid "Disc"
 msgstr ""
 
-#: mpdevil:1162 mpdevil:1718 mpdevil:1815 mpdevil:2761
+#: mpdevil:1118 mpdevil:1674 mpdevil:1771 mpdevil:2708
 msgid "Title"
 msgstr ""
 
-#: mpdevil:1162 mpdevil:1821 mpdevil:2762
+#: mpdevil:1118 mpdevil:1777 mpdevil:2709
 msgid "Artist"
 msgstr ""
 
-#: mpdevil:1162 mpdevil:1827 mpdevil:2763
+#: mpdevil:1118 mpdevil:1783 mpdevil:2710
 msgid "Album"
 msgstr ""
 
-#: mpdevil:1162 mpdevil:1722 mpdevil:1833 mpdevil:2764
+#: mpdevil:1118 mpdevil:1678 mpdevil:1789 mpdevil:2711
 msgid "Length"
 msgstr ""
 
-#: mpdevil:1162 mpdevil:2765
+#: mpdevil:1118 mpdevil:2712
 msgid "Year"
 msgstr ""
 
-#: mpdevil:1162 mpdevil:2766
+#: mpdevil:1118 mpdevil:2713
 msgid "Genre"
 msgstr ""
 
-#: mpdevil:1278 mpdevil:1280 mpdevil:3721
+#: mpdevil:1234 mpdevil:1236 mpdevil:3666
 msgid "Settings"
 msgstr ""
 
-#: mpdevil:1293 mpdevil:1302 mpdevil:3567
+#: mpdevil:1249 mpdevil:1258 mpdevil:3513
 msgid "General"
 msgstr ""
 
-#: mpdevil:1294 mpdevil:1303 mpdevil:3732
+#: mpdevil:1250 mpdevil:1259 mpdevil:3677
 msgid "Profiles"
 msgstr ""
 
-#: mpdevil:1295 mpdevil:1304 mpdevil:3571
+#: mpdevil:1251 mpdevil:1260 mpdevil:3517
 msgid "Playlist"
 msgstr ""
 
-#: mpdevil:1317
+#: mpdevil:1273
 msgid "Stats"
 msgstr ""
 
-#: mpdevil:1327
+#: mpdevil:1283
 msgid "<b>Protocol:</b>"
 msgstr ""
 
-#: mpdevil:1328
+#: mpdevil:1284
 msgid "<b>Uptime:</b>"
 msgstr ""
 
-#: mpdevil:1329
+#: mpdevil:1285
 msgid "<b>Playtime:</b>"
 msgstr ""
 
-#: mpdevil:1330
+#: mpdevil:1286
 msgid "<b>Artists:</b>"
 msgstr ""
 
-#: mpdevil:1331
+#: mpdevil:1287
 msgid "<b>Albums:</b>"
 msgstr ""
 
-#: mpdevil:1332
+#: mpdevil:1288
 msgid "<b>Songs:</b>"
 msgstr ""
 
-#: mpdevil:1333
+#: mpdevil:1289
 msgid "<b>Total Playtime:</b>"
 msgstr ""
 
-#: mpdevil:1334
+#: mpdevil:1290
 msgid "<b>Database Update:</b>"
 msgstr ""
 
-#: mpdevil:1358
+#: mpdevil:1314
 msgid "A simple music browser for MPD"
 msgstr ""
 
-#: mpdevil:1456
+#: mpdevil:1412
 msgid "Open with…"
 msgstr ""
 
-#: mpdevil:1474
+#: mpdevil:1430
 msgid "MPD-Tag"
 msgstr ""
 
-#: mpdevil:1477
+#: mpdevil:1433
 msgid "Value"
 msgstr ""
 
-#: mpdevil:1608
+#: mpdevil:1564
 msgid "_Append"
 msgstr ""
 
-#: mpdevil:1610
+#: mpdevil:1566
 msgid "Add all titles to playlist"
 msgstr ""
 
-#: mpdevil:1611
+#: mpdevil:1567
 msgid "_Play"
 msgstr ""
 
-#: mpdevil:1613
+#: mpdevil:1569
 msgid "Directly play all titles"
 msgstr ""
 
-#: mpdevil:1614
+#: mpdevil:1570
 msgid "_Enqueue"
 msgstr ""
 
-#: mpdevil:1616
+#: mpdevil:1572
 msgid ""
 "Append all titles after the currently playing track and clear the playlist "
 "from all other songs"
 msgstr ""
 
-#: mpdevil:1871
+#: mpdevil:1827
 msgid "all tags"
 msgstr ""
 
-#: mpdevil:1900
+#: mpdevil:1856
 #, python-brace-format
 msgid "{hits} hit"
 msgid_plural "{hits} hits"
 msgstr[0] ""
 msgstr[1] ""
 
-#: mpdevil:1938
+#: mpdevil:1894
 msgid "all genres"
 msgstr ""
 
-#: mpdevil:2040
+#: mpdevil:1996
 msgid "all artists"
 msgstr ""
 
-#: mpdevil:2232 mpdevil:2863 mpdevil:3150 mpdevil:3151
+#: mpdevil:2180 mpdevil:2805 mpdevil:3091 mpdevil:3092
 #, python-brace-format
 msgid "{titles} title"
 msgid_plural "{titles} titles"
 msgstr[0] ""
 msgstr[1] ""
 
-#: mpdevil:2234
+#: mpdevil:2182
 #, python-brace-format
 msgid "on {discs} discs"
 msgstr ""
 
-#: mpdevil:2374 mpdevil:3590
+#: mpdevil:2322 mpdevil:3536
 msgid "Back to current album"
 msgstr ""
 
-#: mpdevil:2376
+#: mpdevil:2324
 msgid "Search"
 msgstr ""
 
-#: mpdevil:2551
+#: mpdevil:2500
 msgid "searching..."
 msgstr ""
 
-#: mpdevil:2556
+#: mpdevil:2505
 msgid "connection error"
 msgstr ""
 
-#: mpdevil:2558
+#: mpdevil:2507
 msgid "lyrics not found"
 msgstr ""
 
-#: mpdevil:2603
+#: mpdevil:2552
 #, python-brace-format
 msgid "{channels} channel"
 msgid_plural "{channels} channels"
 msgstr[0] ""
 msgstr[1] ""
 
-#: mpdevil:2733
+#: mpdevil:2680
 msgid "Scroll to current song"
 msgstr ""
 
-#: mpdevil:2741 mpdevil:3606
+#: mpdevil:2688 mpdevil:3552
 msgid "Clear playlist"
 msgstr ""
 
-#: mpdevil:3036
+#: mpdevil:2982
 msgid "Show lyrics"
 msgstr ""
 
-#: mpdevil:3358
+#: mpdevil:3300
 msgid "Random mode"
 msgstr ""
 
-#: mpdevil:3360
+#: mpdevil:3302
 msgid "Repeat mode"
 msgstr ""
 
-#: mpdevil:3362
+#: mpdevil:3304
 msgid "Single mode"
 msgstr ""
 
-#: mpdevil:3364
+#: mpdevil:3306
 msgid "Consume mode"
 msgstr ""
 
-#: mpdevil:3568
+#: mpdevil:3514
 msgid "Window"
 msgstr ""
 
-#: mpdevil:3569
+#: mpdevil:3515
 msgid "Playback"
 msgstr ""
 
-#: mpdevil:3570
+#: mpdevil:3516
 msgid "Search, Album Dialog and Album List"
 msgstr ""
 
-#: mpdevil:3580
+#: mpdevil:3526
 msgid "Open online help"
 msgstr ""
 
-#: mpdevil:3581
+#: mpdevil:3527
 msgid "Open shortcuts window"
 msgstr ""
 
-#: mpdevil:3582
+#: mpdevil:3528
 msgid "Open menu"
 msgstr ""
 
-#: mpdevil:3583 mpdevil:3727
+#: mpdevil:3529 mpdevil:3672
 msgid "Update database"
 msgstr ""
 
-#: mpdevil:3584 mpdevil:3725
+#: mpdevil:3530 mpdevil:3670
 msgid "Quit"
 msgstr ""
 
-#: mpdevil:3585
+#: mpdevil:3531
 msgid "Cycle through profiles"
 msgstr ""
 
-#: mpdevil:3586
+#: mpdevil:3532
 msgid "Cycle through profiles in reversed order"
 msgstr ""
 
-#: mpdevil:3587
+#: mpdevil:3533
 msgid "Toggle mini player"
 msgstr ""
 
-#: mpdevil:3588
+#: mpdevil:3534
 msgid "Toggle lyrics"
 msgstr ""
 
-#: mpdevil:3589
+#: mpdevil:3535
 msgid "Toggle search"
 msgstr ""
 
-#: mpdevil:3591
+#: mpdevil:3537
 msgid "Play/Pause"
 msgstr ""
 
-#: mpdevil:3592
+#: mpdevil:3538
 msgid "Stop"
 msgstr ""
 
-#: mpdevil:3593
+#: mpdevil:3539
 msgid "Next title"
 msgstr ""
 
-#: mpdevil:3594
+#: mpdevil:3540
 msgid "Previous title"
 msgstr ""
 
-#: mpdevil:3595
+#: mpdevil:3541
 msgid "Seek forward"
 msgstr ""
 
-#: mpdevil:3596
+#: mpdevil:3542
 msgid "Seek backward"
 msgstr ""
 
-#: mpdevil:3597
+#: mpdevil:3543
 msgid "Toggle repeat mode"
 msgstr ""
 
-#: mpdevil:3598
+#: mpdevil:3544
 msgid "Toggle random mode"
 msgstr ""
 
-#: mpdevil:3599
+#: mpdevil:3545
 msgid "Toggle single mode"
 msgstr ""
 
-#: mpdevil:3600
+#: mpdevil:3546
 msgid "Toggle consume mode"
 msgstr ""
 
-#: mpdevil:3601
+#: mpdevil:3547
 msgid "Play selected item (next)"
 msgstr ""
 
-#: mpdevil:3601
+#: mpdevil:3547
 msgid "Left-click"
 msgstr ""
 
-#: mpdevil:3602
+#: mpdevil:3548
 msgid "Append selected item"
 msgstr ""
 
-#: mpdevil:3602 mpdevil:3605
+#: mpdevil:3548 mpdevil:3551
 msgid "Middle-click"
 msgstr ""
 
-#: mpdevil:3603
+#: mpdevil:3549
 msgid "Play selected item immediately"
 msgstr ""
 
-#: mpdevil:3603
+#: mpdevil:3549
 msgid "Double-click"
 msgstr ""
 
-#: mpdevil:3604 mpdevil:3607
+#: mpdevil:3550 mpdevil:3553
 msgid "Show additional information"
 msgstr ""
 
-#: mpdevil:3604 mpdevil:3607
+#: mpdevil:3550 mpdevil:3553
 msgid "Right-click"
 msgstr ""
 
-#: mpdevil:3605
+#: mpdevil:3551
 msgid "Remove selected song"
 msgstr ""
 
-#: mpdevil:3631
+#: mpdevil:3577
 msgid "Connect"
 msgstr ""
 
-#: mpdevil:3649
+#: mpdevil:3595
 #, python-brace-format
 msgid "Connection to “{profile}” ({host}:{port}) failed"
 msgstr ""
 
-#: mpdevil:3722
+#: mpdevil:3667
 msgid "Keyboard shortcuts"
 msgstr ""
 
-#: mpdevil:3723
+#: mpdevil:3668
 msgid "Help"
 msgstr ""
 
-#: mpdevil:3724
+#: mpdevil:3669
 msgid "About"
 msgstr ""
 
-#: mpdevil:3728
+#: mpdevil:3673
 msgid "Server stats"
 msgstr ""
 
-#: mpdevil:3733
+#: mpdevil:3678
 msgid "Mini player"
 msgstr ""
 
-#: mpdevil:3734
-msgid "Save window layout"
-msgstr ""
-
-#: mpdevil:3739
+#: mpdevil:3683
 msgid "Menu"
 msgstr ""
 
-#: mpdevil:3787 mpdevil:3789
+#: mpdevil:3734 mpdevil:3736
 msgid "connecting…"
 msgstr ""
