@@ -867,10 +867,10 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(view_grid, False, False, 0)
 		self.pack_start(behavior_heading, False, False, 0)
 		self.pack_start(check_buttons["use-album-artist"], False, False, 0)
-		self.pack_start(check_buttons["send-notify"], False, False, 0)
-		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
-		self.pack_start(check_buttons["force-mode"], False, False, 0)
 		self.pack_start(check_buttons["sort-albums-by-year"], False, False, 0)
+		self.pack_start(check_buttons["send-notify"], False, False, 0)
+		self.pack_start(check_buttons["force-mode"], False, False, 0)
+		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
 
 	def _remove_handlers(self, *args):
 		for handler in self._settings_handlers:
