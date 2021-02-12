@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-11 19:07+0100\n"
-"PO-Revision-Date: 2021-02-12 09:33+0100\n"
+"POT-Creation-Date: 2021-02-12 16:57+0100\n"
+"PO-Revision-Date: 2021-02-12 16:59+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -82,8 +82,8 @@ msgid "Play selected albums and titles immediately"
 msgstr "Geselecteerde albums en titels direct afspelen"
 
 #: mpdevil:827
-msgid "Sort albums in chronological order"
-msgstr "Sorteer albums in chronologische volgorde"
+msgid "Sort albums by year"
+msgstr "Sorteer albums op jaar"
 
 #: mpdevil:839
 msgid "<b>View</b>"
@@ -522,8 +522,8 @@ msgstr "Menu"
 msgid "connecting…"
 msgstr "verbinding maken…"
 
-#~ msgid "Sort albums by:"
-#~ msgstr "Albums sorteren op:"
+#~ msgid "Sort albums in chronological order"
+#~ msgstr "Sorteer albums in chronologische volgorde"
 
 #~ msgid "name"
 #~ msgstr "naam"

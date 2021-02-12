@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-11 19:07+0100\n"
+"POT-Creation-Date: 2021-02-12 16:57+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -82,7 +82,7 @@ msgid "Play selected albums and titles immediately"
 msgstr ""
 
 #: mpdevil:827
-msgid "Sort albums in chronological order"
+msgid "Sort albums by year"
 msgstr ""
 
 #: mpdevil:839
