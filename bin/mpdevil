@@ -815,19 +815,19 @@ class GeneralSettings(Gtk.Box):
 		# check buttons
 		check_buttons={}
 		check_buttons_data=[
-			(_("Use Client-side decoration"), None, "use-csd"),
-			(_("Show stop button"), None, "show-stop"),
-			(_("Show lyrics button"), None, "show-lyrics-button"),
-			(_("Show initials in artist view"), None, "show-initials"),
-			(_("Place playlist at the side"), None, "playlist-right"),
-			(_("Use “Album Artist” tag"), None, "use-album-artist"),
-			(_("Send notification on title change"), None, "send-notify"),
-			(_("Stop playback on quit"), None, "stop-on-quit"),
-			(_("Play selected albums and titles immediately"), None, "force-mode"),
-			(_("Sort albums by year"), None, "sort-albums-by-year"),
+			(_("Use Client-side decoration"), "use-csd"),
+			(_("Show stop button"), "show-stop"),
+			(_("Show lyrics button"), "show-lyrics-button"),
+			(_("Show initials in artist view"), "show-initials"),
+			(_("Place playlist at the side"), "playlist-right"),
+			(_("Use “Album Artist” tag"), "use-album-artist"),
+			(_("Send notification on title change"), "send-notify"),
+			(_("Stop playback on quit"), "stop-on-quit"),
+			(_("Play selected albums and titles immediately"), "force-mode"),
+			(_("Sort albums by year"), "sort-albums-by-year"),
 		]
-		for label, tooltip, key in check_buttons_data:
-			check_buttons[key]=Gtk.CheckButton(label=label, tooltip_text=tooltip)
+		for label, key in check_buttons_data:
+			check_buttons[key]=Gtk.CheckButton(label=label)
 			check_buttons[key].set_active(self._settings.get_boolean(key))
 			check_buttons[key].set_margin_start(12)
 			check_buttons[key].connect("toggled", self._on_toggled, key)
