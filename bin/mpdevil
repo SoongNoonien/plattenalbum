@@ -3625,6 +3625,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client=client
 		self._settings=settings
 		self._use_csd=self._settings.get_boolean("use-csd")
+		self._size=None  # needed for window size saving
 
 		# MPRIS
 		dbus_service=MPRISInterface(self, self._client, self._settings)
@@ -3833,8 +3834,10 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_size_allocate(self, widget, rect):
 		if not self.is_maximized() and not self._settings.get_property("mini-player"):
 			size=self.get_size()
-			self._settings.set_int("width", size[0])
-			self._settings.set_int("height", size[1])
+			if size != self._size:  # prevent unneeded write operations
+				self._settings.set_int("width", size[0])
+				self._settings.set_int("height", size[1])
+				self._size=size
 
 	def _on_paned_position(self, obj, typestring, key):
 		self._settings.set_int(key, obj.get_position())
