@@ -162,9 +162,9 @@
       <description>
        This setting should only be used if you know what you are doing!
        It controls the time in msec. between two status requests to MPD.
-       To high values (long time) will make mpdevil very slow in terms
+       Too high values (long time) will make mpdevil very slow in terms
        of showing the latest status of MPD (e.g. current song).
-       To low values (short time) can cause gui blocks making mpdevil
+       Too low values (short time) can cause gui blocks making mpdevil
        unresponsive and cpu intensive.
       </description>
     </key>
