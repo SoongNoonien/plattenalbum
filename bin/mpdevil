@@ -34,7 +34,7 @@ textdomain("mpdevil")
 if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
 	bindtextdomain("mpdevil", "/app/share/locale")
 
-VERSION="1.1.1"  # sync with setup.py
+VERSION="1.1.1-dev"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -379,15 +379,18 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				self._metadata["xesam:{}".format(xesam_tag)]=GLib.Variant("as", song[tag])
 		if "id" in song:
 			self._metadata["mpris:trackid"]=GLib.Variant("o", self._MPRIS_PATH+"/Track/{}".format(song["id"][0]))
-		if "time" in song:
+		if "duration" in song:
 			self._metadata["mpris:length"]=GLib.Variant("x", float(song["duration"][0])*1000000)
 		if "file" in song:
 			song_file=song["file"][0]
-			lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
-			self._metadata["xesam:url"]=GLib.Variant("s", "file://{}".format(os.path.join(lib_path, song_file)))
-			cover=Cover(self._settings, mpd_meta)
-			if cover.path is not None:
-				self._metadata["mpris:artUrl"]=GLib.Variant("s", "file://{}".format(cover.path))
+			if "://" in song_file:  # remote file
+				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
+			else:
+				lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
+				self._metadata["xesam:url"]=GLib.Variant("s", "file://{}".format(os.path.join(lib_path, song_file)))
+				cover=Cover(self._settings, mpd_meta)
+				if cover.path is not None:
+					self._metadata["mpris:artUrl"]=GLib.Variant("s", "file://{}".format(cover.path))
 
 	def _update_property(self, interface_name, prop):
 		getter, setter=self._prop_mapping[interface_name][prop]
@@ -674,7 +677,10 @@ class Client(MPDClient):
 			diff=set(status.items())-set(self._last_status.items())
 			for key, val in diff:
 				if key == "elapsed":
-					self.emitter.emit("elapsed_changed", float(val), float(status["duration"]))
+					if "duration" in status:
+						self.emitter.emit("elapsed_changed", float(val), float(status["duration"]))
+					else:
+						self.emitter.emit("elapsed_changed", 0.0, 0.0)
 				elif key == "bitrate":
 					self.emitter.emit("bitrate", float(val))
 				elif key == "songid":
