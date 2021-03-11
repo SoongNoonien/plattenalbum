@@ -33,6 +33,8 @@ from gettext import gettext as _, ngettext, textdomain, bindtextdomain
 textdomain("mpdevil")
 if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
 	bindtextdomain("mpdevil", "/app/share/locale")
+else:
+	bindtextdomain("mpdevil", localedir=None)  # replace "None" by a static path if needed (e.g when installing on a non-FHS distro)
 
 VERSION="1.1.1-dev"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
