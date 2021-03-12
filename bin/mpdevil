@@ -3005,7 +3005,7 @@ class CoverPlaylistWindow(Gtk.Paned):
 		self._lyrics_button_revealer.add(self.lyrics_button)
 
 		# stack
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.OVER_DOWN_UP)
 		self._stack.add_named(self._cover_event_box, "cover")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 		self._stack.set_visible_child(self._cover_event_box)
