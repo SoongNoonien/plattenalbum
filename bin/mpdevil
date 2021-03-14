@@ -2319,7 +2319,7 @@ class Browser(Gtk.Paned):
 
 		# widgets
 		icons={}
-		icons_data=("go-previous-symbolic", "system-search-symbolic")
+		icons_data=("go-jump-symbolic", "system-search-symbolic")
 		if self._use_csd:
 			for data in icons_data:
 				icons[data]=Gtk.Image.new_from_icon_name(data, Gtk.IconSize.BUTTON)
@@ -2327,7 +2327,7 @@ class Browser(Gtk.Paned):
 			for data in icons_data:
 				icons[data]=AutoSizedIcon(data, "icon-size-sec", self._settings)
 
-		self.back_to_current_album_button=Gtk.Button(image=icons["go-previous-symbolic"], tooltip_text=_("Back to current album"))
+		self.back_to_current_album_button=Gtk.Button(image=icons["go-jump-symbolic"], tooltip_text=_("Back to current album"))
 		self.back_to_current_album_button.set_can_focus(False)
 		self.search_button=Gtk.ToggleButton(image=icons["system-search-symbolic"], tooltip_text=_("Search"))
 		self.search_button.set_can_focus(False)
@@ -2684,7 +2684,7 @@ class PlaylistWindow(Gtk.Box):
 		provider.load_from_data(css)
 
 		self._back_to_current_song_button=Gtk.Button(
-			image=AutoSizedIcon("go-previous-symbolic", "icon-size-sec", self._settings),
+			image=AutoSizedIcon("go-jump-symbolic", "icon-size-sec", self._settings),
 			tooltip_text=_("Scroll to current song"),
 			relief=Gtk.ReliefStyle.NONE
 		)
