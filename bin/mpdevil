@@ -1868,7 +1868,6 @@ class SearchWindow(Gtk.Box):
 					if self._stop_flag:
 						GLib.idle_add(self._done_callback)
 						return
-					self.search_entry.set_progress_fraction((i+1)/hits)
 					song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
 					try:
 						int_track=int(song["track"])
@@ -1880,8 +1879,10 @@ class SearchWindow(Gtk.Box):
 							song["human_duration"], song["file"],
 							int_track
 					])
-					while Gtk.events_pending():
-						Gtk.main_iteration_do(True)
+					if i%100 == 0:
+						self.search_entry.set_progress_fraction((i+1)/hits)
+						while Gtk.events_pending():
+							Gtk.main_iteration_do(True)
 			if self._songs_view.count() > 0:
 				self._action_bar.set_sensitive(True)
 			GLib.idle_add(self._done_callback)
