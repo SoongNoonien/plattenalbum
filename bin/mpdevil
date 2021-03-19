@@ -2084,6 +2084,7 @@ class AlbumWindow(FocusFrame):
 		self._stop_flag=False
 		self._done=True
 		self._pending=[]
+		self._popover=None
 
 		# cover, display_label, display_label_artist, tooltip(titles), album, year, artist
 		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str)
@@ -2301,8 +2302,8 @@ class AlbumWindow(FocusFrame):
 					artist=self._store[path][6]
 					v=self._scroll_vadj.get_value()
 					h=self._scroll_hadj.get_value()
-					pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, event.x-h, event.y-v)
-					pop.popup()
+					self._popover=AlbumPopover(self._client, self._settings, album, artist, year, widget, event.x-h, event.y-v)
+					self._popover.popup()
 		self._button_event=(None, None)
 
 	def _on_key_release_event(self, widget, event):
@@ -2319,8 +2320,8 @@ class AlbumWindow(FocusFrame):
 				rect=widget.get_cell_rect(paths[0], None)[1]
 				x=rect.x+rect.width//2
 				y=rect.y+rect.height//2
-				pop=AlbumPopover(self._client, self._settings, album, artist, year, widget, x, y)
-				pop.popup()
+				self._popover=AlbumPopover(self._client, self._settings, album, artist, year, widget, x, y)
+				self._popover.popup()
 
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
@@ -2331,6 +2332,9 @@ class AlbumWindow(FocusFrame):
 
 	def _on_disconnected(self, *args):
 		self._iconview.set_sensitive(False)
+		if self._popover is not None:
+			self._popover.destroy()
+			self._popover=None
 		self._clear()
 
 	def _on_reconnected(self, *args):
@@ -2628,9 +2632,11 @@ class CoverEventBox(Gtk.EventBox):
 		# adding vars
 		self._client=client
 		self._settings=settings
+		self._popover=None
 
 		# connect
 		self._button_press_event=self.connect("button-press-event", self._on_button_press_event)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 	def _on_button_press_event(self, widget, event):
 		if self._settings.get_property("mini-player"):
@@ -2652,8 +2658,15 @@ class CoverEventBox(Gtk.EventBox):
 					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 						self._client.wrapped_call("album_to_playlist", album, artist, album_year, "append")
 					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-						pop=AlbumPopover(self._client, self._settings, album, artist, album_year, widget, event.x, event.y)
-						pop.popup()
+						self._popover=AlbumPopover(
+							self._client, self._settings, album, artist, album_year, widget, event.x, event.y
+						)
+						self._popover.popup()
+
+	def _on_disconnected(self, *args):
+		if self._popover is not None:
+			self._popover.destroy()
+			self._popover=None
 
 class MainCover(Gtk.Frame):
 	def __init__(self, client, settings):
@@ -2713,6 +2726,7 @@ class PlaylistWindow(Gtk.Box):
 		self._icon_size=self._settings.get_int("icon-size-sec")
 		self._inserted_path=None  # needed for drag and drop
 		self._button_event=(None, None)
+		self._popover=None
 
 		# buttons
 		provider=Gtk.CssProvider()
@@ -2881,8 +2895,8 @@ class PlaylistWindow(Gtk.Box):
 				if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					self._store.remove(self._store.get_iter(path))
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					pop=SongPopover(self._store[path][8], self._client, widget, int(event.x), int(event.y))
-					pop.popup()
+					self._popover=SongPopover(self._store[path][8], self._client, widget, int(event.x), int(event.y))
+					self._popover.popup()
 		self._button_event=(None, None)
 
 	def _on_key_release_event(self, widget, event):
@@ -2898,8 +2912,8 @@ class PlaylistWindow(Gtk.Box):
 			if treeiter is not None:
 				path=self._store.get_path(treeiter)
 				cell=self._treeview.get_cell_area(path, None)
-				pop=SongPopover(self._store[path][8], self._client, widget, int(cell.x), int(cell.y))
-				pop.popup()
+				self._popover=SongPopover(self._store[path][8], self._client, widget, int(cell.x), int(cell.y))
+				self._popover.popup()
 
 	def _on_row_deleted(self, model, path):  # sync treeview to mpd
 		try:
@@ -2990,6 +3004,9 @@ class PlaylistWindow(Gtk.Box):
 		self._treeview.set_sensitive(False)
 		self._back_to_current_song_button.set_sensitive(False)
 		self._clear_button.set_sensitive(False)
+		if self._popover is not None:
+			self._popover.destroy()
+			self._popover=None
 		self._clear()
 
 	def _on_reconnected(self, *args):
@@ -3335,6 +3352,7 @@ class PlaybackOptions(Gtk.Box):
 		# adding vars
 		self._client=client
 		self._settings=settings
+		self._popover=None
 
 		# widgets
 		icons={}
@@ -3432,8 +3450,8 @@ class PlaybackOptions(Gtk.Box):
 
 	def _on_volume_button_press_event(self, widget, event):
 		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			pop=OutputPopover(self._client, self._volume_button)
-			pop.popup()
+			self._popover=OutputPopover(self._client, self._volume_button)
+			self._popover.popup()
 
 	def _on_single_button_press_event(self, widget, event):
 		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3461,6 +3479,9 @@ class PlaybackOptions(Gtk.Box):
 		self._single_refresh(None, "0")
 		self._consume_refresh(None, False)
 		self._volume_refresh(None, -1)
+		if self._popover is not None:
+			self._popover.destroy()
+			self._popover=None
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
