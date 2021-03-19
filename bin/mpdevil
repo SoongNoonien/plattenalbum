@@ -1742,6 +1742,9 @@ class SearchWindow(Gtk.Box):
 
 		# adding vars
 		self._client=client
+		self._stop_flag=False
+		self._done=True
+		self._pending=[]
 
 		# tag switcher
 		self._tag_combo_box=Gtk.ComboBoxText()
@@ -1821,51 +1824,83 @@ class SearchWindow(Gtk.Box):
 		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.pack_start(self._songs_window, True, True, 0)
 
-	def clear(self, *args):
-		self._songs_view.clear()
-		self.search_entry.set_text("")
-		self._tag_combo_box.remove_all()
+	def _clear(self, *args):
+		if self._done:
+			self._songs_view.clear()
+			self.search_entry.set_text("")
+			self._tag_combo_box.remove_all()
+		elif not self._clear in self._pending:
+			self._stop_flag=True
+			self._pending.append(self._clear)
 
 	def _on_disconnected(self, *args):
 		self._tag_combo_box.set_sensitive(False)
 		self.search_entry.set_sensitive(False)
-		self.clear()
+		self._clear()
 
 	def _on_reconnected(self, *args):
-		self._tag_combo_box.append_text(_("all tags"))
-		for tag in self._client.wrapped_call("tagtypes"):
-			if not tag.startswith("MUSICBRAINZ"):
-				self._tag_combo_box.append_text(tag)
-		self._tag_combo_box.set_active(0)
-		self._tag_combo_box.set_sensitive(True)
-		self.search_entry.set_sensitive(True)
+		if self._done:
+			self._tag_combo_box.append_text(_("all tags"))
+			for tag in self._client.wrapped_call("tagtypes"):
+				if not tag.startswith("MUSICBRAINZ"):
+					self._tag_combo_box.append_text(tag)
+			self._tag_combo_box.set_active(0)
+			self._tag_combo_box.set_sensitive(True)
+			self.search_entry.set_sensitive(True)
+		elif not self._on_reconnected in self._pending:
+			self._stop_flag=True
+			self._pending.append(self._on_reconnected)
 
-	def _on_search_changed(self, widget):
-		self._songs_view.clear()
-		self._hits_label.set_text("")
-		if len(self.search_entry.get_text()) > 0:
-			if self._tag_combo_box.get_active() == 0:
-				songs=self._client.wrapped_call("search", "any", self.search_entry.get_text())
-			else:
-				songs=self._client.wrapped_call("search", self._tag_combo_box.get_active_text(), self.search_entry.get_text())
-			for s in songs:
-				song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
-				try:
-					int_track=int(song["track"])
-				except:
-					int_track=0
-				self._store.append([
-						song["track"], song["title"],
-						song["artist"], song["album"],
-						song["human_duration"], song["file"],
-						int_track
-				])
-			hits=self._songs_view.count()
-			self._hits_label.set_text(ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
-		if self._songs_view.count() == 0:
+	def _on_search_changed(self, *args):
+		if self._done:
+			self._done=False
+			self._songs_view.clear()
+			self._hits_label.set_text("")
 			self._action_bar.set_sensitive(False)
-		else:
-			self._action_bar.set_sensitive(True)
+			if len(self.search_entry.get_text()) > 0:
+				if self._tag_combo_box.get_active() == 0:
+					songs=self._client.wrapped_call("search", "any", self.search_entry.get_text())
+				else:
+					songs=self._client.wrapped_call("search", self._tag_combo_box.get_active_text(), self.search_entry.get_text())
+				hits=len(songs)
+				self._hits_label.set_text(ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
+				for i, s in enumerate(songs):
+					if self._stop_flag:
+						GLib.idle_add(self._done_callback)
+						return
+					self.search_entry.set_progress_fraction((i+1)/hits)
+					song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
+					try:
+						int_track=int(song["track"])
+					except:
+						int_track=0
+					self._store.append([
+							song["track"], song["title"],
+							song["artist"], song["album"],
+							song["human_duration"], song["file"],
+							int_track
+					])
+					while Gtk.events_pending():
+						Gtk.main_iteration_do(True)
+			if self._songs_view.count() > 0:
+				self._action_bar.set_sensitive(True)
+			GLib.idle_add(self._done_callback)
+		elif not self._on_search_changed in self._pending:
+			self._stop_flag=True
+			self._pending.append(self._on_search_changed)
+
+	def _done_callback(self, *args):
+		self.search_entry.set_progress_fraction(0.0)
+		self._stop_flag=False
+		self._done=True
+		pending=self._pending
+		self._pending=[]
+		for p in pending:
+			try:
+				p()
+			except:
+				pass
+		return False
 
 class GenreSelect(Gtk.ComboBoxText):
 	__gsignals__={"genre_changed": (GObject.SignalFlags.RUN_FIRST, None, ())}
