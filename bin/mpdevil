@@ -1809,8 +1809,8 @@ class SearchWindow(Gtk.Box):
 		column_time.set_sort_column_id(4)
 
 		# connect
-		self.search_entry.connect("search-changed", self._on_search_changed)
-		self._tag_combo_box.connect("changed", self._on_search_changed)
+		self.search_entry.connect("search-changed", self._search)
+		self._tag_combo_box.connect("changed", self._search)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
@@ -1851,7 +1851,7 @@ class SearchWindow(Gtk.Box):
 			self._stop_flag=True
 			self._pending.append(self._on_reconnected)
 
-	def _on_search_changed(self, *args):
+	def _search(self, *args):
 		if self._done:
 			self._done=False
 			self._songs_view.clear()
@@ -1866,7 +1866,7 @@ class SearchWindow(Gtk.Box):
 				self._hits_label.set_text(ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
 				for i, s in enumerate(songs):
 					if self._stop_flag:
-						GLib.idle_add(self._done_callback)
+						self._done_callback()
 						return
 					song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
 					try:
@@ -1885,10 +1885,10 @@ class SearchWindow(Gtk.Box):
 							Gtk.main_iteration_do(True)
 			if self._songs_view.count() > 0:
 				self._action_bar.set_sensitive(True)
-			GLib.idle_add(self._done_callback)
-		elif not self._on_search_changed in self._pending:
+			self._done_callback()
+		elif not self._search in self._pending:
 			self._stop_flag=True
-			self._pending.append(self._on_search_changed)
+			self._pending.append(self._search)
 
 	def _done_callback(self, *args):
 		self.search_entry.set_progress_fraction(0.0)
@@ -2081,7 +2081,7 @@ class AlbumWindow(FocusFrame):
 		self._client=client
 		self._artist_window=artist_window
 		self._button_event=(None, None)
-		self.stop_flag=False
+		self._stop_flag=False
 		self._done=True
 		self._pending=[]
 
@@ -2132,7 +2132,7 @@ class AlbumWindow(FocusFrame):
 		if self._done:
 			self._workaround_clear()
 		elif not self._clear in self._pending:
-			self.stop_flag=True
+			self._stop_flag=True
 			self._pending.append(self._clear)
 
 	def scroll_to_current_album(self):
@@ -2169,12 +2169,12 @@ class AlbumWindow(FocusFrame):
 			self._done=False
 			self._settings.set_property("cursor-watch", True)
 			self._progress_bar.show()
-			GLib.idle_add(self._store.clear)
+			self._store.clear()
 			self._iconview.set_model(None)
 			try:  # self._artist_window can still be empty (e.g. when client is not connected and cover size gets changed)
 				genre, artists=self._artist_window.get_selected_artists()
 			except:
-				GLib.idle_add(self._done_callback)
+				self._done_callback()
 				return
 			# show artist names if all albums are shown
 			if len(artists) > 1:
@@ -2186,12 +2186,12 @@ class AlbumWindow(FocusFrame):
 			artist_type=self._settings.get_artist_type()
 			for i, artist in enumerate(artists):
 				try:  # client cloud meanwhile disconnect
-					if self.stop_flag:
-						GLib.idle_add(self._done_callback)
+					if self._stop_flag:
+						self._done_callback()
 						return
 					else:
 						if i > 0:  # more than one artist to show (all artists)
-							GLib.idle_add(self._progress_bar.pulse)
+							self._progress_bar.pulse()
 						if genre is None:
 							album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist)
 						else:
@@ -2208,7 +2208,7 @@ class AlbumWindow(FocusFrame):
 						while Gtk.events_pending():
 							Gtk.main_iteration_do(True)
 				except MPDBase.ConnectionError:
-					GLib.idle_add(self._done_callback)
+					self._done_callback()
 					return
 
 			def display_albums():
@@ -2239,18 +2239,18 @@ class AlbumWindow(FocusFrame):
 						tooltip, album["album"], album["year"], album["artist"]]
 					)
 				self._iconview.set_model(self._store)
-				GLib.idle_add(self._done_callback)
+				self._done_callback()
 				return False
 
 			def load_covers():
 				size=self._settings.get_int("album-cover")
 				total_albums=len(albums)
 				for i, album in enumerate(albums):
-					if self.stop_flag:
+					if self._stop_flag:
 						break
 					album["cover"]=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
 					GLib.idle_add(self._progress_bar.set_fraction, (i+1)/total_albums)
-				if self.stop_flag:
+				if self._stop_flag:
 					GLib.idle_add(self._done_callback)
 				else:
 					GLib.idle_add(display_albums)
@@ -2258,7 +2258,7 @@ class AlbumWindow(FocusFrame):
 			cover_thread=threading.Thread(target=load_covers, daemon=True)
 			cover_thread.start()
 		elif not self._refresh in self._pending:
-			self.stop_flag=True
+			self._stop_flag=True
 			self._pending.append(self._refresh)
 
 	def _path_to_playlist(self, path, mode="default"):
@@ -2271,7 +2271,7 @@ class AlbumWindow(FocusFrame):
 		self._settings.set_property("cursor-watch", False)
 		self._progress_bar.hide()
 		self._progress_bar.set_fraction(0)
-		self.stop_flag=False
+		self._stop_flag=False
 		self._done=True
 		pending=self._pending
 		self._pending=[]
