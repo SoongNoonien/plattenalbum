@@ -1809,8 +1809,8 @@ class SearchWindow(Gtk.Box):
 		column_time.set_sort_column_id(4)
 
 		# connect
-		self.search_entry.connect("search-changed", self._search)
-		self._tag_combo_box.connect("changed", self._search)
+		self._search_entry_changed=self.search_entry.connect("search-changed", self._search)
+		self._tag_combo_box_changed=self._tag_combo_box.connect("changed", self._search)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
@@ -1826,9 +1826,13 @@ class SearchWindow(Gtk.Box):
 
 	def _clear(self, *args):
 		if self._done:
+			self.search_entry.handler_block(self._search_entry_changed)
+			self._tag_combo_box.handler_block(self._tag_combo_box_changed)
 			self._songs_view.clear()
 			self.search_entry.set_text("")
 			self._tag_combo_box.remove_all()
+			self.search_entry.handler_unblock(self._search_entry_changed)
+			self._tag_combo_box.handler_unblock(self._tag_combo_box_changed)
 		elif not self._clear in self._pending:
 			self._stop_flag=True
 			self._pending.append(self._clear)
@@ -1840,6 +1844,7 @@ class SearchWindow(Gtk.Box):
 
 	def _on_reconnected(self, *args):
 		if self._done:
+			self._tag_combo_box.handler_block(self._tag_combo_box_changed)
 			self._tag_combo_box.append_text(_("all tags"))
 			for tag in self._client.wrapped_call("tagtypes"):
 				if not tag.startswith("MUSICBRAINZ"):
@@ -1847,6 +1852,7 @@ class SearchWindow(Gtk.Box):
 			self._tag_combo_box.set_active(0)
 			self._tag_combo_box.set_sensitive(True)
 			self.search_entry.set_sensitive(True)
+			self._tag_combo_box.handler_unblock(self._tag_combo_box_changed)
 		elif not self._on_reconnected in self._pending:
 			self._stop_flag=True
 			self._pending.append(self._on_reconnected)
