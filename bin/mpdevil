@@ -29,6 +29,7 @@ import datetime
 import os
 import sys
 import re
+import operator
 from gettext import gettext as _, ngettext, textdomain, bindtextdomain
 textdomain("mpdevil")
 if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
@@ -623,6 +624,14 @@ class Client(MPDClient):
 		songs=self.find("album", album, "date", year, self._settings.get_artist_type(), artist)
 		self.files_to_playlist([song["file"] for song in songs], mode)
 
+	def artist_to_playlist(self, artist, genre, mode="default"):
+		albums=self.get_albums(artist, genre)
+		if self._settings.get_boolean("sort-albums-by-year"):
+			albums.sort(key=operator.itemgetter('year'))
+		else:
+			albums.sort(key=operator.itemgetter('album'))
+		self.files_to_playlist([song["file"] for album in albums for song in album["songs"]], mode)
+
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
 		if len(native_list) > 0:
@@ -652,6 +661,20 @@ class Client(MPDClient):
 				return None
 		else:
 			return None
+
+	def get_albums(self, artist, genre):
+		albums=[]
+		artist_type=self._settings.get_artist_type()
+		if genre is None:
+			album_candidates=self.comp_list("album", artist_type, artist)
+		else:
+			album_candidates=self.comp_list("album", artist_type, artist, "genre", genre)
+		for album in album_candidates:
+			years=self.comp_list("date", "album", album, artist_type, artist)
+			for year in years:
+				songs=self.find("album", album, "date", year, artist_type, artist)
+				albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
+		return albums
 
 	def toggle_play(self):
 		status=self.status()
@@ -1996,6 +2019,7 @@ class ArtistWindow(FocusFrame):
 		scroll.add(self._treeview)
 
 		# connect
+		self._treeview.connect("button-release-event", self._on_button_release_event)
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._settings.connect("changed::use-album-artist", self._refresh)
 		self._settings.connect("changed::show-initials", self._on_show_initials_changed)
@@ -2060,6 +2084,19 @@ class ArtistWindow(FocusFrame):
 			except:
 				self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
+
+	def _on_button_release_event(self, widget, event):
+		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
+		if path_re is not None:
+			path=path_re[0]
+			if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
+				genre=self._genre_select.get_selected_genre()
+				if path == Gtk.TreePath(0):
+					for row in self._store:
+						self._client.wrapped_call("artist_to_playlist", row[0], genre, "append")
+				else:
+					artist=self._store[path][0]
+					self._client.wrapped_call("artist_to_playlist", artist, genre, "append")
 
 	def _on_row_activated(self, widget, path, view_column):
 		for row in self._store:  # reset bold text
@@ -2190,7 +2227,6 @@ class AlbumWindow(FocusFrame):
 				self._iconview.set_markup_column(1)
 			# prepare albmus list (run all mpd related commands)
 			albums=[]
-			artist_type=self._settings.get_artist_type()
 			for i, artist in enumerate(artists):
 				try:  # client cloud meanwhile disconnect
 					if self._stop_flag:
@@ -2199,19 +2235,7 @@ class AlbumWindow(FocusFrame):
 					else:
 						if i > 0:  # more than one artist to show (all artists)
 							self._progress_bar.pulse()
-						if genre is None:
-							album_candidates=self._client.wrapped_call("comp_list", "album", artist_type, artist)
-						else:
-							album_candidates=self._client.wrapped_call(
-								"comp_list", "album", artist_type, artist, "genre", genre
-							)
-						for album in album_candidates:
-							years=self._client.wrapped_call("comp_list", "date", "album", album, artist_type, artist)
-							for year in years:
-								songs=self._client.wrapped_call(
-									"find", "album", album, "date", year, artist_type, artist
-								)
-								albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
+						albums.extend(self._client.wrapped_call("get_albums", artist, genre))
 						while Gtk.events_pending():
 							Gtk.main_iteration_do(True)
 				except MPDBase.ConnectionError:
