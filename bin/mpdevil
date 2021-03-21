@@ -198,25 +198,25 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	# setter and getter
 	def _get_playback_status(self):
 		if self._client.connected():
-			status=self._client.wrapped_call("status")
+			status=self._client.status()
 			return GLib.Variant("s", {"play": "Playing", "pause": "Paused", "stop": "Stopped"}[status["state"]])
 		return GLib.Variant("s", "Stopped")
 
 	def _set_loop_status(self, value):
 		if self._client.connected():
 			if value == "Playlist":
-				self._client.wrapped_call("repeat", 1)
-				self._client.wrapped_call("single", 0)
+				self._client.repeat(1)
+				self._client.single(0)
 			elif value == "Track":
-				self._client.wrapped_call("repeat", 1)
-				self._client.wrapped_call("single", 1)
+				self._client.repeat(1)
+				self._client.single(1)
 			elif value == "None":
-				self._client.wrapped_call("repeat", 0)
-				self._client.wrapped_call("single", 0)
+				self._client.repeat(0)
+				self._client.single(0)
 
 	def _get_loop_status(self):
 		if self._client.connected():
-			status=self._client.wrapped_call("status")
+			status=self._client.status()
 			if status["repeat"] == "1":
 				if status.get("single", "0") == "0":
 					return GLib.Variant("s", "Playlist")
@@ -229,13 +229,13 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _set_shuffle(self, value):
 		if self._client.connected():
 			if value:
-				self._client.wrapped_call("random", "1")
+				self._client.random("1")
 			else:
-				self._client.wrapped_call("random", "0")
+				self._client.random("0")
 
 	def _get_shuffle(self):
 		if self._client.connected():
-			if self._client.wrapped_call("status")["random"] == "1":
+			if self._client.status()["random"] == "1":
 				return GLib.Variant("b", True)
 			else:
 				return GLib.Variant("b", False)
@@ -246,23 +246,23 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	def _get_volume(self):
 		if self._client.connected():
-			return GLib.Variant("d", float(self._client.wrapped_call("status").get("volume", 0))/100)
+			return GLib.Variant("d", float(self._client.status().get("volume", 0))/100)
 		return GLib.Variant("d", 0)
 
 	def _set_volume(self, value):
 		if self._client.connected():
 			if value >= 0 and value <= 1:
-				self._client.wrapped_call("setvol", int(value * 100))
+				self._client.setvol(int(value * 100))
 
 	def _get_position(self):
 		if self._client.connected():
-			status=self._client.wrapped_call("status")
+			status=self._client.status()
 			return GLib.Variant("x", float(status.get("elapsed", 0))*1000000)
 		return GLib.Variant("x", 0)
 
 	def _get_can_next_prev(self):
 		if self._client.connected():
-			status=self._client.wrapped_call("status")
+			status=self._client.status()
 			if status["state"] == "stop":
 				return GLib.Variant("b", False)
 			else:
@@ -321,37 +321,37 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	# player methods
 	def Next(self):
-		self._client.wrapped_call("next")
+		self._client.next()
 
 	def Previous(self):
-		self._client.wrapped_call("previous")
+		self._client.previous()
 
 	def Pause(self):
-		self._client.wrapped_call("pause", 1)
+		self._client.pause(1)
 
 	def PlayPause(self):
-		self._client.wrapped_call("toggle_play")
+		self._client.toggle_play()
 
 	def Stop(self):
-		self._client.wrapped_call("stop")
+		self._client.stop()
 
 	def Play(self):
-		self._client.wrapped_call("play")
+		self._client.play()
 
 	def Seek(self, offset):
 		if offset > 0:
 			offset="+"+str(offset/1000000)
 		else:
 			offset=str(offset/1000000)
-		self._client.wrapped_call("seekcur", offset)
+		self._client.seekcur(offset)
 
 	def SetPosition(self, trackid, position):
-		song=self._client.wrapped_call("currentsong")
+		song=self._client.currentsong()
 		if str(trackid).split("/")[-1] != song["id"]:
 			return
 		mpd_pos=position/1000000
 		if mpd_pos >= 0 and mpd_pos <= float(song["duration"]):
-			self._client.wrapped_call("seekcur", str(mpd_pos))
+			self._client.seekcur(str(mpd_pos))
 
 	def OpenUri(self, uri):
 		pass
@@ -368,7 +368,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		Translate metadata returned by MPD to the MPRIS v2 syntax.
 		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
 		"""
-		mpd_meta=self._client.wrapped_call("currentsong")  # raw values needed for cover
+		mpd_meta=self._client.currentsong()  # raw values needed for cover
 		song=ClientHelper.song_to_list_dict(mpd_meta)
 		self._metadata={}
 		for tag, xesam_tag in (("album","album"),("title","title"),("date","contentCreated")):
@@ -539,13 +539,6 @@ class Client(MPDClient):
 		# connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
 
-	def wrapped_call(self, name, *args):
-		try:
-			func=getattr(self, name)
-		except:
-			raise ValueError
-		return func(*args)
-
 	def start(self):
 		self.emitter.emit("disconnected")  # bring player in defined state
 		active=self._settings.get_int("active-profile")
@@ -577,7 +570,7 @@ class Client(MPDClient):
 
 	def connected(self):
 		try:
-			self.wrapped_call("ping")
+			self.ping()
 			return True
 		except:
 			return False
@@ -1320,7 +1313,7 @@ class ServerStats(Gtk.Dialog):
 			"db_playtime": _("<b>Total Playtime:</b>"),
 			"db_update": _("<b>Database Update:</b>")
 		}
-		stats=client.wrapped_call("stats")
+		stats=client.stats()
 		stats["protocol"]=str(client.mpd_version)
 		for key in ("uptime","playtime","db_playtime"):
 			stats[key]=ClientHelper.seconds_to_display_time(int(stats[key]))
@@ -1429,8 +1422,8 @@ class SongPopover(Gtk.Popover):
 		self.set_relative_to(relative)
 
 		# client calls
-		song=client.wrapped_call("get_metadata", uri)
-		abs_path=client.wrapped_call("get_absolute_path", uri)
+		song=client.get_metadata(uri)
+		abs_path=client.get_absolute_path(uri)
 
 		# popover css
 		style_context=self.get_style_context()
@@ -1537,7 +1530,7 @@ class SongsView(Gtk.TreeView):
 		return return_list
 
 	def _on_row_activated(self, widget, path, view_column):
-		self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]], "play")
+		self._client.files_to_playlist([self._store[path][self._file_column_id]], "play")
 
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -1551,9 +1544,9 @@ class SongsView(Gtk.TreeView):
 			path=path_re[0]
 			if self._button_event == (event.button, path):
 				if event.button == 1 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]])
+					self._client.files_to_playlist([self._store[path][self._file_column_id]])
 				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._client.wrapped_call("files_to_playlist", [self._store[path][self._file_column_id]], "append")
+					self._client.files_to_playlist([self._store[path][self._file_column_id]], "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					uri=self._store[path][self._file_column_id]
 					if self.get_property("headers-visible"):
@@ -1567,9 +1560,9 @@ class SongsView(Gtk.TreeView):
 		treeview, treeiter=self._selection.get_selected()
 		if treeiter is not None:
 			if event.keyval == Gdk.keyval_from_name("p"):
-				self._client.wrapped_call("files_to_playlist", [self._store.get_value(treeiter, self._file_column_id)])
+				self._client.files_to_playlist([self._store.get_value(treeiter, self._file_column_id)])
 			elif event.keyval == Gdk.keyval_from_name("a"):
-				self._client.wrapped_call("files_to_playlist", [self._store.get_value(treeiter, self._file_column_id)], "append")
+				self._client.files_to_playlist([self._store.get_value(treeiter, self._file_column_id)], "append")
 			elif event.keyval == Gdk.keyval_from_name("Menu"):
 				path=self._store.get_path(treeiter)
 				cell=self.get_cell_area(path, None)
@@ -1637,13 +1630,13 @@ class SongsWindow(Gtk.Box):
 		return self._scroll
 
 	def _on_append_button_clicked(self, *args):
-		self._client.wrapped_call("files_to_playlist", self._songs_view.get_files(), "append")
+		self._client.files_to_playlist(self._songs_view.get_files(), "append")
 
 	def _on_play_button_clicked(self, *args):
-		self._client.wrapped_call("files_to_playlist", self._songs_view.get_files(), "play")
+		self._client.files_to_playlist(self._songs_view.get_files(), "play")
 
 	def _on_enqueue_button_clicked(self, *args):
-		self._client.wrapped_call("files_to_playlist", self._songs_view.get_files(), "enqueue")
+		self._client.files_to_playlist(self._songs_view.get_files(), "enqueue")
 
 class AlbumPopover(Gtk.Popover):
 	def __init__(self, client, settings, album, album_artist, year, widget, x, y):
@@ -1658,7 +1651,7 @@ class AlbumPopover(Gtk.Popover):
 
 		# adding vars
 		self._client=client
-		songs=self._client.wrapped_call("find", "album", album, "date", year, settings.get_artist_type(), album_artist)
+		songs=self._client.find("album", album, "date", year, settings.get_artist_type(), album_artist)
 
 		# store
 		# (track, title (artist), duration, file)
@@ -1869,7 +1862,7 @@ class SearchWindow(Gtk.Box):
 		if self._done:
 			self._tag_combo_box.handler_block(self._tag_combo_box_changed)
 			self._tag_combo_box.append_text(_("all tags"))
-			for tag in self._client.wrapped_call("tagtypes"):
+			for tag in self._client.tagtypes():
 				if not tag.startswith("MUSICBRAINZ"):
 					self._tag_combo_box.append_text(tag)
 			self._tag_combo_box.set_active(0)
@@ -1888,9 +1881,9 @@ class SearchWindow(Gtk.Box):
 			self._action_bar.set_sensitive(False)
 			if len(self.search_entry.get_text()) > 0:
 				if self._tag_combo_box.get_active() == 0:
-					songs=self._client.wrapped_call("search", "any", self.search_entry.get_text())
+					songs=self._client.search("any", self.search_entry.get_text())
 				else:
-					songs=self._client.wrapped_call("search", self._tag_combo_box.get_active_text(), self.search_entry.get_text())
+					songs=self._client.search(self._tag_combo_box.get_active_text(), self.search_entry.get_text())
 				hits=len(songs)
 				self._hits_label.set_text(ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
 				for i, s in enumerate(songs):
@@ -1965,7 +1958,7 @@ class GenreSelect(Gtk.ComboBoxText):
 		self.handler_block(self._changed)
 		self.remove_all()
 		self.append_text(_("all genres"))
-		for genre in self._client.wrapped_call("comp_list", "genre"):
+		for genre in self._client.comp_list("genre"):
 			self.append_text(genre)
 		self.set_active(0)
 		self.handler_unblock(self._changed)
@@ -2070,9 +2063,9 @@ class ArtistWindow(FocusFrame):
 		self._store.append([_("all artists"), Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		genre=self._genre_select.get_selected_genre()
 		if genre is None:
-			artists=self._client.wrapped_call("comp_list", self._settings.get_artist_type())
+			artists=self._client.comp_list(self._settings.get_artist_type())
 		else:
-			artists=self._client.wrapped_call("comp_list", self._settings.get_artist_type(), "genre", genre)
+			artists=self._client.comp_list(self._settings.get_artist_type(), "genre", genre)
 		current_char=""
 		for artist in artists:
 			try:
@@ -2092,10 +2085,10 @@ class ArtistWindow(FocusFrame):
 				genre=self._genre_select.get_selected_genre()
 				if path == Gtk.TreePath(0):
 					for row in self._store:
-						self._client.wrapped_call("artist_to_playlist", row[0], genre, "append")
+						self._client.artist_to_playlist(row[0], genre, "append")
 				else:
 					artist=self._store[path][0]
-					self._client.wrapped_call("artist_to_playlist", artist, genre, "append")
+					self._client.artist_to_playlist(artist, genre, "append")
 
 	def _on_row_activated(self, widget, path, view_column):
 		for row in self._store:  # reset bold text
@@ -2179,7 +2172,7 @@ class AlbumWindow(FocusFrame):
 
 	def scroll_to_current_album(self):
 		def callback():
-			song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
+			song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
 			album=song.get("album", "")
 			self._iconview.unselect_all()
 			row_num=len(self._store)
@@ -2233,7 +2226,7 @@ class AlbumWindow(FocusFrame):
 					else:
 						if i > 0:  # more than one artist to show (all artists)
 							self._progress_bar.pulse()
-						albums.extend(self._client.wrapped_call("get_albums", artist, genre))
+						albums.extend(self._client.get_albums(artist, genre))
 						while Gtk.events_pending():
 							Gtk.main_iteration_do(True)
 				except MPDBase.ConnectionError:
@@ -2294,7 +2287,7 @@ class AlbumWindow(FocusFrame):
 		album=self._store[path][4]
 		year=self._store[path][5]
 		artist=self._store[path][6]
-		self._client.wrapped_call("album_to_playlist", album, artist, year, mode)
+		self._client.album_to_playlist(album, artist, year, mode)
 
 	def _done_callback(self, *args):
 		self._settings.set_property("cursor-watch", False)
@@ -2356,7 +2349,7 @@ class AlbumWindow(FocusFrame):
 		selected_album=self._store.get_value(treeiter, 4)
 		selected_album_year=self._store.get_value(treeiter, 5)
 		selected_artist=self._store.get_value(treeiter, 6)
-		self._client.wrapped_call("album_to_playlist", selected_album, selected_artist, selected_album_year, "play")
+		self._client.album_to_playlist(selected_album, selected_artist, selected_album_year, "play")
 
 	def _on_disconnected(self, *args):
 		self._iconview.set_sensitive(False)
@@ -2434,7 +2427,7 @@ class Browser(Gtk.Paned):
 	def _back_to_current_album(self, *args):
 		def callback():
 			try:
-				song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
+				song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
 				if song == {}:
 					return False
 			except MPDBase.ConnectionError:
@@ -2536,7 +2529,7 @@ class LyricsWindow(FocusFrame):
 		self.add(scroll)
 
 	def enable(self, *args):
-		current_song=self._client.wrapped_call("currentsong")
+		current_song=self._client.currentsong()
 		if current_song == {}:
 			if self._displayed_song_file is not None:
 				self._refresh()
@@ -2583,7 +2576,7 @@ class LyricsWindow(FocusFrame):
 		GLib.idle_add(self._text_buffer.set_text, text, -1)
 
 	def _refresh(self, *args):
-		current_song=self._client.wrapped_call("currentsong")
+		current_song=self._client.currentsong()
 		if current_song == {}:
 			self._displayed_song_file=None
 			self._text_buffer.set_text("", -1)
@@ -2643,7 +2636,7 @@ class AudioType(Gtk.Label):
 
 	def _on_song_changed(self, *args):
 		try:
-			self.file_type=self._client.wrapped_call("currentsong")["file"].split(".")[-1].split("/")[0]
+			self.file_type=self._client.currentsong()["file"].split(".")[-1].split("/")[0]
 			self._refresh()
 		except:
 			pass
@@ -2672,7 +2665,7 @@ class CoverEventBox(Gtk.EventBox):
 				window.begin_move_drag(1, event.x_root, event.y_root, Gdk.CURRENT_TIME)
 		else:
 			if self._client.connected():
-				song=ClientHelper.song_to_first_str_dict(self._client.wrapped_call("currentsong"))
+				song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
 				if song != {}:
 					try:
 						artist=song[self._settings.get_artist_type()]
@@ -2681,9 +2674,9 @@ class CoverEventBox(Gtk.EventBox):
 					album=song.get("album", "")
 					album_year=song.get("date", "")
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.wrapped_call("album_to_playlist", album, artist, album_year)
+						self._client.album_to_playlist(album, artist, album_year)
 					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.wrapped_call("album_to_playlist", album, artist, album_year, "append")
+						self._client.album_to_playlist(album, artist, album_year, "append")
 					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 						self._popover=AlbumPopover(
 							self._client, self._settings, album, artist, album_year, widget, event.x, event.y
@@ -2726,7 +2719,7 @@ class MainCover(Gtk.Frame):
 		self.add(self._cover)
 
 	def _refresh(self, *args):
-		current_song=self._client.wrapped_call("currentsong")
+		current_song=self._client.currentsong()
 		self._cover.set_from_pixbuf(Cover(self._settings, current_song).get_pixbuf(self._settings.get_int("track-cover")))
 
 	def _on_disconnected(self, *args):
@@ -2882,7 +2875,7 @@ class PlaylistWindow(Gtk.Box):
 		self._store.handler_unblock(self._row_deleted)
 
 	def _refresh_playlist_info(self):
-		songs=self._client.wrapped_call("playlistinfo")
+		songs=self._client.playlistinfo()
 		if songs == []:
 			self._playlist_info.set_text("")
 		else:
@@ -2901,7 +2894,7 @@ class PlaylistWindow(Gtk.Box):
 		for row in self._store:  # reset bold text
 			row[9]=Pango.Weight.BOOK
 		try:
-			song=self._client.wrapped_call("status")["song"]
+			song=self._client.status()["song"]
 			path=Gtk.TreePath(int(song))
 			self._selection.select_path(path)
 			self._store[path][9]=Pango.Weight.BOLD
@@ -2950,30 +2943,30 @@ class PlaylistWindow(Gtk.Box):
 					path=path-1
 				if path < self._inserted_path:
 					self._inserted_path=self._inserted_path-1
-				self._client.wrapped_call("move", path, self._inserted_path)
+				self._client.move(path, self._inserted_path)
 				self._inserted_path=None
 			else:  # delete
-				self._client.wrapped_call("delete", path)  # bad song index possible
-			self._playlist_version=int(self._client.wrapped_call("status")["playlist"])
+				self._client.delete(path)  # bad song index possible
+			self._playlist_version=int(self._client.status()["playlist"])
 		except MPDBase.CommandError as e:
 			self._playlist_version=None
-			self._client.emitter.emit("playlist_changed", int(self._client.wrapped_call("status")["playlist"]))
+			self._client.emitter.emit("playlist_changed", int(self._client.status()["playlist"]))
 			raise e  # propagate exception
 
 	def _on_row_inserted(self, model, path, treeiter):
 		self._inserted_path=int(path.to_string())
 
 	def _on_row_activated(self, widget, path, view_column):
-		self._client.wrapped_call("play", path)
+		self._client.play(path)
 
 	def _on_playlist_changed(self, emitter, version):
 		self._store.handler_block(self._row_inserted)
 		self._store.handler_block(self._row_deleted)
 		songs=[]
 		if self._playlist_version is not None:
-			songs=self._client.wrapped_call("plchanges", self._playlist_version)
+			songs=self._client.plchanges(self._playlist_version)
 		else:
-			songs=self._client.wrapped_call("playlistinfo")
+			songs=self._client.playlistinfo()
 		if songs != []:
 			self._playlist_info.set_text("")
 			for s in songs:
@@ -3000,7 +2993,7 @@ class PlaylistWindow(Gtk.Box):
 						song["date"], song["genre"],
 						song["file"], Pango.Weight.BOOK
 					])
-		for i in reversed(range(int(self._client.wrapped_call("status")["playlistlength"]), len(self._store))):
+		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
 		self._refresh_playlist_info()
@@ -3013,7 +3006,7 @@ class PlaylistWindow(Gtk.Box):
 
 	def _on_song_changed(self, *args):
 		self._refresh_selection()
-		if self._client.wrapped_call("status")["state"] == "play":
+		if self._client.status()["state"] == "play":
 			self._scroll_to_selected_title()
 
 	def _on_back_to_current_song_button_clicked(self, *args):
@@ -3172,8 +3165,8 @@ class PlaybackControl(Gtk.ButtonBox):
 
 	def _refresh_tooltips(self, *args):
 		try:
-			songs=self._client.wrapped_call("playlistinfo")
-			song=int(self._client.wrapped_call("status")["song"])
+			songs=self._client.playlistinfo()
+			song=int(self._client.status()["song"])
 			elapsed=ClientHelper.calc_display_length(songs[:song])
 			rest=ClientHelper.calc_display_length(songs[song+1:])
 			elapsed_titles=ngettext("{titles} title", "{titles} titles", song).format(titles=song)
@@ -3185,16 +3178,16 @@ class PlaybackControl(Gtk.ButtonBox):
 			self._next_button.set_tooltip_text("")
 
 	def _on_play_clicked(self, widget):
-		self._client.wrapped_call("toggle_play")
+		self._client.toggle_play()
 
 	def _on_stop_clicked(self, widget):
-		self._client.wrapped_call("stop")
+		self._client.stop()
 
 	def _on_prev_clicked(self, widget):
-		self._client.wrapped_call("previous")
+		self._client.previous()
 
 	def _on_next_clicked(self, widget):
-		self._client.wrapped_call("next")
+		self._client.next()
 
 	def _on_state(self, emitter, state):
 		if state == "play":
@@ -3309,16 +3302,16 @@ class SeekBar(Gtk.Box):
 			self._update=True
 			self._scale.set_has_origin(True)
 			if self._jumped:  # actual seek
-				self._client.wrapped_call("seekcur", self._scale.get_value())
+				self._client.seekcur(self._scale.get_value())
 				self._jumped=False
 			else:  # restore state
-				status=self._client.wrapped_call("status")
+				status=self._client.status()
 				self._refresh(None, float(status["elapsed"]), float(status["duration"]))
 
 	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
 		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
 			scroll == Gtk.ScrollType.PAGE_BACKWARD or scroll == Gtk.ScrollType.PAGE_FORWARD):
-			self._client.wrapped_call("seekcur", value)
+			self._client.seekcur(value)
 		elif scroll == Gtk.ScrollType.JUMP:
 			duration=self._adjustment.get_upper()
 			if value > duration:  # fix display error
@@ -3331,15 +3324,15 @@ class SeekBar(Gtk.Box):
 
 	def _on_elapsed_button_release_event(self, widget, event):
 		if event.button == 1:
-			self._client.wrapped_call("seekcur", "-"+str(self._adjustment.get_property("step-increment")))
+			self._client.seekcur("-"+str(self._adjustment.get_property("step-increment")))
 		elif event.button == 3:
-			self._client.wrapped_call("seekcur", "+"+str(self._adjustment.get_property("step-increment")))
+			self._client.seekcur("+"+str(self._adjustment.get_property("step-increment")))
 
 	def _on_rest_button_release_event(self, widget, event):
 		if event.button == 1:
-			self._client.wrapped_call("seekcur", "+"+str(self._adjustment.get_property("step-increment")))
+			self._client.seekcur("+"+str(self._adjustment.get_property("step-increment")))
 		elif event.button == 3:
-			self._client.wrapped_call("seekcur", "-"+str(self._adjustment.get_property("step-increment")))
+			self._client.seekcur("-"+str(self._adjustment.get_property("step-increment")))
 
 	def _on_state(self, emitter, state):
 		if state == "stop":
@@ -3355,7 +3348,7 @@ class OutputPopover(Gtk.Popover):
 
 		# widgets
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=6)
-		for output in self._client.wrapped_call("outputs"):
+		for output in self._client.outputs():
 			button=Gtk.CheckButton(label="{} ({})".format(output["outputname"], output["plugin"]))
 			if output["outputenabled"] == "1":
 				button.set_active(True)
@@ -3368,9 +3361,9 @@ class OutputPopover(Gtk.Popover):
 
 	def _on_button_toggled(self, button, out_id):
 		if button.get_active():
-			self._client.wrapped_call("enableoutput", out_id)
+			self._client.enableoutput(out_id)
 		else:
-			self._client.wrapped_call("disableoutput", out_id)
+			self._client.disableoutput(out_id)
 
 class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings):
@@ -3429,13 +3422,14 @@ class PlaybackOptions(Gtk.Box):
 		self.pack_start(self._volume_button, True, True, 0)
 
 	def _set_option(self, widget, option):
+		func=getattr(self._client, option)
 		if widget.get_active():
-			self._client.wrapped_call(option, "1")
+			func("1")
 		else:
-			self._client.wrapped_call(option, "0")
+			func("0")
 
 	def _set_volume(self, widget, value):
-		self._client.wrapped_call("setvol", str(int(value*100)))
+		self._client.setvol(str(int(value*100)))
 
 	def _repeat_refresh(self, emitter, val):
 		self._repeat_button.handler_block(self._repeat_button_toggled)
@@ -3482,11 +3476,11 @@ class PlaybackOptions(Gtk.Box):
 
 	def _on_single_button_press_event(self, widget, event):
 		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			state=self._client.wrapped_call("status")["single"]
+			state=self._client.status()["single"]
 			if state == "oneshot":
-				self._client.wrapped_call("single", "0")
+				self._client.single("0")
 			else:
-				self._client.wrapped_call("single", "oneshot")
+				self._client.single("oneshot")
 
 	def _on_reconnected(self, *args):
 		self._repeat_button.set_sensitive(True)
@@ -3547,40 +3541,40 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 	def _on_toggle_play(self, action, param):
-		self._client.wrapped_call("toggle_play")
+		self._client.toggle_play()
 
 	def _on_stop(self, action, param):
-		self._client.wrapped_call("stop")
+		self._client.stop()
 
 	def _on_next(self, action, param):
-		self._client.wrapped_call("next")
+		self._client.next()
 
 	def _on_prev(self, action, param):
-		self._client.wrapped_call("previous")
+		self._client.previous()
 
 	def _on_seek_forward(self, action, param):
-		self._client.wrapped_call("seekcur", "+10")
+		self._client.seekcur("+10")
 
 	def _on_seek_backward(self, action, param):
-		self._client.wrapped_call("seekcur", "-10")
+		self._client.seekcur("-10")
 
 	def _on_clear(self, action, param):
-		self._client.wrapped_call("clear")
+		self._client.clear()
 
 	def _on_update(self, action, param):
-		self._client.wrapped_call("update")
+		self._client.update()
 
 	def _on_repeat(self, action, param):
-		self._client.wrapped_call("toggle_option", "repeat")
+		self._client.toggle_option("repeat")
 
 	def _on_random(self, action, param):
-		self._client.wrapped_call("toggle_option", "random")
+		self._client.toggle_option("random")
 
 	def _on_single(self, action, param):
-		self._client.wrapped_call("toggle_option", "single")
+		self._client.toggle_option("single")
 
 	def _on_consume(self, action, param):
-		self._client.wrapped_call("toggle_option", "consume")
+		self._client.toggle_option("consume")
 
 	def _on_state(self, emitter, state):
 		state_dict={"play": True, "pause": True, "stop": False}
@@ -3884,7 +3878,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		action.set_state(param)
 
 	def _on_song_changed(self, *args):
-		song=self._client.wrapped_call("currentsong")
+		song=self._client.currentsong()
 		if song == {}:
 			if self._use_csd:
 				self.set_title("mpdevil")
@@ -3903,7 +3897,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			else:
 				self.set_title(song["title"]+" - "+song["artist"]+" - "+song["album"]+date)
 			if self._settings.get_boolean("send-notify"):
-				if not self.is_active() and self._client.wrapped_call("status")["state"] == "play":
+				if not self.is_active() and self._client.status()["state"] == "play":
 					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"]+date)
 					pixbuf=Cover(self._settings, song).get_pixbuf(400)
 					notify.set_image_from_pixbuf(pixbuf)
@@ -4013,7 +4007,7 @@ class mpdevil(Gtk.Application):
 
 	def _on_delete_event(self, *args):
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
-			self._client.wrapped_call("stop")
+			self._client.stop()
 		self.quit()
 
 	def _on_about(self, action, param):
@@ -4023,7 +4017,7 @@ class mpdevil(Gtk.Application):
 
 	def _on_quit(self, action, param):
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
-			self._client.wrapped_call("stop")
+			self._client.stop()
 		self.quit()
 
 if __name__ == "__main__":
