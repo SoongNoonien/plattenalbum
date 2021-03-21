@@ -1982,7 +1982,7 @@ class GenreSelect(Gtk.ComboBoxText):
 		self.set_sensitive(True)
 
 class ArtistWindow(FocusFrame):
-	__gsignals__={"artists_changed": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	__gsignals__={"artists_changed": (GObject.SignalFlags.RUN_FIRST, None, ()), "clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 
 	def __init__(self, client, settings, genre_select):
 		super().__init__()
@@ -2033,6 +2033,7 @@ class ArtistWindow(FocusFrame):
 
 	def _clear(self, *args):
 		self._store.clear()
+		self.emit("clear")
 
 	def select(self, artist):
 		row_num=len(self._store)
@@ -2065,7 +2066,6 @@ class ArtistWindow(FocusFrame):
 				break
 
 	def _refresh(self, *args):
-		self._selection.set_mode(Gtk.SelectionMode.NONE)
 		self._clear()
 		self._store.append([_("all artists"), Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 		genre=self._genre_select.get_selected_genre()
@@ -2083,7 +2083,6 @@ class ArtistWindow(FocusFrame):
 					current_char=artist[0]
 			except:
 				self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
-		self._selection.set_mode(Gtk.SelectionMode.SINGLE)
 
 	def _on_button_release_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -2151,13 +2150,12 @@ class AlbumWindow(FocusFrame):
 		self._iconview.connect("button-press-event", self._on_button_press_event)
 		self._iconview.connect("button-release-event", self._on_button_release_event)
 		self._iconview.connect("key-release-event", self._on_key_release_event)
-		self._client.emitter.connect("update", self._clear)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
-		self._settings.connect("changed::use-album-artist", self._clear)
 		self._artist_window.connect("artists_changed", self._refresh)
+		self._artist_window.connect("clear", self._clear)
 
 		# packing
 		self.set_widget(self._iconview)
@@ -2365,7 +2363,6 @@ class AlbumWindow(FocusFrame):
 		if self._popover is not None:
 			self._popover.destroy()
 			self._popover=None
-		self._clear()
 
 	def _on_reconnected(self, *args):
 		self._iconview.set_sensitive(True)
