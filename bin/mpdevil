@@ -29,7 +29,6 @@ import datetime
 import os
 import sys
 import re
-import operator
 from gettext import gettext as _, ngettext, textdomain, bindtextdomain
 textdomain("mpdevil")
 if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
@@ -617,13 +616,22 @@ class Client(MPDClient):
 		songs=self.find("album", album, "date", year, self._settings.get_artist_type(), artist)
 		self.files_to_playlist([song["file"] for song in songs], mode)
 
-	def artist_to_playlist(self, artist, genre, mode="default"):
-		albums=self.get_albums(artist, genre)
+	def artist_to_playlist(self, artist, genre, mode="default"):  #TODO use mode
 		if self._settings.get_boolean("sort-albums-by-year"):
-			albums.sort(key=operator.itemgetter('year'))
+			sort_tag="date"
 		else:
-			albums.sort(key=operator.itemgetter('album'))
-		self.files_to_playlist([song["file"] for album in albums for song in album["songs"]], mode)
+			sort_tag="album"
+		if artist is None:  # treat 'None' as 'all artists'
+			if genre is None:  # treat 'None' as 'all genres'
+				self.searchadd("any", "", "sort", sort_tag)
+			else:
+				self.findadd("genre", genre, "sort", sort_tag)
+		else:
+			artist_type=self._settings.get_artist_type()
+			if genre is None:  # treat 'None' as 'all genres'
+				self.findadd(artist_type, artist, "sort", sort_tag)
+			else:
+				self.findadd(artist_type, artist, "genre", genre, "sort", sort_tag)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
@@ -2084,8 +2092,7 @@ class ArtistWindow(FocusFrame):
 			if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
 				genre=self._genre_select.get_selected_genre()
 				if path == Gtk.TreePath(0):
-					for row in self._store:
-						self._client.artist_to_playlist(row[0], genre, "append")
+					self._client.artist_to_playlist(None, genre, "append")
 				else:
 					artist=self._store[path][0]
 					self._client.artist_to_playlist(artist, genre, "append")
