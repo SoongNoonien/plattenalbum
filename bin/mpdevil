@@ -1417,21 +1417,12 @@ class FocusFrame(Gtk.Overlay):
 		self._widget.connect("focus-out-event", lambda *args: self._frame.hide())
 
 class SongPopover(Gtk.Popover):
-	def __init__(self, uri, client, relative, x, y, offset=26):
+	def __init__(self, client):
 		super().__init__()
-		rect=Gdk.Rectangle()
-		rect.x=x
-		# Gtk places popovers in treeviews 26px above the given position for no obvious reasons, so I move them 26px
-		# This seems to be related to the width/height of the headers in treeviews
-		rect.y=y+offset
-		rect.width=1
-		rect.height=1
-		self.set_pointing_to(rect)
-		self.set_relative_to(relative)
 
-		# client calls
-		song=client.get_metadata(uri)
-		abs_path=client.get_absolute_path(uri)
+		# adding vars
+		self._client=client
+		self._rect=Gdk.Rectangle()
 
 		# popover css
 		style_context=self.get_style_context()
@@ -1440,60 +1431,78 @@ class SongPopover(Gtk.Popover):
 		provider.load_from_data(css)
 		style_context.add_provider(provider, 600)
 
-		# open with button
+		# open-with button
 		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
 		style_context=open_button.get_style_context()
 		style_context.add_class("circular")
-		open_button_revealer=Gtk.Revealer()  # needed for open_button tooltip
-		open_button_revealer.set_halign(Gtk.Align.END)
-		open_button_revealer.set_valign(Gtk.Align.END)
-		open_button_revealer.add(open_button)
+
+		# button revealer
+		self._open_button_revealer=Gtk.Revealer()
+		self._open_button_revealer.set_halign(Gtk.Align.END)
+		self._open_button_revealer.set_valign(Gtk.Align.END)
+		self._open_button_revealer.add(open_button)
 
 		# treeview
 		# (tag, display-value, tooltip)
-		store=Gtk.ListStore(str, str, str)
-		treeview=Gtk.TreeView(model=store, headers_visible=False, search_column=-1, tooltip_column=2)
-		treeview.set_can_focus(False)
-		treeview.get_selection().set_mode(Gtk.SelectionMode.NONE)
+		self._store=Gtk.ListStore(str, str, str)
+		self._treeview=Gtk.TreeView(model=self._store, headers_visible=False, search_column=-1, tooltip_column=2)
+		self._treeview.set_can_focus(False)
+		self._treeview.get_selection().set_mode(Gtk.SelectionMode.NONE)
 
 		# columns
 		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0, weight=Pango.Weight.BOLD)
 		column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text_ralign, text=0)
 		column_tag.set_property("resizable", False)
-		treeview.append_column(column_tag)
+		self._treeview.append_column(column_tag)
 		column_value=Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
 		column_value.set_property("resizable", False)
-		treeview.append_column(column_value)
+		self._treeview.append_column(column_value)
 
-		# populate
-		song=ClientHelper.song_to_str_dict(song)
-		for tag, value in song.items():
-			tooltip=value.replace("&", "&amp;")
-			if tag == "time":
-				store.append([tag+":", ClientHelper.seconds_to_display_time(int(value)), tooltip])
-			elif tag == "last-modified":
-				time=datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
-				store.append([tag+":", time.strftime("%a %d %B %Y, %H∶%M UTC"), tooltip])
-			else:
-				store.append([tag+":", value, tooltip])
+		# scroll
+		self._scroll=Gtk.ScrolledWindow(border_width=3)
+		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		self._scroll.set_propagate_natural_height(True)
+		self._scroll.add(self._treeview)
+
+		# connect
+		open_button.connect("clicked", self._on_open_button_clicked)
 
 		# packing
 		overlay=Gtk.Overlay()
-		scroll=Gtk.ScrolledWindow(border_width=3)
-		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-		window=self.get_toplevel()
-		scroll.set_max_content_height(window.get_size()[1]//2)
-		scroll.set_propagate_natural_height(True)
-		scroll.add(treeview)
-		overlay.add(scroll)
-		overlay.add_overlay(open_button_revealer)
-		if abs_path is not None:  # show open with button when song is on the same computer
-			self._gfile=Gio.File.new_for_path(abs_path)
-			open_button.connect("clicked", self._on_open_button_clicked)
-			open_button_revealer.set_reveal_child(True)
+		overlay.add(self._scroll)
+		overlay.add_overlay(self._open_button_revealer)
 		self.add(overlay)
 		overlay.show_all()
+
+	def open(self, uri, widget, x, y, offset=26):
+		self._rect.x=x
+		# Gtk places popovers in treeviews 26px above the given position for no obvious reasons, so I move them 26px
+		# This seems to be related to the width/height of the headers in treeviews
+		self._rect.y=y+offset
+		self.set_pointing_to(self._rect)
+		self.set_relative_to(widget)
+		window=self.get_toplevel()
+		self._scroll.set_max_content_height(window.get_size()[1]//2)
+		self._store.clear()
+		song=ClientHelper.song_to_str_dict(self._client.get_metadata(uri))
+		for tag, value in song.items():
+			tooltip=value.replace("&", "&amp;")
+			if tag == "time":
+				self._store.append([tag+":", ClientHelper.seconds_to_display_time(int(value)), tooltip])
+			elif tag == "last-modified":
+				time=datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+				self._store.append([tag+":", time.strftime("%a %d %B %Y, %H∶%M UTC"), tooltip])
+			else:
+				self._store.append([tag+":", value, tooltip])
+		abs_path=self._client.get_absolute_path(uri)
+		if abs_path is None:  # show open with button when song is on the same computer
+			self._open_button_revealer.set_reveal_child(False)
+		else:
+			self._gfile=Gio.File.new_for_path(abs_path)
+			self._open_button_revealer.set_reveal_child(True)
+		self.popup()
+		self._treeview.columns_autosize()
 
 	def _on_open_button_clicked(self, *args):
 		self.popdown()
@@ -1510,7 +1519,7 @@ class SongsView(Gtk.TreeView):
 		super().__init__(model=store, search_column=-1)
 		self.columns_autosize()
 
-		# add vars
+		# adding vars
 		self._client=client
 		self._store=store
 		self._file_column_id=file_column_id
@@ -1518,6 +1527,9 @@ class SongsView(Gtk.TreeView):
 
 		# selection
 		self._selection=self.get_selection()
+
+		# song popover
+		self._song_popover=SongPopover(self._client)
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
@@ -1558,10 +1570,9 @@ class SongsView(Gtk.TreeView):
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					uri=self._store[path][self._file_column_id]
 					if self.get_property("headers-visible"):
-						pop=SongPopover(uri, self._client, widget, int(event.x), int(event.y))
+						self._song_popover.open(uri, widget, int(event.x), int(event.y))
 					else:
-						pop=SongPopover(uri, self._client, widget, int(event.x), int(event.y), offset=0)
-					pop.popup()
+						self._song_popover.open(uri, widget, int(event.x), int(event.y), offset=0)
 		self._button_event=(None, None)
 
 	def _on_key_release_event(self, widget, event):
@@ -1574,8 +1585,7 @@ class SongsView(Gtk.TreeView):
 			elif event.keyval == Gdk.keyval_from_name("Menu"):
 				path=self._store.get_path(treeiter)
 				cell=self.get_cell_area(path, None)
-				pop=SongPopover(self._store[path][self._file_column_id], self._client, widget, cell.x, cell.y)
-				pop.popup()
+				self._song_popover.open(self._store[path][self._file_column_id], widget, cell.x, cell.y)
 
 class SongsWindow(Gtk.Box):
 	def __init__(self, client, store, file_column_id, focus_indicator=True):
@@ -1647,23 +1657,56 @@ class SongsWindow(Gtk.Box):
 		self._client.files_to_playlist(self._songs_view.get_files(), "enqueue")
 
 class AlbumPopover(Gtk.Popover):
-	def __init__(self, client, settings, album, album_artist, year, widget, x, y):
+	def __init__(self, client, settings):
 		super().__init__()
-		rect=Gdk.Rectangle()
-		rect.x=x
-		rect.y=y
-		rect.width=1
-		rect.height=1
-		self.set_pointing_to(rect)
-		self.set_relative_to(widget)
 
 		# adding vars
 		self._client=client
-		songs=self._client.find("album", album, "date", year, settings.get_artist_type(), album_artist)
+		self._settings=settings
+		self._rect=Gdk.Rectangle()
 
-		# store
+		# songs window
 		# (track, title (artist), duration, file)
-		store=Gtk.ListStore(str, str, str, str)
+		self._store=Gtk.ListStore(str, str, str, str)
+		songs_window=SongsWindow(self._client, self._store, 3, focus_indicator=False)
+
+		# scroll
+		self._scroll=songs_window.get_scroll()
+		self._scroll.set_propagate_natural_height(True)
+		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		self._scroll.set_property("margin-start", 3)
+		self._scroll.set_property("margin-end", 3)
+		self._scroll.set_property("margin-top", 3)
+
+		# songs view
+		self._songs_view=songs_window.get_treeview()
+		self._songs_view.set_property("headers_visible", False)
+
+		# columns
+		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
+		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
+		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
+		column_track.set_property("resizable", False)
+		self._songs_view.append_column(column_track)
+		column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
+		column_title.set_property("resizable", False)
+		self._songs_view.append_column(column_title)
+		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_ralign, text=2)
+		column_time.set_property("resizable", False)
+		self._songs_view.append_column(column_time)
+
+		# packing
+		self.add(songs_window)
+		songs_window.show_all()
+
+	def open(self, album, album_artist, date, widget, x, y):
+		self._rect.x=x
+		self._rect.y=y
+		self.set_pointing_to(self._rect)
+		self.set_relative_to(widget)
+		self._scroll.set_max_content_height(4*widget.get_allocated_height()//7)
+		self._store.clear()
+		songs=self._client.find("album", album, "date", date, self._settings.get_artist_type(), album_artist)
 		for s in songs:
 			song=ClientHelper.song_to_list_dict(ClientHelper.pepare_song_for_display(s))
 			track=song["track"][0]
@@ -1679,41 +1722,9 @@ class AlbumPopover(Gtk.Popover):
 			else:
 				title_artist="<b>{}</b> - {}".format(title, artist)
 			title_artist=title_artist.replace("&", "&amp;")
-			store.append([track, title_artist, song["human_duration"][0], song["file"][0]])
-
-		# songs window
-		songs_window=SongsWindow(self._client, store, 3, focus_indicator=False)
-
-		# scroll
-		scroll=songs_window.get_scroll()
-		scroll.set_max_content_height(4*widget.get_allocated_height()//7)
-		scroll.set_propagate_natural_height(True)
-		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-		scroll.set_property("margin-start", 3)
-		scroll.set_property("margin-end", 3)
-		scroll.set_property("margin-top", 3)
-
-		# songs view
-		songs_view=songs_window.get_treeview()
-		songs_view.set_property("headers_visible", False)
-
-		# columns
-		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
-		column_track.set_property("resizable", False)
-		songs_view.append_column(column_track)
-		column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
-		column_title.set_property("resizable", False)
-		column_title.set_property("expand", True)
-		songs_view.append_column(column_title)
-		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_ralign, text=2)
-		column_time.set_property("resizable", False)
-		songs_view.append_column(column_time)
-
-		# packing
-		self.add(songs_window)
-		songs_window.show_all()
+			self._store.append([track, title_artist, song["human_duration"][0], song["file"][0]])
+		self.popup()
+		self._songs_view.columns_autosize()
 
 class Cover(object):
 	def __init__(self, settings, raw_song):
@@ -2145,6 +2156,9 @@ class AlbumWindow(FocusFrame):
 		# progress bar
 		self._progress_bar=Gtk.ProgressBar(no_show_all=True)
 
+		# album popover
+		self._album_popover=AlbumPopover(self._client, self._settings)
+
 		# connect
 		self._iconview.connect("item-activated", self._on_item_activated)
 		self._iconview.connect("button-press-event", self._on_button_press_event)
@@ -2330,8 +2344,7 @@ class AlbumWindow(FocusFrame):
 					artist=self._store[path][6]
 					v=self._scroll_vadj.get_value()
 					h=self._scroll_hadj.get_value()
-					self._popover=AlbumPopover(self._client, self._settings, album, artist, year, widget, event.x-h, event.y-v)
-					self._popover.popup()
+					self._album_popover.open(album, artist, year, widget, event.x-h, event.y-v)
 		self._button_event=(None, None)
 
 	def _on_key_release_event(self, widget, event):
@@ -2348,8 +2361,7 @@ class AlbumWindow(FocusFrame):
 				rect=widget.get_cell_rect(paths[0], None)[1]
 				x=rect.x+rect.width//2
 				y=rect.y+rect.height//2
-				self._popover=AlbumPopover(self._client, self._settings, album, artist, year, widget, x, y)
-				self._popover.popup()
+				self._album_popover.open(album, artist, year, widget, x, y)
 
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
@@ -2360,9 +2372,7 @@ class AlbumWindow(FocusFrame):
 
 	def _on_disconnected(self, *args):
 		self._iconview.set_sensitive(False)
-		if self._popover is not None:
-			self._popover.destroy()
-			self._popover=None
+		self._album_popover.popdown()
 
 	def _on_reconnected(self, *args):
 		self._iconview.set_sensitive(True)
@@ -2659,7 +2669,9 @@ class CoverEventBox(Gtk.EventBox):
 		# adding vars
 		self._client=client
 		self._settings=settings
-		self._popover=None
+
+		# album popover
+		self._album_popover=AlbumPopover(self._client, self._settings)
 
 		# connect
 		self._button_press_event=self.connect("button-press-event", self._on_button_press_event)
@@ -2685,15 +2697,10 @@ class CoverEventBox(Gtk.EventBox):
 					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 						self._client.album_to_playlist(album, artist, album_year, "append")
 					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._popover=AlbumPopover(
-							self._client, self._settings, album, artist, album_year, widget, event.x, event.y
-						)
-						self._popover.popup()
+						self._album_popover.open(album, artist, album_year, widget, event.x, event.y)
 
 	def _on_disconnected(self, *args):
-		if self._popover is not None:
-			self._popover.destroy()
-			self._popover=None
+		self._album_popover.popdown()
 
 class MainCover(Gtk.Frame):
 	def __init__(self, client, settings):
@@ -2753,7 +2760,6 @@ class PlaylistWindow(Gtk.Box):
 		self._icon_size=self._settings.get_int("icon-size-sec")
 		self._inserted_path=None  # needed for drag and drop
 		self._button_event=(None, None)
-		self._popover=None
 
 		# buttons
 		provider=Gtk.CssProvider()
@@ -2831,6 +2837,9 @@ class PlaylistWindow(Gtk.Box):
 		audio.set_margin_start(12)
 		action_bar.pack_end(self._clear_button)
 		action_bar.pack_end(audio)
+
+		# song popover
+		self._song_popover=SongPopover(self._client)
 
 		# connect
 		self._treeview.connect("row-activated", self._on_row_activated)
@@ -2922,8 +2931,7 @@ class PlaylistWindow(Gtk.Box):
 				if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					self._store.remove(self._store.get_iter(path))
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._popover=SongPopover(self._store[path][8], self._client, widget, int(event.x), int(event.y))
-					self._popover.popup()
+					self._song_popover.open(self._store[path][8], widget, int(event.x), int(event.y))
 		self._button_event=(None, None)
 
 	def _on_key_release_event(self, widget, event):
@@ -2939,8 +2947,7 @@ class PlaylistWindow(Gtk.Box):
 			if treeiter is not None:
 				path=self._store.get_path(treeiter)
 				cell=self._treeview.get_cell_area(path, None)
-				self._popover=SongPopover(self._store[path][8], self._client, widget, int(cell.x), int(cell.y))
-				self._popover.popup()
+				self._song_popover.open(self._store[path][8], widget, int(cell.x), int(cell.y))
 
 	def _on_row_deleted(self, model, path):  # sync treeview to mpd
 		try:
@@ -3031,9 +3038,7 @@ class PlaylistWindow(Gtk.Box):
 		self._treeview.set_sensitive(False)
 		self._back_to_current_song_button.set_sensitive(False)
 		self._clear_button.set_sensitive(False)
-		if self._popover is not None:
-			self._popover.destroy()
-			self._popover=None
+		self._song_popover.popdown()
 		self._clear()
 
 	def _on_reconnected(self, *args):
