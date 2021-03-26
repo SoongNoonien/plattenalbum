@@ -1550,7 +1550,6 @@ class SongsView(Gtk.TreeView):
 		self._client=client
 		self._store=store
 		self._file_column_id=file_column_id
-		self._button_event=(None, None)
 
 		# selection
 		self._selection=self.get_selection()
@@ -1561,7 +1560,6 @@ class SongsView(Gtk.TreeView):
 		# connect
 		self.connect("row-activated", self._on_row_activated)
 		self.connect("button-press-event", self._on_button_press_event)
-		self.connect("button-release-event", self._on_button_release_event)
 		self._client.emitter.connect("show-info", self._on_show_info)
 		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 
@@ -1583,23 +1581,15 @@ class SongsView(Gtk.TreeView):
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 		if path_re is not None:
-			if event.type == Gdk.EventType.BUTTON_PRESS:
-				self._button_event=(event.button, path_re[0])
-
-	def _on_button_release_event(self, widget, event):
-		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
-		if path_re is not None:
 			path=path_re[0]
-			if self._button_event == (event.button, path):
-				if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._client.files_to_playlist([self._store[path][self._file_column_id]], "append")
-				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					uri=self._store[path][self._file_column_id]
-					if self.get_property("headers-visible"):
-						self._song_popover.open(uri, widget, int(event.x), int(event.y))
-					else:
-						self._song_popover.open(uri, widget, int(event.x), int(event.y), offset=0)
-		self._button_event=(None, None)
+			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self._client.files_to_playlist([self._store[path][self._file_column_id]], "append")
+			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+				uri=self._store[path][self._file_column_id]
+				if self.get_property("headers-visible"):
+					self._song_popover.open(uri, widget, int(event.x), int(event.y))
+				else:
+					self._song_popover.open(uri, widget, int(event.x), int(event.y), offset=0)
 
 	def _on_show_info(self, *args):
 		if self.has_focus():
@@ -2061,7 +2051,7 @@ class ArtistWindow(FocusFrame):
 		scroll.add(self._treeview)
 
 		# connect
-		self._treeview.connect("button-release-event", self._on_button_release_event)
+		self._treeview.connect("button-press-event", self._on_button_press_event)
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._settings.connect("changed::use-album-artist", self._refresh)
 		self._settings.connect("changed::show-initials", self._on_show_initials_changed)
@@ -2127,11 +2117,11 @@ class ArtistWindow(FocusFrame):
 			except:
 				self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 
-	def _on_button_release_event(self, widget, event):
+	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 		if path_re is not None:
 			path=path_re[0]
-			if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
+			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 				genre=self._genre_select.get_selected_genre()
 				if path == Gtk.TreePath(0):
 					self._client.artist_to_playlist(None, genre, "append")
@@ -2176,11 +2166,9 @@ class AlbumWindow(FocusFrame):
 		self._settings=settings
 		self._client=client
 		self._artist_window=artist_window
-		self._button_event=(None, None)
 		self._stop_flag=False
 		self._done=True
 		self._pending=[]
-		self._popover=None
 
 		# cover, display_label, display_label_artist, tooltip(titles), album, year, artist
 		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str)
@@ -2207,7 +2195,6 @@ class AlbumWindow(FocusFrame):
 		# connect
 		self._iconview.connect("item-activated", self._on_item_activated)
 		self._iconview.connect("button-press-event", self._on_button_press_event)
-		self._iconview.connect("button-release-event", self._on_button_release_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("show-info", self._on_show_info)
@@ -2373,23 +2360,17 @@ class AlbumWindow(FocusFrame):
 
 	def _on_button_press_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
-		if event.type == Gdk.EventType.BUTTON_PRESS:
-			self._button_event=(event.button, path)
-
-	def _on_button_release_event(self, widget, event):
-		path=widget.get_path_at_pos(int(event.x), int(event.y))
 		if path is not None:
-			if self._button_event == (event.button, path):
-				if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._path_to_playlist(path, "append")
-				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					album=self._store[path][4]
-					year=self._store[path][5]
-					artist=self._store[path][6]
-					v=self._scroll_vadj.get_value()
-					h=self._scroll_hadj.get_value()
-					self._album_popover.open(album, artist, year, widget, event.x-h, event.y-v)
-		self._button_event=(None, None)
+			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self._path_to_playlist(path, "append")
+			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+				album=self._store[path][4]
+				year=self._store[path][5]
+				artist=self._store[path][6]
+				v=self._scroll_vadj.get_value()
+				h=self._scroll_hadj.get_value()
+				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
+				GLib.idle_add(self._album_popover.open, album, artist, year, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
@@ -2804,7 +2785,6 @@ class PlaylistWindow(Gtk.Box):
 		self._playlist_version=None
 		self._icon_size=self._settings.get_int("icon-size-sec")
 		self._inserted_path=None  # needed for drag and drop
-		self._button_event=(None, None)
 
 		# buttons
 		provider=Gtk.CssProvider()
@@ -2889,7 +2869,6 @@ class PlaylistWindow(Gtk.Box):
 		# connect
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._treeview.connect("button-press-event", self._on_button_press_event)
-		self._treeview.connect("button-release-event", self._on_button_release_event)
 		self._treeview.connect("key-release-event", self._on_key_release_event)
 		self._treeview.connect("drag-begin", lambda *args: self._frame.disable())
 		self._treeview.connect("drag-end", lambda *args: self._frame.enable())
@@ -2966,19 +2945,11 @@ class PlaylistWindow(Gtk.Box):
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 		if path_re is not None:
-			if event.type == Gdk.EventType.BUTTON_PRESS:
-				self._button_event=(event.button, path_re[0])
-
-	def _on_button_release_event(self, widget, event):
-		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
-		if path_re is not None:
 			path=path_re[0]
-			if self._button_event == (event.button, path):
-				if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._store.remove(self._store.get_iter(path))
-				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._song_popover.open(self._store[path][8], widget, int(event.x), int(event.y))
-		self._button_event=(None, None)
+			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self._store.remove(self._store.get_iter(path))
+			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self._song_popover.open(self._store[path][8], widget, int(event.x), int(event.y))
 
 	def _on_key_release_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
@@ -3314,9 +3285,7 @@ class SeekBar(Gtk.Box):
 
 		# connect
 		self._elapsed_event_box.connect("button-release-event", self._on_elapsed_button_release_event)
-		self._elapsed_event_box.connect("button-press-event", lambda *args: self._scale.grab_focus())
 		self._rest_event_box.connect("button-release-event", self._on_rest_button_release_event)
-		self._rest_event_box.connect("button-press-event", lambda *args: self._scale.grab_focus())
 		self._scale.connect("change-value", self._on_change_value)
 		self._scale.connect("scroll-event", lambda *args: True)  # disable mouse wheel
 		self._scale.connect("button-press-event", self._on_scale_button_press_event)
