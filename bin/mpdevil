@@ -502,7 +502,7 @@ class ClientHelper():
 			length=length+float(song.get("duration", 0.0))
 		return ClientHelper.seconds_to_display_time(int(length))
 
-class MpdEventEmitter(GObject.Object):
+class EventEmitter(GObject.Object):
 	__gsignals__={
 		"update": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
@@ -518,7 +518,9 @@ class MpdEventEmitter(GObject.Object):
 		"single": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"audio": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
-		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (float,))
+		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
+		"add_to_playlist": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+		"show_info": (GObject.SignalFlags.RUN_FIRST, None, ())
 	}
 
 	def __init__(self):
@@ -530,7 +532,7 @@ class Client(MPDClient):
 
 		# adding vars
 		self._settings=settings
-		self.emitter=MpdEventEmitter()
+		self.emitter=EventEmitter()
 		self._last_status={}
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
@@ -616,22 +618,47 @@ class Client(MPDClient):
 		songs=self.find("album", album, "date", year, self._settings.get_artist_type(), artist)
 		self.files_to_playlist([song["file"] for song in songs], mode)
 
-	def artist_to_playlist(self, artist, genre, mode="default"):  #TODO use mode
-		if self._settings.get_boolean("sort-albums-by-year"):
-			sort_tag="date"
-		else:
-			sort_tag="album"
-		if artist is None:  # treat 'None' as 'all artists'
-			if genre is None:  # treat 'None' as 'all genres'
-				self.searchadd("any", "", "sort", sort_tag)
+	def artist_to_playlist(self, artist, genre, mode):
+		def append():
+			if self._settings.get_boolean("sort-albums-by-year"):
+				sort_tag="date"
 			else:
-				self.findadd("genre", genre, "sort", sort_tag)
-		else:
-			artist_type=self._settings.get_artist_type()
-			if genre is None:  # treat 'None' as 'all genres'
-				self.findadd(artist_type, artist, "sort", sort_tag)
+				sort_tag="album"
+			if artist is None:  # treat 'None' as 'all artists'
+				if genre is None:  # treat 'None' as 'all genres'
+					self.searchadd("any", "", "sort", sort_tag)
+				else:
+					self.findadd("genre", genre, "sort", sort_tag)
 			else:
-				self.findadd(artist_type, artist, "genre", genre, "sort", sort_tag)
+				artist_type=self._settings.get_artist_type()
+				if genre is None:  # treat 'None' as 'all genres'
+					self.findadd(artist_type, artist, "sort", sort_tag)
+				else:
+					self.findadd(artist_type, artist, "genre", genre, "sort", sort_tag)
+		if mode == "append":
+			append()
+		elif mode == "play":
+			self.clear()
+			append()
+			self.play()
+		elif mode == "enqueue":
+			status=self.status()
+			if status["state"] == "stop":
+				self.clear()
+				append()
+				self.play()
+			else:
+				self.moveid(status["songid"], 0)
+				current_song_file=self.currentsong()["file"]
+				try:
+					self.delete((1,))  # delete all songs, but the first. bad song index possible
+				except:
+					pass
+				append()
+				duplicates=self.playlistfind("file", current_song_file)
+				if len(duplicates) > 1:
+					self.move(0, duplicates[1]["pos"])
+					self.delete(int(duplicates[1]["pos"])-1)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
@@ -1516,7 +1543,7 @@ class SongPopover(Gtk.Popover):
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
-		super().__init__(model=store, search_column=-1)
+		super().__init__(model=store, search_column=-1, activate_on_single_click=True)
 		self.columns_autosize()
 
 		# adding vars
@@ -1535,7 +1562,8 @@ class SongsView(Gtk.TreeView):
 		self.connect("row-activated", self._on_row_activated)
 		self.connect("button-press-event", self._on_button_press_event)
 		self.connect("button-release-event", self._on_button_release_event)
-		self.connect("key-release-event", self._on_key_release_event)
+		self._client.emitter.connect("show-info", self._on_show_info)
+		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 
 	def clear(self):
 		self._store.clear()
@@ -1550,7 +1578,7 @@ class SongsView(Gtk.TreeView):
 		return return_list
 
 	def _on_row_activated(self, widget, path, view_column):
-		self._client.files_to_playlist([self._store[path][self._file_column_id]], "play")
+		self._client.files_to_playlist([self._store[path][self._file_column_id]])
 
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -1563,9 +1591,7 @@ class SongsView(Gtk.TreeView):
 		if path_re is not None:
 			path=path_re[0]
 			if self._button_event == (event.button, path):
-				if event.button == 1 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._client.files_to_playlist([self._store[path][self._file_column_id]])
-				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
+				if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					self._client.files_to_playlist([self._store[path][self._file_column_id]], "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					uri=self._store[path][self._file_column_id]
@@ -1575,17 +1601,18 @@ class SongsView(Gtk.TreeView):
 						self._song_popover.open(uri, widget, int(event.x), int(event.y), offset=0)
 		self._button_event=(None, None)
 
-	def _on_key_release_event(self, widget, event):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
-			if event.keyval == Gdk.keyval_from_name("p"):
-				self._client.files_to_playlist([self._store.get_value(treeiter, self._file_column_id)])
-			elif event.keyval == Gdk.keyval_from_name("a"):
-				self._client.files_to_playlist([self._store.get_value(treeiter, self._file_column_id)], "append")
-			elif event.keyval == Gdk.keyval_from_name("Menu"):
-				path=self._store.get_path(treeiter)
-				cell=self.get_cell_area(path, None)
-				self._song_popover.open(self._store[path][self._file_column_id], widget, cell.x, cell.y)
+	def _on_show_info(self, *args):
+		if self.has_focus():
+			treeview, treeiter=self._selection.get_selected()
+			path=self._store.get_path(treeiter)
+			cell=self.get_cell_area(path, None)
+			self._song_popover.open(self._store[path][self._file_column_id], self, cell.x, cell.y)
+
+	def _on_add_to_playlist(self, emitter, mode):
+		if self.has_focus():
+			treeview, treeiter=self._selection.get_selected()
+			if treeiter is not None:
+				self._client.files_to_playlist([self._store.get_value(treeiter, self._file_column_id)], mode)
 
 class SongsWindow(Gtk.Box):
 	def __init__(self, client, store, file_column_id, focus_indicator=True):
@@ -1666,8 +1693,8 @@ class AlbumPopover(Gtk.Popover):
 		self._rect=Gdk.Rectangle()
 
 		# songs window
-		# (track, title (artist), duration, file)
-		self._store=Gtk.ListStore(str, str, str, str)
+		# (track, title (artist), duration, file, search text)
+		self._store=Gtk.ListStore(str, str, str, str, str)
 		songs_window=SongsWindow(self._client, self._store, 3, focus_indicator=False)
 
 		# scroll
@@ -1680,7 +1707,8 @@ class AlbumPopover(Gtk.Popover):
 
 		# songs view
 		self._songs_view=songs_window.get_treeview()
-		self._songs_view.set_property("headers_visible", False)
+		self._songs_view.set_property("headers-visible", False)
+		self._songs_view.set_property("search-column", 4)
 
 		# columns
 		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
@@ -1705,6 +1733,7 @@ class AlbumPopover(Gtk.Popover):
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
 		self._scroll.set_max_content_height(4*widget.get_allocated_height()//7)
+		self._songs_view.set_model(None)  # clear old scroll position
 		self._store.clear()
 		songs=self._client.find("album", album, "date", date, self._settings.get_artist_type(), album_artist)
 		for s in songs:
@@ -1722,7 +1751,8 @@ class AlbumPopover(Gtk.Popover):
 			else:
 				title_artist="<b>{}</b> - {}".format(title, artist)
 			title_artist=title_artist.replace("&", "&amp;")
-			self._store.append([track, title_artist, song["human_duration"][0], song["file"][0]])
+			self._store.append([track, title_artist, song["human_duration"][0], song["file"][0], title])
+		self._songs_view.set_model(self._store)
 		self.popup()
 		self._songs_view.columns_autosize()
 
@@ -2038,6 +2068,7 @@ class ArtistWindow(FocusFrame):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("update", self._refresh)
+		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 		self._genre_select.connect("genre_changed", self._refresh)
 
 		self.set_widget(self._treeview)
@@ -2114,6 +2145,18 @@ class ArtistWindow(FocusFrame):
 		self._store[path][1]=Pango.Weight.BOLD
 		self.emit("artists_changed")
 
+	def _on_add_to_playlist(self, emitter, mode):
+		if self._treeview.has_focus():
+			treeview, treeiter=self._selection.get_selected()
+			if treeiter is not None:
+				path=self._store.get_path(treeiter)
+				genre=self._genre_select.get_selected_genre()
+				if path == Gtk.TreePath(0):
+					self._client.artist_to_playlist(None, genre, mode)
+				else:
+					artist=self._store[path][0]
+					self._client.artist_to_playlist(artist, genre, mode)
+
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
 		self._clear()
@@ -2144,7 +2187,9 @@ class AlbumWindow(FocusFrame):
 		self._sort_settings()
 
 		# iconview
-		self._iconview=Gtk.IconView(model=self._store, item_width=0, pixbuf_column=0, markup_column=1, tooltip_column=3)
+		self._iconview=Gtk.IconView(
+			model=self._store, item_width=0, pixbuf_column=0, markup_column=1, tooltip_column=3, activate_on_single_click=True
+		)
 
 		# scroll
 		scroll=Gtk.ScrolledWindow()
@@ -2163,9 +2208,10 @@ class AlbumWindow(FocusFrame):
 		self._iconview.connect("item-activated", self._on_item_activated)
 		self._iconview.connect("button-press-event", self._on_button_press_event)
 		self._iconview.connect("button-release-event", self._on_button_release_event)
-		self._iconview.connect("key-release-event", self._on_key_release_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("show-info", self._on_show_info)
+		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
 		self._artist_window.connect("artists_changed", self._refresh)
@@ -2334,9 +2380,7 @@ class AlbumWindow(FocusFrame):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
 		if path is not None:
 			if self._button_event == (event.button, path):
-				if event.button == 1 and event.type == Gdk.EventType.BUTTON_RELEASE:
-					self._path_to_playlist(path)
-				elif event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
+				if event.button == 2 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					self._path_to_playlist(path, "append")
 				elif event.button == 3 and event.type == Gdk.EventType.BUTTON_RELEASE:
 					album=self._store[path][4]
@@ -2347,28 +2391,12 @@ class AlbumWindow(FocusFrame):
 					self._album_popover.open(album, artist, year, widget, event.x-h, event.y-v)
 		self._button_event=(None, None)
 
-	def _on_key_release_event(self, widget, event):
-		paths=widget.get_selected_items()
-		if len(paths) != 0:
-			if event.keyval == Gdk.keyval_from_name("p"):
-				self._path_to_playlist(paths[0])
-			elif event.keyval == Gdk.keyval_from_name("a"):
-				self._path_to_playlist(paths[0], "append")
-			elif event.keyval == Gdk.keyval_from_name("Menu"):
-				album=self._store[paths[0]][4]
-				year=self._store[paths[0]][5]
-				artist=self._store[paths[0]][6]
-				rect=widget.get_cell_rect(paths[0], None)[1]
-				x=rect.x+rect.width//2
-				y=rect.y+rect.height//2
-				self._album_popover.open(album, artist, year, widget, x, y)
-
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
 		selected_album=self._store.get_value(treeiter, 4)
 		selected_album_year=self._store.get_value(treeiter, 5)
 		selected_artist=self._store.get_value(treeiter, 6)
-		self._client.album_to_playlist(selected_album, selected_artist, selected_album_year, "play")
+		self._client.album_to_playlist(selected_album, selected_artist, selected_album_year)
 
 	def _on_disconnected(self, *args):
 		self._iconview.set_sensitive(False)
@@ -2376,6 +2404,23 @@ class AlbumWindow(FocusFrame):
 
 	def _on_reconnected(self, *args):
 		self._iconview.set_sensitive(True)
+
+	def _on_show_info(self, *args):
+		if self._iconview.has_focus():
+			paths=self._iconview.get_selected_items()
+			if len(paths) > 0:
+				rect=self._iconview.get_cell_rect(paths[0], None)[1]
+				x=rect.x+rect.width//2
+				y=rect.y+rect.height//2
+				self._album_popover.open(
+					self._store[paths[0]][4], self._store[paths[0]][6], self._store[paths[0]][5], self._iconview, x, y
+				)
+
+	def _on_add_to_playlist(self, emitter, mode):
+		if self._iconview.has_focus():
+			paths=self._iconview.get_selected_items()
+			if len(paths) != 0:
+				self._path_to_playlist(paths[0], mode)
 
 	def _on_cover_size_changed(self, *args):
 		def callback():
@@ -2857,6 +2902,7 @@ class PlaylistWindow(Gtk.Box):
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("show-info", self._on_show_info)
 
 		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::column-visibilities", self._load_settings)
@@ -2942,12 +2988,6 @@ class PlaylistWindow(Gtk.Box):
 					self._store.remove(treeiter)
 				except:
 					pass
-		elif event.keyval == Gdk.keyval_from_name("Menu"):
-			treeview, treeiter=self._selection.get_selected()
-			if treeiter is not None:
-				path=self._store.get_path(treeiter)
-				cell=self._treeview.get_cell_area(path, None)
-				self._song_popover.open(self._store[path][8], widget, int(cell.x), int(cell.y))
 
 	def _on_row_deleted(self, model, path):  # sync treeview to mpd
 		try:
@@ -3045,6 +3085,14 @@ class PlaylistWindow(Gtk.Box):
 		self._back_to_current_song_button.set_sensitive(True)
 		self._clear_button.set_sensitive(True)
 		self._treeview.set_sensitive(True)
+
+	def _on_show_info(self, *args):
+		if self._treeview.has_focus():
+			treeview, treeiter=self._selection.get_selected()
+			if treeiter is not None:
+				path=self._store.get_path(treeiter)
+				cell=self._treeview.get_cell_area(path, None)
+				self._song_popover.open(self._store[path][8], self._treeview, int(cell.x), int(cell.y))
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
@@ -3642,13 +3690,13 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 			("<Control>s", _("Toggle random mode"), None, playback_group),
 			("<Control>1", _("Toggle single mode"), None, playback_group),
 			("<Control>o", _("Toggle consume mode"), None, playback_group),
-			("p", _("Play selected item (next)"), _("Left-click"), items_group),
-			("a", _("Append selected item"), _("Middle-click"), items_group),
-			("Return", _("Play selected item immediately"), _("Double-click"), items_group),
-			("Menu", _("Show additional information"), _("Right-click"), items_group),
+			("<Control>e", _("Enqueue selected item"), None, items_group),
+			("<Control>plus", _("Append selected item"), _("Middle-click"), items_group),
+			("<Control>Return", _("Play selected item immediately"), None, items_group),
+			("<Control>i", _("Show additional information"), _("Right-click"), items_group),
 			("Delete", _("Remove selected song"), _("Middle-click"), playlist_group),
 			("<Shift>Delete", _("Clear playlist"), None, playlist_group),
-			("Menu", _("Show additional information"), _("Right-click"), playlist_group)
+			("<Control>i", _("Show additional information"), _("Right-click"), playlist_group)
 		)
 		for accel, title, subtitle, group in shortcut_data:
 			shortcut=Gtk.ShortcutsShortcut(visible=True, accelerator=accel, title=title, subtitle=subtitle)
@@ -3732,7 +3780,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		simple_actions_data=(
 			"settings","stats","help","menu",
 			"toggle-lyrics","back-to-current-album","toggle-search",
-			"profile-next","profile-prev"
+			"profile-next","profile-prev","show-info","append","play","enqueue"
 		)
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
@@ -3885,6 +3933,18 @@ class MainWindow(Gtk.ApplicationWindow):
 		current_profile=self._settings.get_int("active-profile")
 		self._settings.set_int("active-profile", (current_profile-1)%total_profiles)
 
+	def _on_show_info(self, action, param):
+		self._client.emitter.emit("show-info")
+
+	def _on_append(self, action, param):
+		self._client.emitter.emit("add-to-playlist", "append")
+
+	def _on_play(self, action, param):
+		self._client.emitter.emit("add-to-playlist", "play")
+
+	def _on_enqueue(self, action, param):
+		self._client.emitter.emit("add-to-playlist", "enqueue")
+
 	def _on_profiles(self, action, param):
 		self._settings.set_int("active-profile", param.unpack())
 		action.set_state(param)
@@ -3998,7 +4058,9 @@ class mpdevil(Gtk.Application):
 				("mpd.stop", ["<Control>space"]),("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),
 				("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>s"]),("mpd.single", ["<Control>1"]),
 				("mpd.consume", ["<Control>o"]),("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
-				("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"])
+				("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"]),
+				("win.show-info", ["<Control>i"]),("win.append", ["<Control>plus"]),
+				("win.play", ["<Control>Return"]),("win.enqueue", ["<Control>e"])
 			)
 			for action, accels in action_accels:
 				self.set_accels_for_action(action, accels)
