@@ -2424,7 +2424,10 @@ class AlbumWindow(FocusFrame):
 				GLib.idle_add(self._album_popover.open, album, artist, year, widget, event.x-h, event.y-v)
 			else:
 				genre, artists=self._artist_window.get_selected_artists()
-				GLib.idle_add(self._artist_popover.open, artists[0], genre, widget, event.x-h, event.y-v)
+				if len(artists) > 1:
+					GLib.idle_add(self._artist_popover.open, None, genre, widget, event.x-h, event.y-v)
+				elif len(artists) == 1:
+					GLib.idle_add(self._artist_popover.open, artists[0], genre, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
