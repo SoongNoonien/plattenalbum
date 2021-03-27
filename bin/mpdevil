@@ -1577,9 +1577,10 @@ class SongsView(Gtk.TreeView):
 	def _on_show_info(self, *args):
 		if self.has_focus():
 			treeview, treeiter=self._selection.get_selected()
-			path=self._store.get_path(treeiter)
-			cell=self.get_cell_area(path, None)
-			self._song_popover.open(self._store[path][self._file_column_id], self, cell.x, cell.y)
+			if treeiter is not None:
+				path=self._store.get_path(treeiter)
+				cell=self.get_cell_area(path, None)
+				self._song_popover.open(self._store[path][self._file_column_id], self, cell.x, cell.y)
 
 	def _on_add_to_playlist(self, emitter, mode):
 		if self.has_focus():
@@ -2078,6 +2079,7 @@ class ArtistWindow(FocusFrame):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("update", self._refresh)
 		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
+		self._client.emitter.connect("show-info", self._on_show_info)
 		self._genre_select.connect("genre_changed", self._refresh)
 
 		self.set_widget(self._treeview)
@@ -2168,6 +2170,18 @@ class ArtistWindow(FocusFrame):
 				else:
 					artist=self._store[path][0]
 					self._client.artist_to_playlist(artist, genre, mode)
+
+	def _on_show_info(self, *args):
+		if self._treeview.has_focus():
+			treeview, treeiter=self._selection.get_selected()
+			if treeiter is not None:
+				path=self._store.get_path(treeiter)
+				cell=self._treeview.get_cell_area(path, None)
+				genre=self._genre_select.get_selected_genre()
+				if path == Gtk.TreePath(0):
+					self._artist_popover.open(None, genre, self._treeview, cell.x, cell.y)
+				else:
+					self._artist_popover.open(self._store[path][0], genre, self._treeview, cell.x, cell.y)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
