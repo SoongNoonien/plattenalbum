@@ -3646,7 +3646,7 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 		general_group=Gtk.ShortcutsGroup(title=_("General"), visible=True)
 		window_group=Gtk.ShortcutsGroup(title=_("Window"), visible=True)
 		playback_group=Gtk.ShortcutsGroup(title=_("Playback"), visible=True)
-		items_group=Gtk.ShortcutsGroup(title=_("Search, Album Dialog and Album List"), visible=True)
+		items_group=Gtk.ShortcutsGroup(title=_("Search, Album Dialog, Album List and Artist List"), visible=True)
 		playlist_group=Gtk.ShortcutsGroup(title=_("Playlist"), visible=True)
 		section=Gtk.ShortcutsSection(section_name="shortcuts", visible=True)
 		section.add(general_group)
@@ -3680,10 +3680,10 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 			("<Control>e", _("Enqueue selected item"), None, items_group),
 			("<Control>plus", _("Append selected item"), _("Middle-click"), items_group),
 			("<Control>Return", _("Play selected item immediately"), None, items_group),
-			("<Control>i", _("Show additional information"), _("Right-click"), items_group),
+			("<Control>i Menu", _("Show additional information"), _("Right-click"), items_group),
 			("Delete", _("Remove selected song"), _("Middle-click"), playlist_group),
 			("<Shift>Delete", _("Clear playlist"), None, playlist_group),
-			("<Control>i", _("Show additional information"), _("Right-click"), playlist_group)
+			("<Control>i Menu", _("Show additional information"), _("Right-click"), playlist_group)
 		)
 		for accel, title, subtitle, group in shortcut_data:
 			shortcut=Gtk.ShortcutsShortcut(visible=True, accelerator=accel, title=title, subtitle=subtitle)
@@ -4044,7 +4044,7 @@ class mpdevil(Gtk.Application):
 				("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>s"]),("mpd.single", ["<Control>1"]),
 				("mpd.consume", ["<Control>o"]),("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
 				("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"]),
-				("win.show-info", ["<Control>i"]),("win.append", ["<Control>plus"]),
+				("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),
 				("win.play", ["<Control>Return"]),("win.enqueue", ["<Control>e"])
 			)
 			for action, accels in action_accels:
