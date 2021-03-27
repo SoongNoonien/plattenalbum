@@ -1605,6 +1605,8 @@ class SongsView(Gtk.TreeView):
 				self._client.files_to_playlist([self._store.get_value(treeiter, self._file_column_id)], mode)
 
 class SongsWindow(Gtk.Box):
+	__gsignals__={"button-clicked": (GObject.SignalFlags.RUN_FIRST, None, ())}
+
 	def __init__(self, client, store, file_column_id, focus_indicator=True):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 
@@ -1666,6 +1668,7 @@ class SongsWindow(Gtk.Box):
 
 	def _on_button_clicked(self, widget, mode):
 		self._client.files_to_playlist(self._songs_view.get_files(), mode)
+		self.emit("button-clicked")
 
 class AlbumPopover(Gtk.Popover):
 	def __init__(self, client, settings):
@@ -1706,6 +1709,9 @@ class AlbumPopover(Gtk.Popover):
 		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_ralign, text=2)
 		column_time.set_property("resizable", False)
 		self._songs_view.append_column(column_time)
+
+		# connect
+		songs_window.connect("button-clicked", lambda *args: self.popdown())
 
 		# packing
 		self.add(songs_window)
