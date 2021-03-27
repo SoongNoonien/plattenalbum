@@ -1734,29 +1734,20 @@ class ArtistPopover(Gtk.Popover):
 		self._genre=None
 
 		# buttons
-		append_button=Gtk.Button.new_with_mnemonic(_("_Append"))
-		append_button.set_image(Gtk.Image.new_from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON))
-		append_button.set_tooltip_text(_("Add all titles to playlist"))
-		play_button=Gtk.Button.new_with_mnemonic(_("_Play"))
-		play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.BUTTON))
-		play_button.set_tooltip_text(_("Directly play all titles"))
-		enqueue_button=Gtk.Button.new_with_mnemonic(_("_Enqueue"))
-		enqueue_button.set_image(Gtk.Image.new_from_icon_name("insert-object-symbolic", Gtk.IconSize.BUTTON))
-		enqueue_button.set_tooltip_text(_("Append all titles after the currently playing track and clear the playlist from all other songs"))
+		vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, border_width=9)
+		data=((_("Append"), _("Add all titles to playlist"), "list-add-symbolic", "append"),
+			(_("Play"), _("Directly play all titles"), "media-playback-start-symbolic", "play"),
+			(_("Enqueue"), _("Append all titles after the currently playing track and clear the playlist from all other songs"),
+			"insert-object-symbolic", "enqueue")
+		)
+		for label, tooltip, icon, mode in data:
+			button=Gtk.ModelButton(label=label, tooltip_text=tooltip, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+			button.get_child().set_property("xalign", 0)
+			button.connect("clicked", self._on_button_clicked, mode)
+			vbox.pack_start(button, True, True, 0)
 
-		# button box
-		button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND, orientation=Gtk.Orientation.VERTICAL, border_width=3)
-		button_box.pack_start(append_button, True, True, 0)
-		button_box.pack_start(play_button, True, True, 0)
-		button_box.pack_start(enqueue_button, True, True, 0)
-
-		# connect
-		append_button.connect("clicked", self._on_button_clicked, "append")
-		play_button.connect("clicked", self._on_button_clicked, "play")
-		enqueue_button.connect("clicked", self._on_button_clicked, "enqueue")
-
-		self.add(button_box)
-		button_box.show_all()
+		self.add(vbox)
+		vbox.show_all()
 
 	def open(self, artist, genre, widget, x, y):
 		self._rect.x=x
