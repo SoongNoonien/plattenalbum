@@ -1637,9 +1637,9 @@ class SongsWindow(Gtk.Box):
 		self._action_bar=Gtk.ActionBar()
 
 		# connect
-		append_button.connect("clicked", self._on_append_button_clicked)
-		play_button.connect("clicked", self._on_play_button_clicked)
-		enqueue_button.connect("clicked", self._on_enqueue_button_clicked)
+		append_button.connect("clicked", self._on_button_clicked, "append")
+		play_button.connect("clicked", self._on_button_clicked, "play")
+		enqueue_button.connect("clicked", self._on_button_clicked, "enqueue")
 
 		# packing
 		if focus_indicator:
@@ -1664,14 +1664,8 @@ class SongsWindow(Gtk.Box):
 	def get_scroll(self):
 		return self._scroll
 
-	def _on_append_button_clicked(self, *args):
-		self._client.files_to_playlist(self._songs_view.get_files(), "append")
-
-	def _on_play_button_clicked(self, *args):
-		self._client.files_to_playlist(self._songs_view.get_files(), "play")
-
-	def _on_enqueue_button_clicked(self, *args):
-		self._client.files_to_playlist(self._songs_view.get_files(), "enqueue")
+	def _on_button_clicked(self, widget, mode):
+		self._client.files_to_playlist(self._songs_view.get_files(), mode)
 
 class AlbumPopover(Gtk.Popover):
 	def __init__(self, client, settings):
@@ -1745,6 +1739,54 @@ class AlbumPopover(Gtk.Popover):
 		self._songs_view.set_model(self._store)
 		self.popup()
 		self._songs_view.columns_autosize()
+
+class ArtistPopover(Gtk.Popover):
+	def __init__(self, client):
+		super().__init__()
+
+		# adding vars
+		self._client=client
+		self._rect=Gdk.Rectangle()
+		self._artist=None
+		self._genre=None
+
+		# buttons
+		append_button=Gtk.Button.new_with_mnemonic(_("_Append"))
+		append_button.set_image(Gtk.Image.new_from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON))
+		append_button.set_tooltip_text(_("Add all titles to playlist"))
+		play_button=Gtk.Button.new_with_mnemonic(_("_Play"))
+		play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.BUTTON))
+		play_button.set_tooltip_text(_("Directly play all titles"))
+		enqueue_button=Gtk.Button.new_with_mnemonic(_("_Enqueue"))
+		enqueue_button.set_image(Gtk.Image.new_from_icon_name("insert-object-symbolic", Gtk.IconSize.BUTTON))
+		enqueue_button.set_tooltip_text(_("Append all titles after the currently playing track and clear the playlist from all other songs"))
+
+		# button box
+		button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND, orientation=Gtk.Orientation.VERTICAL, border_width=3)
+		button_box.pack_start(append_button, True, True, 0)
+		button_box.pack_start(play_button, True, True, 0)
+		button_box.pack_start(enqueue_button, True, True, 0)
+
+		# connect
+		append_button.connect("clicked", self._on_button_clicked, "append")
+		play_button.connect("clicked", self._on_button_clicked, "play")
+		enqueue_button.connect("clicked", self._on_button_clicked, "enqueue")
+
+		self.add(button_box)
+		button_box.show_all()
+
+	def open(self, artist, genre, widget, x, y):
+		self._rect.x=x
+		self._rect.y=y
+		self.set_pointing_to(self._rect)
+		self.set_relative_to(widget)
+		self._artist=artist
+		self._genre=genre
+		self.popup()
+
+	def _on_button_clicked(self, widget, mode):
+		self._client.artist_to_playlist(self._artist, self._genre, mode)
+		self.popdown()
 
 class Cover(object):
 	def __init__(self, settings, raw_song):
@@ -2050,6 +2092,9 @@ class ArtistWindow(FocusFrame):
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scroll.add(self._treeview)
 
+		# artist popover
+		self._artist_popover=ArtistPopover(self._client)
+
 		# connect
 		self._treeview.connect("button-press-event", self._on_button_press_event)
 		self._treeview.connect("row-activated", self._on_row_activated)
@@ -2118,16 +2163,19 @@ class ArtistWindow(FocusFrame):
 				self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 
 	def _on_button_press_event(self, widget, event):
-		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
-		if path_re is not None:
-			path=path_re[0]
-			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+		if event.button in (2,3) and event.type == Gdk.EventType.BUTTON_PRESS:
+			path_re=widget.get_path_at_pos(int(event.x), int(event.y))
+			if path_re is not None:
+				path=path_re[0]
 				genre=self._genre_select.get_selected_genre()
 				if path == Gtk.TreePath(0):
-					self._client.artist_to_playlist(None, genre, "append")
+					artist=None
 				else:
 					artist=self._store[path][0]
+				if event.button == 2:
 					self._client.artist_to_playlist(artist, genre, "append")
+				if event.button == 3:
+					self._artist_popover.open(artist, genre, self._treeview, event.x, event.y)
 
 	def _on_row_activated(self, widget, path, view_column):
 		for row in self._store:  # reset bold text
@@ -2149,6 +2197,7 @@ class ArtistWindow(FocusFrame):
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
+		self._artist_popover.popdown()
 		self._clear()
 
 	def _on_reconnected(self, *args):
@@ -2189,8 +2238,9 @@ class AlbumWindow(FocusFrame):
 		# progress bar
 		self._progress_bar=Gtk.ProgressBar(no_show_all=True)
 
-		# album popover
+		# popover
 		self._album_popover=AlbumPopover(self._client, self._settings)
+		self._artist_popover=ArtistPopover(self._client)
 
 		# connect
 		self._iconview.connect("item-activated", self._on_item_activated)
@@ -2360,17 +2410,21 @@ class AlbumWindow(FocusFrame):
 
 	def _on_button_press_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
-		if path is not None:
-			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+		if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+			if path is not None:
 				self._path_to_playlist(path, "append")
-			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+			v=self._scroll_vadj.get_value()
+			h=self._scroll_hadj.get_value()
+			if path is not None:
 				album=self._store[path][4]
 				year=self._store[path][5]
 				artist=self._store[path][6]
-				v=self._scroll_vadj.get_value()
-				h=self._scroll_hadj.get_value()
 				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
 				GLib.idle_add(self._album_popover.open, album, artist, year, widget, event.x-h, event.y-v)
+			else:
+				genre, artists=self._artist_window.get_selected_artists()
+				GLib.idle_add(self._artist_popover.open, artists[0], genre, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
@@ -2382,6 +2436,7 @@ class AlbumWindow(FocusFrame):
 	def _on_disconnected(self, *args):
 		self._iconview.set_sensitive(False)
 		self._album_popover.popdown()
+		self._artist_popover.popdown()
 
 	def _on_reconnected(self, *args):
 		self._iconview.set_sensitive(True)
