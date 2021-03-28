@@ -2834,7 +2834,7 @@ class PlaylistWindow(Gtk.Box):
 		# treeview
 		# (track, disc, title, artist, album, duration, date, genre, file, weight)
 		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
-		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, reorderable=True, search_column=2)
+		self._treeview=Gtk.TreeView(model=self._store,activate_on_single_click=True,reorderable=True,search_column=2,fixed_height_mode=True)
 		self._selection=self._treeview.get_selection()
 
 		# columns
