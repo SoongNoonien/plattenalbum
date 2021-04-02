@@ -1437,15 +1437,10 @@ class SongPopover(Gtk.Popover):
 		self._client=client
 		self._rect=Gdk.Rectangle()
 
-		# popover css
-		style_context=self.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""* {background-color: @theme_base_color}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 600)
-
 		# open-with button
 		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
+		open_button.set_margin_bottom(6)
+		open_button.set_margin_end(6)
 		style_context=open_button.get_style_context()
 		style_context.add_class("circular")
 
@@ -1473,20 +1468,24 @@ class SongPopover(Gtk.Popover):
 		self._treeview.append_column(column_value)
 
 		# scroll
-		self._scroll=Gtk.ScrolledWindow(border_width=3)
+		self._scroll=Gtk.ScrolledWindow()
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		self._scroll.set_propagate_natural_height(True)
 		self._scroll.add(self._treeview)
+
+		# overlay
+		overlay=Gtk.Overlay()
+		overlay.add(self._scroll)
+		overlay.add_overlay(self._open_button_revealer)
 
 		# connect
 		open_button.connect("clicked", self._on_open_button_clicked)
 
 		# packing
-		overlay=Gtk.Overlay()
-		overlay.add(self._scroll)
-		overlay.add_overlay(self._open_button_revealer)
-		self.add(overlay)
-		overlay.show_all()
+		frame=Gtk.Frame(border_width=6)
+		frame.add(overlay)
+		self.add(frame)
+		frame.show_all()
 
 	def open(self, uri, widget, x, y, offset=26):
 		self._rect.x=x
@@ -1590,8 +1589,11 @@ class SongsView(Gtk.TreeView):
 
 class SongsWindow(Gtk.Box):
 	__gsignals__={"button-clicked": (GObject.SignalFlags.RUN_FIRST, None, ())}
-	def __init__(self, client, store, file_column_id, focus_indicator=True):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL)
+	def __init__(self, client, store, file_column_id, popover_mode=False):
+		if popover_mode:
+			super().__init__(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
+		else:
+			super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
 
 		# treeview
@@ -1603,40 +1605,33 @@ class SongsWindow(Gtk.Box):
 		self._scroll.add(self._songs_view)
 
 		# buttons
-		append_button=Gtk.Button.new_with_mnemonic(_("_Append"))
-		append_button.set_image(Gtk.Image.new_from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON))
-		append_button.set_tooltip_text(_("Add all titles to playlist"))
-		play_button=Gtk.Button.new_with_mnemonic(_("_Play"))
-		play_button.set_image(Gtk.Image.new_from_icon_name("media-playback-start-symbolic", Gtk.IconSize.BUTTON))
-		play_button.set_tooltip_text(_("Directly play all titles"))
-		enqueue_button=Gtk.Button.new_with_mnemonic(_("_Enqueue"))
-		enqueue_button.set_image(Gtk.Image.new_from_icon_name("insert-object-symbolic", Gtk.IconSize.BUTTON))
-		enqueue_button.set_tooltip_text(_("Append all titles after the currently playing track and clear the playlist from all other songs"))
-
-		# button box
 		button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
+		data=((_("_Append"), _("Add all titles to playlist"), "list-add-symbolic", "append"),
+			(_("_Play"), _("Directly play all titles"), "media-playback-start-symbolic", "play"),
+			(_("_Enqueue"), _("Append all titles after the currently playing track and clear the playlist from all other songs"),
+			"insert-object-symbolic", "enqueue")
+		)
+		for label, tooltip, icon, mode in data:
+			button=Gtk.Button.new_with_mnemonic(label)
+			button.set_image(Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+			button.set_tooltip_text(tooltip)
+			button.connect("clicked", self._on_button_clicked, mode)
+			button_box.pack_start(button, True, True, 0)
 
 		# action bar
 		self._action_bar=Gtk.ActionBar()
 
-		# connect
-		append_button.connect("clicked", self._on_button_clicked, "append")
-		play_button.connect("clicked", self._on_button_clicked, "play")
-		enqueue_button.connect("clicked", self._on_button_clicked, "enqueue")
-
 		# packing
-		if focus_indicator:
+		if popover_mode:
+			self.pack_end(button_box, False, False, 0)
+			frame=Gtk.Frame()
+		else:
+			self._action_bar.pack_start(button_box)
+			self.pack_end(self._action_bar, False, False, 0)
 			frame=FocusFrame()
 			frame.set_widget(self._songs_view)
-			frame.add(self._scroll)
-			self.pack_start(frame, True, True, 0)
-		else:
-			self.pack_start(self._scroll, True, True, 0)
-		button_box.pack_start(append_button, True, True, 0)
-		button_box.pack_start(play_button, True, True, 0)
-		button_box.pack_start(enqueue_button, True, True, 0)
-		self._action_bar.pack_start(button_box)
-		self.pack_start(self._action_bar, False, False, 0)
+		frame.add(self._scroll)
+		self.pack_start(frame, True, True, 0)
 
 	def get_treeview(self):
 		return self._songs_view
@@ -1661,15 +1656,12 @@ class AlbumPopover(Gtk.Popover):
 		# songs window
 		# (track, title (artist), duration, file, search text)
 		self._store=Gtk.ListStore(str, str, str, str, str)
-		songs_window=SongsWindow(self._client, self._store, 3, focus_indicator=False)
+		songs_window=SongsWindow(self._client, self._store, 3, popover_mode=True)
 
 		# scroll
 		self._scroll=songs_window.get_scroll()
 		self._scroll.set_propagate_natural_height(True)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-		self._scroll.set_property("margin-start", 3)
-		self._scroll.set_property("margin-end", 3)
-		self._scroll.set_property("margin-top", 3)
 
 		# songs view
 		self._songs_view=songs_window.get_treeview()
