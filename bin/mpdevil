@@ -2746,25 +2746,14 @@ class CoverEventBox(Gtk.EventBox):
 	def _on_disconnected(self, *args):
 		self._album_popover.popdown()
 
-class MainCover(Gtk.Frame):
+class MainCover(Gtk.Image):
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
 		self._settings=settings
-
-		# css
-		style_context=self.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""* {background-color: @theme_base_color; border-width: 0px}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 600)
-
-		# cover
-		self._cover=Gtk.Image.new()
-		size=self._settings.get_int("track-cover")
-		self._cover.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(size))  # set to fallback cover
 		# set default size
-		self._cover.set_size_request(size, size)
+		size=self._settings.get_int("track-cover")
+		self.set_size_request(size, size)
 
 		# connect
 		self._client.emitter.connect("current_song_changed", self._refresh)
@@ -2772,23 +2761,21 @@ class MainCover(Gtk.Frame):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._settings.connect("changed::track-cover", self._on_settings_changed)
 
-		self.add(self._cover)
-
 	def _refresh(self, *args):
 		current_song=self._client.currentsong()
-		self._cover.set_from_pixbuf(Cover(self._settings, current_song).get_pixbuf(self._settings.get_int("track-cover")))
+		self.set_from_pixbuf(Cover(self._settings, current_song).get_pixbuf(self._settings.get_int("track-cover")))
 
 	def _on_disconnected(self, *args):
 		size=self._settings.get_int("track-cover")
-		self._cover.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(size))
-		self._cover.set_sensitive(False)
+		self.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(size))
+		self.set_sensitive(False)
 
 	def _on_reconnected(self, *args):
-		self._cover.set_sensitive(True)
+		self.set_sensitive(True)
 
 	def _on_settings_changed(self, *args):
 		size=self._settings.get_int("track-cover")
-		self._cover.set_size_request(size, size)
+		self.set_size_request(size, size)
 		self._refresh()
 
 class PlaylistWindow(Gtk.Box):
