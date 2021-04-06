@@ -610,8 +610,12 @@ class Client(MPDClient):
 			else:
 				enqueue(files)
 
-	def album_to_playlist(self, album, artist, year, mode="default"):
-		songs=self.find("album", album, "date", year, self._settings.get_artist_type(), artist)
+	def album_to_playlist(self, album, artist, year, genre, mode="default"):
+		if genre is None:
+			genre_filter=()
+		else:
+			genre_filter=("genre", genre)
+		songs=self.find("album", album, "date", year, self._settings.get_artist_type(), artist, *genre_filter)
 		self.files_to_playlist([song["file"] for song in songs], mode)
 
 	def artist_to_playlist(self, artist, genre, mode):
@@ -621,13 +625,13 @@ class Client(MPDClient):
 			else:
 				sort_tag="album"
 			if artist is None:  # treat 'None' as 'all artists'
-				if genre is None:  # treat 'None' as 'all genres'
+				if genre is None:
 					self.searchadd("any", "", "sort", sort_tag)
 				else:
 					self.findadd("genre", genre, "sort", sort_tag)
 			else:
 				artist_type=self._settings.get_artist_type()
-				if genre is None:  # treat 'None' as 'all genres'
+				if genre is None:
 					self.findadd(artist_type, artist, "sort", sort_tag)
 				else:
 					self.findadd(artist_type, artist, "genre", genre, "sort", sort_tag)
@@ -690,13 +694,14 @@ class Client(MPDClient):
 		albums=[]
 		artist_type=self._settings.get_artist_type()
 		if genre is None:
-			album_candidates=self.comp_list("album", artist_type, artist)
+			genre_filter=()
 		else:
-			album_candidates=self.comp_list("album", artist_type, artist, "genre", genre)
+			genre_filter=("genre", genre)
+		album_candidates=self.comp_list("album", artist_type, artist, *genre_filter)
 		for album in album_candidates:
 			years=self.comp_list("date", "album", album, artist_type, artist)
 			for year in years:
-				songs=self.find("album", album, "date", year, artist_type, artist)
+				songs=self.find("album", album, "date", year, artist_type, artist, *genre_filter)
 				albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
 		return albums
 
@@ -1688,7 +1693,7 @@ class AlbumPopover(Gtk.Popover):
 		self.add(songs_window)
 		songs_window.show_all()
 
-	def open(self, album, album_artist, date, widget, x, y):
+	def open(self, album, album_artist, date, genre, widget, x, y):
 		self._rect.x=x
 		self._rect.y=y
 		self.set_pointing_to(self._rect)
@@ -1696,7 +1701,11 @@ class AlbumPopover(Gtk.Popover):
 		self._scroll.set_max_content_height(4*widget.get_allocated_height()//7)
 		self._songs_view.set_model(None)  # clear old scroll position
 		self._store.clear()
-		songs=self._client.find("album", album, "date", date, self._settings.get_artist_type(), album_artist)
+		if genre is None:
+			genre_filter=()
+		else:
+			genre_filter=("genre", genre)
+		songs=self._client.find("album", album, "date", date, self._settings.get_artist_type(), album_artist, *genre_filter)
 		for s in songs:
 			song=ClientHelper.song_to_list_dict(ClientHelper.pepare_song_for_display(s))
 			track=song["track"][0]
@@ -2022,7 +2031,7 @@ class ArtistWindow(FocusFrame):
 		super().__init__()
 		self._client=client
 		self._settings=settings
-		self._genre_select=genre_select
+		self.genre_select=genre_select
 
 		# treeview
 		# (name, weight, initial-letter, weight-initials)
@@ -2063,7 +2072,7 @@ class ArtistWindow(FocusFrame):
 		self._client.emitter.connect("update", self._refresh)
 		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 		self._client.emitter.connect("show-info", self._on_show_info)
-		self._genre_select.connect("genre_changed", self._refresh)
+		self.genre_select.connect("genre_changed", self._refresh)
 
 		self.set_widget(self._treeview)
 		self.add(scroll)
@@ -2078,23 +2087,22 @@ class ArtistWindow(FocusFrame):
 			path=Gtk.TreePath(i)
 			if self._store[path][0] == artist:
 				self._treeview.set_cursor(path, None, False)
-				if self.get_selected_artists()[1] != [artist]:
+				if self.get_selected_artists() != [artist]:
 					self._treeview.row_activated(path, self._column_name)
 				break
 
 	def get_selected_artists(self):
 		artists=[]
-		genre=self._genre_select.get_selected_genre()
 		if self._store[Gtk.TreePath(0)][1] == Pango.Weight.BOLD:
 			for row in self._store:
 				artists.append(row[0])
-			return (genre, artists[1:])
+			return artists[1:]
 		else:
 			for row in self._store:
 				if row[1] == Pango.Weight.BOLD:
 					artists.append(row[0])
 					break
-			return (genre, artists)
+			return artists
 
 	def highlight_selected(self):
 		for path, row in enumerate(self._store):
@@ -2105,7 +2113,7 @@ class ArtistWindow(FocusFrame):
 	def _refresh(self, *args):
 		self._clear()
 		self._store.append([_("all artists"), Pango.Weight.BOOK, "", Pango.Weight.BOOK])
-		genre=self._genre_select.get_selected_genre()
+		genre=self.genre_select.get_selected_genre()
 		if genre is None:
 			artists=self._client.comp_list(self._settings.get_artist_type())
 		else:
@@ -2126,7 +2134,7 @@ class ArtistWindow(FocusFrame):
 			path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 			if path_re is not None:
 				path=path_re[0]
-				genre=self._genre_select.get_selected_genre()
+				genre=self.genre_select.get_selected_genre()
 				if path == Gtk.TreePath(0):
 					artist=None
 				else:
@@ -2147,7 +2155,7 @@ class ArtistWindow(FocusFrame):
 			treeview, treeiter=self._selection.get_selected()
 			if treeiter is not None:
 				path=self._store.get_path(treeiter)
-				genre=self._genre_select.get_selected_genre()
+				genre=self.genre_select.get_selected_genre()
 				if path == Gtk.TreePath(0):
 					self._client.artist_to_playlist(None, genre, mode)
 				else:
@@ -2160,7 +2168,7 @@ class ArtistWindow(FocusFrame):
 			if treeiter is not None:
 				path=self._store.get_path(treeiter)
 				cell=self._treeview.get_cell_area(path, None)
-				genre=self._genre_select.get_selected_genre()
+				genre=self.genre_select.get_selected_genre()
 				if path == Gtk.TreePath(0):
 					self._artist_popover.open(None, genre, self._treeview, cell.x, cell.y)
 				else:
@@ -2280,7 +2288,8 @@ class AlbumWindow(FocusFrame):
 			self._store.clear()
 			self._iconview.set_model(None)
 			try:  # self._artist_window can still be empty (e.g. when client is not connected and cover size gets changed)
-				genre, artists=self._artist_window.get_selected_artists()
+				artists=self._artist_window.get_selected_artists()
+				genre=self._artist_window.genre_select.get_selected_genre()
 			except:
 				self._done_callback()
 				return
@@ -2360,7 +2369,8 @@ class AlbumWindow(FocusFrame):
 		album=self._store[path][4]
 		year=self._store[path][5]
 		artist=self._store[path][6]
-		self._client.album_to_playlist(album, artist, year, mode)
+		genre=self._artist_window.genre_select.get_selected_genre()
+		self._client.album_to_playlist(album, artist, year, genre, mode)
 
 	def _done_callback(self, *args):
 		self._settings.set_property("cursor-watch", False)
@@ -2385,14 +2395,15 @@ class AlbumWindow(FocusFrame):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			v=self._scroll_vadj.get_value()
 			h=self._scroll_hadj.get_value()
+			genre=self._artist_window.genre_select.get_selected_genre()
 			if path is not None:
 				album=self._store[path][4]
 				year=self._store[path][5]
 				artist=self._store[path][6]
 				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
-				GLib.idle_add(self._album_popover.open, album, artist, year, widget, event.x-h, event.y-v)
+				GLib.idle_add(self._album_popover.open, album, artist, year, genre, widget, event.x-h, event.y-v)
 			else:
-				genre, artists=self._artist_window.get_selected_artists()
+				artists=self._artist_window.get_selected_artists()
 				if len(artists) > 1:
 					GLib.idle_add(self._artist_popover.open, None, genre, widget, event.x-h, event.y-v)
 				elif len(artists) == 1:
@@ -2400,10 +2411,11 @@ class AlbumWindow(FocusFrame):
 
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
-		selected_album=self._store.get_value(treeiter, 4)
-		selected_album_year=self._store.get_value(treeiter, 5)
-		selected_artist=self._store.get_value(treeiter, 6)
-		self._client.album_to_playlist(selected_album, selected_artist, selected_album_year)
+		album=self._store.get_value(treeiter, 4)
+		year=self._store.get_value(treeiter, 5)
+		artist=self._store.get_value(treeiter, 6)
+		genre=self._artist_window.genre_select.get_selected_genre()
+		self._client.album_to_playlist(album, artist, year, genre)
 
 	def _on_disconnected(self, *args):
 		self._iconview.set_sensitive(False)
@@ -2420,8 +2432,9 @@ class AlbumWindow(FocusFrame):
 				rect=self._iconview.get_cell_rect(paths[0], None)[1]
 				x=rect.x+rect.width//2
 				y=rect.y+rect.height//2
+				genre=self._artist_window.genre_select.get_selected_genre()
 				self._album_popover.open(
-					self._store[paths[0]][4], self._store[paths[0]][6], self._store[paths[0]][5], self._iconview, x, y
+					self._store[paths[0]][4], self._store[paths[0]][6], self._store[paths[0]][5], genre, self._iconview, x, y
 				)
 
 	def _on_add_to_playlist(self, emitter, mode):
@@ -2512,7 +2525,7 @@ class Browser(Gtk.Paned):
 			except:
 				self._genre_select.deactivate()
 			# select artist
-			if len(self._artist_window.get_selected_artists()[1]) <= 1:  # one artist selected
+			if len(self._artist_window.get_selected_artists()) <= 1:  # one artist selected
 				self._artist_window.select(artist)
 			else:  # all artists selected
 				self.search_button.set_active(False)
@@ -2735,13 +2748,14 @@ class CoverEventBox(Gtk.EventBox):
 					except:
 						artist=song.get("artist", "")
 					album=song.get("album", "")
-					album_year=song.get("date", "")
+					year=song.get("date", "")
+					genre=song.get("genre", "")
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, album_year)
+						self._client.album_to_playlist(album, artist, year, genre)
 					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, album_year, "append")
+						self._client.album_to_playlist(album, artist, year, genre, "append")
 					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._album_popover.open(album, artist, album_year, widget, event.x, event.y)
+						self._album_popover.open(album, artist, year, genre, widget, event.x, event.y)
 
 	def _on_disconnected(self, *args):
 		self._album_popover.popdown()
