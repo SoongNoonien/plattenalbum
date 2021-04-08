@@ -2087,22 +2087,17 @@ class ArtistWindow(FocusFrame):
 			path=Gtk.TreePath(i)
 			if self._store[path][0] == artist:
 				self._treeview.set_cursor(path, None, False)
-				if self.get_selected_artists() != [artist]:
+				if self._store[path][1] != Pango.Weight.BOLD:
 					self._treeview.row_activated(path, self._column_name)
 				break
 
-	def get_selected_artists(self):
-		artists=[]
+	def get_selected_artist(self):
 		if self._store[Gtk.TreePath(0)][1] == Pango.Weight.BOLD:
-			for row in self._store:
-				artists.append(row[0])
-			return artists[1:]
+			return None
 		else:
 			for row in self._store:
 				if row[1] == Pango.Weight.BOLD:
-					artists.append(row[0])
-					break
-			return artists
+					return row[0]
 
 	def highlight_selected(self):
 		for path, row in enumerate(self._store):
@@ -2138,6 +2133,13 @@ class ArtistWindow(FocusFrame):
 				if artist is None:
 					artist=song.get("artist", "")
 				self.select(artist)
+			else:
+				if len(self._store) > 1:
+					path=Gtk.TreePath(1)
+				else:
+					path=Gtk.TreePath(0)
+				self._treeview.set_cursor(path, None, False)
+				self._treeview.row_activated(path, self._column_name)
 
 	def _on_button_press_event(self, widget, event):
 		if event.button in (2,3) and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -2298,16 +2300,20 @@ class AlbumWindow(FocusFrame):
 			self._store.clear()
 			self._iconview.set_model(None)
 			try:  # self._artist_window can still be empty (e.g. when client is not connected and cover size gets changed)
-				artists=self._artist_window.get_selected_artists()
+				artist=self._artist_window.get_selected_artist()
 				genre=self._artist_window.genre_select.get_selected_genre()
 			except:
 				self._done_callback()
 				return
-			# show artist names if all albums are shown
-			if len(artists) > 1:
-				self._iconview.set_markup_column(2)
+			if artist is None:
+				self._iconview.set_markup_column(2)  # show artist names
+				if genre is None:
+					artists=self._client.comp_list(self._settings.get_artist_type())
+				else:
+					artists=self._client.comp_list(self._settings.get_artist_type(), "genre", genre)
 			else:
-				self._iconview.set_markup_column(1)
+				self._iconview.set_markup_column(1)  # hide artist names
+				artists=[artist]
 			# prepare albmus list (run all mpd related commands)
 			albums=[]
 			for i, artist in enumerate(artists):
@@ -2413,11 +2419,8 @@ class AlbumWindow(FocusFrame):
 				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
 				GLib.idle_add(self._album_popover.open, album, artist, year, genre, widget, event.x-h, event.y-v)
 			else:
-				artists=self._artist_window.get_selected_artists()
-				if len(artists) > 1:
-					GLib.idle_add(self._artist_popover.open, None, genre, widget, event.x-h, event.y-v)
-				elif len(artists) == 1:
-					GLib.idle_add(self._artist_popover.open, artists[0], genre, widget, event.x-h, event.y-v)
+				artist=self._artist_window.get_selected_artist()
+				GLib.idle_add(self._artist_popover.open, artist, genre, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
 		treeiter=self._store.get_iter(path)
@@ -2526,11 +2529,11 @@ class Browser(Gtk.Paned):
 			if song.get("genre", "") != self._genre_select.get_selected_genre():
 				self._genre_select.deactivate()
 			# select artist
-			if len(self._artist_window.get_selected_artists()) <= 1:  # one artist selected
-				self._artist_window.select(artist)
-			else:  # all artists selected
+			if self._artist_window.get_selected_artist() is None:  # all artists selected
 				self.search_button.set_active(False)
 				self._artist_window.highlight_selected()
+			else:  # one artist selected
+				self._artist_window.select(artist)
 			self._album_window.scroll_to_current_album()
 
 	def _on_search_toggled(self, widget):
