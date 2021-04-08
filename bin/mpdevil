@@ -2747,13 +2747,12 @@ class CoverEventBox(Gtk.EventBox):
 						artist=song.get("artist", "")
 					album=song.get("album", "")
 					year=song.get("date", "")
-					genre=song.get("genre", "")
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, year, genre)
+						self._client.album_to_playlist(album, artist, year, None)
 					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, year, genre, "append")
+						self._client.album_to_playlist(album, artist, year, None, "append")
 					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._album_popover.open(album, artist, year, genre, widget, event.x, event.y)
+						self._album_popover.open(album, artist, year, None, widget, event.x, event.y)
 
 	def _on_disconnected(self, *args):
 		self._album_popover.popdown()
