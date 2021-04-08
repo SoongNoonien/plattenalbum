@@ -2128,6 +2128,16 @@ class ArtistWindow(FocusFrame):
 					current_char=artist[0]
 			except:
 				self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+		if genre is not None:
+			self._treeview.set_cursor(Gtk.TreePath(0), None, False)
+			self._treeview.row_activated(Gtk.TreePath(0), self._column_name)
+		else:
+			song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
+			if song != {}:
+				artist=song.get(self._settings.get_artist_type())
+				if artist is None:
+					artist=song.get("artist", "")
+				self.select(artist)
 
 	def _on_button_press_event(self, widget, event):
 		if event.button in (2,3) and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -2505,24 +2515,15 @@ class Browser(Gtk.Paned):
 		self.pack2(self._stack, True, False)
 
 	def _back_to_current_album(self, *args):
-		def callback():
-			try:
-				song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
-				if song == {}:
-					return False
-			except MPDBase.ConnectionError:
-				return False
+		song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
+		if song != {}:
 			self.search_button.set_active(False)
 			# get artist name
-			try:
-				artist=song[self._settings.get_artist_type()]
-			except:
+			artist=song.get(self._settings.get_artist_type())
+			if artist is None:
 				artist=song.get("artist", "")
 			# deactivate genre filter to show all artists (if needed)
-			try:
-				if song["genre"] != self._genre_select.get_selected_genre():
-					self._genre_select.deactivate()
-			except:
+			if song.get("genre", "") != self._genre_select.get_selected_genre():
 				self._genre_select.deactivate()
 			# select artist
 			if len(self._artist_window.get_selected_artists()) <= 1:  # one artist selected
@@ -2531,8 +2532,6 @@ class Browser(Gtk.Paned):
 				self.search_button.set_active(False)
 				self._artist_window.highlight_selected()
 			self._album_window.scroll_to_current_album()
-			return False
-		GLib.idle_add(callback)  # ensure it will be executed even when albums are still loading
 
 	def _on_search_toggled(self, widget):
 		if widget.get_active():
@@ -2542,7 +2541,6 @@ class Browser(Gtk.Paned):
 			self._stack.set_visible_child_name("albums")
 
 	def _on_reconnected(self, *args):
-		self._back_to_current_album()
 		self.back_to_current_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
 
