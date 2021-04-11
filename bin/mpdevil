@@ -389,9 +389,9 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			else:
 				lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
 				self._metadata["xesam:url"]=GLib.Variant("s", "file://{}".format(os.path.join(lib_path, song_file)))
-				cover=Cover(self._settings, mpd_meta)
-				if cover.path is not None:
-					self._metadata["mpris:artUrl"]=GLib.Variant("s", "file://{}".format(cover.path))
+				cover_path=self._client.get_cover_path(mpd_meta)
+				if cover_path is not None:
+					self._metadata["mpris:artUrl"]=GLib.Variant("s", "file://{}".format(cover_path))
 
 	def _update_property(self, interface_name, prop):
 		getter, setter=self._prop_mapping[interface_name][prop]
@@ -501,6 +501,18 @@ class ClientHelper():
 			length=length+float(song.get("duration", 0.0))
 		return ClientHelper.seconds_to_display_time(int(length))
 
+	def binary_to_pixbuf(binary, size):
+		loader=GdkPixbuf.PixbufLoader.new()
+		loader.write(binary)
+		loader.close()
+		raw_pixbuf=loader.get_pixbuf()
+		ratio=raw_pixbuf.get_width()/raw_pixbuf.get_height()
+		if ratio > 1:
+			pixbuf=raw_pixbuf.scale_simple(size,size/ratio,GdkPixbuf.InterpType.BILINEAR)
+		else:
+			pixbuf=raw_pixbuf.scale_simple(size*ratio,size,GdkPixbuf.InterpType.BILINEAR)
+		return pixbuf
+
 class EventEmitter(GObject.Object):
 	__gsignals__={
 		"update": (GObject.SignalFlags.RUN_FIRST, None, ()),
@@ -532,6 +544,7 @@ class Client(MPDClient):
 		self._last_status={}
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
+		self.fallback_cover=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
 
 		# connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
@@ -670,6 +683,63 @@ class Client(MPDClient):
 		else:
 			return([])
 
+	def get_cover_path(self, raw_song):
+		path=None
+		song=ClientHelper.song_to_first_str_dict(raw_song)
+		song_file=song.get("file")
+		active_profile=self._settings.get_int("active-profile")
+		lib_path=self._settings.get_lib_path()
+		if lib_path is not None:
+			regex_str=self._settings.get_value("regex")[active_profile]
+			if regex_str == "":
+				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
+			else:
+				regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
+				regex_str=regex_str.replace("%Album%", song.get("album", ""))
+				try:
+					regex=re.compile(regex_str, flags=re.IGNORECASE)
+				except:
+					print("illegal regex:", regex_str)
+					return (None, None)
+			if song_file is not None:
+				song_dir=os.path.join(lib_path, os.path.dirname(song_file))
+				if song_dir.endswith(".cue"):
+					song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
+				if os.path.exists(song_dir):
+					for f in os.listdir(song_dir):
+						if regex.match(f):
+							path=os.path.join(song_dir, f)
+							break
+		return path
+
+	def get_cover_binary(self, uri):
+		if uri is None:
+			binary=None
+		else:
+			try:
+				binary=self.albumart(uri)["binary"]
+			except:
+				try:
+					binary=self.readpicture(uri)["binary"]
+				except:
+					binary=None
+		return binary
+
+	def get_cover(self, song, size):
+		cover_path=self.get_cover_path(song)
+		if cover_path is None:
+			cover_binary=self.get_cover_binary(song.get("file"))
+			if cover_binary is None:
+				pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(self.fallback_cover, size, size)
+			else:
+				pixbuf=ClientHelper.binary_to_pixbuf(cover_binary, size)
+		else:
+			try:
+				pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(cover_path, size, size)
+			except:  # load fallback if cover can't be loaded (GLib: Couldn’t recognize the image file format for file...)
+				pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(self.fallback_cover, size, size)
+		return pixbuf
+
 	def get_metadata(self, uri):
 		meta_base=self.lsinfo(uri)[0]
 		try:  # .cue files produce an error here
@@ -702,7 +772,15 @@ class Client(MPDClient):
 			years=self.comp_list("date", "album", album, artist_type, artist)
 			for year in years:
 				songs=self.find("album", album, "date", year, artist_type, artist, *genre_filter)
-				albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
+				cover_path=self.get_cover_path(songs[0])
+				if cover_path is None:
+					cover_binary=self.get_cover_binary(songs[0].get("file"))
+					if cover_binary is None:
+						albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
+					else:
+						albums.append({"artist":artist,"album":album,"year":year,"songs":songs,"cover_binary":cover_binary})
+				else:
+					albums.append({"artist": artist, "album": album, "year": year, "songs": songs, "cover_path": cover_path})
 		return albums
 
 	def toggle_play(self):
@@ -1763,47 +1841,6 @@ class ArtistPopover(Gtk.Popover):
 		self._client.artist_to_playlist(self._artist, self._genre, mode)
 		self.popdown()
 
-class Cover(object):
-	def __init__(self, settings, raw_song):
-		self.path=None
-		song=ClientHelper.song_to_first_str_dict(raw_song)
-		if song != {}:
-			song_file=song["file"]
-			active_profile=settings.get_int("active-profile")
-			lib_path=settings.get_lib_path()
-			if lib_path is not None:
-				regex_str=settings.get_value("regex")[active_profile]
-				if regex_str == "":
-					regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
-				else:
-					regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
-					regex_str=regex_str.replace("%Album%", song.get("album", ""))
-					try:
-						regex=re.compile(regex_str, flags=re.IGNORECASE)
-					except:
-						print("illegal regex:", regex_str)
-						return
-				if song_file is not None:
-					song_dir=os.path.join(lib_path, os.path.dirname(song_file))
-					if song_dir.endswith(".cue"):
-						song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
-					if os.path.exists(song_dir):
-						for f in os.listdir(song_dir):
-							if regex.match(f):
-								self.path=os.path.join(song_dir, f)
-								break
-
-	def get_pixbuf(self, size):
-		if self.path is None:  # fallback needed
-			path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
-			return GdkPixbuf.Pixbuf.new_from_file_at_size(path, size, size)
-		else:
-			try:
-				return GdkPixbuf.Pixbuf.new_from_file_at_size(self.path, size, size)
-			except:  # load fallback if cover can't be loaded (GLib: Couldn’t recognize the image file format for file...)
-				path=Gtk.IconTheme.get_default().lookup_icon("media-optical", size, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
-				return GdkPixbuf.Pixbuf.new_from_file_at_size(path, size, size)
-
 ###########
 # browser #
 ###########
@@ -2288,10 +2325,6 @@ class AlbumWindow(FocusFrame):
 		else:
 			self._store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
 
-	def _add_row(self, row):  # needed for GLib.idle
-		self._store.append(row)
-		return False  # stop after one run
-
 	def _refresh(self, *args):
 		if self._done:
 			self._done=False
@@ -2362,20 +2395,29 @@ class AlbumWindow(FocusFrame):
 				self._done_callback()
 				return False
 
-			def load_covers():
+			def render_covers():
 				size=self._settings.get_int("album-cover")
 				total_albums=len(albums)
 				for i, album in enumerate(albums):
 					if self._stop_flag:
 						break
-					album["cover"]=Cover(self._settings, album["songs"][0]).get_pixbuf(size)
+					if "cover_path" in album:
+						try:
+							album["cover"]=GdkPixbuf.Pixbuf.new_from_file_at_size(album["cover_path"], size, size)
+						except:  # load fallback if cover can't be loaded
+							album["cover"]=GdkPixbuf.Pixbuf.new_from_file_at_size(self._client.fallback_cover, size, size)
+					else:
+						if "cover_binary" in album:
+							album["cover"]=ClientHelper.binary_to_pixbuf(album["cover_binary"], size)
+						else:
+							album["cover"]=GdkPixbuf.Pixbuf.new_from_file_at_size(self._client.fallback_cover, size, size)
 					GLib.idle_add(self._progress_bar.set_fraction, (i+1)/total_albums)
 				if self._stop_flag:
 					GLib.idle_add(self._done_callback)
 				else:
 					GLib.idle_add(display_albums)
 
-			cover_thread=threading.Thread(target=load_covers, daemon=True)
+			cover_thread=threading.Thread(target=render_covers, daemon=True)
 			cover_thread.start()
 		elif not self._refresh in self._pending:
 			self._stop_flag=True
@@ -2777,11 +2819,11 @@ class MainCover(Gtk.Image):
 
 	def _refresh(self, *args):
 		current_song=self._client.currentsong()
-		self.set_from_pixbuf(Cover(self._settings, current_song).get_pixbuf(self._settings.get_int("track-cover")))
+		self.set_from_pixbuf(self._client.get_cover(current_song, self._settings.get_int("track-cover")))
 
 	def _on_disconnected(self, *args):
 		size=self._settings.get_int("track-cover")
-		self.set_from_pixbuf(Cover(self._settings, {}).get_pixbuf(size))
+		self.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_size(self._client.fallback_cover, size, size))
 		self.set_sensitive(False)
 
 	def _on_reconnected(self, *args):
@@ -3940,7 +3982,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
 					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"]+date)
-					pixbuf=Cover(self._settings, song).get_pixbuf(400)
+					pixbuf=self._client.get_cover(song, 400)
 					notify.set_image_from_pixbuf(pixbuf)
 					notify.show()
 
