@@ -1668,7 +1668,9 @@ class SongsView(Gtk.TreeView):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 		if path_re is not None:
 			path=path_re[0]
-			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+			if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+				self._client.files_to_playlist([self._store[path][self._file_column_id]], "play")
+			elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 				self._client.files_to_playlist([self._store[path][self._file_column_id]], "append")
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				uri=self._store[path][self._file_column_id]
@@ -2145,8 +2147,7 @@ class ArtistWindow(FocusFrame):
 			path=Gtk.TreePath(i)
 			if self._store[path][0] == artist:
 				self._treeview.set_cursor(path, None, False)
-				if self._store[path][1] != Pango.Weight.BOLD:
-					self._treeview.row_activated(path, self._column_name)
+				self._treeview.row_activated(path, self._column_name)
 				break
 
 	def get_selected_artist(self):
@@ -2200,7 +2201,8 @@ class ArtistWindow(FocusFrame):
 				self._treeview.row_activated(path, self._column_name)
 
 	def _on_button_press_event(self, widget, event):
-		if event.button in (2,3) and event.type == Gdk.EventType.BUTTON_PRESS:
+		if ((event.button in (2,3) and event.type == Gdk.EventType.BUTTON_PRESS)
+			or (event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS)):
 			path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 			if path_re is not None:
 				path=path_re[0]
@@ -2209,16 +2211,19 @@ class ArtistWindow(FocusFrame):
 					artist=None
 				else:
 					artist=self._store[path][0]
-				if event.button == 2:
+				if event.button == 1:
+					self._client.artist_to_playlist(artist, genre, "play")
+				elif event.button == 2:
 					self._client.artist_to_playlist(artist, genre, "append")
-				if event.button == 3:
+				elif event.button == 3:
 					self._artist_popover.open(artist, genre, self._treeview, event.x, event.y)
 
 	def _on_row_activated(self, widget, path, view_column):
-		for row in self._store:  # reset bold text
-			row[1]=Pango.Weight.BOOK
-		self._store[path][1]=Pango.Weight.BOLD
-		self.emit("artists_changed")
+		if self._store[path][1] == Pango.Weight.BOOK:
+			for row in self._store:  # reset bold text
+				row[1]=Pango.Weight.BOOK
+			self._store[path][1]=Pango.Weight.BOLD
+			self.emit("artists_changed")
 
 	def _on_add_to_playlist(self, emitter, mode):
 		if self._treeview.has_focus():
@@ -2468,7 +2473,10 @@ class AlbumWindow(FocusFrame):
 
 	def _on_button_press_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
-		if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+		if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+			if path is not None:
+				self._path_to_playlist(path, "play")
+		elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 			if path is not None:
 				self._path_to_playlist(path, "append")
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -2815,6 +2823,8 @@ class CoverEventBox(Gtk.EventBox):
 					year=song.get("date", "")
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 						self._client.album_to_playlist(album, artist, year, None)
+					elif event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+						self._client.album_to_playlist(album, artist, year, None, "play")
 					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 						self._client.album_to_playlist(album, artist, year, None, "append")
 					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3726,7 +3736,7 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 			("<Control>o", _("Toggle consume mode"), None, playback_group),
 			("<Control>e", _("Enqueue selected item"), None, items_group),
 			("<Control>plus", _("Append selected item"), _("Middle-click"), items_group),
-			("<Control>Return", _("Play selected item immediately"), None, items_group),
+			("<Control>Return", _("Play selected item immediately"), _("Double-click"), items_group),
 			("<Control>i Menu", _("Show additional information"), _("Right-click"), items_group),
 			("Delete", _("Remove selected song"), _("Middle-click"), playlist_group),
 			("<Shift>Delete", _("Clear playlist"), None, playlist_group),
