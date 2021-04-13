@@ -1515,10 +1515,12 @@ class FocusFrame(Gtk.Overlay):
 		self._widget.connect("focus-out-event", lambda *args: self._frame.hide())
 
 class SongPopover(Gtk.Popover):
-	def __init__(self, client):
+	def __init__(self, client, show_buttons=True):
 		super().__init__()
 		self._client=client
 		self._rect=Gdk.Rectangle()
+		self._uri=None
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
 
 		# open-with button
 		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
@@ -1527,11 +1529,24 @@ class SongPopover(Gtk.Popover):
 		style_context=open_button.get_style_context()
 		style_context.add_class("circular")
 
-		# button revealer
+		# open button revealer
 		self._open_button_revealer=Gtk.Revealer()
 		self._open_button_revealer.set_halign(Gtk.Align.END)
 		self._open_button_revealer.set_valign(Gtk.Align.END)
 		self._open_button_revealer.add(open_button)
+
+		# buttons
+		if show_buttons:
+			button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
+			data=((_("Append"), "list-add-symbolic", "append"),
+				(_("Play"), "media-playback-start-symbolic", "play"),
+				(_("Enqueue"), "insert-object-symbolic", "enqueue")
+			)
+			for label, icon, mode in data:
+				button=Gtk.Button(label=label, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+				button.connect("clicked", self._on_button_clicked, mode)
+				button_box.pack_start(button, True, True, 0)
+			box.pack_end(button_box, False, False, 0)
 
 		# treeview
 		# (tag, display-value, tooltip)
@@ -1565,12 +1580,14 @@ class SongPopover(Gtk.Popover):
 		open_button.connect("clicked", self._on_open_button_clicked)
 
 		# packing
-		frame=Gtk.Frame(border_width=6)
+		frame=Gtk.Frame()
 		frame.add(overlay)
-		self.add(frame)
-		frame.show_all()
+		box.pack_start(frame, True, True, 0)
+		self.add(box)
+		box.show_all()
 
 	def open(self, uri, widget, x, y, offset=26):
+		self._uri=uri
 		self._rect.x=x
 		# Gtk places popovers in treeviews 26px above the given position for no obvious reasons, so I move them 26px
 		# This seems to be related to the width/height of the headers in treeviews
@@ -1608,6 +1625,10 @@ class SongPopover(Gtk.Popover):
 			app=app_chooser.get_app_info()
 			app.launch([self._gfile], None)
 		dialog.destroy()
+
+	def _on_button_clicked(self, widget, mode):
+		self._client.files_to_playlist([self._uri], mode)
+		self.popdown()
 
 class SongsView(Gtk.TreeView):
 	def __init__(self, client, store, file_column_id):
@@ -2921,7 +2942,7 @@ class PlaylistWindow(Gtk.Box):
 		action_bar.pack_end(audio)
 
 		# song popover
-		self._song_popover=SongPopover(self._client)
+		self._song_popover=SongPopover(self._client, show_buttons=False)
 
 		# connect
 		self._treeview.connect("row-activated", self._on_row_activated)
