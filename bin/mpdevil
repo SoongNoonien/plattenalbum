@@ -961,6 +961,7 @@ class GeneralSettings(Gtk.Box):
 			(_("Stop playback on quit"), "stop-on-quit"),
 			(_("Play selected albums and titles immediately"), "force-mode"),
 			(_("Sort albums by year"), "sort-albums-by-year"),
+			(_("Provide MPRIS"), "mpris"),
 		]
 		for label, key in check_buttons_data:
 			check_buttons[key]=Gtk.CheckButton(label=label)
@@ -991,11 +992,11 @@ class GeneralSettings(Gtk.Box):
 		self.connect("destroy", self._remove_handlers)
 
 		# packing
-		box=Gtk.Box(spacing=12)
-		box.pack_start(check_buttons["use-csd"], False, False, 0)
-		box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
+		csd_box=Gtk.Box(spacing=12)
+		csd_box.pack_start(check_buttons["use-csd"], False, False, 0)
+		csd_box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
 		self.pack_start(view_heading, False, False, 0)
-		self.pack_start(box, False, False, 0)
+		self.pack_start(csd_box, False, False, 0)
 		self.pack_start(check_buttons["show-stop"], False, False, 0)
 		self.pack_start(check_buttons["show-lyrics-button"], False, False, 0)
 		self.pack_start(check_buttons["show-initials"], False, False, 0)
@@ -1007,6 +1008,10 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(check_buttons["send-notify"], False, False, 0)
 		self.pack_start(check_buttons["force-mode"], False, False, 0)
 		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
+		mpris_box=Gtk.Box(spacing=12)
+		mpris_box.pack_start(check_buttons["mpris"], False, False, 0)
+		mpris_box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
+		self.pack_start(mpris_box, False, False, 0)
 
 	def _remove_handlers(self, *args):
 		for handler in self._settings_handlers:
@@ -3811,7 +3816,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._size=None  # needed for window size saving
 
 		# MPRIS
-		dbus_service=MPRISInterface(self, self._client, self._settings)
+		if self._settings.get_boolean("mpris"):
+			dbus_service=MPRISInterface(self, self._client, self._settings)
 
 		# actions
 		simple_actions_data=(
