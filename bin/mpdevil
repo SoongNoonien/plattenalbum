@@ -954,14 +954,13 @@ class GeneralSettings(Gtk.Box):
 			(_("Use Client-side decoration"), "use-csd"),
 			(_("Show stop button"), "show-stop"),
 			(_("Show lyrics button"), "show-lyrics-button"),
-			(_("Show initials in artist view"), "show-initials"),
 			(_("Place playlist at the side"), "playlist-right"),
 			(_("Use “Album Artist” tag"), "use-album-artist"),
 			(_("Send notification on title change"), "send-notify"),
 			(_("Stop playback on quit"), "stop-on-quit"),
 			(_("Play selected albums and titles immediately"), "force-mode"),
 			(_("Sort albums by year"), "sort-albums-by-year"),
-			(_("Provide MPRIS"), "mpris"),
+			(_("Provide “MPRIS”"), "mpris"),
 		]
 		for label, key in check_buttons_data:
 			check_buttons[key]=Gtk.CheckButton(label=label)
@@ -999,19 +998,18 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(csd_box, False, False, 0)
 		self.pack_start(check_buttons["show-stop"], False, False, 0)
 		self.pack_start(check_buttons["show-lyrics-button"], False, False, 0)
-		self.pack_start(check_buttons["show-initials"], False, False, 0)
 		self.pack_start(check_buttons["playlist-right"], False, False, 0)
 		self.pack_start(view_grid, False, False, 0)
 		self.pack_start(behavior_heading, False, False, 0)
+		mpris_box=Gtk.Box(spacing=12)
+		mpris_box.pack_start(check_buttons["mpris"], False, False, 0)
+		mpris_box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
+		self.pack_start(mpris_box, False, False, 0)
 		self.pack_start(check_buttons["use-album-artist"], False, False, 0)
 		self.pack_start(check_buttons["sort-albums-by-year"], False, False, 0)
 		self.pack_start(check_buttons["send-notify"], False, False, 0)
 		self.pack_start(check_buttons["force-mode"], False, False, 0)
 		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
-		mpris_box=Gtk.Box(spacing=12)
-		mpris_box.pack_start(check_buttons["mpris"], False, False, 0)
-		mpris_box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
-		self.pack_start(mpris_box, False, False, 0)
 
 	def _remove_handlers(self, *args):
 		for handler in self._settings_handlers:
@@ -2110,9 +2108,7 @@ class ArtistWindow(FocusFrame):
 		self._column_initials=Gtk.TreeViewColumn("", renderer_text_malign, text=2, weight=3)
 		self._column_initials.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 		self._column_initials.set_property("resizable", False)
-		self._column_initials.set_visible(self._settings.get_boolean("show-initials"))
 		self._treeview.append_column(self._column_initials)
-
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		self._column_name=Gtk.TreeViewColumn("", renderer_text, text=0, weight=1)
 		self._column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
@@ -2131,7 +2127,6 @@ class ArtistWindow(FocusFrame):
 		self._treeview.connect("button-press-event", self._on_button_press_event)
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._settings.connect("changed::use-album-artist", self._refresh)
-		self._settings.connect("changed::show-initials", self._on_show_initials_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("update", self._refresh)
@@ -2262,9 +2257,6 @@ class ArtistWindow(FocusFrame):
 	def _on_reconnected(self, *args):
 		self._refresh()
 		self.set_sensitive(True)
-
-	def _on_show_initials_changed(self, *args):
-		self._column_initials.set_visible(self._settings.get_boolean("show-initials"))
 
 class AlbumWindow(FocusFrame):
 	def __init__(self, client, settings, artist_window):
