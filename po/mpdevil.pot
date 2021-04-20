@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-18 17:21+0200\n"
+"POT-Creation-Date: 2021-04-20 17:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -82,7 +82,7 @@ msgid "Sort albums by year"
 msgstr ""
 
 #: mpdevil:963
-msgid "Provide “MPRIS”"
+msgid "Support “MPRIS”"
 msgstr ""
 
 #: mpdevil:975

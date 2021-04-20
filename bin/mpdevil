@@ -960,7 +960,7 @@ class GeneralSettings(Gtk.Box):
 			(_("Stop playback on quit"), "stop-on-quit"),
 			(_("Play selected albums and titles immediately"), "force-mode"),
 			(_("Sort albums by year"), "sort-albums-by-year"),
-			(_("Provide “MPRIS”"), "mpris"),
+			(_("Support “MPRIS”"), "mpris"),
 		]
 		for label, key in check_buttons_data:
 			check_buttons[key]=Gtk.CheckButton(label=label)
