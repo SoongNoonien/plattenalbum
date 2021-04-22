@@ -36,7 +36,7 @@ if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
 else:
 	bindtextdomain("mpdevil", localedir=None)  # replace "None" by a static path if needed (e.g when installing on a non-FHS distro)
 
-VERSION="1.2.0"  # sync with setup.py
+VERSION="1.2.0-dev"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 
 
@@ -1032,20 +1032,15 @@ class ProfileSettings(Gtk.Grid):
 		super().__init__(row_spacing=6, column_spacing=12, border_width=18)
 		self._client=client
 		self._settings=settings
-		self._gui_modification=False  # indicates whether the settings were changed from the settings dialog
 
 		# widgets
-		self._profiles_combo=Gtk.ComboBoxText(entry_text_column=0, hexpand=True)
-
+		self._profiles_combo=ComboBoxEntry()
 		add_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON))
 		delete_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("list-remove-symbolic", Gtk.IconSize.BUTTON))
 		add_delete_buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		add_delete_buttons.pack_start(add_button, True, True, 0)
 		add_delete_buttons.pack_start(delete_button, True, True, 0)
-
 		connect_button=Gtk.Button.new_with_mnemonic(_("_Connect"))
-
-		self._profile_entry=Gtk.Entry(hexpand=True)
 		self._host_entry=Gtk.Entry(hexpand=True)
 		self._port_entry=Gtk.SpinButton.new_with_range(0, 65535, 1)
 		address_entry=Gtk.Box(spacing=6)
@@ -1053,19 +1048,14 @@ class ProfileSettings(Gtk.Grid):
 		address_entry.pack_start(self._port_entry, False, False, 0)
 		self._password_entry=PasswordEntry(hexpand=True)
 		self._path_entry=Gtk.Entry(hexpand=True, placeholder_text=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC))
-		self._path_select_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open-symbolic", Gtk.IconSize.BUTTON))
-		path_box=Gtk.Box(spacing=6)
-		path_box.pack_start(self._path_entry, True, True, 0)
-		path_box.pack_start(self._path_select_button, False, False, 0)
+		self._path_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "folder-open-symbolic")
 		self._regex_entry=Gtk.Entry(hexpand=True, placeholder_text=COVER_REGEX)
 		self._regex_entry.set_tooltip_text(
 			_("The first image in the same directory as the song file "\
 			"matching this regex will be displayed. %AlbumArtist% and "\
 			"%Album% will be replaced by the corresponding tags of the song.")
 		)
-
 		profiles_label=Gtk.Label(label=_("Profile:"), xalign=1)
-		profile_label=Gtk.Label(label=_("Name:"), xalign=1)
 		host_label=Gtk.Label(label=_("Host:"), xalign=1)
 		password_label=Gtk.Label(label=_("Password:"), xalign=1)
 		path_label=Gtk.Label(label=_("Music lib:"), xalign=1)
@@ -1077,40 +1067,30 @@ class ProfileSettings(Gtk.Grid):
 		connect_button.connect("clicked", self._on_connect_button_clicked)
 		style_context=connect_button.get_style_context()
 		style_context.add_class("suggested-action")
-		self._path_select_button.connect("clicked", self._on_path_select_button_clicked, parent)
-		self._profiles_changed=self._profiles_combo.connect("changed", self._on_profiles_changed)
+		self._path_entry.connect("icon-release", self._on_path_entry_icon_release, parent)
+		self._profiles_select=self._profiles_combo.connect("select", self._on_profiles_select)
 		self.entry_changed_handlers=[]
-		self.entry_changed_handlers.append((self._profile_entry, self._profile_entry.connect("changed", self._on_profile_entry_changed)))
+		self.entry_changed_handlers.append((self._profiles_combo, self._profiles_combo.connect("text", self._on_profile_entry_changed)))
 		self.entry_changed_handlers.append((self._host_entry, self._host_entry.connect("changed", self._on_host_entry_changed)))
 		self.entry_changed_handlers.append((self._port_entry, self._port_entry.connect("value-changed", self._on_port_entry_changed)))
 		self.entry_changed_handlers.append((self._password_entry, self._password_entry.connect("changed", self._on_password_entry_changed)))
 		self.entry_changed_handlers.append((self._path_entry, self._path_entry.connect("changed", self._on_path_entry_changed)))
 		self.entry_changed_handlers.append((self._regex_entry, self._regex_entry.connect("changed", self._on_regex_entry_changed)))
-		self._settings_handlers=[]
-		self._settings_handlers.append(self._settings.connect("changed::profiles", self._on_settings_changed))
-		self._settings_handlers.append(self._settings.connect("changed::hosts", self._on_settings_changed))
-		self._settings_handlers.append(self._settings.connect("changed::ports", self._on_settings_changed))
-		self._settings_handlers.append(self._settings.connect("changed::passwords", self._on_settings_changed))
-		self._settings_handlers.append(self._settings.connect("changed::paths", self._on_settings_changed))
-		self._settings_handlers.append(self._settings.connect("changed::regex", self._on_settings_changed))
-		self.connect("destroy", self._remove_handlers)
 
 		self._profiles_combo_reload()
-		self._profiles_combo.set_active(0)
+		self._profiles_combo.set_active(self._settings.get_int("active-profile"))
 
 		# packing
 		self.add(profiles_label)
-		self.attach_next_to(profile_label, profiles_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(host_label, profile_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(host_label, profiles_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(regex_label, path_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(self._profiles_combo, profiles_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(add_delete_buttons, self._profiles_combo, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(self._profile_entry, profile_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(address_entry, host_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(self._password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(path_box, path_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(self._path_entry, path_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(self._regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
 		connect_button.set_margin_top(12)
 		self.attach_next_to(connect_button, self._regex_entry, Gtk.PositionType.BOTTOM, 2, 1)
@@ -1124,24 +1104,11 @@ class ProfileSettings(Gtk.Grid):
 			obj.handler_unblock(handler)
 
 	def _profiles_combo_reload(self, *args):
-		self._profiles_combo.handler_block(self._profiles_changed)
-
+		self._profiles_combo.handler_block(self._profiles_select)
 		self._profiles_combo.remove_all()
 		for profile in self._settings.get_value("profiles"):
 			self._profiles_combo.append_text(profile)
-
-		self._profiles_combo.handler_unblock(self._profiles_changed)
-
-	def _remove_handlers(self, *args):
-		for handler in self._settings_handlers:
-			self._settings.disconnect(handler)
-
-	def _on_settings_changed(self, *args):
-		if self._gui_modification:
-			self._gui_modification=False
-		else:
-			self._profiles_combo_reload()
-			self._profiles_combo.set_active(0)
+		self._profiles_combo.handler_unblock(self._profiles_select)
 
 	def _on_add_button_clicked(self, *args):
 		model=self._profiles_combo.get_model()
@@ -1156,7 +1123,7 @@ class ProfileSettings(Gtk.Grid):
 		self._profiles_combo.set_active(new_pos)
 
 	def _on_delete_button_clicked(self, *args):
-		pos=self._profiles_combo.get_active()
+		pos=self._profiles_combo.get_selected()
 		self._settings.array_delete("as", "profiles", pos)
 		self._settings.array_delete("as", "hosts", pos)
 		self._settings.array_delete("ai", "ports", pos)
@@ -1171,55 +1138,42 @@ class ProfileSettings(Gtk.Grid):
 			self._profiles_combo.set_active(new_pos)
 
 	def _on_connect_button_clicked(self, *args):
-		self._settings.set_int("active-profile", self._profiles_combo.get_active())
+		self._settings.set_int("active-profile", self._profiles_combo.get_selected())
 		self._client.reconnect()
 
 	def _on_profile_entry_changed(self, *args):
-		self._gui_modification=True
-		pos=self._profiles_combo.get_active()
-		self._settings.array_modify("as", "profiles", pos, self._profile_entry.get_text())
-		self._profiles_combo_reload()
-		self._profiles_combo.handler_block(self._profiles_changed)  # do not reload all settings
-		self._profiles_combo.set_active(pos)
-		self._profiles_combo.handler_unblock(self._profiles_changed)
+		self._settings.array_modify("as", "profiles", self._profiles_combo.get_selected(), self._profiles_combo.get_text())
 
 	def _on_host_entry_changed(self, *args):
-		self._gui_modification=True
-		self._settings.array_modify("as", "hosts", self._profiles_combo.get_active(), self._host_entry.get_text())
+		self._settings.array_modify("as", "hosts", self._profiles_combo.get_selected(), self._host_entry.get_text())
 
 	def _on_port_entry_changed(self, *args):
-		self._gui_modification=True
-		self._settings.array_modify("ai", "ports", self._profiles_combo.get_active(), int(self._port_entry.get_value()))
+		self._settings.array_modify("ai", "ports", self._profiles_combo.get_selected(), int(self._port_entry.get_value()))
 
 	def _on_password_entry_changed(self, *args):
-		self._gui_modification=True
-		self._settings.array_modify("as", "passwords", self._profiles_combo.get_active(), self._password_entry.get_text())
+		self._settings.array_modify("as", "passwords", self._profiles_combo.get_selected(), self._password_entry.get_text())
 
 	def _on_path_entry_changed(self, *args):
-		self._gui_modification=True
-		self._settings.array_modify("as", "paths", self._profiles_combo.get_active(), self._path_entry.get_text())
+		self._settings.array_modify("as", "paths", self._profiles_combo.get_selected(), self._path_entry.get_text())
 
 	def _on_regex_entry_changed(self, *args):
-		self._gui_modification=True
-		self._settings.array_modify("as", "regex", self._profiles_combo.get_active(), self._regex_entry.get_text())
+		self._settings.array_modify("as", "regex", self._profiles_combo.get_selected(), self._regex_entry.get_text())
 
-	def _on_path_select_button_clicked(self, widget, parent):
+	def _on_path_entry_icon_release(self, widget, icon_pos, event, parent):
 		dialog=Gtk.FileChooserNative(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
-		folder=self._settings.get_lib_path(self._profiles_combo.get_active())
+		folder=self._settings.get_lib_path(self._profiles_combo.get_selected())
 		if folder is not None:
 			dialog.set_current_folder(folder)
 		response=dialog.run()
 		if response == Gtk.ResponseType.ACCEPT:
-			self._gui_modification=True
-			self._settings.array_modify("as", "paths", self._profiles_combo.get_active(), dialog.get_filename())
+			self._settings.array_modify("as", "paths", self._profiles_combo.get_selected(), dialog.get_filename())
 			self._path_entry.set_text(dialog.get_filename())
 		dialog.destroy()
 
-	def _on_profiles_changed(self, *args):
+	def _on_profiles_select(self, *args):
 		active=self._profiles_combo.get_active()
 		if active >= 0:
 			self._block_entry_changed_handlers()
-			self._profile_entry.set_text(self._settings.get_value("profiles")[active])
 			self._host_entry.set_text(self._settings.get_value("hosts")[active])
 			self._port_entry.set_value(self._settings.get_value("ports")[active])
 			self._password_entry.set_text(self._settings.get_value("passwords")[active])
@@ -1489,6 +1443,35 @@ class PasswordEntry(Gtk.Entry):
 		else:
 			self.set_visibility(False)
 			self.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "view-conceal-symbolic")
+
+class ComboBoxEntry(Gtk.ComboBoxText):
+	__gsignals__={"text": (GObject.SignalFlags.RUN_FIRST, None, ()), "select": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	def __init__(self):
+		super().__init__(entry_text_column=0, has_entry=True)
+		self._store=self.get_property("model")
+		self._entry=self.get_child()
+		self._selected=-1
+
+		# connect
+		self.connect("changed", self._on_changed)
+
+	def get_text(self):
+		return self._entry.get_text()
+
+	def get_selected(self):
+		return self._selected
+
+	def _on_changed(self, *args):
+		active=self.get_active()
+		if active >= 0:
+			self._selected=active
+			self.emit("select")
+		else:
+			try:
+				self._store[self._selected][0]=self._entry.get_text()
+				self.emit("text")
+			except:
+				pass
 
 class FocusFrame(Gtk.Overlay):
 	def __init__(self):
