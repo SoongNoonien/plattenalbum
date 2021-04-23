@@ -1110,8 +1110,11 @@ class ProfileSettings(Gtk.Grid):
 			self._profiles_combo.set_active(new_pos)
 
 	def _on_connect_button_clicked(self, *args):
-		self._settings.set_int("active-profile", self._profiles_combo.get_selected())
-		self._client.reconnect()
+		selected=self._profiles_combo.get_selected()
+		if selected == self._settings.get_int("active-profile"):
+			self._client.reconnect()
+		else:
+			self._settings.set_int("active-profile", selected)
 
 	def _on_profile_entry_changed(self, *args):
 		self._settings.array_modify("as", "profiles", self._profiles_combo.get_selected(), self._profiles_combo.get_text())
