@@ -930,7 +930,6 @@ class GeneralSettings(Gtk.Box):
 	def __init__(self, settings):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=18)
 		self._settings=settings
-		self._settings_handlers=[]
 
 		# int settings
 		int_settings={}
@@ -943,10 +942,7 @@ class GeneralSettings(Gtk.Box):
 		for label, (vmin, vmax, step), key in int_settings_data:
 			int_settings[key]=(Gtk.Label(label=label, xalign=0), Gtk.SpinButton.new_with_range(vmin, vmax, step))
 			int_settings[key][1].set_value(self._settings.get_int(key))
-			int_settings[key][1].connect("value-changed", self._on_int_changed, key)
-			self._settings_handlers.append(
-				self._settings.connect("changed::{}".format(key), self._on_int_settings_changed, int_settings[key][1])
-			)
+			int_settings[key][1].connect("value-changed", lambda widget,key: self._settings.set_int(key, int(widget.get_value())), key)
 
 		# check buttons
 		check_buttons={}
@@ -963,21 +959,16 @@ class GeneralSettings(Gtk.Box):
 			(_("Support “MPRIS”"), "mpris"),
 		]
 		for label, key in check_buttons_data:
-			check_buttons[key]=Gtk.CheckButton(label=label)
+			check_buttons[key]=Gtk.CheckButton(label=label, margin_start=12)
 			check_buttons[key].set_active(self._settings.get_boolean(key))
-			check_buttons[key].set_margin_start(12)
-			check_buttons[key].connect("toggled", self._on_toggled, key)
-			self._settings_handlers.append(
-				self._settings.connect("changed::{}".format(key), self._on_check_settings_changed, check_buttons[key])
-			)
+			check_buttons[key].connect("toggled", lambda widget,key: self._settings.set_boolean(key, widget.get_active()), key)
 
 		# headings
 		view_heading=Gtk.Label(label=_("<b>View</b>"), use_markup=True, xalign=0)
 		behavior_heading=Gtk.Label(label=_("<b>Behavior</b>"), use_markup=True, xalign=0)
 
 		# view grid
-		view_grid=Gtk.Grid(row_spacing=6, column_spacing=12)
-		view_grid.set_margin_start(12)
+		view_grid=Gtk.Grid(row_spacing=6, column_spacing=12, margin_start=12)
 		view_grid.add(int_settings["track-cover"][0])
 		view_grid.attach_next_to(int_settings["album-cover"][0], int_settings["track-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size"][0], int_settings["album-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
@@ -986,9 +977,6 @@ class GeneralSettings(Gtk.Box):
 		view_grid.attach_next_to(int_settings["album-cover"][1], int_settings["album-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size"][1], int_settings["icon-size"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size-sec"][1], int_settings["icon-size-sec"][0], Gtk.PositionType.RIGHT, 1, 1)
-
-		# connect
-		self.connect("destroy", self._remove_handlers)
 
 		# packing
 		csd_box=Gtk.Box(spacing=12)
@@ -1010,22 +998,6 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(check_buttons["send-notify"], False, False, 0)
 		self.pack_start(check_buttons["force-mode"], False, False, 0)
 		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
-
-	def _remove_handlers(self, *args):
-		for handler in self._settings_handlers:
-			self._settings.disconnect(handler)
-
-	def _on_int_settings_changed(self, settings, key, entry):
-		entry.set_value(settings.get_int(key))
-
-	def _on_check_settings_changed(self, settings, key, button):
-		button.set_active(settings.get_boolean(key))
-
-	def _on_int_changed(self, widget, key):
-		self._settings.set_int(key, int(widget.get_value()))
-
-	def _on_toggled(self, widget, key):
-		self._settings.set_boolean(key, widget.get_active())
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, client, settings):
@@ -1077,9 +1049,6 @@ class ProfileSettings(Gtk.Grid):
 		self.entry_changed_handlers.append((self._path_entry, self._path_entry.connect("changed", self._on_path_entry_changed)))
 		self.entry_changed_handlers.append((self._regex_entry, self._regex_entry.connect("changed", self._on_regex_entry_changed)))
 
-		self._profiles_combo_reload()
-		self._profiles_combo.set_active(self._settings.get_int("active-profile"))
-
 		# packing
 		self.add(profiles_label)
 		self.attach_next_to(host_label, profiles_label, Gtk.PositionType.BOTTOM, 1, 1)
@@ -1094,6 +1063,9 @@ class ProfileSettings(Gtk.Grid):
 		self.attach_next_to(self._regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
 		connect_button.set_margin_top(12)
 		self.attach_next_to(connect_button, self._regex_entry, Gtk.PositionType.BOTTOM, 2, 1)
+
+		self._profiles_combo_reload()
+		self._profiles_combo.set_active(self._settings.get_int("active-profile"))
 
 	def _block_entry_changed_handlers(self, *args):
 		for obj, handler in self.entry_changed_handlers:
@@ -1236,10 +1208,6 @@ class PlaylistSettings(Gtk.Box):
 		self._up_button.connect("clicked", self._on_up_button_clicked)
 		self._down_button.connect("clicked", self._on_down_button_clicked)
 		self._selection.connect("changed", self._set_button_sensitivity)
-		self._settings_handlers=[]
-		self._settings_handlers.append(self._settings.connect("changed::column-visibilities", self._on_visibilities_changed))
-		self._settings_handlers.append(self._settings.connect("changed::column-permutation", self._on_permutation_changed))
-		self.connect("destroy", self._remove_handlers)
 
 		# packing
 		self.pack_start(label, False, False, 0)
@@ -1273,10 +1241,6 @@ class PlaylistSettings(Gtk.Box):
 				self._up_button.set_sensitive(True)
 				self._down_button.set_sensitive(True)
 
-	def _remove_handlers(self, *args):
-		for handler in self._settings_handlers:
-			self._settings.disconnect(handler)
-
 	def _on_cell_toggled(self, widget, path):
 		self._store[path][0]=not self._store[path][0]
 		self._settings.array_modify("ab", "column-visibilities", self._store[path][2], self._store[path][0])
@@ -1297,24 +1261,6 @@ class PlaylistSettings(Gtk.Box):
 		self._store.move_after(treeiter, next)
 		self._set_button_sensitivity()
 		self._save_permutation()
-
-	def _on_visibilities_changed(self, *args):
-		visibilities=self._settings.get_value("column-visibilities").unpack()
-		for i, actual_index in enumerate(self._settings.get_value("column-permutation")):
-			self._store[i][0]=visibilities[actual_index]
-
-	def _on_permutation_changed(self, *args):
-		equal=True
-		perm=self._settings.get_value("column-permutation")
-		for i, e in enumerate(self._store):
-			if e[2] != perm[i]:
-				equal=False
-				break
-		if not equal:
-			self._store.handler_block(self._row_deleted)
-			self._store.clear()
-			self._fill()
-			self._store.handler_unblock(self._row_deleted)
 
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings):
