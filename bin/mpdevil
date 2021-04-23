@@ -1875,6 +1875,8 @@ class SearchWindow(Gtk.Box):
 
 		# connect
 		self._search_entry_changed=self.search_entry.connect("search-changed", self._search)
+		self.search_entry.connect("focus_in_event", self._on_search_entry_focus_event, True)
+		self.search_entry.connect("focus_out_event", self._on_search_entry_focus_event, False)
 		self._tag_combo_box_changed=self._tag_combo_box.connect("changed", self._search)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -1973,6 +1975,13 @@ class SearchWindow(Gtk.Box):
 			except:
 				pass
 		return False
+
+	def _on_search_entry_focus_event(self, widget, event, focus):
+		app=self.get_toplevel().get_application()
+		if focus:
+			app.set_accels_for_action("mpd.toggle-play", [])
+		else:
+			app.set_accels_for_action("mpd.toggle-play", ["space"])
 
 class GenreSelect(Gtk.ComboBoxText):
 	__gsignals__={"genre_changed": (GObject.SignalFlags.RUN_FIRST, None, ())}
@@ -2463,7 +2472,6 @@ class AlbumWindow(FocusFrame):
 		GLib.idle_add(callback)
 
 class Browser(Gtk.Paned):
-	__gsignals__={"search-focus-changed": (GObject.SignalFlags.RUN_FIRST, None, (bool,))}
 	def __init__(self, client, settings):
 		super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
 		self._client=client
@@ -2492,8 +2500,6 @@ class Browser(Gtk.Paned):
 		# connect
 		self.back_to_current_album_button.connect("clicked", self._back_to_current_album)
 		self.search_button.connect("toggled", self._on_search_toggled)
-		self._search_window.search_entry.connect("focus_in_event", lambda *args: self.emit("search-focus-changed", True))
-		self._search_window.search_entry.connect("focus_out_event", lambda *args: self.emit("search-focus-changed", False))
 		self._artist_window.connect("artists_changed", self._on_artists_changed)
 		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -3768,7 +3774,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
-		self._browser.connect("search-focus-changed", self._on_search_focus_changed)
 		# auto save window state and size
 		self.connect("size-allocate", self._on_size_allocate)
 		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)
@@ -3906,13 +3911,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._header_bar.set_subtitle("")
 		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
 			self.lookup_action(action).set_enabled(False)
-
-	def _on_search_focus_changed(self, obj, focus):
-		app=self.get_application()
-		if focus:
-			app.set_accels_for_action("mpd.toggle-play", [])
-		else:
-			app.set_accels_for_action("mpd.toggle-play", ["space"])
 
 	def _on_size_allocate(self, widget, rect):
 		if not self.is_maximized() and not self._settings.get_property("mini-player"):
