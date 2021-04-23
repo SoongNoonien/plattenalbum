@@ -2811,18 +2811,19 @@ class PlaylistWindow(Gtk.Box):
 		self._back_to_current_song_button=Gtk.Button(
 			image=AutoSizedIcon("go-previous-symbolic", "icon-size-sec", self._settings),
 			tooltip_text=_("Scroll to current song"),
-			relief=Gtk.ReliefStyle.NONE
+			relief=Gtk.ReliefStyle.NONE,
+			can_focus=False
 		)
-		self._back_to_current_song_button.set_can_focus(False)
 		style_context=self._back_to_current_song_button.get_style_context()
 		style_context.add_provider(provider, 600)
-		self._clear_button=Gtk.Button(
+		clear_button=Gtk.Button(
 			image=AutoSizedIcon("edit-clear-symbolic", "icon-size-sec", self._settings),
 			tooltip_text=_("Clear playlist"),
-			relief=Gtk.ReliefStyle.NONE
+			relief=Gtk.ReliefStyle.NONE,
+			action_name="mpd.clear",
+			can_focus=False
 		)
-		self._clear_button.set_can_focus(False)
-		style_context=self._clear_button.get_style_context()
+		style_context=clear_button.get_style_context()
 		style_context.add_class("destructive-action")
 		style_context.add_provider(provider, 600)
 
@@ -2877,7 +2878,7 @@ class PlaylistWindow(Gtk.Box):
 		action_bar.pack_start(self._playlist_info)
 		audio.set_margin_end(3)
 		audio.set_margin_start(12)
-		action_bar.pack_end(self._clear_button)
+		action_bar.pack_end(clear_button)
 		action_bar.pack_end(audio)
 
 		# song popover
@@ -2892,7 +2893,6 @@ class PlaylistWindow(Gtk.Box):
 		self._row_deleted=self._store.connect("row-deleted", self._on_row_deleted)
 		self._row_inserted=self._store.connect("row-inserted", self._on_row_inserted)
 		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
-		self._clear_button.connect("clicked", self._on_clear_button_clicked)
 
 		self._client.emitter.connect("playlist_changed", self._on_playlist_changed)
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
@@ -3059,19 +3059,14 @@ class PlaylistWindow(Gtk.Box):
 				break
 		self._scroll_to_selected_title()
 
-	def _on_clear_button_clicked(self, *args):
-		self._client.clear()
-
 	def _on_disconnected(self, *args):
 		self._treeview.set_sensitive(False)
 		self._back_to_current_song_button.set_sensitive(False)
-		self._clear_button.set_sensitive(False)
 		self._song_popover.popdown()
 		self._clear()
 
 	def _on_reconnected(self, *args):
 		self._back_to_current_song_button.set_sensitive(True)
-		self._clear_button.set_sensitive(True)
 		self._treeview.set_sensitive(True)
 
 	def _on_show_info(self, *args):
@@ -3179,27 +3174,26 @@ class PlaybackControl(Gtk.ButtonBox):
 		self._play_icon=AutoSizedIcon("media-playback-start-symbolic", "icon-size", self._settings)
 		self._pause_icon=AutoSizedIcon("media-playback-pause-symbolic", "icon-size", self._settings)
 		self._play_button=Gtk.Button(image=self._play_icon)
+		self._play_button.set_action_name("mpd.toggle-play")
 		self._play_button.set_can_focus(False)
 		self._stop_button=Gtk.Button(image=AutoSizedIcon("media-playback-stop-symbolic", "icon-size", self._settings))
+		self._stop_button.set_property("no-show-all", not(self._settings.get_boolean("show-stop")))
+		self._stop_button.set_action_name("mpd.stop")
 		self._stop_button.set_can_focus(False)
 		self._prev_button=Gtk.Button(image=AutoSizedIcon("media-skip-backward-symbolic", "icon-size", self._settings))
+		self._prev_button.set_action_name("mpd.prev")
 		self._prev_button.set_can_focus(False)
 		self._next_button=Gtk.Button(image=AutoSizedIcon("media-skip-forward-symbolic", "icon-size", self._settings))
+		self._next_button.set_action_name("mpd.next")
 		self._next_button.set_can_focus(False)
 
 		# connect
-		self._play_button.connect("clicked", self._on_play_clicked)
-		self._stop_button.connect("clicked", self._on_stop_clicked)
-		self._stop_button.set_property("no-show-all", not(self._settings.get_boolean("show-stop")))
-		self._prev_button.connect("clicked", self._on_prev_clicked)
-		self._next_button.connect("clicked", self._on_next_clicked)
 		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._settings.connect("changed::show-stop", self._on_show_stop_changed)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("playlist_changed", self._refresh_tooltips)
 		self._client.emitter.connect("current_song_changed", self._refresh_tooltips)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 		# packing
 		self.pack_start(self._prev_button, True, True, 0)
@@ -3221,39 +3215,17 @@ class PlaybackControl(Gtk.ButtonBox):
 			self._prev_button.set_tooltip_text("")
 			self._next_button.set_tooltip_text("")
 
-	def _on_play_clicked(self, widget):
-		self._client.toggle_play()
-
-	def _on_stop_clicked(self, widget):
-		self._client.stop()
-
-	def _on_prev_clicked(self, widget):
-		self._client.previous()
-
-	def _on_next_clicked(self, widget):
-		self._client.next()
-
 	def _on_state(self, emitter, state):
 		if state == "play":
 			self._play_button.set_image(self._pause_icon)
-			self._prev_button.set_sensitive(True)
-			self._next_button.set_sensitive(True)
 		elif state == "pause":
 			self._play_button.set_image(self._play_icon)
-			self._prev_button.set_sensitive(True)
-			self._next_button.set_sensitive(True)
 		else:
 			self._play_button.set_image(self._play_icon)
-			self._prev_button.set_sensitive(False)
-			self._next_button.set_sensitive(False)
 
 	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
 		self._prev_button.set_tooltip_text("")
 		self._next_button.set_tooltip_text("")
-
-	def _on_reconnected(self, *args):
-		self.set_sensitive(True)
 
 	def _on_mini_player(self, obj, typestring):
 		self._on_show_stop_changed()
@@ -3403,112 +3375,108 @@ class OutputPopover(Gtk.Popover):
 		else:
 			self._client.disableoutput(out_id)
 
-class PlaybackOptions(Gtk.Box):
+class VolumeButton(Gtk.VolumeButton):
 	def __init__(self, client, settings):
-		super().__init__(spacing=6)
+		super().__init__(use_symbolic=True, size=settings.get_gtk_icon_size("icon-size"), can_focus=False)
 		self._client=client
 		self._settings=settings
 		self._popover=None
-
-		# widgets
-		icons={}
-		for icon_name in ("media-playlist-shuffle-symbolic","media-playlist-repeat-symbolic",
-					"org.mpdevil.mpdevil-single-symbolic","org.mpdevil.mpdevil-consume-symbolic"):
-			icons[icon_name]=AutoSizedIcon(icon_name, "icon-size", self._settings)
-		self._random_button=Gtk.ToggleButton(image=icons["media-playlist-shuffle-symbolic"], tooltip_text=_("Random mode"))
-		self._random_button.set_can_focus(False)
-		self._repeat_button=Gtk.ToggleButton(image=icons["media-playlist-repeat-symbolic"], tooltip_text=_("Repeat mode"))
-		self._repeat_button.set_can_focus(False)
-		self._single_button=Gtk.ToggleButton(image=icons["org.mpdevil.mpdevil-single-symbolic"], tooltip_text=_("Single mode"))
-		self._single_button.set_can_focus(False)
-		self._consume_button=Gtk.ToggleButton(image=icons["org.mpdevil.mpdevil-consume-symbolic"], tooltip_text=_("Consume mode"))
-		self._consume_button.set_can_focus(False)
-		self._volume_button=Gtk.VolumeButton(use_symbolic=True, size=self._settings.get_gtk_icon_size("icon-size"))
-		self._volume_button.set_can_focus(False)
-		self._adj=self._volume_button.get_adjustment()
+		self._adj=self.get_adjustment()
 		self._adj.set_step_increment(0.05)
 		self._adj.set_page_increment(0.1)
 		self._adj.set_upper(0)  # do not allow volume change by user when MPD has not yet reported volume (no output enabled/avail)
 
 		# connect
-		self._random_button_toggled=self._random_button.connect("toggled", self._set_option, "random")
-		self._repeat_button_toggled=self._repeat_button.connect("toggled", self._set_option, "repeat")
-		self._single_button_toggled=self._single_button.connect("toggled", self._set_option, "single")
-		self._consume_button_toggled=self._consume_button.connect("toggled", self._set_option, "consume")
-		self._volume_button_changed=self._volume_button.connect("value-changed", self._set_volume)
-		self._repeat_changed=self._client.emitter.connect("repeat", self._repeat_refresh)
-		self._random_changed=self._client.emitter.connect("random", self._random_refresh)
-		self._single_changed=self._client.emitter.connect("single", self._single_refresh)
-		self._consume_changed=self._client.emitter.connect("consume", self._consume_refresh)
-		self._volume_changed=self._client.emitter.connect("volume_changed", self._volume_refresh)
-		self._single_button.connect("button-press-event", self._on_single_button_press_event)
-		self._volume_button.connect("button-press-event", self._on_volume_button_press_event)
+		self._changed=self.connect("value-changed", self._set_volume)
+		self._client.emitter.connect("volume_changed", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
-		self._settings.connect("notify::mini-player", self._on_mini_player)
+		self.connect("button-press-event", self._on_button_press_event)
 		self._settings.connect("changed::icon-size", self._on_icon_size_changed)
-
-		# packing
-		self._button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
-		self._button_box.pack_start(self._repeat_button, True, True, 0)
-		self._button_box.pack_start(self._random_button, True, True, 0)
-		self._button_box.pack_start(self._single_button, True, True, 0)
-		self._button_box.pack_start(self._consume_button, True, True, 0)
-		self.pack_start(self._button_box, True, True, 0)
-		self.pack_start(self._volume_button, True, True, 0)
-
-	def _set_option(self, widget, option):
-		func=getattr(self._client, option)
-		if widget.get_active():
-			func("1")
-		else:
-			func("0")
 
 	def _set_volume(self, widget, value):
 		self._client.setvol(str(int(value*100)))
 
-	def _repeat_refresh(self, emitter, val):
-		self._repeat_button.handler_block(self._repeat_button_toggled)
-		self._repeat_button.set_active(val)
-		self._repeat_button.handler_unblock(self._repeat_button_toggled)
-
-	def _random_refresh(self, emitter, val):
-		self._random_button.handler_block(self._random_button_toggled)
-		self._random_button.set_active(val)
-		self._random_button.handler_unblock(self._random_button_toggled)
-
-	def _single_refresh(self, emitter, val):
-		self._single_button.handler_block(self._single_button_toggled)
-		if val == "1":
-			self._single_button.get_style_context().remove_class("destructive-action")
-			self._single_button.set_active(True)
-		elif val == "oneshot":
-			self._single_button.get_style_context().add_class("destructive-action")
-			self._single_button.set_active(False)
-		else:
-			self._single_button.get_style_context().remove_class("destructive-action")
-			self._single_button.set_active(False)
-		self._single_button.handler_unblock(self._single_button_toggled)
-
-	def _consume_refresh(self, emitter, val):
-		self._consume_button.handler_block(self._consume_button_toggled)
-		self._consume_button.set_active(val)
-		self._consume_button.handler_unblock(self._consume_button_toggled)
-
-	def _volume_refresh(self, emitter, volume):
-		self._volume_button.handler_block(self._volume_button_changed)
+	def _refresh(self, emitter, volume):
+		self.handler_block(self._changed)
 		if volume < 0:
-			self._volume_button.set_value(0)
+			self.set_value(0)
 			self._adj.set_upper(0)
 		else:
 			self._adj.set_upper(1)
-			self._volume_button.set_value(volume/100)
-		self._volume_button.handler_unblock(self._volume_button_changed)
+			self.set_value(volume/100)
+		self.handler_unblock(self._changed)
 
-	def _on_volume_button_press_event(self, widget, event):
+	def _on_button_press_event(self, widget, event):
 		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self._popover=OutputPopover(self._client, self._volume_button)
+			self._popover=OutputPopover(self._client, self)
 			self._popover.popup()
+
+	def _on_reconnected(self, *args):
+		self.set_sensitive(True)
+
+	def _on_disconnected(self, *args):
+		self.set_sensitive(False)
+		self._refresh(None, -1)
+		if self._popover is not None:
+			self._popover.destroy()
+			self._popover=None
+
+	def _on_icon_size_changed(self, *args):
+		self.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
+
+class PlaybackOptions(Gtk.ButtonBox):
+	def __init__(self, client, settings):
+		super().__init__(layout_style=Gtk.ButtonBoxStyle.EXPAND)
+		self._client=client
+		self._settings=settings
+
+		# buttons
+		self._buttons={}
+		data=(
+			("random", "media-playlist-shuffle-symbolic", _("Random mode")),
+			("repeat", "media-playlist-repeat-symbolic", _("Repeat mode")),
+			("single", "org.mpdevil.mpdevil-single-symbolic", _("Single mode")),
+			("consume", "org.mpdevil.mpdevil-consume-symbolic", _("Consume mode")),
+		)
+		for name, icon, tooltip in data:
+			self._buttons[name]=Gtk.ToggleButton(image=AutoSizedIcon(icon, "icon-size", self._settings),
+				tooltip_text=tooltip, can_focus=False, action_name="mpd."+name)
+
+		# connect
+		self._client.emitter.connect("repeat", self._repeat_refresh)
+		self._client.emitter.connect("random", self._random_refresh)
+		self._client.emitter.connect("single", self._single_refresh)
+		self._client.emitter.connect("consume", self._consume_refresh)
+		self._buttons["single"].connect("button-press-event", self._on_single_button_press_event)
+		self._client.emitter.connect_after("disconnected", self._on_disconnected)  # connect "after" to ensure all mpd actions are disabled
+		self._settings.connect("notify::mini-player", self._on_mini_player)
+
+		# packing
+		self.pack_start(self._buttons["repeat"], True, True, 0)
+		self.pack_start(self._buttons["random"], True, True, 0)
+		self.pack_start(self._buttons["single"], True, True, 0)
+		self.pack_start(self._buttons["consume"], True, True, 0)
+
+	def _repeat_refresh(self, emitter, val):
+		self._buttons["repeat"].set_active(val)
+
+	def _random_refresh(self, emitter, val):
+		self._buttons["random"].set_active(val)
+
+	def _single_refresh(self, emitter, val):
+		if val == "1":
+			self._buttons["single"].get_style_context().remove_class("destructive-action")
+			self._buttons["single"].set_active(True)
+		elif val == "oneshot":
+			self._buttons["single"].get_style_context().add_class("destructive-action")
+			self._buttons["single"].set_active(False)
+		else:
+			self._buttons["single"].get_style_context().remove_class("destructive-action")
+			self._buttons["single"].set_active(False)
+
+	def _consume_refresh(self, emitter, val):
+		self._buttons["consume"].set_active(val)
 
 	def _on_single_button_press_event(self, widget, event):
 		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3518,38 +3486,19 @@ class PlaybackOptions(Gtk.Box):
 			else:
 				self._client.single("oneshot")
 
-	def _on_reconnected(self, *args):
-		self._repeat_button.set_sensitive(True)
-		self._random_button.set_sensitive(True)
-		self._single_button.set_sensitive(True)
-		self._consume_button.set_sensitive(True)
-		self._volume_button.set_sensitive(True)
-
 	def _on_disconnected(self, *args):
-		self._repeat_button.set_sensitive(False)
-		self._random_button.set_sensitive(False)
-		self._single_button.set_sensitive(False)
-		self._consume_button.set_sensitive(False)
-		self._volume_button.set_sensitive(False)
 		self._repeat_refresh(None, False)
 		self._random_refresh(None, False)
 		self._single_refresh(None, "0")
 		self._consume_refresh(None, False)
-		self._volume_refresh(None, -1)
-		if self._popover is not None:
-			self._popover.destroy()
-			self._popover=None
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
-			self._button_box.set_property("no-show-all", True)
-			self._button_box.set_property("visible", False)
+			self.set_property("no-show-all", True)
+			self.set_property("visible", False)
 		else:
-			self._button_box.set_property("no-show-all", False)
-			self._button_box.show_all()
-
-	def _on_icon_size_changed(self, *args):
-		self._volume_button.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
+			self.set_property("no-show-all", False)
+			self.show_all()
 
 ###################
 # MPD gio actions #
@@ -3758,8 +3707,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._profiles_action=Gio.SimpleAction.new_stateful("profiles", GLib.VariantType.new("i"), GLib.Variant("i", 0))
 		self._profiles_action.connect("change-state", self._on_profiles)
 		self.add_action(self._profiles_action)
-		self._mpd_action_group=MPDActionGroup(self._client)
-		self.insert_action_group("mpd", self._mpd_action_group)
 
 		# shortcuts
 		shortcuts_window=ShortcutsWindow()
@@ -3778,6 +3725,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		playback_options=PlaybackOptions(self._client, self._settings)
+		volume_button=VolumeButton(self._client, self._settings)
 		connection_notify=ConnectionNotify(self._client, self._settings)
 
 		# menu
@@ -3809,6 +3757,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.pack_start(playback_control)
 		action_bar.pack_start(seek_bar)
 		action_bar.pack_start(playback_options)
+		action_bar.pack_start(volume_button)
 
 		# connect
 		self._settings.connect("changed::profiles", self._refresh_profiles_menu)
@@ -3959,7 +3908,11 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lookup_action(action).set_enabled(False)
 
 	def _on_search_focus_changed(self, obj, focus):
-		self._mpd_action_group.lookup_action("toggle-play").set_enabled(not(focus))
+		app=self.get_application()
+		if focus:
+			app.set_accels_for_action("mpd.toggle-play", [])
+		else:
+			app.set_accels_for_action("mpd.toggle-play", ["space"])
 
 	def _on_size_allocate(self, widget, rect):
 		if not self.is_maximized() and not self._settings.get_property("mini-player"):
@@ -4021,6 +3974,7 @@ class mpdevil(Gtk.Application):
 		if not self._window:  # allow just one instance
 			self._window=MainWindow(self, self._client, self._settings)
 			self._window.connect("delete-event", self._on_delete_event)
+			self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 			# accelerators
 			action_accels=(
 				("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
