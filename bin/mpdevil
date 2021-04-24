@@ -3206,10 +3206,10 @@ class PlaybackControl(Gtk.ButtonBox):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 		# packing
-		self.pack_start(self._prev_button, False, False, 0)
-		self.pack_start(self._play_button, False, False, 0)
-		self.pack_start(self._stop_button, False, False, 0)
-		self.pack_start(self._next_button, False, False, 0)
+		self.pack_start(self._prev_button, True, True, 0)
+		self.pack_start(self._play_button, True, True, 0)
+		self.pack_start(self._stop_button, True, True, 0)
+		self.pack_start(self._next_button, True, True, 0)
 
 	def _refresh_tooltips(self, *args):
 		try:
@@ -3452,7 +3452,7 @@ class PlaybackOptions(Gtk.ButtonBox):
 		for name, icon, tooltip in data:
 			button=Gtk.ToggleButton(image=AutoSizedIcon(icon, "icon-size", self._settings), tooltip_text=tooltip, can_focus=False)
 			handler=button.connect("toggled", self._set_option, name)
-			self.pack_start(button, False, False, 0)
+			self.pack_start(button, True, True, 0)
 			self._buttons[name]=(button, handler)
 
 		# css
