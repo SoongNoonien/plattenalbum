@@ -3202,10 +3202,10 @@ class PlaybackControl(Gtk.ButtonBox):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 		# packing
-		self.pack_start(self._prev_button, True, True, 0)
-		self.pack_start(self._play_button, True, True, 0)
-		self.pack_start(self._stop_button, True, True, 0)
-		self.pack_start(self._next_button, True, True, 0)
+		self.pack_start(self._prev_button, False, False, 0)
+		self.pack_start(self._play_button, False, False, 0)
+		self.pack_start(self._stop_button, False, False, 0)
+		self.pack_start(self._next_button, False, False, 0)
 
 	def _refresh_tooltips(self, *args):
 		try:
@@ -3440,49 +3440,50 @@ class PlaybackOptions(Gtk.ButtonBox):
 		# buttons
 		self._buttons={}
 		data=(
-			("random", "media-playlist-shuffle-symbolic", _("Random mode")),
 			("repeat", "media-playlist-repeat-symbolic", _("Repeat mode")),
+			("random", "media-playlist-shuffle-symbolic", _("Random mode")),
 			("single", "org.mpdevil.mpdevil-single-symbolic", _("Single mode")),
 			("consume", "org.mpdevil.mpdevil-consume-symbolic", _("Consume mode")),
 		)
 		for name, icon, tooltip in data:
-			self._buttons[name]=Gtk.ToggleButton(image=AutoSizedIcon(icon, "icon-size", self._settings),
-				tooltip_text=tooltip, can_focus=False, action_name="mpd."+name)
+			button=Gtk.ToggleButton(image=AutoSizedIcon(icon, "icon-size", self._settings), tooltip_text=tooltip, can_focus=False)
+			handler=button.connect("toggled", self._set_option, name)
+			self.pack_start(button, False, False, 0)
+			self._buttons[name]=(button, handler)
+
+		# css
+		self._provider=Gtk.CssProvider()
+		self._provider.load_from_data(b"""button {color: @warning_color;}""")  # orange icon
 
 		# connect
-		self._client.emitter.connect("repeat", self._repeat_refresh)
-		self._client.emitter.connect("random", self._random_refresh)
+		for name in ("repeat", "random", "consume"):
+			self._client.emitter.connect(name, self._button_refresh, name)
 		self._client.emitter.connect("single", self._single_refresh)
-		self._client.emitter.connect("consume", self._consume_refresh)
-		self._buttons["single"].connect("button-press-event", self._on_single_button_press_event)
-		self._client.emitter.connect_after("disconnected", self._on_disconnected)  # connect "after" to ensure all mpd actions are disabled
+		self._buttons["single"][0].connect("button-press-event", self._on_single_button_press_event)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._settings.connect("notify::mini-player", self._on_mini_player)
 
-		# packing
-		self.pack_start(self._buttons["repeat"], True, True, 0)
-		self.pack_start(self._buttons["random"], True, True, 0)
-		self.pack_start(self._buttons["single"], True, True, 0)
-		self.pack_start(self._buttons["consume"], True, True, 0)
+	def _set_option(self, widget, option):
+		func=getattr(self._client, option)
+		if widget.get_active():
+			func("1")
+		else:
+			func("0")
 
-	def _repeat_refresh(self, emitter, val):
-		self._buttons["repeat"].set_active(val)
-
-	def _random_refresh(self, emitter, val):
-		self._buttons["random"].set_active(val)
+	def _button_refresh(self, emitter, val, name):
+		self._buttons[name][0].handler_block(self._buttons[name][1])
+		self._buttons[name][0].set_active(val)
+		self._buttons[name][0].handler_unblock(self._buttons[name][1])
 
 	def _single_refresh(self, emitter, val):
-		if val == "1":
-			self._buttons["single"].get_style_context().remove_class("destructive-action")
-			self._buttons["single"].set_active(True)
-		elif val == "oneshot":
-			self._buttons["single"].get_style_context().add_class("destructive-action")
-			self._buttons["single"].set_active(False)
+		self._buttons["single"][0].handler_block(self._buttons["single"][1])
+		self._buttons["single"][0].set_active((val in ("1", "oneshot")))
+		if val == "oneshot":
+			self._buttons["single"][0].get_style_context().add_provider(self._provider, 600)
 		else:
-			self._buttons["single"].get_style_context().remove_class("destructive-action")
-			self._buttons["single"].set_active(False)
-
-	def _consume_refresh(self, emitter, val):
-		self._buttons["consume"].set_active(val)
+			self._buttons["single"][0].get_style_context().remove_provider(self._provider)
+		self._buttons["single"][0].handler_unblock(self._buttons["single"][1])
 
 	def _on_single_button_press_event(self, widget, event):
 		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3493,10 +3494,13 @@ class PlaybackOptions(Gtk.ButtonBox):
 				self._client.single("oneshot")
 
 	def _on_disconnected(self, *args):
-		self._repeat_refresh(None, False)
-		self._random_refresh(None, False)
+		self.set_sensitive(False)
+		for name in ("repeat", "random", "consume"):
+			self._button_refresh(None, False, name)
 		self._single_refresh(None, "0")
-		self._consume_refresh(None, False)
+
+	def _on_reconnected(self, *args):
+		self.set_sensitive(True)
 
 	def _on_mini_player(self, obj, typestring):
 		if obj.get_property("mini-player"):
