@@ -3367,23 +3367,26 @@ class OutputPopover(Gtk.Popover):
 		self._client=client
 
 		# widgets
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=6)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=9)
 		for output in self._client.outputs():
-			button=Gtk.CheckButton(label="{} ({})".format(output["outputname"], output["plugin"]))
+			button=Gtk.ModelButton(label="{} ({})".format(output["outputname"], output["plugin"]), role=Gtk.ButtonRole.CHECK)
+			button.get_child().set_property("xalign", 0)
 			if output["outputenabled"] == "1":
-				button.set_active(True)
-			button.connect("toggled", self._on_button_toggled, output["outputid"])
+				button.set_property("active", True)
+			button.connect("clicked", self._on_button_clicked, output["outputid"])
 			box.pack_start(button, False, False, 0)
 
 		# packing
 		self.add(box)
 		box.show_all()
 
-	def _on_button_toggled(self, button, out_id):
-		if button.get_active():
-			self._client.enableoutput(out_id)
-		else:
+	def _on_button_clicked(self, button, out_id):
+		if button.get_property("active"):
 			self._client.disableoutput(out_id)
+			button.set_property("active", False)
+		else:
+			self._client.enableoutput(out_id)
+			button.set_property("active", True)
 
 class VolumeButton(Gtk.VolumeButton):
 	def __init__(self, client, settings):
