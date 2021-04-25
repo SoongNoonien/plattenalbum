@@ -3457,7 +3457,7 @@ class PlaybackOptions(Gtk.ButtonBox):
 
 		# css
 		self._provider=Gtk.CssProvider()
-		self._provider.load_from_data(b"""button {color: @warning_color;}""")  # orange icon
+		self._provider.load_from_data(b"""image {-gtk-icon-shadow: 0 0 3px red;}""")  # red glowing icon
 
 		# connect
 		for name in ("repeat", "random", "consume"):
@@ -3484,9 +3484,9 @@ class PlaybackOptions(Gtk.ButtonBox):
 		self._buttons["single"][0].handler_block(self._buttons["single"][1])
 		self._buttons["single"][0].set_active((val in ("1", "oneshot")))
 		if val == "oneshot":
-			self._buttons["single"][0].get_style_context().add_provider(self._provider, 600)
+			self._buttons["single"][0].get_image().get_style_context().add_provider(self._provider, 600)
 		else:
-			self._buttons["single"][0].get_style_context().remove_provider(self._provider)
+			self._buttons["single"][0].get_image().get_style_context().remove_provider(self._provider)
 		self._buttons["single"][0].handler_unblock(self._buttons["single"][1])
 
 	def _on_single_button_press_event(self, widget, event):
