@@ -3463,7 +3463,7 @@ class PlaybackOptions(Gtk.ButtonBox):
 
 		# css
 		self._provider=Gtk.CssProvider()
-		self._provider.load_from_data(b"""image {-gtk-icon-shadow: 0 0 3px red;}""")  # red glowing icon
+		self._provider.load_from_data(b"""image {color: @error_color;}""")  # red icon
 
 		# connect
 		for name in ("repeat", "random", "consume"):
