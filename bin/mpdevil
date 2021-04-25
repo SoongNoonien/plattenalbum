@@ -3376,6 +3376,9 @@ class OutputPopover(Gtk.Popover):
 			button.connect("clicked", self._on_button_clicked, output["outputid"])
 			box.pack_start(button, False, False, 0)
 
+		#connect
+		self.connect("closed", lambda *args: self.destroy())
+
 		# packing
 		self.add(box)
 		box.show_all()
@@ -3432,7 +3435,7 @@ class VolumeButton(Gtk.VolumeButton):
 		self.set_sensitive(False)
 		self._refresh(None, -1)
 		if self._popover is not None:
-			self._popover.destroy()
+			self._popover.popdown()
 			self._popover=None
 
 	def _on_icon_size_changed(self, *args):
