@@ -1776,13 +1776,12 @@ class ArtistPopover(Gtk.Popover):
 
 		# buttons
 		vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, border_width=9)
-		data=((_("Append"), _("Add all titles to playlist"), "list-add-symbolic", "append"),
-			(_("Play"), _("Directly play all titles"), "media-playback-start-symbolic", "play"),
-			(_("Enqueue"), _("Append all titles after the currently playing track and clear the playlist from all other songs"),
-			"insert-object-symbolic", "enqueue")
+		data=((_("Append"), "list-add-symbolic", "append"),
+			(_("Play"), "media-playback-start-symbolic", "play"),
+			(_("Enqueue"), "insert-object-symbolic", "enqueue")
 		)
-		for label, tooltip, icon, mode in data:
-			button=Gtk.ModelButton(label=label, tooltip_text=tooltip, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+		for label, icon, mode in data:
+			button=Gtk.ModelButton(label=label, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
 			button.get_child().set_property("xalign", 0)
 			button.connect("clicked", self._on_button_clicked, mode)
 			vbox.pack_start(button, True, True, 0)
