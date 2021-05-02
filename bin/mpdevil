@@ -2501,7 +2501,8 @@ class Browser(Gtk.Paned):
 		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window)
 
 		# connect
-		self.back_to_current_album_button.connect("clicked", self._back_to_current_album)
+		self.back_to_current_album_button.connect("clicked", self._on_back_to_current_album_button_clicked)
+		self.back_to_current_album_button.connect("button-press-event", self._on_back_to_current_album_button_press_event)
 		self.search_button.connect("toggled", self._on_search_toggled)
 		self._artist_window.connect("artists_changed", self._on_artists_changed)
 		self._settings.connect("notify::mini-player", self._on_mini_player)
@@ -2526,7 +2527,7 @@ class Browser(Gtk.Paned):
 		self.pack1(box1, False, False)
 		self.pack2(self._stack, True, False)
 
-	def _back_to_current_album(self, *args):
+	def _back_to_current_album(self, force=False):
 		song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
 		if song != {}:
 			self.search_button.set_active(False)
@@ -2535,15 +2536,22 @@ class Browser(Gtk.Paned):
 			if artist is None:
 				artist=song.get("artist", "")
 			# deactivate genre filter to show all artists (if needed)
-			if song.get("genre", "") != self._genre_select.get_selected_genre():
+			if song.get("genre", "") != self._genre_select.get_selected_genre() or force:
 				self._genre_select.deactivate()
 			# select artist
-			if self._artist_window.get_selected_artist() is None:  # all artists selected
+			if self._artist_window.get_selected_artist() is None and not force:  # all artists selected
 				self.search_button.set_active(False)
 				self._artist_window.highlight_selected()
 			else:  # one artist selected
 				self._artist_window.select(artist)
 			self._album_window.scroll_to_current_album()
+
+	def _on_back_to_current_album_button_clicked(self, *args):
+		self._back_to_current_album()
+
+	def _on_back_to_current_album_button_press_event(self, widget, event):
+		if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+			self._back_to_current_album(force=True)
 
 	def _on_search_toggled(self, widget):
 		if widget.get_active():
