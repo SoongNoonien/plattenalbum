@@ -23,7 +23,7 @@
     </ul>
   </description>
   <releases>
-    <release version="1.2.0" date="2021-04-21"/>
+    <release version="1.2.1" date="2021-05-04"/>
   </releases>
   <launchable type="desktop-id">org.mpdevil.mpdevil.desktop</launchable>
   <screenshots>
