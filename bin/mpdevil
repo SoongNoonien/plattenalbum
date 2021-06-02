@@ -38,6 +38,7 @@ else:
 
 VERSION="1.2.1"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
+FALLBACK_COVER=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
 
 
 #########
@@ -503,14 +504,24 @@ class ClientHelper():
 
 	def binary_to_pixbuf(binary, size):
 		loader=GdkPixbuf.PixbufLoader.new()
-		loader.write(binary)
-		loader.close()
-		raw_pixbuf=loader.get_pixbuf()
-		ratio=raw_pixbuf.get_width()/raw_pixbuf.get_height()
-		if ratio > 1:
-			pixbuf=raw_pixbuf.scale_simple(size,size/ratio,GdkPixbuf.InterpType.BILINEAR)
-		else:
-			pixbuf=raw_pixbuf.scale_simple(size*ratio,size,GdkPixbuf.InterpType.BILINEAR)
+		try:
+			loader.write(binary)
+			loader.close()
+			raw_pixbuf=loader.get_pixbuf()
+			ratio=raw_pixbuf.get_width()/raw_pixbuf.get_height()
+			if ratio > 1:
+				pixbuf=raw_pixbuf.scale_simple(size,size/ratio,GdkPixbuf.InterpType.BILINEAR)
+			else:
+				pixbuf=raw_pixbuf.scale_simple(size*ratio,size,GdkPixbuf.InterpType.BILINEAR)
+		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
+			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
+		return pixbuf
+
+	def file_to_pixbuf(file, size):
+		try:
+			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(file, size, size)
+		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
+			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 		return pixbuf
 
 class EventEmitter(GObject.Object):
@@ -544,7 +555,6 @@ class Client(MPDClient):
 		self._last_status={}
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
-		self.fallback_cover=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
 
 		# connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
@@ -730,14 +740,11 @@ class Client(MPDClient):
 		if cover_path is None:
 			cover_binary=self.get_cover_binary(song.get("file"))
 			if cover_binary is None:
-				pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(self.fallback_cover, size, size)
+				pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 			else:
 				pixbuf=ClientHelper.binary_to_pixbuf(cover_binary, size)
 		else:
-			try:
-				pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(cover_path, size, size)
-			except:  # load fallback if cover can't be loaded (GLib: Couldn’t recognize the image file format for file...)
-				pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(self.fallback_cover, size, size)
+			pixbuf=ClientHelper.file_to_pixbuf(cover_path, size)
 		return pixbuf
 
 	def get_metadata(self, uri):
@@ -2369,15 +2376,12 @@ class AlbumWindow(FocusFrame):
 					if self._stop_flag:
 						break
 					if "cover_path" in album:
-						try:
-							album["cover"]=GdkPixbuf.Pixbuf.new_from_file_at_size(album["cover_path"], size, size)
-						except:  # load fallback if cover can't be loaded
-							album["cover"]=GdkPixbuf.Pixbuf.new_from_file_at_size(self._client.fallback_cover, size, size)
+						album["cover"]=ClientHelper.file_to_pixbuf(album["cover_path"], size)
 					else:
 						if "cover_binary" in album:
 							album["cover"]=ClientHelper.binary_to_pixbuf(album["cover_binary"], size)
 						else:
-							album["cover"]=GdkPixbuf.Pixbuf.new_from_file_at_size(self._client.fallback_cover, size, size)
+							album["cover"]=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 					GLib.idle_add(self._progress_bar.set_fraction, (i+1)/total_albums)
 				if self._stop_flag:
 					GLib.idle_add(self._done_callback)
@@ -2800,7 +2804,7 @@ class MainCover(Gtk.Image):
 
 	def _on_disconnected(self, *args):
 		size=self._settings.get_int("track-cover")
-		self.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_size(self._client.fallback_cover, size, size))
+		self.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size))
 		self.set_sensitive(False)
 
 	def _on_reconnected(self, *args):
