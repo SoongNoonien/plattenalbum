@@ -446,6 +446,22 @@ class ClientHelper():
 			time_string=str(delta).lstrip("0").lstrip(":")
 		return time_string.replace(":", "∶")  # use 'ratio' as delimiter
 
+	def convert_audio_format(audio_format):
+		# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
+		samplerate, bits, channels=audio_format.split(":")
+		if bits == "f":
+			bits="32fp"
+		try:
+			int_chan=int(channels)
+		except:
+			int_chan=0
+		try:
+			freq=str(int(samplerate)/1000)
+		except:
+			freq=samplerate
+		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=channels)
+		return "{} kHz, {} bit, {}".format(freq, bits, channels)
+
 	def song_to_str_dict(song):  # converts tags with multiple values to comma separated strings
 		return_song={}
 		for tag, value in song.items():
@@ -539,7 +555,7 @@ class EventEmitter(GObject.Object):
 		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"single": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"audio": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
+		"audio": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
 		"add_to_playlist": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"show_info": (GObject.SignalFlags.RUN_FIRST, None, ())
@@ -824,14 +840,8 @@ class Client(MPDClient):
 					self.emitter.emit("bitrate", float(val))
 				elif key == "songid":
 					self.emitter.emit("current_song_changed")
-				elif key in ("state", "single"):
+				elif key in ("state", "single", "audio"):
 					self.emitter.emit(key, val)
-				elif key == "audio":
-					# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
-					samplerate, bits, channels=val.split(":")
-					if bits == "f":
-						bits="32fp"
-					self.emitter.emit("audio", samplerate, bits, channels)
 				elif key == "volume":
 					self.emitter.emit("volume_changed", float(val))
 				elif key == "playlist":
@@ -1544,13 +1554,16 @@ class SongPopover(Gtk.Popover):
 		self._scroll.set_max_content_height(window.get_size()[1]//2)
 		self._store.clear()
 		song=ClientHelper.song_to_str_dict(self._client.get_metadata(uri))
+		song.pop("time", None)
 		for tag, value in song.items():
 			tooltip=value.replace("&", "&amp;")
-			if tag == "time":
-				self._store.append([tag+":", ClientHelper.seconds_to_display_time(int(value)), tooltip])
+			if tag == "duration":
+				self._store.append([tag+":", ClientHelper.seconds_to_display_time(int(float(value))), tooltip])
 			elif tag == "last-modified":
 				time=datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
 				self._store.append([tag+":", time.strftime("%a %d %B %Y, %H∶%M UTC"), tooltip])
+			elif tag == "format":
+				self._store.append([tag+":", ClientHelper.convert_audio_format(value), tooltip])
 			else:
 				self._store.append([tag+":", value, tooltip])
 		abs_path=self._client.get_absolute_path(uri)
@@ -2697,7 +2710,7 @@ class AudioType(Gtk.Label):
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
-		self.freq, self.res, self.chan, self.brate, self.file_type=(0, 0, 0, 0, "")
+		self._format, self._brate, self._file_type=("::", 0.0, "")
 
 		# connect
 		self._client.emitter.connect("audio", self._on_audio)
@@ -2708,33 +2721,23 @@ class AudioType(Gtk.Label):
 
 	def clear(self, *args):
 		self.set_text("")
-		self.freq, self.res, self.chan, self.brate, self.file_type=(0, 0, 0, 0, "")
+		self._format, self._brate, self._file_type=("::", 0.0, "")
 
 	def _refresh(self, *args):
-		try:
-			int_chan=int(self.chan)
-		except:
-			int_chan=0
-		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=self.chan)
-		string="{} kb/s, {} kHz, {} bit, {}, {}".format(self.brate, self.freq, self.res, channels, self.file_type)
+		string="{} kb/s, {}, {}".format(self._brate, ClientHelper.convert_audio_format(self._format), self._file_type)
 		self.set_text(string)
 
-	def _on_audio(self, emitter, freq, res, chan):
-		try:
-			self.freq=str(int(freq)/1000)
-		except:
-			self.freq=freq
-		self.res=res
-		self.chan=chan
+	def _on_audio(self, emitter, audio_format):
+		self._format=audio_format
 		self._refresh()
 
 	def _on_bitrate(self, emitter, brate):
-		self.brate=brate
+		self._brate=brate
 		self._refresh()
 
 	def _on_song_changed(self, *args):
 		try:
-			self.file_type=self._client.currentsong()["file"].split(".")[-1].split("/")[0]
+			self._file_type=self._client.currentsong()["file"].split(".")[-1].split("/")[0]
 			self._refresh()
 		except:
 			pass
