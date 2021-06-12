@@ -826,6 +826,17 @@ class Client(MPDClient):
 		func=getattr(self, option)
 		func(new_state)
 
+	def conditional_previous(self):
+		if self._settings.get_boolean("rewind-mode"):
+			double_click_time=Gtk.Settings.get_default().get_property("gtk-double-click-time")
+			status=self.status()
+			if float(status.get("elapsed", 0))*1000 > double_click_time:
+				self.seekcur(0)
+			else:
+				self.previous()
+		else:
+			self.previous()
+
 	def _main_loop(self, *args):
 		try:
 			status=self.status()
@@ -974,6 +985,7 @@ class GeneralSettings(Gtk.Box):
 			(_("Play selected albums and titles immediately"), "force-mode"),
 			(_("Sort albums by year"), "sort-albums-by-year"),
 			(_("Support “MPRIS”"), "mpris"),
+			(_("Rewind via previous button"), "rewind-mode"),
 		]
 		for label, key in check_buttons_data:
 			check_buttons[key]=Gtk.CheckButton(label=label, margin_start=12)
@@ -1014,6 +1026,7 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(check_buttons["sort-albums-by-year"], False, False, 0)
 		self.pack_start(check_buttons["send-notify"], False, False, 0)
 		self.pack_start(check_buttons["force-mode"], False, False, 0)
+		self.pack_start(check_buttons["rewind-mode"], False, False, 0)
 		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
 
 class ProfileSettings(Gtk.Grid):
@@ -3567,7 +3580,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client.next()
 
 	def _on_prev(self, action, param):
-		self._client.previous()
+		self._client.conditional_previous()
 
 	def _on_seek_forward(self, action, param):
 		self._client.seekcur("+10")
