@@ -323,7 +323,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._client.next()
 
 	def Previous(self):
-		self._client.previous()
+		self._client.conditional_previous()
 
 	def Pause(self):
 		self._client.pause(1)
