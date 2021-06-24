@@ -1483,6 +1483,17 @@ class FocusFrame(Gtk.Overlay):
 		self._widget.connect("focus-in-event", lambda *args: self._frame.show())
 		self._widget.connect("focus-out-event", lambda *args: self._frame.hide())
 
+class ScrolledFocusFrame(FocusFrame):
+	def __init__(self, widget):
+		super().__init__()
+		self.set_widget(widget)
+
+		# scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.add(widget)
+
+		self.add(scroll)
+
 class SongPopover(Gtk.Popover):
 	def __init__(self, client, show_buttons=True):
 		super().__init__()
@@ -2019,149 +2030,154 @@ class SearchWindow(Gtk.Box):
 		else:
 			app.set_accels_for_action("mpd.toggle-play", ["space"])
 
-class GenreSelect(Gtk.ComboBoxText):
-	__gsignals__={"genre_changed": (GObject.SignalFlags.RUN_FIRST, None, ())}
+class SelectionList(Gtk.TreeView):
+	__gsignals__={"item-selected": (GObject.SignalFlags.RUN_FIRST, None, ()), "clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	def __init__(self, select_all_string):
+		super().__init__(activate_on_single_click=True, search_column=0, headers_visible=False, fixed_height_mode=True)
+		self.select_all_string=select_all_string
+		self._selected_path=None
+
+		# store
+		# (item, weight, initial-letter, weight-initials)
+		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
+		self._store.append([self.select_all_string, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+		self.set_model(self._store)
+		self._selection=self.get_selection()
+
+		# columns
+		renderer_text_malign=Gtk.CellRendererText(xalign=0.5)
+		self._column_initial=Gtk.TreeViewColumn("", renderer_text_malign, text=2, weight=3)
+		self._column_initial.set_property("sizing", Gtk.TreeViewColumnSizing.FIXED)
+		self._column_initial.set_property("min-width", 30)
+		self.append_column(self._column_initial)
+		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
+		self._column_item=Gtk.TreeViewColumn("", renderer_text, text=0, weight=1)
+		self._column_item.set_property("sizing", Gtk.TreeViewColumnSizing.FIXED)
+		self._column_item.set_property("expand", True)
+		self.append_column(self._column_item)
+
+		# connect
+		self.connect("row-activated", self._on_row_activated)
+
+	def clear(self):
+		self._store.clear()
+		self._store.append([self.select_all_string, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+		self._selected_path=None
+		self.emit("clear")
+
+	def set_items(self, items):
+		self.clear()
+		current_char=""
+		for item in items:
+			try:
+				if current_char == item[0]:
+					self._store.append([item, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+				else:
+					self._store.append([item, Pango.Weight.BOOK, item[0], Pango.Weight.BOLD])
+					current_char=item[0]
+			except:
+				self._store.append([item, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+
+	def get_item(self, path):
+		if path == Gtk.TreePath(0):
+			return None
+		else:
+			return self._store[path][0]
+
+	def length(self):
+		return len(self._store)-1
+
+	def select_path(self, path):
+		self.set_cursor(path, None, False)
+		self.row_activated(path, self._column_item)
+
+	def select(self, item):
+		row_num=len(self._store)
+		for i in range(0, row_num):
+			path=Gtk.TreePath(i)
+			if self._store[path][0] == item:
+				self.select_path(path)
+				break
+
+	def select_all(self):
+		self.set_cursor(Gtk.TreePath(0), None, False)
+		self.row_activated(Gtk.TreePath(0), self._column_item)
+
+	def get_selected(self):
+		if self._selected_path is None:
+			raise ValueError("None selected")
+		elif self._selected_path == Gtk.TreePath(0):
+			return None
+		else:
+			return self._store[self._selected_path][0]
+
+	def highlight_selected(self):
+		self.set_cursor(self._selected_path, None, False)
+
+	def _on_row_activated(self, widget, path, view_column):
+		if path != self._selected_path:
+			if self._selected_path is not None:
+				self._store[self._selected_path][1]=Pango.Weight.BOOK
+			self._store[path][1]=Pango.Weight.BOLD
+			self._selected_path=path
+			self.emit("item-selected")
+
+class GenreSelect(SelectionList):
 	def __init__(self, client):
-		super().__init__(wrap_width=3)
+		super().__init__(_("all genres"))
 		self._client=client
 
 		# connect
-		self._changed=self.connect("changed", self._on_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("update", self._refresh)
 
 	def deactivate(self):
-		self.set_active(0)
-
-	def _clear(self, *args):
-		self.handler_block(self._changed)
-		self.remove_all()
-		self.handler_unblock(self._changed)
-
-	def get_selected_genre(self):
-		if self.get_active() == 0:
-			return None
-		else:
-			return self.get_active_text()
+		self.select_all()
 
 	def _refresh(self, *args):
-		self.handler_block(self._changed)
-		self.remove_all()
-		self.append_text(_("all genres"))
-		for genre in self._client.comp_list("genre"):
-			self.append_text(genre)
-		self.set_active(0)
-		self.handler_unblock(self._changed)
-
-	def _on_changed(self, *args):
-		self.emit("genre_changed")
+		self.set_items(self._client.comp_list("genre"))
+		self.select_all()
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
-		self._clear()
+		self.clear()
 
 	def _on_reconnected(self, *args):
 		self._refresh()
 		self.set_sensitive(True)
 
-class ArtistWindow(FocusFrame):
-	__gsignals__={"artists_changed": (GObject.SignalFlags.RUN_FIRST, None, ()), "clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
+class ArtistWindow(SelectionList):
 	def __init__(self, client, settings, genre_select):
-		super().__init__()
+		super().__init__(_("all artists"))
 		self._client=client
 		self._settings=settings
 		self.genre_select=genre_select
 
-		# treeview
-		# (name, weight, initial-letter, weight-initials)
-		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
-		self._treeview=Gtk.TreeView(model=self._store, activate_on_single_click=True, search_column=0, headers_visible=False)
-		self._treeview.columns_autosize()
-		self._selection=self._treeview.get_selection()
-
-		# columns
-		renderer_text_malign=Gtk.CellRendererText(xalign=0.5)
-		self._column_initials=Gtk.TreeViewColumn("", renderer_text_malign, text=2, weight=3)
-		self._column_initials.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self._column_initials.set_property("resizable", False)
-		self._treeview.append_column(self._column_initials)
-		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		self._column_name=Gtk.TreeViewColumn("", renderer_text, text=0, weight=1)
-		self._column_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-		self._column_name.set_property("resizable", False)
-		self._treeview.append_column(self._column_name)
-
-		# scroll
-		scroll=Gtk.ScrolledWindow()
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self._treeview)
+		# selection
+		self._selection=self.get_selection()
 
 		# artist popover
 		self._artist_popover=ArtistPopover(self._client)
 
 		# connect
-		self._treeview.connect("button-press-event", self._on_button_press_event)
-		self._treeview.connect("row-activated", self._on_row_activated)
+		self.connect("button-press-event", self._on_button_press_event)
 		self._settings.connect("changed::use-album-artist", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
-		self._client.emitter.connect("update", self._refresh)
 		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 		self._client.emitter.connect("show-info", self._on_show_info)
-		self.genre_select.connect("genre_changed", self._refresh)
-
-		self.set_widget(self._treeview)
-		self.add(scroll)
-
-	def _clear(self, *args):
-		self._store.clear()
-		self.emit("clear")
-
-	def select(self, artist):
-		row_num=len(self._store)
-		for i in range(0, row_num):
-			path=Gtk.TreePath(i)
-			if self._store[path][0] == artist:
-				self._treeview.set_cursor(path, None, False)
-				self._treeview.row_activated(path, self._column_name)
-				break
-
-	def get_selected_artist(self):
-		if self._store[Gtk.TreePath(0)][1] == Pango.Weight.BOLD:
-			return None
-		else:
-			for row in self._store:
-				if row[1] == Pango.Weight.BOLD:
-					return row[0]
-
-	def highlight_selected(self):
-		for path, row in enumerate(self._store):
-			if row[1] == Pango.Weight.BOLD:
-				self._treeview.set_cursor(path, None, False)
-				break
+		self.genre_select.connect_after("item-selected", self._refresh)
 
 	def _refresh(self, *args):
-		self._clear()
-		self._store.append([_("all artists"), Pango.Weight.BOOK, "", Pango.Weight.BOOK])
-		genre=self.genre_select.get_selected_genre()
+		genre=self.genre_select.get_selected()
 		if genre is None:
 			artists=self._client.comp_list(self._settings.get_artist_type())
 		else:
 			artists=self._client.comp_list(self._settings.get_artist_type(), "genre", genre)
-		current_char=""
-		for artist in artists:
-			try:
-				if current_char == artist[0]:
-					self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
-				else:
-					self._store.append([artist, Pango.Weight.BOOK, artist[0], Pango.Weight.BOLD])
-					current_char=artist[0]
-			except:
-				self._store.append([artist, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+		self.set_items(artists)
 		if genre is not None:
-			self._treeview.set_cursor(Gtk.TreePath(0), None, False)
-			self._treeview.row_activated(Gtk.TreePath(0), self._column_name)
+			self.select_all()
 		else:
 			song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
 			if song != {}:
@@ -2170,12 +2186,10 @@ class ArtistWindow(FocusFrame):
 					artist=song.get("artist", "")
 				self.select(artist)
 			else:
-				if len(self._store) > 1:
-					path=Gtk.TreePath(1)
+				if self.length() > 0:
+					self.select_path(Gtk.TreePath(1))
 				else:
-					path=Gtk.TreePath(0)
-				self._treeview.set_cursor(path, None, False)
-				self._treeview.row_activated(path, self._column_name)
+					self.select_path(Gtk.TreePath(0))
 
 	def _on_button_press_event(self, widget, event):
 		if ((event.button in (2,3) and event.type == Gdk.EventType.BUTTON_PRESS)
@@ -2183,56 +2197,40 @@ class ArtistWindow(FocusFrame):
 			path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 			if path_re is not None:
 				path=path_re[0]
-				genre=self.genre_select.get_selected_genre()
-				if path == Gtk.TreePath(0):
-					artist=None
-				else:
-					artist=self._store[path][0]
+				genre=self.genre_select.get_selected()
+				artist=self.get_item(path)
 				if event.button == 1:
 					self._client.artist_to_playlist(artist, genre, "play")
 				elif event.button == 2:
 					self._client.artist_to_playlist(artist, genre, "append")
 				elif event.button == 3:
-					self._artist_popover.open(artist, genre, self._treeview, event.x, event.y)
-
-	def _on_row_activated(self, widget, path, view_column):
-		if self._store[path][1] == Pango.Weight.BOOK:
-			for row in self._store:  # reset bold text
-				row[1]=Pango.Weight.BOOK
-			self._store[path][1]=Pango.Weight.BOLD
-			self.emit("artists_changed")
+					self._artist_popover.open(artist, genre, self, event.x, event.y)
 
 	def _on_add_to_playlist(self, emitter, mode):
-		if self._treeview.has_focus():
-			treeview, treeiter=self._selection.get_selected()
-			if treeiter is not None:
-				path=self._store.get_path(treeiter)
-				genre=self.genre_select.get_selected_genre()
-				if path == Gtk.TreePath(0):
-					self._client.artist_to_playlist(None, genre, mode)
-				else:
-					artist=self._store[path][0]
-					self._client.artist_to_playlist(artist, genre, mode)
+		if self.has_focus():
+			selected_rows=self._selection.get_selected_rows()
+			if selected_rows is not None:
+				path=selected_rows[1][0]
+				genre=self.genre_select.get_selected()
+				artist=self.get_item(path)
+				self._client.artist_to_playlist(artist, genre, mode)
 
 	def _on_show_info(self, *args):
-		if self._treeview.has_focus():
-			treeview, treeiter=self._selection.get_selected()
-			if treeiter is not None:
-				path=self._store.get_path(treeiter)
-				cell=self._treeview.get_cell_area(path, None)
-				genre=self.genre_select.get_selected_genre()
-				if path == Gtk.TreePath(0):
-					self._artist_popover.open(None, genre, self._treeview, cell.x, cell.y)
-				else:
-					self._artist_popover.open(self._store[path][0], genre, self._treeview, cell.x, cell.y)
+		if self.has_focus():
+			selected_rows=self._selection.get_selected_rows()
+			if selected_rows is not None:
+				path=selected_rows[1][0]
+				genre=self.genre_select.get_selected()
+				artist=self.get_item(path)
+				cell=self.get_cell_area(path, None)
+				self._artist_popover.open(artist, genre, self, cell.x, cell.y)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
 		self._artist_popover.popdown()
-		self._clear()
+		self.clear()
 
 	def _on_reconnected(self, *args):
-		self._refresh()
 		self.set_sensitive(True)
 
 class AlbumWindow(FocusFrame):
@@ -2277,7 +2275,7 @@ class AlbumWindow(FocusFrame):
 		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
-		self._artist_window.connect("artists_changed", self._refresh)
+		self._artist_window.connect("item-selected", self._refresh)
 		self._artist_window.connect("clear", self._clear)
 
 		# packing
@@ -2333,8 +2331,8 @@ class AlbumWindow(FocusFrame):
 			self._store.clear()
 			self._iconview.set_model(None)
 			try:  # self._artist_window can still be empty (e.g. when client is not connected and cover size gets changed)
-				artist=self._artist_window.get_selected_artist()
-				genre=self._artist_window.genre_select.get_selected_genre()
+				artist=self._artist_window.get_selected()
+				genre=self._artist_window.genre_select.get_selected()
 			except:
 				self._done_callback()
 				return
@@ -2424,7 +2422,7 @@ class AlbumWindow(FocusFrame):
 		album=self._store[path][4]
 		year=self._store[path][5]
 		artist=self._store[path][6]
-		genre=self._artist_window.genre_select.get_selected_genre()
+		genre=self._artist_window.genre_select.get_selected()
 		self._client.album_to_playlist(album, artist, year, genre, mode)
 
 	def _done_callback(self, *args):
@@ -2453,7 +2451,7 @@ class AlbumWindow(FocusFrame):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			v=self._scroll_vadj.get_value()
 			h=self._scroll_hadj.get_value()
-			genre=self._artist_window.genre_select.get_selected_genre()
+			genre=self._artist_window.genre_select.get_selected()
 			if path is not None:
 				album=self._store[path][4]
 				year=self._store[path][5]
@@ -2461,7 +2459,7 @@ class AlbumWindow(FocusFrame):
 				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
 				GLib.idle_add(self._album_popover.open, album, artist, year, genre, widget, event.x-h, event.y-v)
 			else:
-				artist=self._artist_window.get_selected_artist()
+				artist=self._artist_window.get_selected()
 				GLib.idle_add(self._artist_popover.open, artist, genre, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
@@ -2469,7 +2467,7 @@ class AlbumWindow(FocusFrame):
 		album=self._store.get_value(treeiter, 4)
 		year=self._store.get_value(treeiter, 5)
 		artist=self._store.get_value(treeiter, 6)
-		genre=self._artist_window.genre_select.get_selected_genre()
+		genre=self._artist_window.genre_select.get_selected()
 		self._client.album_to_playlist(album, artist, year, genre)
 
 	def _on_disconnected(self, *args):
@@ -2487,7 +2485,7 @@ class AlbumWindow(FocusFrame):
 				rect=self._iconview.get_cell_rect(paths[0], None)[1]
 				x=rect.x+rect.width//2
 				y=rect.y+rect.height//2
-				genre=self._artist_window.genre_select.get_selected_genre()
+				genre=self._artist_window.genre_select.get_selected()
 				self._album_popover.open(
 					self._store[paths[0]][4], self._store[paths[0]][6], self._store[paths[0]][5], genre, self._iconview, x, y
 				)
@@ -2520,56 +2518,63 @@ class Browser(Gtk.Paned):
 		else:
 			for data in icons_data:
 				icons[data]=AutoSizedIcon(data, "icon-size-sec", self._settings)
-
 		self.back_to_current_album_button=Gtk.Button(image=icons["go-previous-symbolic"], tooltip_text=_("Back to current album"))
 		self.back_to_current_album_button.set_can_focus(False)
 		self.search_button=Gtk.ToggleButton(image=icons["system-search-symbolic"], tooltip_text=_("Search"))
 		self.search_button.set_can_focus(False)
+		label=Gtk.Label(ellipsize=Pango.EllipsizeMode.MIDDLE)
+		self._genres_button=Gtk.ToggleButton(image=label, tooltip_text=_("Filter by genre"))
 		self._genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self._genre_select)
 		self._search_window=SearchWindow(self._client)
 		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window)
 
+		# stacks
+		self._artists_genres_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.OVER_RIGHT_LEFT)
+		self._artists_genres_stack.add_named(ScrolledFocusFrame(self._artist_window), "artists")
+		self._artists_genres_stack.add_named(ScrolledFocusFrame(self._genre_select), "genres")
+		self._albums_search_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._albums_search_stack.add_named(self._album_window, "albums")
+		self._albums_search_stack.add_named(self._search_window, "search")
+
 		# connect
 		self.back_to_current_album_button.connect("clicked", self._on_back_to_current_album_button_clicked)
 		self.back_to_current_album_button.connect("button-press-event", self._on_back_to_current_album_button_press_event)
 		self.search_button.connect("toggled", self._on_search_toggled)
-		self._artist_window.connect("artists_changed", self._on_artists_changed)
+		self._genres_button.connect("toggled", self._on_genres_toggled)
+		self._genre_select.connect("item-selected", self._on_genre_chnaged)
+		self._artist_window.connect("item-selected", self._on_artists_changed)
 		self._settings.connect("notify::mini-player", self._on_mini_player)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 		# packing
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-		self._stack.add_named(self._album_window, "albums")
-		self._stack.add_named(self._search_window, "search")
 		hbox=Gtk.Box(spacing=6, border_width=6)
-		if self._use_csd:
-			hbox.pack_start(self._genre_select, True, True, 0)
-		else:
+		if not self._use_csd:
 			hbox.pack_start(self.back_to_current_album_button, False, False, 0)
-			hbox.pack_start(self._genre_select, True, True, 0)
-			hbox.pack_start(self.search_button, False, False, 0)
-		box1=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		box1.pack_start(hbox, False, False, 0)
-		box1.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		box1.pack_start(self._artist_window, True, True, 0)
-		self.pack1(box1, False, False)
-		self.pack2(self._stack, True, False)
+			hbox.pack_end(self.search_button, False, False, 0)
+		hbox.pack_start(self._genres_button, True, True, 0)
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		vbox.pack_start(hbox, False, False, 0)
+		vbox.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		vbox.pack_start(self._artists_genres_stack, True, True, 0)
+		self.pack1(vbox, False, False)
+		self.pack2(self._albums_search_stack, True, False)
 
 	def _back_to_current_album(self, force=False):
 		song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
 		if song != {}:
 			self.search_button.set_active(False)
+			self._genres_button.set_active(False)
 			# get artist name
 			artist=song.get(self._settings.get_artist_type())
 			if artist is None:
 				artist=song.get("artist", "")
 			# deactivate genre filter to show all artists (if needed)
-			if song.get("genre", "") != self._genre_select.get_selected_genre() or force:
+			if song.get("genre", "") != self._genre_select.get_selected() or force:
 				self._genre_select.deactivate()
 			# select artist
-			if self._artist_window.get_selected_artist() is None and not force:  # all artists selected
+			if self._artist_window.get_selected() is None and not force:  # all artists selected
 				self.search_button.set_active(False)
 				self._artist_window.highlight_selected()
 			else:  # one artist selected
@@ -2583,21 +2588,38 @@ class Browser(Gtk.Paned):
 		if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
 			self._back_to_current_album(force=True)
 
+	def _on_genres_toggled(self, widget):
+		if widget.get_active():
+			self._artists_genres_stack.set_visible_child_name("genres")
+		else:
+			self._artists_genres_stack.set_visible_child_name("artists")
+
 	def _on_search_toggled(self, widget):
 		if widget.get_active():
-			self._stack.set_visible_child_name("search")
+			self._albums_search_stack.set_visible_child_name("search")
 			self._search_window.search_entry.grab_focus()
 		else:
-			self._stack.set_visible_child_name("albums")
+			self._albums_search_stack.set_visible_child_name("albums")
 
 	def _on_reconnected(self, *args):
 		self.back_to_current_album_button.set_sensitive(True)
 		self.search_button.set_sensitive(True)
+		self._genres_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
 		self.back_to_current_album_button.set_sensitive(False)
 		self.search_button.set_active(False)
 		self.search_button.set_sensitive(False)
+		self._genres_button.set_active(False)
+		self._genres_button.set_sensitive(False)
+
+	def _on_genre_chnaged(self, *args):
+		genre=self._genre_select.get_selected()
+		if genre is None:
+			self._genres_button.get_image().set_text(self._genre_select.select_all_string)
+		else:
+			self._genres_button.get_image().set_text(genre)
+		self._genres_button.set_active(False)
 
 	def _on_artists_changed(self, *args):
 		self.search_button.set_active(False)
