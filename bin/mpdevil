@@ -1397,19 +1397,8 @@ class AboutDialog(Gtk.AboutDialog):
 
 class AutoSizedIcon(Gtk.Image):
 	def __init__(self, icon_name, settings_key, settings):
-		super().__init__()
-		self.set_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
-		pixel_size=settings.get_int(settings_key)
-		if pixel_size > 0:
-			self.set_pixel_size(pixel_size)
-		self._settings=settings
-		self._settings_key=settings_key
-
-		# connect
-		self._settings.connect("changed::"+self._settings_key, self._on_icon_size_changed)
-
-	def _on_icon_size_changed(self, *args):
-		self.set_pixel_size(self._settings.get_int(self._settings_key))
+		super().__init__(icon_name=icon_name)
+		settings.bind(settings_key, self, "pixel-size", Gio.SettingsBindFlags.GET)
 
 class PasswordEntry(Gtk.Entry):
 	def __init__(self, **kwargs):
@@ -3444,12 +3433,12 @@ class VolumeButton(Gtk.VolumeButton):
 	def __init__(self, client, settings):
 		super().__init__(use_symbolic=True, size=settings.get_gtk_icon_size("icon-size"), can_focus=False)
 		self._client=client
-		self._settings=settings
 		self._popover=None
 		self._adj=self.get_adjustment()
 		self._adj.set_step_increment(0.05)
 		self._adj.set_page_increment(0.1)
 		self._adj.set_upper(0)  # do not allow volume change by user when MPD has not yet reported volume (no output enabled/avail)
+		settings.bind("icon-size", self.get_child(), "pixel-size", Gio.SettingsBindFlags.GET)
 
 		# connect
 		self._changed=self.connect("value-changed", self._set_volume)
@@ -3457,7 +3446,6 @@ class VolumeButton(Gtk.VolumeButton):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self.connect("button-press-event", self._on_button_press_event)
-		self._settings.connect("changed::icon-size", self._on_icon_size_changed)
 
 	def _set_volume(self, widget, value):
 		self._client.setvol(str(int(value*100)))
@@ -3486,9 +3474,6 @@ class VolumeButton(Gtk.VolumeButton):
 		if self._popover is not None:
 			self._popover.popdown()
 			self._popover=None
-
-	def _on_icon_size_changed(self, *args):
-		self.set_property("size", self._settings.get_gtk_icon_size("icon-size"))
 
 class PlaybackOptions(Gtk.ButtonBox):
 	def __init__(self, client, settings):
