@@ -513,9 +513,7 @@ class ClientHelper():
 		return base_song
 
 	def calc_display_length(songs):
-		length=float(0)
-		for song in songs:
-			length=length+float(song.get("duration", 0.0))
+		length=sum([float(song.get("duration", 0.0)) for song in songs])
 		return ClientHelper.seconds_to_display_time(int(length))
 
 	def binary_to_pixbuf(binary, size):
@@ -2848,6 +2846,7 @@ class PlaylistWindow(Gtk.Box):
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
+		self._selected_path=None  # currently marked song (bold text)
 		self._icon_size=self._settings.get_int("icon-size-sec")
 		self._inserted_path=None  # needed for drag and drop
 
@@ -2876,8 +2875,8 @@ class PlaylistWindow(Gtk.Box):
 		style_context.add_provider(provider, 600)
 
 		# treeview
-		# (track, disc, title, artist, album, duration, date, genre, file, weight)
-		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight)
+		# (track, disc, title, artist, album, human duration, date, genre, file, weight, duration)
+		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight, float)
 		self._treeview=Gtk.TreeView(model=self._store,activate_on_single_click=True,reorderable=True,search_column=2,fixed_height_mode=True)
 		self._selection=self._treeview.get_selection()
 
@@ -2974,20 +2973,28 @@ class PlaylistWindow(Gtk.Box):
 	def _clear(self, *args):
 		self._playlist_info.set_text("")
 		self._playlist_version=None
+		self._selected_path=None
 		self._store.handler_block(self._row_inserted)
 		self._store.handler_block(self._row_deleted)
 		self._store.clear()
 		self._store.handler_unblock(self._row_inserted)
 		self._store.handler_unblock(self._row_deleted)
 
-	def _refresh_playlist_info(self):
-		songs=self._client.playlistinfo()
-		if songs == []:
-			self._playlist_info.set_text("")
-		else:
-			length_human_readable=ClientHelper.calc_display_length(songs)
-			titles=ngettext("{titles} title", "{titles} titles", len(songs)).format(titles=len(songs))
-			self._playlist_info.set_text(" ".join((titles, "({length})".format(length=length_human_readable))))
+	def _select(self, path):
+		self._unselect()
+		try:
+			self._store[path][9]=Pango.Weight.BOLD
+			self._selected_path=path
+		except IndexError:  # invalid path
+			pass
+
+	def _unselect(self):
+		if self._selected_path is not None:
+			try:
+				self._store[self._selected_path][9]=Pango.Weight.BOOK
+				self._selected_path=None
+			except IndexError:  # invalid path
+				self._selected_path=None
 
 	def _scroll_to_selected_title(self, *args):
 		treeview, treeiter=self._selection.get_selected()
@@ -2997,15 +3004,14 @@ class PlaylistWindow(Gtk.Box):
 
 	def _refresh_selection(self):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
 		self._treeview.set_cursor(Gtk.TreePath(len(self._store)), None, False)
-		for row in self._store:  # reset bold text
-			row[9]=Pango.Weight.BOOK
-		try:
-			song=self._client.status()["song"]
+		song=self._client.status().get("song")
+		if song is None:
+			self._selection.unselect_all()
+			self._unselect()
+		else:
 			path=Gtk.TreePath(int(song))
 			self._selection.select_path(path)
-			self._store[path][9]=Pango.Weight.BOLD
-		except:
-			self._selection.unselect_all()
+			self._select(path)
 
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -3052,12 +3058,14 @@ class PlaylistWindow(Gtk.Box):
 	def _on_playlist_changed(self, emitter, version):
 		self._store.handler_block(self._row_inserted)
 		self._store.handler_block(self._row_deleted)
+		self._unselect()
 		songs=[]
 		if self._playlist_version is not None:
 			songs=self._client.plchanges(self._playlist_version)
 		else:
 			songs=self._client.playlistinfo()
 		if songs != []:
+			self._treeview.freeze_child_notify()
 			self._playlist_info.set_text("")
 			for s in songs:
 				song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
@@ -3073,7 +3081,8 @@ class PlaylistWindow(Gtk.Box):
 						6, song["date"],
 						7, song["genre"],
 						8, song["file"],
-						9, Pango.Weight.BOOK
+						9, Pango.Weight.BOOK,
+						10, float(song["duration"])
 					)
 				except:
 					self._store.append([
@@ -3081,14 +3090,22 @@ class PlaylistWindow(Gtk.Box):
 						song["title"], song["artist"],
 						song["album"], song["human_duration"],
 						song["date"], song["genre"],
-						song["file"], Pango.Weight.BOOK
+						song["file"], Pango.Weight.BOOK,
+						float(song["duration"])
 					])
+			self._treeview.thaw_child_notify()
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
-		self._refresh_playlist_info()
-		if self._playlist_version is None or songs != []:
-			self._refresh_selection()
+		playlist_length=len(self._store)
+		if playlist_length == 0:
+			self._playlist_info.set_text("")
+		else:
+			length_human_readable=ClientHelper.seconds_to_display_time(int(sum([row[10] for row in self._store])))
+			titles=ngettext("{titles} title", "{titles} titles", playlist_length).format(titles=playlist_length)
+			self._playlist_info.set_text(" ".join((titles, "({length})".format(length=length_human_readable))))
+		self._refresh_selection()
+		if self._playlist_version != version:
 			self._scroll_to_selected_title()
 		self._playlist_version=version
 		self._store.handler_unblock(self._row_inserted)
@@ -3101,10 +3118,8 @@ class PlaylistWindow(Gtk.Box):
 
 	def _on_back_to_current_song_button_clicked(self, *args):
 		self._treeview.set_cursor(Gtk.TreePath(len(self._store)), None, False)  # set to invalid TreePath (needed to unset cursor)
-		for path, row in enumerate(self._store):
-			if row[9] == Pango.Weight.BOLD:
-				self._selection.select_path(path)
-				break
+		if self._selected_path is not None:
+			self._selection.select_path(self._selected_path)
 		self._scroll_to_selected_title()
 
 	def _on_disconnected(self, *args):
@@ -3250,18 +3265,19 @@ class PlaybackControl(Gtk.ButtonBox):
 		self.pack_start(self._next_button, True, True, 0)
 
 	def _refresh_tooltips(self, *args):
-		try:
-			songs=self._client.playlistinfo()
-			song=int(self._client.status()["song"])
-			elapsed=ClientHelper.calc_display_length(songs[:song])
-			rest=ClientHelper.calc_display_length(songs[song+1:])
-			elapsed_titles=ngettext("{titles} title", "{titles} titles", song).format(titles=song)
-			rest_titles=ngettext("{titles} title", "{titles} titles", (len(songs)-(song+1))).format(titles=(len(songs)-(song+1)))
-			self._prev_button.set_tooltip_text(" ".join((elapsed_titles, "({length})".format(length=elapsed))))
-			self._next_button.set_tooltip_text(" ".join((rest_titles, "({length})".format(length=rest))))
-		except:
+		status=self._client.status()
+		song=status.get("song")
+		length=status.get("playlistlength")
+		if song is None or length is None:
 			self._prev_button.set_tooltip_text("")
 			self._next_button.set_tooltip_text("")
+		else:
+			elapsed=int(song)
+			rest=int(length)-elapsed-1
+			elapsed_titles=ngettext("{titles} title", "{titles} titles", elapsed).format(titles=elapsed)
+			rest_titles=ngettext("{titles} title", "{titles} titles", rest).format(titles=rest)
+			self._prev_button.set_tooltip_text(elapsed_titles)
+			self._next_button.set_tooltip_text(rest_titles)
 
 	def _on_state(self, emitter, state):
 		if state == "play":
