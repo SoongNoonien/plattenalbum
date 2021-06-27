@@ -4035,7 +4035,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
 class mpdevil(Gtk.Application):
 	def __init__(self, *args, **kwargs):
-		super().__init__(*args, application_id="org.mpdevil.mpdevil", flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
+		super().__init__(*args, application_id="org.mpdevil.mpdevil", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE, **kwargs)
+		self.add_main_option("debug",ord("d"),GLib.OptionFlags.NONE,GLib.OptionArg.NONE,_("Debug mode"),None)
 		self._settings=Settings()
 		self._client=Client(self._settings)
 		self._window=None
@@ -4043,7 +4044,7 @@ class mpdevil(Gtk.Application):
 	def do_activate(self):
 		if not self._window:  # allow just one instance
 			self._window=MainWindow(self, self._client, self._settings)
-			self._window.connect("delete-event", self._on_delete_event)
+			self._window.connect("delete-event", self._on_quit)
 			self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 			# accelerators
 			action_accels=(
@@ -4066,26 +4067,28 @@ class mpdevil(Gtk.Application):
 
 	def do_startup(self):
 		Gtk.Application.do_startup(self)
-
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
 		self.add_action(action)
-
 		action=Gio.SimpleAction.new("quit", None)
 		action.connect("activate", self._on_quit)
 		self.add_action(action)
 
-	def _on_delete_event(self, *args):
-		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
-			self._client.stop()
-		self.quit()
+	def do_command_line(self, command_line):
+		# convert GVariantDict -> GVariant -> dict
+		options=command_line.get_options_dict().end().unpack()
+		if "debug" in options:
+			import logging
+			logging.basicConfig(level=logging.DEBUG)
+		self.activate()
+		return 0
 
-	def _on_about(self, action, param):
+	def _on_about(self, *args):
 		dialog=AboutDialog(self._window)
 		dialog.run()
 		dialog.destroy()
 
-	def _on_quit(self, action, param):
+	def _on_quit(self, *args):
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
 			self._client.stop()
 		self.quit()
