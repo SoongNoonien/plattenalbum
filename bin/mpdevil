@@ -3579,10 +3579,9 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client=client
 
 		# actions
-		self._simple_actions_data=(
-			"toggle-play","stop","next","prev","seek-forward","seek-backward","clear","update",
-			"repeat","random","single","consume"
-		)
+		self._simple_actions_disable_on_stop_data=("next","prev","seek-forward","seek-backward")
+		self._simple_actions_enable_on_reconnect_data=("toggle-play","stop","clear","update","repeat","random","single","consume")
+		self._simple_actions_data=self._simple_actions_disable_on_stop_data+self._simple_actions_enable_on_reconnect_data
 		for name in self._simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -3631,7 +3630,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 
 	def _on_state(self, emitter, state):
 		state_dict={"play": True, "pause": True, "stop": False}
-		for action in ("next","prev","seek-forward","seek-backward"):
+		for action in self._simple_actions_disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state_dict[state])
 
 	def _on_disconnected(self, *args):
@@ -3639,7 +3638,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 			self.lookup_action(action).set_enabled(False)
 
 	def _on_reconnected(self, *args):
-		for action in self._simple_actions_data:
+		for action in self._simple_actions_enable_on_reconnect_data:
 			self.lookup_action(action).set_enabled(True)
 
 ####################
