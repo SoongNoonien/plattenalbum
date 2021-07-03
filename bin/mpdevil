@@ -29,6 +29,8 @@ import datetime
 import os
 import sys
 import re
+import locale
+locale.setlocale(locale.LC_ALL, "")
 from gettext import gettext as _, ngettext, textdomain, bindtextdomain
 textdomain("mpdevil")
 if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
@@ -2055,15 +2057,14 @@ class SelectionList(Gtk.TreeView):
 	def set_items(self, items):
 		self.clear()
 		current_char=""
+		items.sort(key=locale.strxfrm)
+		items.sort(key=lambda item: locale.strxfrm(item[:1]))
 		for item in items:
-			try:
-				if current_char == item[0]:
-					self._store.append([item, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
-				else:
-					self._store.append([item, Pango.Weight.BOOK, item[0], Pango.Weight.BOLD])
-					current_char=item[0]
-			except:
+			if current_char == item[:1].upper():
 				self._store.append([item, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+			else:
+				self._store.append([item, Pango.Weight.BOOK, item[:1].upper(), Pango.Weight.BOLD])
+				current_char=item[:1].upper()
 
 	def get_item(self, path):
 		if path == Gtk.TreePath(0):
