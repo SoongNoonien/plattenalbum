@@ -30,7 +30,10 @@ import os
 import sys
 import re
 import locale
-locale.setlocale(locale.LC_ALL, "")
+try:
+	locale.setlocale(locale.LC_ALL, "")
+except locale.Error as e:
+	print(e)
 from gettext import gettext as _, ngettext, textdomain, bindtextdomain
 textdomain("mpdevil")
 if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
@@ -458,11 +461,11 @@ class ClientHelper():
 		except:
 			int_chan=0
 		try:
-			freq=str(int(samplerate)/1000)
+			freq=locale.str(int(samplerate)/1000)
 		except:
 			freq=samplerate
 		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=channels)
-		return "{} kHz, {} bit, {}".format(freq, bits, channels)
+		return "{} kHz • {} bit • {}".format(freq, bits, channels)
 
 	def song_to_str_dict(song):  # converts tags with multiple values to comma separated strings
 		return_song={}
@@ -1569,16 +1572,15 @@ class SongPopover(Gtk.Popover):
 		song=ClientHelper.song_to_str_dict(self._client.get_metadata(uri))
 		song.pop("time", None)
 		for tag, value in song.items():
-			tooltip=value.replace("&", "&amp;")
 			if tag == "duration":
-				self._store.append([tag+":", ClientHelper.seconds_to_display_time(int(float(value))), tooltip])
+				self._store.append([tag+":", ClientHelper.seconds_to_display_time(int(float(value))), locale.str(float(value))])
 			elif tag == "last-modified":
 				time=datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
-				self._store.append([tag+":", time.strftime("%a %d %B %Y, %H∶%M UTC"), tooltip])
+				self._store.append([tag+":", time.strftime("%a %d %B %Y, %H∶%M UTC"), value])
 			elif tag == "format":
-				self._store.append([tag+":", ClientHelper.convert_audio_format(value), tooltip])
+				self._store.append([tag+":", ClientHelper.convert_audio_format(value), value])
 			else:
-				self._store.append([tag+":", value, tooltip])
+				self._store.append([tag+":", value, value.replace("&", "&amp;")])
 		abs_path=self._client.get_absolute_path(uri)
 		if abs_path is None:  # show open with button when song is on the same computer
 			self._open_button_revealer.set_reveal_child(False)
@@ -2747,7 +2749,7 @@ class AudioType(Gtk.Label):
 		self._format, self._brate, self._file_type=("::", 0.0, "")
 
 	def _refresh(self, *args):
-		string="{} kb/s, {}, {}".format(self._brate, ClientHelper.convert_audio_format(self._format), self._file_type)
+		string="{} kb/s • {} • {}".format(locale.str(self._brate), ClientHelper.convert_audio_format(self._format), self._file_type)
 		self.set_text(string)
 
 	def _on_audio(self, emitter, audio_format):
@@ -2760,7 +2762,8 @@ class AudioType(Gtk.Label):
 
 	def _on_song_changed(self, *args):
 		try:
-			self._file_type=self._client.currentsong()["file"].split(".")[-1].split("/")[0]
+			mime=Gio.content_type_guess(self._client.currentsong()["file"])[0]
+			self._file_type=Gio.content_type_get_description(mime)
 			self._refresh()
 		except:
 			pass
