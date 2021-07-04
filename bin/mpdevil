@@ -2738,7 +2738,7 @@ class AudioType(Gtk.Label):
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
-		self._format, self._brate, self._file_type=("::", 0.0, "")
+		self._format, self._brate, self._file_type=("", 0.0, "")
 
 		# connect
 		self._client.emitter.connect("audio", self._on_audio)
@@ -2749,11 +2749,12 @@ class AudioType(Gtk.Label):
 
 	def clear(self, *args):
 		self.set_text("")
-		self._format, self._brate, self._file_type=("::", 0.0, "")
+		self._format, self._brate, self._file_type=("", 0.0, "")
 
 	def _refresh(self, *args):
-		string="{} kb/s • {} • {}".format(locale.str(self._brate), ClientHelper.convert_audio_format(self._format), self._file_type)
-		self.set_text(string)
+		if self._format != "":
+			string="{} kb/s • {} • {}".format(locale.str(self._brate), ClientHelper.convert_audio_format(self._format), self._file_type)
+			self.set_text(string)
 
 	def _on_audio(self, emitter, audio_format):
 		self._format=audio_format
