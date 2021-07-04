@@ -1913,12 +1913,14 @@ class SearchWindow(Gtk.Box):
 		column_time.set_sort_column_id(4)
 
 		# connect
+		self.search_entry.connect("activate", self._search)
 		self._search_entry_changed=self.search_entry.connect("search-changed", self._search)
 		self.search_entry.connect("focus_in_event", self._on_search_entry_focus_event, True)
 		self.search_entry.connect("focus_out_event", self._on_search_entry_focus_event, False)
 		self._tag_combo_box_changed=self._tag_combo_box.connect("changed", self._search)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("update", self._search)
 
 		# packing
 		hbox=Gtk.Box(spacing=6, border_width=6)
