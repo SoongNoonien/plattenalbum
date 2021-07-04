@@ -2762,8 +2762,7 @@ class AudioType(Gtk.Label):
 
 	def _on_song_changed(self, *args):
 		try:
-			mime=Gio.content_type_guess(self._client.currentsong()["file"])[0]
-			self._file_type=Gio.content_type_get_description(mime)
+			self._file_type=self._client.currentsong()["file"].split(".")[-1].split("/")[0].upper()
 			self._refresh()
 		except:
 			pass
