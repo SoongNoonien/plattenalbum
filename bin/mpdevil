@@ -3372,6 +3372,7 @@ class AudioFormat(Gtk.Box):
 		self._top_label=Gtk.Label(xalign=1)
 		self._brate_label=Gtk.Label(xalign=1, width_chars=5)
 		self._format_label=Gtk.Label()
+		self.set_property("no-show-all", not(self._settings.get_boolean("show-audio-format")))
 
 		# connect
 		self._settings.connect("notify::mini-player", self._on_mini_player)
