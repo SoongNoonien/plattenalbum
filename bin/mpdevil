@@ -3417,8 +3417,11 @@ class AudioFormat(Gtk.Box):
 
 	def _on_show_audio_format_changed(self, *args):
 		visibility=(self._settings.get_boolean("show-audio-format") and not self._settings.get_property("mini-player"))
-		self.set_property("visible", visibility)
 		self.set_property("no-show-all", not(visibility))
+		if visibility:
+			self.show_all()
+		else:
+			self.hide()
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
