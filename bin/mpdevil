@@ -2364,15 +2364,11 @@ class AlbumWindow(FocusFrame):
 					else:
 						discs=int(discs)
 					if discs > 1:
-						tooltip=ngettext(
-							"{number} song on {discs} discs ({duration})",
-							"{number} songs on {discs} discs ({duration})",
-							length
-						).format(number=length, discs=discs, duration=duration)
+						tooltip=_("{number} songs on {discs} discs ({duration})").format(
+							number=length, discs=discs, duration=duration)
 					else:
-						tooltip=ngettext(
-							"{number} song ({duration})", "{number} songs ({duration})", length
-						).format(number=length, duration=duration)
+						tooltip=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(
+							number=length, duration=duration)
 					# album label
 					if album["year"] == "":
 						display_label="<b>{}</b>".format(album["album"])
@@ -3425,9 +3421,8 @@ class AudioFormat(Gtk.Box):
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
-		self._top_label.set_width_chars(0)
-		self._top_label.set_text(_(" kb/s"))
 		self._brate_label.set_text(locale.str(0.0))
+		self._top_label.set_text(" kb/s")
 		self._format_label.set_markup("<small> </small>")
 
 	def _on_reconnected(self, *args):
