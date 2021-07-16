@@ -976,6 +976,7 @@ class GeneralSettings(Gtk.Box):
 		check_buttons_data=[
 			(_("Use Client-side decoration"), "use-csd"),
 			(_("Show stop button"), "show-stop"),
+			(_("Show audio format"), "show-audio-format"),
 			(_("Show lyrics button"), "show-lyrics-button"),
 			(_("Place playlist at the side"), "playlist-right"),
 			(_("Use “Album Artist” tag"), "use-album-artist"),
@@ -1011,6 +1012,7 @@ class GeneralSettings(Gtk.Box):
 		self.pack_start(view_heading, False, False, 0)
 		self.pack_start(csd_box, False, False, 0)
 		self.pack_start(check_buttons["show-stop"], False, False, 0)
+		self.pack_start(check_buttons["show-audio-format"], False, False, 0)
 		self.pack_start(check_buttons["show-lyrics-button"], False, False, 0)
 		self.pack_start(check_buttons["playlist-right"], False, False, 0)
 		self.pack_start(view_grid, False, False, 0)
@@ -3366,7 +3368,7 @@ class SeekBar(Gtk.Box):
 		if state == "stop":
 			self._disable()
 
-class AudioType(Gtk.Box):
+class AudioFormat(Gtk.Box):
 	def __init__(self, client, settings):
 		super().__init__(spacing=6)
 		self._client=client
@@ -3377,7 +3379,7 @@ class AudioType(Gtk.Box):
 
 		# connect
 		self._settings.connect("notify::mini-player", self._on_mini_player)
-#		self._settings.connect("changed::show-stop", self._on_show_audio_details_changed)  # TODO
+		self._settings.connect("changed::show-audio-format", self._on_show_audio_format_changed)
 		self._client.emitter.connect("audio", self._on_audio)
 		self._client.emitter.connect("bitrate", self._on_bitrate)
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
@@ -3414,11 +3416,10 @@ class AudioType(Gtk.Box):
 			self._top_label.set_text(" kb/s • "+file_type)
 
 	def _on_mini_player(self, obj, typestring):
-		self._on_show_audio_details_changed()
+		self._on_show_audio_format_changed()
 
-	def _on_show_audio_details_changed(self, *args):
-#		visibility=(self._settings.get_boolean("show-stop") and not self._settings.get_property("mini-player"))
-		visibility=not self._settings.get_property("mini-player")
+	def _on_show_audio_format_changed(self, *args):
+		visibility=(self._settings.get_boolean("show-audio-format") and not self._settings.get_property("mini-player"))
 		self.set_property("visible", visibility)
 		self.set_property("no-show-all", not(visibility))
 
@@ -3814,7 +3815,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings)
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
-		audio=AudioType(self._client, self._settings)
+		audio=AudioFormat(self._client, self._settings)
 		playback_options=PlaybackOptions(self._client, self._settings)
 		volume_button=VolumeButton(self._client, self._settings)
 		connection_notify=ConnectionNotify(self._client, self._settings)

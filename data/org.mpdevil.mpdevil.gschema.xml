@@ -61,6 +61,11 @@
       <summary>Show stop button</summary>
       <description></description>
     </key>
+    <key type="b" name="show-audio-format">
+      <default>true</default>
+      <summary>Show audio format</summary>
+      <description></description>
+    </key>
     <key type="b" name="show-lyrics-button">
       <default>true</default>
       <summary>Show lyrics button</summary>
