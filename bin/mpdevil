@@ -517,9 +517,9 @@ class ClientHelper():
 					base_song[tag]=song[tag][0]
 		return base_song
 
-	def calc_display_length(songs):
-		length=sum([float(song.get("duration", 0.0)) for song in songs])
-		return ClientHelper.seconds_to_display_time(int(length))
+	def calc_display_duration(songs):
+		duration=sum([float(song.get("duration", 0.0)) for song in songs])
+		return ClientHelper.seconds_to_display_time(int(duration))
 
 	def binary_to_pixbuf(binary, size):
 		loader=GdkPixbuf.PixbufLoader.new()
@@ -935,14 +935,6 @@ class Settings(Gio.Settings):
 		array=self.get_value(key).unpack()
 		array[pos]=value
 		self.set_value(key, GLib.Variant(vtype, array))
-
-	def get_gtk_icon_size(self, key):
-		icon_size=self.get_int(key)
-		sizes=[(48, Gtk.IconSize.DIALOG), (32, Gtk.IconSize.DND), (24, Gtk.IconSize.LARGE_TOOLBAR), (16, Gtk.IconSize.BUTTON)]
-		for pixel_size, gtk_size in sizes:
-			if icon_size >= pixel_size:
-				return gtk_size
-		return Gtk.IconSize.INVALID
 
 	def get_artist_type(self):
 		if self.get_boolean("use-album-artist"):
@@ -2362,7 +2354,7 @@ class AlbumWindow(FocusFrame):
 			def display_albums():
 				for i, album in enumerate(albums):
 					# tooltip
-					duration=ClientHelper.calc_display_length(album["songs"])
+					duration=ClientHelper.calc_display_duration(album["songs"])
 					length=len(album["songs"])
 					discs=album["songs"][-1].get("disc", 1)
 					if type(discs) == list:
@@ -3552,7 +3544,7 @@ class OutputPopover(Gtk.Popover):
 
 class VolumeButton(Gtk.VolumeButton):
 	def __init__(self, client, settings):
-		super().__init__(use_symbolic=True, size=settings.get_gtk_icon_size("icon-size"), can_focus=False)
+		super().__init__(use_symbolic=True, can_focus=False)
 		self._client=client
 		self._popover=None
 		self._adj=self.get_adjustment()

@@ -51,11 +51,6 @@
       <summary>Size of icons in main control bar</summary>
       <description></description>
     </key>
-    <key type="i" name="icon-size-sec">
-      <default>16</default>
-      <summary>Size of icons in secondary control bars</summary>
-      <description></description>
-    </key>
     <key type="b" name="use-csd">
       <default>true</default>
       <summary>Use Client-side decoration</summary>
