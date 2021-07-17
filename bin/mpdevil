@@ -3216,10 +3216,10 @@ class PlaybackControl(Gtk.ButtonBox):
 		else:
 			elapsed=int(song)
 			rest=int(length)-elapsed-1
-			elapsed_titles=ngettext("{titles} title", "{titles} titles", elapsed).format(titles=elapsed)
-			rest_titles=ngettext("{titles} title", "{titles} titles", rest).format(titles=rest)
-			self._prev_button.set_tooltip_text(elapsed_titles)
-			self._next_button.set_tooltip_text(rest_titles)
+			elapsed_songs=ngettext("{number} song", "{number} songs", elapsed).format(number=elapsed)
+			rest_songs=ngettext("{number} song", "{number} songs", rest).format(number=rest)
+			self._prev_button.set_tooltip_text(elapsed_songs)
+			self._next_button.set_tooltip_text(rest_songs)
 
 	def _on_state(self, emitter, state):
 		if state == "play":
