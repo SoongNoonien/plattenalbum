@@ -3177,9 +3177,8 @@ class PlaybackControl(Gtk.ButtonBox):
 		self._settings=settings
 
 		# widgets
-		self._play_icon=AutoSizedIcon("media-playback-start-symbolic", "icon-size", self._settings)
-		self._pause_icon=AutoSizedIcon("media-playback-pause-symbolic", "icon-size", self._settings)
-		self._play_button=Gtk.Button(image=self._play_icon)
+		self._play_button_icon=AutoSizedIcon("media-playback-start-symbolic", "icon-size", self._settings)
+		self._play_button=Gtk.Button(image=self._play_button_icon)
 		self._play_button.set_action_name("mpd.toggle-play")
 		self._play_button.set_can_focus(False)
 		self._stop_button=Gtk.Button(image=AutoSizedIcon("media-playback-stop-symbolic", "icon-size", self._settings))
@@ -3224,11 +3223,9 @@ class PlaybackControl(Gtk.ButtonBox):
 
 	def _on_state(self, emitter, state):
 		if state == "play":
-			self._play_button.set_image(self._pause_icon)
-		elif state == "pause":
-			self._play_button.set_image(self._play_icon)
+			self._play_button_icon.set_property("icon-name", "media-playback-pause-symbolic")
 		else:
-			self._play_button.set_image(self._play_icon)
+			self._play_button_icon.set_property("icon-name", "media-playback-start-symbolic")
 
 	def _on_disconnected(self, *args):
 		self._prev_button.set_tooltip_text("")
