@@ -969,7 +969,7 @@ class GeneralSettings(Gtk.Box):
 		for label, (vmin, vmax, step), key in int_settings_data:
 			int_settings[key]=(Gtk.Label(label=label, xalign=0), Gtk.SpinButton.new_with_range(vmin, vmax, step))
 			int_settings[key][1].set_value(self._settings.get_int(key))
-			int_settings[key][1].connect("value-changed", lambda widget,key: self._settings.set_int(key, int(widget.get_value())), key)
+			self._settings.bind(key, int_settings[key][1], "value", Gio.SettingsBindFlags.DEFAULT)
 
 		# check buttons
 		check_buttons={}
@@ -990,7 +990,7 @@ class GeneralSettings(Gtk.Box):
 		for label, key in check_buttons_data:
 			check_buttons[key]=Gtk.CheckButton(label=label, margin_start=12)
 			check_buttons[key].set_active(self._settings.get_boolean(key))
-			check_buttons[key].connect("toggled", lambda widget,key: self._settings.set_boolean(key, widget.get_active()), key)
+			self._settings.bind(key, check_buttons[key], "active", Gio.SettingsBindFlags.DEFAULT)
 
 		# headings
 		view_heading=Gtk.Label(label=_("<b>View</b>"), use_markup=True, xalign=0)
@@ -3130,6 +3130,7 @@ class CoverPlaylistWindow(Gtk.Paned):
 		self._lyrics_button_revealer.set_halign(Gtk.Align.END)
 		self._lyrics_button_revealer.set_valign(Gtk.Align.START)
 		self._lyrics_button_revealer.add(self.lyrics_button)
+		self._settings.bind("show-lyrics-button", self._lyrics_button_revealer, "reveal-child", Gio.SettingsBindFlags.DEFAULT)
 
 		# stack
 		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.OVER_DOWN_UP)
@@ -3141,7 +3142,6 @@ class CoverPlaylistWindow(Gtk.Paned):
 		self.lyrics_button.connect("toggled", self._on_lyrics_toggled)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
-		self._settings.connect("changed::show-lyrics-button", self._on_settings_changed)
 
 		# packing
 		overlay=Gtk.Overlay()
@@ -3150,7 +3150,6 @@ class CoverPlaylistWindow(Gtk.Paned):
 		overlay.add_overlay(self._lyrics_button_revealer)
 		self.pack1(overlay, False, False)
 		self.pack2(self._playlist_window, True, False)
-		self._on_settings_changed()  # hide lyrics button
 
 	def _on_reconnected(self, *args):
 		self.lyrics_button.set_sensitive(True)
@@ -3166,12 +3165,6 @@ class CoverPlaylistWindow(Gtk.Paned):
 		else:
 			self._stack.set_visible_child(self._cover_event_box)
 			self._lyrics_window.disable()
-
-	def _on_settings_changed(self, *args):
-		if self._settings.get_boolean("show-lyrics-button"):
-			self._lyrics_button_revealer.set_reveal_child(True)
-		else:
-			self._lyrics_button_revealer.set_reveal_child(False)
 
 ######################
 # action bar widgets #
