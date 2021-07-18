@@ -172,7 +172,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		}
 
 		# start
-		self._bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
 		Gio.bus_own_name_on_connection(self._bus, self._MPRIS_NAME, Gio.BusNameOwnerFlags.NONE, None, None)
 		self._node_info=Gio.DBusNodeInfo.new_for_xml(self._INTERFACES_XML)
 		for interface in self._node_info.interfaces:
@@ -4015,7 +4015,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
-			watch_cursor = Gdk.Cursor(Gdk.CursorType.WATCH)
+			watch_cursor=Gdk.Cursor(Gdk.CursorType.WATCH)
 			self.get_window().set_cursor(watch_cursor)
 		else:
 			self.get_window().set_cursor(None)
@@ -4053,7 +4053,7 @@ class mpdevil(Gtk.Application):
 
 		# notifications
 		Notify.init("mpdevil")
-		self.notify = Notify.Notification.new("")
+		self.notify=Notify.Notification.new("")
 
 	def do_activate(self):
 		if not self._window:  # allow just one instance
