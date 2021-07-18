@@ -3762,7 +3762,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
 		if settings.get_boolean("maximize"):
 			self.maximize()  # request maximize
-		Notify.init("mpdevil")
+		self._notify=app.notify
 		self._client=client
 		self._settings=settings
 		self._use_csd=self._settings.get_boolean("use-csd")
@@ -3977,10 +3977,11 @@ class MainWindow(Gtk.ApplicationWindow):
 				self.set_title(song["title"]+" • "+song["artist"]+" • "+song["album"]+date)
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
-					notify=Notify.Notification.new(song["title"], song["artist"]+"\n"+song["album"]+date)
+					self._notify.close()  # clear previous notifications
+					self._notify.update(song["title"], f"{song['artist']}\n{song['album']}{date}")
 					pixbuf=self._client.get_cover(song, 400)
-					notify.set_image_from_pixbuf(pixbuf)
-					notify.show()
+					self._notify.set_image_from_pixbuf(pixbuf)
+					self._notify.show()
 
 	def _on_reconnected(self, *args):
 		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
@@ -4050,6 +4051,10 @@ class mpdevil(Gtk.Application):
 		self._client=Client(self._settings)
 		self._window=None
 
+		# notifications
+		Notify.init("mpdevil")
+		self.notify = Notify.Notification.new("")
+
 	def do_activate(self):
 		if not self._window:  # allow just one instance
 			self._window=MainWindow(self, self._client, self._settings)
@@ -4100,6 +4105,7 @@ class mpdevil(Gtk.Application):
 	def _on_quit(self, *args):
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
 			self._client.stop()
+		self.notify.close()
 		self.quit()
 
 if __name__ == "__main__":
