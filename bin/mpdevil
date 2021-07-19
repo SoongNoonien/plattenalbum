@@ -4106,6 +4106,7 @@ class mpdevil(Gtk.Application):
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
 			self._client.stop()
 		self.notify.close()
+		Notify.uninit()
 		self.quit()
 
 if __name__ == "__main__":
