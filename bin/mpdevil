@@ -3756,15 +3756,15 @@ class ConnectionNotify(Gtk.Revealer):
 		self._client.reconnect()
 
 class MainWindow(Gtk.ApplicationWindow):
-	def __init__(self, app, client, settings):
-		super().__init__(title=("mpdevil"), icon_name="org.mpdevil.mpdevil", application=app)
+	def __init__(self, client, settings, notify, **kwargs):
+		super().__init__(title=("mpdevil"), icon_name="org.mpdevil.mpdevil", **kwargs)
 		self.set_default_icon_name("org.mpdevil.mpdevil")
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
 		if settings.get_boolean("maximize"):
 			self.maximize()  # request maximize
-		self._notify=app.notify
 		self._client=client
 		self._settings=settings
+		self._notify=notify
 		self._use_csd=self._settings.get_boolean("use-csd")
 		self._size=None  # needed for window size saving
 
@@ -4044,20 +4044,18 @@ class MainWindow(Gtk.ApplicationWindow):
 ###################
 
 class mpdevil(Gtk.Application):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, application_id="org.mpdevil.mpdevil", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE, **kwargs)
-		self.add_main_option("debug",ord("d"),GLib.OptionFlags.NONE,GLib.OptionArg.NONE,_("Debug mode"),None)
+	def __init__(self):
+		super().__init__(application_id="org.mpdevil.mpdevil", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+		self.add_main_option("debug", ord("d"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _("Debug mode"), None)
 		self._settings=Settings()
 		self._client=Client(self._settings)
-		self._window=None
-
-		# notifications
 		Notify.init("mpdevil")
-		self.notify=Notify.Notification.new("")
+		self._notify=Notify.Notification.new("")
+		self._window=None
 
 	def do_activate(self):
 		if not self._window:  # allow just one instance
-			self._window=MainWindow(self, self._client, self._settings)
+			self._window=MainWindow(self._client, self._settings, self._notify, application=self)
 			self._window.connect("delete-event", self._on_quit)
 			self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 			# accelerators
@@ -4105,7 +4103,7 @@ class mpdevil(Gtk.Application):
 	def _on_quit(self, *args):
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
 			self._client.stop()
-		self.notify.close()
+		self._notify.close()
 		Notify.uninit()
 		self.quit()
 
