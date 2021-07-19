@@ -522,7 +522,7 @@ class ClientHelper():
 		return ClientHelper.seconds_to_display_time(int(duration))
 
 	def binary_to_pixbuf(binary, size):
-		loader=GdkPixbuf.PixbufLoader.new()
+		loader=GdkPixbuf.PixbufLoader()
 		try:
 			loader.write(binary)
 			loader.close()
@@ -1925,7 +1925,7 @@ class SearchWindow(Gtk.Box):
 		self._hits_label.set_margin_end(6)
 		self._action_bar.pack_end(self._hits_label)
 		self.pack_start(hbox, False, False, 0)
-		self.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		self.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		self.pack_start(self._songs_window, True, True, 0)
 
 	def _clear(self, *args):
@@ -2544,7 +2544,7 @@ class Browser(Gtk.Paned):
 		hbox.pack_start(self._genres_button, True, True, 0)
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		vbox.pack_start(hbox, False, False, 0)
-		vbox.pack_start(Gtk.Separator.new(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
+		vbox.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
 		vbox.pack_start(self._artists_genres_stack, True, True, 0)
 		self.pack1(vbox, False, False)
 		self.pack2(self._albums_search_stack, True, False)
@@ -4050,7 +4050,7 @@ class mpdevil(Gtk.Application):
 		self._settings=Settings()
 		self._client=Client(self._settings)
 		Notify.init("mpdevil")
-		self._notify=Notify.Notification.new("")
+		self._notify=Notify.Notification()
 		self._window=None
 
 	def do_activate(self):
