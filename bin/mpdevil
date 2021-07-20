@@ -795,7 +795,7 @@ class Client(MPDClient):
 			genre_filter=("genre", genre)
 		album_candidates=self.comp_list("album", artist_type, artist, *genre_filter)
 		for album in album_candidates:
-			years=self.comp_list("date", "album", album, artist_type, artist)
+			years=self.comp_list("date", "album", album, artist_type, artist, *genre_filter)
 			for year in years:
 				songs=self.find("album", album, "date", year, artist_type, artist, *genre_filter)
 				cover_path=self.get_cover_path(songs[0])
@@ -2359,10 +2359,18 @@ class AlbumWindow(FocusFrame):
 					duration=ClientHelper.calc_display_duration(album["songs"])
 					length=len(album["songs"])
 					discs=album["songs"][-1].get("disc", 1)
-					if type(discs) == list:
-						discs=int(discs[0])
-					else:
-						discs=int(discs)
+					if not isinstance(discs, int):
+						if isinstance(discs, list):
+							discs=int(discs[0])
+						elif isinstance(discs, str):
+							if discs.isdigit():
+								discs=int(discs)
+							elif "/" in discs:
+								# disc fields sometimes are "<disc-no>/<number of discs>"
+								discs=int(discs.split("/")[1])
+						else:
+							# choose the default value if we can not convert to int
+							discs=1
 					if discs > 1:
 						tooltip=_("{number} songs on {discs} discs ({duration})").format(
 							number=length, discs=discs, duration=duration)
