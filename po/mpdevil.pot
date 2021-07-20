@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-17 14:13+0200\n"
+"POT-Creation-Date: 2021-07-20 20:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -330,7 +330,7 @@ msgid "Filter by genre"
 msgstr ""
 
 #: mpdevil:2704
-msgid "searching..."
+msgid "searching…"
 msgstr ""
 
 #: mpdevil:2709
@@ -537,6 +537,6 @@ msgstr ""
 msgid "connecting…"
 msgstr ""
 
-#: mpdevil:4048
+#: mpdevil:4049
 msgid "Debug mode"
 msgstr ""
