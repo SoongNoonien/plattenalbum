@@ -1971,10 +1971,14 @@ class SearchWindow(Gtk.Box):
 			self._hits_label.set_text("")
 			self._action_bar.set_sensitive(False)
 			if len(self.search_entry.get_text()) > 0:
-				if self._tag_combo_box.get_active() == 0:
-					songs=self._client.search("any", self.search_entry.get_text())
-				else:
-					songs=self._client.search(self._tag_combo_box.get_active_text(), self.search_entry.get_text())
+				try:  # client cloud meanwhile disconnect
+					if self._tag_combo_box.get_active() == 0:
+						songs=self._client.search("any", self.search_entry.get_text())
+					else:
+						songs=self._client.search(self._tag_combo_box.get_active_text(), self.search_entry.get_text())
+				except MPDBase.ConnectionError:
+					self._done_callback()
+					return
 				hits=len(songs)
 				self._hits_label.set_text(ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
 				for i, s in enumerate(songs):
