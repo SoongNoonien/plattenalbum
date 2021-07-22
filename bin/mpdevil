@@ -470,7 +470,7 @@ class ClientHelper():
 	def song_to_str_dict(song):  # converts tags with multiple values to comma separated strings
 		return_song={}
 		for tag, value in song.items():
-			if type(value) == list:
+			if isinstance(value, list):
 				return_song[tag]=(", ".join(value))
 			else:
 				return_song[tag]=value
@@ -479,7 +479,7 @@ class ClientHelper():
 	def song_to_first_str_dict(song):  # extracts the first value of multiple value tags
 		return_song={}
 		for tag, value in song.items():
-			if type(value) == list:
+			if isinstance(value, list):
 				return_song[tag]=value[0]
 			else:
 				return_song[tag]=value
@@ -488,10 +488,10 @@ class ClientHelper():
 	def song_to_list_dict(song):  # converts all values to lists
 		return_song={}
 		for tag, value in song.items():
-			if type(value) != list:
-				return_song[tag]=[value]
-			else:
+			if isinstance(value, list):
 				return_song[tag]=value
+			else:
+				return_song[tag]=[value]
 		return return_song
 
 	def pepare_song_for_display(song):
@@ -513,7 +513,7 @@ class ClientHelper():
 		base_song["human_duration"]=ClientHelper.seconds_to_display_time(int(float(base_song["duration"])))
 		for tag in ("disc", "track"):  # remove confusing multiple tags
 			if tag in song:
-				if type(song[tag]) == list:
+				if isinstance(song[tag], list):
 					base_song[tag]=song[tag][0]
 		return base_song
 
@@ -705,7 +705,7 @@ class Client(MPDClient):
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
 		if len(native_list) > 0:
-			if type(native_list[0]) == dict:
+			if isinstance(native_list[0], dict):
 				return ([l[args[0]] for l in native_list])
 			else:
 				return native_list
@@ -2366,7 +2366,7 @@ class AlbumWindow(FocusFrame):
 					duration=ClientHelper.calc_display_duration(album["songs"])
 					length=len(album["songs"])
 					discs=album["songs"][-1].get("disc", 1)
-					if type(discs) == list:
+					if isinstance(discs, list):
 						discs=int(discs[0])
 					else:
 						discs=int(discs)
