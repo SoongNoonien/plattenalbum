@@ -1626,9 +1626,6 @@ class SongsView(Gtk.TreeView):
 		self._song_popover.popdown()
 		self._store.clear()
 
-	def count(self):
-		return len(self._store)
-
 	def get_files(self):
 		return_list=[]
 		for row in self._store:
@@ -1970,37 +1967,49 @@ class SearchWindow(Gtk.Box):
 			self._songs_view.clear()
 			self._hits_label.set_text("")
 			self._action_bar.set_sensitive(False)
-			if len(self.search_entry.get_text()) > 0:
+			hits=0
+			if self.search_entry.get_text():
+				if self._tag_combo_box.get_active() == 0:
+					search_tag="any"
+				else:
+					search_tag=self._tag_combo_box.get_active_text()
+				search_text=self.search_entry.get_text()
+				stripe_size=100
 				try:  # client cloud meanwhile disconnect
-					if self._tag_combo_box.get_active() == 0:
-						songs=self._client.search("any", self.search_entry.get_text())
-					else:
-						songs=self._client.search(self._tag_combo_box.get_active_text(), self.search_entry.get_text())
+					songs=self._client.search(search_tag, search_text, "window", f"0:{stripe_size}")
 				except MPDBase.ConnectionError:
 					self._done_callback()
 					return
-				hits=len(songs)
-				self._hits_label.set_text(ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
-				for i, s in enumerate(songs):
-					if self._stop_flag:
+				stripe_start=stripe_size
+				while songs:
+					hits+=len(songs)
+					for s in songs:
+						if self._stop_flag:
+							self._done_callback()
+							return
+						song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
+						try:
+							int_track=int(song["track"])
+						except:
+							int_track=0
+						self._store.append([
+								song["track"], song["title"],
+								song["artist"], song["album"],
+								song["human_duration"], song["file"],
+								int_track
+						])
+					self.search_entry.progress_pulse()
+					self._hits_label.set_text(ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
+					while Gtk.events_pending():
+						Gtk.main_iteration_do(True)
+					stripe_end=stripe_start+stripe_size
+					try:  # client cloud meanwhile disconnect
+						songs=self._client.search(search_tag, search_text, "window", f"{stripe_start}:{stripe_end}")
+					except MPDBase.ConnectionError:
 						self._done_callback()
 						return
-					song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
-					try:
-						int_track=int(song["track"])
-					except:
-						int_track=0
-					self._store.append([
-							song["track"], song["title"],
-							song["artist"], song["album"],
-							song["human_duration"], song["file"],
-							int_track
-					])
-					if i%100 == 0:
-						self.search_entry.set_progress_fraction((i+1)/hits)
-						while Gtk.events_pending():
-							Gtk.main_iteration_do(True)
-			if self._songs_view.count() > 0:
+					stripe_start+=stripe_size
+			if hits > 0:
 				self._action_bar.set_sensitive(True)
 			self._done_callback()
 		elif not self._search in self._pending:
