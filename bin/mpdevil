@@ -377,15 +377,15 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._metadata={}
 		for tag, xesam_tag in (("album","album"),("title","title"),("date","contentCreated")):
 			if tag in song:
-				self._metadata["xesam:{}".format(xesam_tag)]=GLib.Variant("s", song[tag][0])
+				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("s", song[tag][0])
 		for tag, xesam_tag in (("track","trackNumber"),("disc","discNumber")):
 			if tag in song:
-				self._metadata["xesam:{}".format(xesam_tag)]=GLib.Variant("i", int(song[tag][0]))
+				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("i", int(song[tag][0]))
 		for tag, xesam_tag in (("albumartist","albumArtist"),("artist","artist"),("composer","composer"),("genre","genre")):
 			if tag in song:
-				self._metadata["xesam:{}".format(xesam_tag)]=GLib.Variant("as", song[tag])
+				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("as", song[tag])
 		if "id" in song:
-			self._metadata["mpris:trackid"]=GLib.Variant("o", self._MPRIS_PATH+"/Track/{}".format(song["id"][0]))
+			self._metadata["mpris:trackid"]=GLib.Variant("o", f"{self._MPRIS_PATH}/Track/{song['id'][0]}")
 		if "duration" in song:
 			self._metadata["mpris:length"]=GLib.Variant("x", float(song["duration"][0])*1000000)
 		if "file" in song:
@@ -394,10 +394,10 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
 			else:
 				lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
-				self._metadata["xesam:url"]=GLib.Variant("s", "file://{}".format(os.path.join(lib_path, song_file)))
+				self._metadata["xesam:url"]=GLib.Variant("s", f"file://{os.path.join(lib_path, song_file)}")
 				cover_path=self._client.get_cover_path(mpd_meta)
 				if cover_path is not None:
-					self._metadata["mpris:artUrl"]=GLib.Variant("s", "file://{}".format(cover_path))
+					self._metadata["mpris:artUrl"]=GLib.Variant("s", f"file://{cover_path}")
 
 	def _update_property(self, interface_name, prop):
 		getter, setter=self._prop_mapping[interface_name][prop]
@@ -446,7 +446,7 @@ class ClientHelper():
 		delta=datetime.timedelta(seconds=seconds)
 		if delta.days > 0:
 			days=ngettext("{days} day", "{days} days", delta.days).format(days=delta.days)
-			time_string=days+", "+str(datetime.timedelta(seconds=delta.seconds))
+			time_string=f"{days}, {datetime.timedelta(seconds=delta.seconds)}"
 		else:
 			time_string=str(delta).lstrip("0").lstrip(":")
 		return time_string.replace(":", "∶")  # use 'ratio' as delimiter
@@ -464,8 +464,8 @@ class ClientHelper():
 			freq=locale.str(int(samplerate)/1000)
 		except:
 			freq=samplerate
-		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=channels)
-		return "{} kHz • {} bit • {}".format(freq, bits, channels)
+		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=int_chan)
+		return f"{freq} kHz • {bits} bit • {channels}"
 
 	def song_to_str_dict(song):  # converts tags with multiple values to comma separated strings
 		return_song={}
@@ -1116,7 +1116,7 @@ class ProfileSettings(Gtk.Grid):
 
 	def _on_add_button_clicked(self, *args):
 		model=self._profiles_combo.get_model()
-		self._settings.array_append("as", "profiles", "new profile ({})".format(len(model)))
+		self._settings.array_append("as", "profiles", f"new profile ({len(model)})")
 		self._settings.array_append("as", "hosts", "localhost")
 		self._settings.array_append("ai", "ports", 6600)
 		self._settings.array_append("as", "passwords", "")
@@ -1789,9 +1789,9 @@ class AlbumPopover(Gtk.Popover):
 				pass
 			artist=(", ".join(song["artist"]))
 			if artist == album_artist or artist == "":
-				title_artist="<b>{}</b>".format(title)
+				title_artist=f"<b>{title}</b>"
 			else:
-				title_artist="<b>{}</b> • {}".format(title, artist)
+				title_artist=f"<b>{titel}</b> • {artist}"
 			title_artist=title_artist.replace("&", "&amp;")
 			self._store.append([track, title_artist, song["human_duration"][0], song["file"][0], title])
 		self._songs_view.set_model(self._store)
@@ -2387,10 +2387,10 @@ class AlbumWindow(FocusFrame):
 							number=length, duration=duration)
 					# album label
 					if album["year"] == "":
-						display_label="<b>{}</b>".format(album["album"])
+						display_label=f"<b>{album['album']}</b>"
 					else:
-						display_label="<b>{}</b> ({})".format(album["album"], album["year"])
-					display_label_artist=display_label+"\n"+album["artist"]
+						display_label=f"<b>{album['album']}</b> ({album['year']})"
+					display_label_artist=f"{display_label}\n{album['artist']}"
 					display_label=display_label.replace("&", "&amp;")
 					display_label_artist=display_label_artist.replace("&", "&amp;")
 					# add album
@@ -2699,7 +2699,7 @@ class LyricsWindow(FocusFrame):
 		for char1, char2 in replaces:
 			title=title.replace(char1, char2)
 			artist=artist.replace(char1, char2)
-		req=requests.get("https://www.letras.mus.br/winamp.php?musica={0}&artista={1}".format(title,artist))
+		req=requests.get(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}")
 		soup=BeautifulSoup(req.text, "html.parser")
 		soup=soup.find(id="letra-cnt")
 		if soup is None:
@@ -3406,7 +3406,7 @@ class AudioFormat(Gtk.Box):
 		if audio_format is None:
 			self._format_label.set_markup("<small> </small>")
 		else:
-			self._format_label.set_markup("<small>"+ClientHelper.convert_audio_format(audio_format)+"</small>")
+			self._format_label.set_markup(f"<small>{ClientHelper.convert_audio_format(audio_format)}</small>")
 
 	def _on_bitrate(self, emitter, brate):
 		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
@@ -3535,7 +3535,7 @@ class OutputPopover(Gtk.Popover):
 		# widgets
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=9)
 		for output in self._client.outputs():
-			button=Gtk.ModelButton(label="{} ({})".format(output["outputname"], output["plugin"]), role=Gtk.ButtonRole.CHECK)
+			button=Gtk.ModelButton(label=f"{output['outputname']} ({output['plugin']})", role=Gtk.ButtonRole.CHECK)
 			button.get_child().set_property("xalign", 0)
 			if output["outputenabled"] == "1":
 				button.set_property("active", True)
@@ -3994,12 +3994,12 @@ class MainWindow(Gtk.ApplicationWindow):
 			if song["date"] == "":
 				date=""
 			else:
-				date=" ("+song["date"]+")"
+				date=f" ({song['date']})"
 			if self._use_csd:
-				self.set_title(song["title"]+" • "+song["artist"])
+				self.set_title(f"{song['title']} • {song['artist']}")
 				self._header_bar.set_subtitle(song["album"]+date)
 			else:
-				self.set_title(song["title"]+" • "+song["artist"]+" • "+song["album"]+date)
+				self.set_title(f"{song['title']} • {song['artist']} • {song['album']}{date}")
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
 					self._notify.close()  # clear previous notifications
