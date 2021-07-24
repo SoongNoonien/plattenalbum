@@ -1791,7 +1791,7 @@ class AlbumPopover(Gtk.Popover):
 			if artist == album_artist or artist == "":
 				title_artist=f"<b>{title}</b>"
 			else:
-				title_artist=f"<b>{titel}</b> • {artist}"
+				title_artist=f"<b>{title}</b> • {artist}"
 			title_artist=title_artist.replace("&", "&amp;")
 			self._store.append([track, title_artist, song["human_duration"][0], song["file"][0], title])
 		self._songs_view.set_model(self._store)
