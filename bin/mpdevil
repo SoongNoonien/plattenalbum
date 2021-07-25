@@ -505,7 +505,7 @@ class ClientHelper():
 			"date": "",
 			"genre": ""
 		}
-		if "range" in song:  # translate .cue 'range' to 'duration' if needed
+		if "range" in song:  # translate .cue 'range' to 'duration' if needed (unneeded since MPD 0.22.4)
 			start, end=song["range"].split("-")
 			if start != "" and end != "":
 				base_song["duration"]=str((float(end)-float(start)))
@@ -787,6 +787,7 @@ class Client(MPDClient):
 			return None
 
 	def get_albums(self, artist, genre):
+		self.tagtypes("clear")
 		albums=[]
 		artist_type=self._settings.get_artist_type()
 		if genre is None:
@@ -797,16 +798,21 @@ class Client(MPDClient):
 		for album in album_candidates:
 			years=self.comp_list("date", "album", album, artist_type, artist, *genre_filter)
 			for year in years:
-				songs=self.find("album", album, "date", year, artist_type, artist, *genre_filter)
-				cover_path=self.get_cover_path(songs[0])
+				count=self.count(artist_type, artist, "album", album, "date", year, *genre_filter)
+				song=self.find("album", album, "date", year, artist_type, artist, *genre_filter, "window", "0:1")[0]
+				cover_path=self.get_cover_path(song)
 				if cover_path is None:
-					cover_binary=self.get_cover_binary(songs[0].get("file"))
+					cover_binary=self.get_cover_binary(song.get("file"))
 					if cover_binary is None:
-						albums.append({"artist": artist, "album": album, "year": year, "songs": songs})
+						albums.append({"artist": artist,"album": album,"year": year,
+						"length": count["songs"],"duration": count["playtime"]})
 					else:
-						albums.append({"artist":artist,"album":album,"year":year,"songs":songs,"cover_binary":cover_binary})
+						albums.append({"artist": artist,"album": album,"year": year,
+						"length": count["songs"],"duration": count["playtime"],"cover_binary": cover_binary})
 				else:
-					albums.append({"artist": artist, "album": album, "year": year, "songs": songs, "cover_path": cover_path})
+					albums.append({"artist": artist,"album": album,"year": year,
+					"length": count["songs"],"duration": count["playtime"], "cover_path": cover_path})
+		self.tagtypes("all")
 		return albums
 
 	def toggle_play(self):
@@ -2248,8 +2254,8 @@ class AlbumWindow(FocusFrame):
 		self._done=True
 		self._pending=[]
 
-		# cover, display_label, display_label_artist, tooltip(titles), album, year, artist
-		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str)
+		# cover, display_label, display_label_artist, tooltip(titles), album, year, artist, index
+		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str, int)
 		self._sort_settings()
 
 		# iconview
@@ -2368,58 +2374,50 @@ class AlbumWindow(FocusFrame):
 				except MPDBase.ConnectionError:
 					self._done_callback()
 					return
-
-			def display_albums():
-				for i, album in enumerate(albums):
-					# tooltip
-					duration=ClientHelper.calc_display_duration(album["songs"])
-					length=len(album["songs"])
-					discs=album["songs"][-1].get("disc", 1)
-					if isinstance(discs, list):
-						discs=int(discs[0])
-					else:
-						discs=int(discs)
-					if discs > 1:
-						tooltip=_("{number} songs on {discs} discs ({duration})").format(
-							number=length, discs=discs, duration=duration)
-					else:
-						tooltip=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(
-							number=length, duration=duration)
-					# album label
-					if album["year"] == "":
-						display_label=f"<b>{album['album']}</b>"
-					else:
-						display_label=f"<b>{album['album']}</b> ({album['year']})"
-					display_label_artist=f"{display_label}\n{album['artist']}"
-					display_label=display_label.replace("&", "&amp;")
-					display_label_artist=display_label_artist.replace("&", "&amp;")
-					# add album
-					self._store.append(
-						[album["cover"], display_label, display_label_artist,
-						tooltip, album["album"], album["year"], album["artist"]]
-					)
-				self._iconview.set_model(self._store)
-				self._done_callback()
-				return False
+			# temporarily display all albums with fallback cover
+			size=self._settings.get_int("album-cover")
+			fallback_cover=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
+			for i, album in enumerate(albums):
+				# tooltip
+				duration=ClientHelper.seconds_to_display_time(int(album["duration"]))
+				length=int(album["length"])
+				tooltip=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(
+					number=length, duration=duration)
+				# album label
+				if album["year"] == "":
+					display_label=f"<b>{album['album']}</b>"
+				else:
+					display_label=f"<b>{album['album']}</b> ({album['year']})"
+				display_label_artist=f"{display_label}\n{album['artist']}"
+				display_label=display_label.replace("&", "&amp;")
+				display_label_artist=display_label_artist.replace("&", "&amp;")
+				# add album
+				self._store.append(
+					[fallback_cover, display_label, display_label_artist,
+					tooltip, album["album"], album["year"], album["artist"], i]
+				)
+			self._iconview.set_model(self._store)
 
 			def render_covers():
+				def set_cover(row, cover):
+					row[0]=cover
 				size=self._settings.get_int("album-cover")
+				fallback_cover=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 				total_albums=len(albums)
-				for i, album in enumerate(albums):
+				for i, row in enumerate(self._store):
+					album=albums[row[7]]
 					if self._stop_flag:
 						break
 					if "cover_path" in album:
-						album["cover"]=ClientHelper.file_to_pixbuf(album["cover_path"], size)
+						cover=ClientHelper.file_to_pixbuf(album["cover_path"], size)
 					else:
 						if "cover_binary" in album:
-							album["cover"]=ClientHelper.binary_to_pixbuf(album["cover_binary"], size)
+							cover=ClientHelper.binary_to_pixbuf(album["cover_binary"], size)
 						else:
-							album["cover"]=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
+							cover=fallback_cover
+					GLib.idle_add(set_cover, row, cover)
 					GLib.idle_add(self._progress_bar.set_fraction, (i+1)/total_albums)
-				if self._stop_flag:
-					GLib.idle_add(self._done_callback)
-				else:
-					GLib.idle_add(display_albums)
+				GLib.idle_add(self._done_callback)
 
 			cover_thread=threading.Thread(target=render_covers, daemon=True)
 			cover_thread.start()
