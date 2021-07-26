@@ -1585,7 +1585,7 @@ class SongPopover(Gtk.Popover):
 			elif tag == "format":
 				self._store.append([tag+":", ClientHelper.convert_audio_format(value), value])
 			else:
-				self._store.append([tag+":", value, value.replace("&", "&amp;")])
+				self._store.append([tag+":", value, GLib.markup_escape_text(value)])
 		abs_path=self._client.get_absolute_path(uri)
 		if abs_path is None:  # show open with button when song is on the same computer
 			self._open_button_revealer.set_reveal_child(False)
@@ -1795,10 +1795,9 @@ class AlbumPopover(Gtk.Popover):
 				pass
 			artist=(", ".join(song["artist"]))
 			if artist == album_artist or artist == "":
-				title_artist=f"<b>{title}</b>"
+				title_artist=f"<b>{GLib.markup_escape_text(title)}</b>"
 			else:
-				title_artist=f"<b>{title}</b> • {artist}"
-			title_artist=title_artist.replace("&", "&amp;")
+				title_artist=f"<b>{GLib.markup_escape_text(title)}</b> • {GLib.markup_escape_text(artist)}"
 			self._store.append([track, title_artist, song["human_duration"][0], song["file"][0], title])
 		self._songs_view.set_model(self._store)
 		self.popup()
@@ -2385,12 +2384,10 @@ class AlbumWindow(FocusFrame):
 					number=length, duration=duration)
 				# album label
 				if album["year"] == "":
-					display_label=f"<b>{album['album']}</b>"
+					display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b>"
 				else:
-					display_label=f"<b>{album['album']}</b> ({album['year']})"
-				display_label_artist=f"{display_label}\n{album['artist']}"
-				display_label=display_label.replace("&", "&amp;")
-				display_label_artist=display_label_artist.replace("&", "&amp;")
+					display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b> ({GLib.markup_escape_text(album['year'])})"
+				display_label_artist=f"{display_label}\n{GLib.markup_escape_text(album['artist'])}"
 				# add album
 				self._store.append(
 					[fallback_cover, display_label, display_label_artist,
