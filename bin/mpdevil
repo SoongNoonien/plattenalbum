@@ -517,10 +517,6 @@ class ClientHelper():
 					base_song[tag]=song[tag][0]
 		return base_song
 
-	def calc_display_duration(songs):
-		duration=sum([float(song.get("duration", 0.0)) for song in songs])
-		return ClientHelper.seconds_to_display_time(int(duration))
-
 	def binary_to_pixbuf(binary, size):
 		loader=GdkPixbuf.PixbufLoader()
 		try:
@@ -855,7 +851,7 @@ class Client(MPDClient):
 					if "duration" in status:
 						self.emitter.emit("elapsed_changed", float(val), float(status["duration"]))
 					else:
-						self.emitter.emit("elapsed_changed", 0.0, 0.0)
+						self.emitter.emit("elapsed_changed", float(val), 0.0)
 				elif key == "bitrate":
 					if val == "0":
 						self.emitter.emit("bitrate", None)
@@ -3301,14 +3297,18 @@ class SeekBar(Gtk.Box):
 
 	def _refresh(self, emitter, elapsed, duration):
 		self.set_sensitive(True)
-		if elapsed > duration:  # fix display error
-			elapsed=duration
-		self._adjustment.set_upper(duration)
-		if self._update:
-			self._scale.set_value(elapsed)
+		if duration > 0:
+			if elapsed > duration:  # fix display error
+				elapsed=duration
+			self._adjustment.set_upper(duration)
+			if self._update:
+				self._scale.set_value(elapsed)
+				self._elapsed.set_text(ClientHelper.seconds_to_display_time(int(elapsed)))
+				self._rest.set_text("-"+ClientHelper.seconds_to_display_time(int(duration-elapsed)))
+			self._scale.set_fill_level(elapsed)
+		else:
+			self._disable()
 			self._elapsed.set_text(ClientHelper.seconds_to_display_time(int(elapsed)))
-			self._rest.set_text("-"+ClientHelper.seconds_to_display_time(int(duration-elapsed)))
-		self._scale.set_fill_level(elapsed)
 
 	def _disable(self, *args):
 		self.set_sensitive(False)
