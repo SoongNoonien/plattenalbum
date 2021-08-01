@@ -505,10 +505,6 @@ class ClientHelper():
 			"date": "",
 			"genre": ""
 		}
-		if "range" in song:  # translate .cue 'range' to 'duration' if needed (unneeded since MPD 0.22.4)
-			start, end=song["range"].split("-")
-			if start != "" and end != "":
-				base_song["duration"]=str((float(end)-float(start)))
 		base_song.update(song)
 		base_song["human_duration"]=ClientHelper.seconds_to_display_time(int(float(base_song["duration"])))
 		for tag in ("disc", "track"):  # remove confusing multiple tags
