@@ -938,10 +938,7 @@ class Settings(Gio.Settings):
 		self.set_value(key, GLib.Variant(vtype, array))
 
 	def get_artist_type(self):
-		if self.get_boolean("use-album-artist"):
-			return ("albumartist")
-		else:
-			return ("artist")
+		return self.get_string("artist-type")
 
 	def get_lib_path(self, profile=None):
 		if profile is None:  # use current profile if none is given
@@ -980,7 +977,6 @@ class GeneralSettings(Gtk.Box):
 			(_("Show audio format"), "show-audio-format"),
 			(_("Show lyrics button"), "show-lyrics-button"),
 			(_("Place playlist at the side"), "playlist-right"),
-			(_("Use “Album Artist” tag"), "use-album-artist"),
 			(_("Send notification on title change"), "send-notify"),
 			(_("Stop playback on quit"), "stop-on-quit"),
 			(_("Play selected albums and titles immediately"), "force-mode"),
@@ -1006,6 +1002,19 @@ class GeneralSettings(Gtk.Box):
 		view_grid.attach_next_to(int_settings["album-cover"][1], int_settings["album-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
 		view_grid.attach_next_to(int_settings["icon-size"][1], int_settings["icon-size"][0], Gtk.PositionType.RIGHT, 1, 1)
 
+		# combo box for sorting artist type
+		artist_combo=Gtk.ComboBoxText()
+		artist_types=["artist", "albumartist", "composer"]
+		for at in artist_types:
+			artist_combo.append_text(at)
+		artist_combo.connect("changed", self._on_artist_combo_changed)
+		default = artist_types.index(self._settings.get_artist_type())
+		artist_combo.set_active(default)
+		artist_label=Gtk.Label(label=_("Artist tag to use for grouping:"), xalign=0)
+		artist_grid=Gtk.Grid(row_spacing=6, column_spacing=12, margin_start=12)
+		artist_grid.add(artist_label)
+		artist_grid.attach_next_to(artist_combo, artist_label, Gtk.PositionType.RIGHT, 1, 1)
+
 		# packing
 		csd_box=Gtk.Box(spacing=12)
 		csd_box.pack_start(check_buttons["use-csd"], False, False, 0)
@@ -1022,12 +1031,16 @@ class GeneralSettings(Gtk.Box):
 		mpris_box.pack_start(check_buttons["mpris"], False, False, 0)
 		mpris_box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
 		self.pack_start(mpris_box, False, False, 0)
-		self.pack_start(check_buttons["use-album-artist"], False, False, 0)
+		self.pack_start(artist_grid, False, False, 0)
 		self.pack_start(check_buttons["sort-albums-by-year"], False, False, 0)
 		self.pack_start(check_buttons["send-notify"], False, False, 0)
 		self.pack_start(check_buttons["force-mode"], False, False, 0)
 		self.pack_start(check_buttons["rewind-mode"], False, False, 0)
 		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
+
+	def _on_artist_combo_changed(self, artist_combo):
+		text = artist_combo.get_active_text()
+		self._settings.set_string("artist-type", text)
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, client, settings):
@@ -1209,7 +1222,7 @@ class PlaylistSettings(Gtk.Box):
 		treeview.append_column(column_text)
 
 		# fill store
-		self._headers=[_("No"), _("Disc"), _("Title"), _("Artist"), _("Album"), _("Length"), _("Year"), _("Genre")]
+		self._headers=[_("No"), _("Disc"), _("Title"), _("Artist"), _("Composer"), _("Album"), _("Length"), _("Year"), _("Genre")]
 		self._fill()
 
 		# scroll
@@ -2151,7 +2164,7 @@ class GenreSelect(SelectionList):
 
 class ArtistWindow(SelectionList):
 	def __init__(self, client, settings, genre_select):
-		super().__init__(_("all artists"))
+		super().__init__(_(f"all {settings.get_artist_type()}s"))
 		self._client=client
 		self._settings=settings
 		self.genre_select=genre_select
@@ -2165,7 +2178,7 @@ class ArtistWindow(SelectionList):
 		# connect
 		self.connect("clear", lambda *args: self._artist_popover.popdown())
 		self.connect("button-press-event", self._on_button_press_event)
-		self._settings.connect("changed::use-album-artist", self._refresh)
+		self._settings.connect("changed::artist-type", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
@@ -2186,7 +2199,7 @@ class ArtistWindow(SelectionList):
 			if song != {}:
 				artist=song.get(self._settings.get_artist_type())
 				if artist is None:
-					artist=song.get("artist", "")
+					artist=""
 				self.select(artist)
 			else:
 				if self.length() > 0:
@@ -2560,7 +2573,7 @@ class Browser(Gtk.Paned):
 			# get artist name
 			artist=song.get(self._settings.get_artist_type())
 			if artist is None:
-				artist=song.get("artist", "")
+				artist=""
 			# deactivate genre filter to show all artists (if needed)
 			if song.get("genre", "") != self._genre_select.get_selected() or force:
 				self._genre_select.deactivate()
@@ -2754,10 +2767,9 @@ class CoverEventBox(Gtk.EventBox):
 			if self._client.connected():
 				song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
 				if song != {}:
-					try:
-						artist=song[self._settings.get_artist_type()]
-					except:
-						artist=song.get("artist", "")
+					artist=song.get(self._settings.get_artist_type())
+					if artist is None:
+						artist=""
 					album=song.get("album", "")
 					year=song.get("date", "")
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -2829,8 +2841,8 @@ class PlaylistWindow(Gtk.Overlay):
 		self._back_button_revealer.add(self._back_to_current_song_button)
 
 		# treeview
-		# (track, disc, title, artist, album, human duration, date, genre, file, weight, duration)
-		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight, float)
+		# (track, disc, title, artist, composer, album, human duration, date, genre, file, weight, duration)
+		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, str, Pango.Weight, float)
 		self._treeview=Gtk.TreeView(model=self._store,activate_on_single_click=True,reorderable=True,search_column=2,fixed_height_mode=True)
 		self._selection=self._treeview.get_selection()
 
@@ -2838,14 +2850,15 @@ class PlaylistWindow(Gtk.Overlay):
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 		self._columns=(
-			Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=9),
-			Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9),
-			Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9),
-			Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9),
-			Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9),
-			Gtk.TreeViewColumn(_("Length"), renderer_text, text=5, weight=9),
-			Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9),
-			Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
+			Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=10),
+			Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=10),
+			Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=10),
+			Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=10),
+			Gtk.TreeViewColumn(_("Composer"), renderer_text, text=4, weight=10),
+			Gtk.TreeViewColumn(_("Album"), renderer_text, text=5, weight=10),
+			Gtk.TreeViewColumn(_("Length"), renderer_text, text=6, weight=10),
+			Gtk.TreeViewColumn(_("Year"), renderer_text, text=7, weight=10),
+			Gtk.TreeViewColumn(_("Genre"), renderer_text, text=8, weight=10)
 		)
 		for i, column in enumerate(self._columns):
 			column.set_property("resizable", True)
@@ -2922,7 +2935,7 @@ class PlaylistWindow(Gtk.Overlay):
 	def _select(self, path):
 		self._unselect()
 		try:
-			self._store[path][9]=Pango.Weight.BOLD
+			self._store[path][10]=Pango.Weight.BOLD
 			self.set_property("selected-path", path)
 		except IndexError:  # invalid path
 			pass
@@ -2930,7 +2943,7 @@ class PlaylistWindow(Gtk.Overlay):
 	def _unselect(self):
 		if self.get_property("selected-path") is not None:
 			try:
-				self._store[self.get_property("selected-path")][9]=Pango.Weight.BOOK
+				self._store[self.get_property("selected-path")][10]=Pango.Weight.BOOK
 				self.set_property("selected-path", None)
 			except IndexError:  # invalid path
 				self.set_property("selected-path", None)
@@ -3030,18 +3043,19 @@ class PlaylistWindow(Gtk.Overlay):
 						1, song["disc"],
 						2, song["title"],
 						3, song["artist"],
-						4, song["album"],
-						5, song["human_duration"],
-						6, song["date"],
-						7, song["genre"],
-						8, song["file"],
-						9, Pango.Weight.BOOK,
-						10, float(song["duration"])
+						4, song["composer"],
+						5, song["album"],
+						6, song["human_duration"],
+						7, song["date"],
+						8, song["genre"],
+						9, song["file"],
+						10, Pango.Weight.BOOK,
+						11, float(song["duration"])
 					)
 				except:
 					self._store.append([
 						song["track"], song["disc"],
-						song["title"], song["artist"],
+						song["title"], song["artist"], song["composer"],
 						song["album"], song["human_duration"],
 						song["date"], song["genre"],
 						song["file"], Pango.Weight.BOOK,
@@ -3986,10 +4000,10 @@ class MainWindow(Gtk.ApplicationWindow):
 				date=f"({song['date']})"
 			album_with_date=" ".join(filter(None, (song["album"], date)))
 			if self._use_csd:
-				self.set_title(" • ".join(filter(None, (song["title"], song["artist"]))))
+				self.set_title(" • ".join(filter(None, (song["title"], song[self._settings.get_artist_type()]))))
 				self._header_bar.set_subtitle(album_with_date)
 			else:
-				self.set_title(" • ".join(filter(None, (song["title"], song["artist"], album_with_date))))
+				self.set_title(" • ".join(filter(None, (song["title"], song[self._settings.get_artist_type()], album_with_date))))
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
 					self._notify.close()  # clear previous notifications

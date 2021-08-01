@@ -91,9 +91,9 @@
       <summary>Play selected albums directly</summary>
       <description></description>
     </key>
-    <key type="b" name="use-album-artist">
-      <default>true</default>
-      <summary>Use 'Album Artist' tag to group albums</summary>
+    <key type="s" name="artist-type">
+      <default>"artist"</default>
+      <summary>Artist type to use</summary>
       <description></description>
     </key>
     <key type="b" name="mpris">
@@ -107,17 +107,17 @@
       <description></description>
     </key>
     <key type="ai" name="column-permutation">
-      <default>[0, 1, 2, 3, 4, 5, 6, 7]</default>
+      <default>[0, 1, 2, 3, 4, 5, 6, 7, 8]</default>
       <summary>Column order in playlist</summary>
       <description></description>
     </key>
     <key type="ab" name="column-visibilities">
-      <default>[true, false, true, true, true, true, false, false]</default>
+      <default>[true, false, true, true, false, true, true, false, false]</default>
       <summary>Visibility of columns in playlist</summary>
       <description></description>
     </key>
     <key type="ai" name="column-sizes">
-      <default>[33, 0, 203, 153, 174, 0, 0, 0]</default>
+      <default>[33, 0, 203, 153, 153, 174, 0, 0, 0]</default>
       <summary>Sizes of columns in playlist</summary>
       <description></description>
     </key>
