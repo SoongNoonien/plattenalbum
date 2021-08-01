@@ -3979,22 +3979,21 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_song_changed(self, *args):
 		song=self._client.currentsong()
 		if song == {}:
+			self.set_title("mpdevil")
 			if self._use_csd:
-				self.set_title("mpdevil")
 				self._header_bar.set_subtitle("")
-			else:
-				self.set_title("mpdevil")
 		else:
 			song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(song))
 			if song["date"] == "":
 				date=""
 			else:
-				date=f" ({song['date']})"
+				date=f"({song['date']})"
+			album_with_date=" ".join(filter(None, (song["album"], date)))
 			if self._use_csd:
-				self.set_title(f"{song['title']} • {song['artist']}")
-				self._header_bar.set_subtitle(song["album"]+date)
+				self.set_title(" • ".join(filter(None, (song["title"], song["artist"]))))
+				self._header_bar.set_subtitle(album_with_date)
 			else:
-				self.set_title(f"{song['title']} • {song['artist']} • {song['album']}{date}")
+				self.set_title(" • ".join(filter(None, (song["title"], song["artist"], album_with_date))))
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
 					self._notify.close()  # clear previous notifications
