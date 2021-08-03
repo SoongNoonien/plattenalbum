@@ -779,7 +779,7 @@ class Client(MPDClient):
 			return None
 
 	def get_albums(self, artist, genre):
-		self.tagtypes("clear")
+		self.restrict_tagtypes()
 		albums=[]
 		artist_type=self._settings.get_artist_type()
 		if genre is None:
@@ -837,6 +837,13 @@ class Client(MPDClient):
 				self.previous()
 		else:
 			self.previous()
+
+	def restrict_tagtypes(self, *tags):
+		self.command_list_ok_begin()
+		self.tagtypes("clear")
+		for tag in tags:
+			self.tagtypes("enable", tag)
+		self.command_list_end()
 
 	def _main_loop(self, *args):
 		try:
@@ -1775,7 +1782,9 @@ class AlbumPopover(Gtk.Popover):
 			genre_filter=()
 		else:
 			genre_filter=("genre", genre)
+		self._client.restrict_tagtypes("track", "title", "artist")
 		songs=self._client.find("album", album, "date", date, self._settings.get_artist_type(), album_artist, *genre_filter)
+		self._client.tagtypes("all")
 		for s in songs:
 			song=ClientHelper.song_to_list_dict(ClientHelper.pepare_song_for_display(s))
 			track=song["track"][0]
@@ -1972,6 +1981,7 @@ class SearchWindow(Gtk.Box):
 					search_tag=self._tag_combo_box.get_active_text()
 				search_text=self.search_entry.get_text()
 				stripe_size=100
+				self._client.restrict_tagtypes("track", "title", "artist", "album")
 				try:  # client cloud meanwhile disconnect
 					songs=self._client.search(search_tag, search_text, "window", f"0:{stripe_size}")
 				except MPDBase.ConnectionError:
@@ -2006,6 +2016,7 @@ class SearchWindow(Gtk.Box):
 						self._done_callback()
 						return
 					stripe_start+=stripe_size
+				self._client.tagtypes("all")
 			if hits > 0:
 				self._action_bar.set_sensitive(True)
 			self._done_callback()
@@ -3013,11 +3024,13 @@ class PlaylistWindow(Gtk.Overlay):
 		self._store.handler_block(self._row_deleted)
 		self._song_popover.popdown()
 		self._unselect()
+		self._client.restrict_tagtypes("track", "disc", "title", "artist", "album", "date", "genre")
 		songs=[]
 		if self._playlist_version is not None:
 			songs=self._client.plchanges(self._playlist_version)
 		else:
 			songs=self._client.playlistinfo()
+		self._client.tagtypes("all")
 		if songs != []:
 			self._treeview.freeze_child_notify()
 			self._set_playlist_info("")
