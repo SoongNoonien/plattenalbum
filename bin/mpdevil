@@ -496,7 +496,7 @@ class ClientHelper():
 
 	def pepare_song_for_display(song):
 		base_song={
-			"title": _("Unknown Title"),
+			"title": os.path.basename(song["file"]),
 			"track": "",
 			"disc": "",
 			"artist": "",
