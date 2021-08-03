@@ -1989,7 +1989,7 @@ class SearchWindow(Gtk.Box):
 							int_track=int(song["track"])
 						except:
 							int_track=0
-						self._store.append([
+						self._store.insert_with_valuesv(-1, range(7), [
 								song["track"], song["title"],
 								song["artist"], song["album"],
 								song["human_duration"], song["file"],
@@ -2075,9 +2075,9 @@ class SelectionList(Gtk.TreeView):
 		items.sort(key=lambda item: locale.strxfrm(item[:1]))
 		for item in items:
 			if current_char == item[:1].upper():
-				self._store.append([item, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+				self._store.insert_with_valuesv(-1, range(4), [item, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
 			else:
-				self._store.append([item, Pango.Weight.BOOK, item[:1].upper(), Pango.Weight.BOLD])
+				self._store.insert_with_valuesv(-1, range(4), [item, Pango.Weight.BOOK, item[:1].upper(), Pango.Weight.BOLD])
 				current_char=item[:1].upper()
 
 	def get_item(self, path):
@@ -3039,7 +3039,7 @@ class PlaylistWindow(Gtk.Overlay):
 						10, float(song["duration"])
 					)
 				except:
-					self._store.append([
+					self._store.insert_with_valuesv(-1, range(11), [
 						song["track"], song["disc"],
 						song["title"], song["artist"],
 						song["album"], song["human_duration"],
