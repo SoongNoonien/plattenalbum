@@ -1980,7 +1980,7 @@ class SearchWindow(Gtk.Box):
 				else:
 					search_tag=self._tag_combo_box.get_active_text()
 				search_text=self.search_entry.get_text()
-				stripe_size=100
+				stripe_size=1000
 				self._client.restrict_tagtypes("track", "title", "artist", "album")
 				try:  # client cloud meanwhile disconnect
 					songs=self._client.search(search_tag, search_text, "window", f"0:{stripe_size}")
