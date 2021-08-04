@@ -193,12 +193,12 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		args=list(parameters.unpack())
 		result=getattr(self, method_name)(*args)
 		out_args=self._node_info.lookup_interface(interface_name).lookup_method(method_name).out_args
-		if out_args == []:
-			invocation.return_value(None)
-		else:
+		if out_args:
 			signature="("+"".join([arg.signature for arg in out_args])+")"
 			variant=GLib.Variant(signature, (result,))
 			invocation.return_value(variant)
+		else:
+			invocation.return_value(None)
 
 	# setter and getter
 	def _get_playback_status(self):
@@ -593,7 +593,7 @@ class Client(MPDClient):
 		active=self._settings.get_int("active-profile")
 		try:
 			self.connect(self._settings.get_value("hosts")[active], self._settings.get_value("ports")[active])
-			if self._settings.get_value("passwords")[active] != "":
+			if self._settings.get_value("passwords")[active]:
 				self.password(self._settings.get_value("passwords")[active])
 		except:
 			self.emitter.emit("connection_error")
@@ -629,7 +629,7 @@ class Client(MPDClient):
 			for f in files:
 				self.add(f)
 		def play(files):
-			if files != []:
+			if files:
 				self.clear()
 				for f in files:
 					self.add(f)
@@ -729,9 +729,7 @@ class Client(MPDClient):
 		lib_path=self._settings.get_lib_path()
 		if lib_path is not None:
 			regex_str=self._settings.get_value("regex")[active_profile]
-			if regex_str == "":
-				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
-			else:
+			if regex_str:
 				regex_str=regex_str.replace("%AlbumArtist%", song["albumartist"][0])
 				regex_str=regex_str.replace("%Album%", song["album"][0])
 				try:
@@ -739,6 +737,8 @@ class Client(MPDClient):
 				except:
 					print("illegal regex:", regex_str)
 					return (None, None)
+			else:
+				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
 			if song_file:
 				song_dir=os.path.join(lib_path, os.path.dirname(song_file))
 				if song_dir.endswith(".cue"):
@@ -954,7 +954,7 @@ class Settings(Gio.Settings):
 		if profile is None:  # use current profile if none is given
 			profile=self.get_int("active-profile")
 		lib_path=self.get_value("paths")[profile]
-		if lib_path == "":
+		if not lib_path:
 			lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 		return lib_path
 
@@ -1790,7 +1790,7 @@ class AlbumPopover(Gtk.Popover):
 			except:
 				pass
 			artist=str(song["artist"])
-			if artist == album_artist or artist == "":
+			if artist == album_artist or not artist:
 				title_artist=f"<b>{GLib.markup_escape_text(title)}</b>"
 			else:
 				title_artist=f"<b>{GLib.markup_escape_text(title)}</b> • {GLib.markup_escape_text(artist)}"
@@ -2380,10 +2380,10 @@ class AlbumWindow(FocusFrame):
 				tooltip=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(
 					number=length, duration=duration)
 				# album label
-				if album["year"] == "":
-					display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b>"
-				else:
+				if album["year"]:
 					display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b> ({GLib.markup_escape_text(album['year'])})"
+				else:
+					display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b>"
 				display_label_artist=f"{display_label}\n{GLib.markup_escape_text(album['artist'])}"
 				# add album
 				self._store.append(
@@ -2668,11 +2668,11 @@ class LyricsWindow(FocusFrame):
 
 	def enable(self, *args):
 		current_song=self._client.currentsong()
-		if current_song == {}:
-			if self._displayed_song_file is not None:
+		if current_song:
+			if current_song["file"] != self._displayed_song_file:
 				self._refresh()
 		else:
-			if current_song["file"] != self._displayed_song_file:
+			if self._displayed_song_file is not None:
 				self._refresh()
 		self._client.emitter.handler_unblock(self._song_changed)
 		GLib.idle_add(self._text_view.grab_focus)  # focus textview
@@ -2697,10 +2697,10 @@ class LyricsWindow(FocusFrame):
 				lyrics+=line+"\n"
 			lyrics+="\n"
 		output=lyrics[:-2]  # omit last two newlines
-		if output == "":  # assume song is instrumental when lyrics are empty
-			return "Instrumental"
-		else:
+		if output:
 			return output
+		else:  # assume song is instrumental when lyrics are empty
+			return "Instrumental"
 
 	def _display_lyrics(self, current_song):
 		GLib.idle_add(self._text_buffer.set_text, _("searching…"), -1)
@@ -2951,10 +2951,10 @@ class PlaylistWindow(Gtk.Overlay):
 			self._select(path)
 
 	def _set_playlist_info(self, text):
-		if text == "":
-			self._columns[2].set_title(_("Title"))
-		else:
+		if text:
 			self._columns[2].set_title(" • ".join([_("Title"), text]))
+		else:
+			self._columns[2].set_title(_("Title"))
 
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -3407,14 +3407,14 @@ class AudioFormat(Gtk.Box):
 
 	def _on_song_changed(self, *args):
 		current_song=self._client.currentsong()
-		if current_song == {}:
-			self._file_type_label.set_text("")
-			self._separator_label.set_text(" kb/s")
-			self._format_label.set_markup("<small> </small>")
-		else:
+		if current_song:
 			file_type=current_song["file"].split(".")[-1].split("/")[0].upper()
 			self._separator_label.set_text(" kb/s • ")
 			self._file_type_label.set_text(file_type)
+		else:
+			self._file_type_label.set_text("")
+			self._separator_label.set_text(" kb/s")
+			self._format_label.set_markup("<small> </small>")
 
 	def _on_mini_player(self, obj, typestring):
 		self._on_show_audio_format_changed()
