@@ -491,21 +491,21 @@ class MultiTag(list):
 
 class Song(collections.UserDict):
 	def __setitem__(self, key, value):
-		# time is deprecated https://mpd.readthedocs.io/en/latest/protocol.html#other-metadata
-		if key != "time":
-			if key == "duration":
-				super().__setitem__(key, Duration(value))
-			elif key == "format":
-				super().__setitem__(key, Format(value))
-			elif key == "last-modified":
-				super().__setitem__(key, LastModified(value))
-			elif key in ("range", "file", "pos", "id"):
-				super().__setitem__(key, value)
+		if key == "time":  # time is deprecated https://mpd.readthedocs.io/en/latest/protocol.html#other-metadata
+			pass
+		elif key == "duration":
+			super().__setitem__(key, Duration(value))
+		elif key == "format":
+			super().__setitem__(key, Format(value))
+		elif key == "last-modified":
+			super().__setitem__(key, LastModified(value))
+		elif key in ("range", "file", "pos", "id"):
+			super().__setitem__(key, value)
+		else:
+			if isinstance(value, list):
+				super().__setitem__(key, MultiTag(value))
 			else:
-				if isinstance(value, list):
-					super().__setitem__(key, MultiTag(value))
-				else:
-					super().__setitem__(key, MultiTag([value]))
+				super().__setitem__(key, MultiTag([value]))
 
 	def __missing__(self, key):
 		if key == "title":
