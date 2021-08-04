@@ -473,11 +473,11 @@ class Format():
 			bits="32fp"
 		try:
 			int_chan=int(channels)
-		except:
+		except ValueError:
 			int_chan=0
 		try:
 			freq=locale.str(int(samplerate)/1000)
-		except:
+		except ValueError:
 			freq=samplerate
 		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=int_chan)
 		return f"{freq} kHz • {bits} bit • {channels}"
@@ -595,7 +595,7 @@ class Client(MPDClient):
 			self.connect(self._settings.get_value("hosts")[active], self._settings.get_value("ports")[active])
 			if self._settings.get_value("passwords")[active]:
 				self.password(self._settings.get_value("passwords")[active])
-		except:
+		except ConnectionRefusedError:
 			self.emitter.emit("connection_error")
 			return False
 		# connect successful
@@ -643,7 +643,7 @@ class Client(MPDClient):
 				current_song_file=self.playlistinfo()[0]["file"]
 				try:
 					self.delete((1,))  # delete all songs, but the first. bad song index possible
-				except:
+				except MPDBase.CommandError:
 					pass
 				for f in files:
 					if f == current_song_file:
@@ -704,7 +704,7 @@ class Client(MPDClient):
 				current_song_file=self.currentsong()["file"]
 				try:
 					self.delete((1,))  # delete all songs, but the first. bad song index possible
-				except:
+				except MPDBase.CommandError:
 					pass
 				append()
 				duplicates=self.playlistfind("file", current_song_file)
@@ -1787,7 +1787,7 @@ class AlbumPopover(Gtk.Popover):
 			# only show artists =/= albumartist
 			try:
 				song["artist"].remove(album_artist)
-			except:
+			except ValueError:
 				pass
 			artist=str(song["artist"])
 			if artist == album_artist or not artist:
@@ -1991,7 +1991,7 @@ class SearchWindow(Gtk.Box):
 							return
 						try:
 							int_track=int(song["track"][0])
-						except:
+						except ValueError:
 							int_track=0
 						self._store.insert_with_valuesv(-1, range(7), [
 								str(song["track"]), str(song["title"]),
