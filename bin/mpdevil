@@ -515,11 +515,11 @@ class Song(collections.UserDict):
 		else:
 			return MultiTag([""])
 
-class ClientHelper():
-	def binary_to_pixbuf(binary, size):
+class BinaryCover(bytes):
+	def get_pixbuf(self, size):
 		loader=GdkPixbuf.PixbufLoader()
 		try:
-			loader.write(binary)
+			loader.write(self)
 			loader.close()
 			raw_pixbuf=loader.get_pixbuf()
 			ratio=raw_pixbuf.get_width()/raw_pixbuf.get_height()
@@ -531,9 +531,10 @@ class ClientHelper():
 			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 		return pixbuf
 
-	def file_to_pixbuf(file, size):
+class FileCover(str):
+	def get_pixbuf(self, size):
 		try:
-			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(file, size, size)
+			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(self, size, size)
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
 			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 		return pixbuf
@@ -762,17 +763,17 @@ class Client(MPDClient):
 					binary=None
 		return binary
 
-	def get_cover(self, song, size):
+	def get_cover(self, song):
 		cover_path=self.get_cover_path(song)
 		if cover_path is None:
-			cover_binary=self.get_cover_binary(song.get("file"))
+			cover_binary=self.get_cover_binary(song["file"])
 			if cover_binary is None:
-				pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
+				cover=FileCover(FALLBACK_COVER)
 			else:
-				pixbuf=ClientHelper.binary_to_pixbuf(cover_binary, size)
+				cover=BinaryCover(cover_binary)
 		else:
-			pixbuf=ClientHelper.file_to_pixbuf(cover_path, size)
-		return pixbuf
+			cover=FileCover(cover_path)
+		return cover
 
 	def get_absolute_path(self, uri):
 		lib_path=self._settings.get_lib_path()
@@ -786,7 +787,7 @@ class Client(MPDClient):
 			return None
 
 	def get_albums(self, artist, genre):
-		self.restrict_tagtypes()
+		self.restrict_tagtypes("albumartist", "album")
 		albums=[]
 		artist_type=self._settings.get_artist_type()
 		if genre is None:
@@ -800,18 +801,9 @@ class Client(MPDClient):
 				count=self.count(artist_type, artist, "album", album, "date", year, *genre_filter)
 				duration=Duration(count["playtime"])
 				song=self.find("album", album, "date", year, artist_type, artist, *genre_filter, "window", "0:1")[0]
-				cover_path=self.get_cover_path(song)
-				if cover_path is None:
-					cover_binary=self.get_cover_binary(song["file"])
-					if cover_binary is None:
-						albums.append({"artist": artist,"album": album,"year": year,
-						"length": count["songs"],"duration": duration})
-					else:
-						albums.append({"artist": artist,"album": album,"year": year,
-						"length": count["songs"],"duration": duration,"cover_binary": cover_binary})
-				else:
-					albums.append({"artist": artist,"album": album,"year": year,
-					"length": count["songs"],"duration": duration, "cover_path": cover_path})
+				cover=self.get_cover(song)
+				albums.append({"artist": artist,"album": album,"year": year,
+					"length": count["songs"], "duration": duration, "cover": cover})
 		self.tagtypes("all")
 		return albums
 
@@ -2410,13 +2402,7 @@ class AlbumWindow(FocusFrame):
 					album=albums[row[7]]
 					if self._stop_flag:
 						break
-					if "cover_path" in album:
-						cover=ClientHelper.file_to_pixbuf(album["cover_path"], size)
-					else:
-						if "cover_binary" in album:
-							cover=ClientHelper.binary_to_pixbuf(album["cover_binary"], size)
-						else:
-							cover=fallback_cover
+					cover=album["cover"].get_pixbuf(size)
 					GLib.idle_add(set_cover, row, cover)
 					GLib.idle_add(self._progress_bar.set_fraction, (i+1)/total_albums)
 				GLib.idle_add(self._done_callback)
@@ -2801,7 +2787,7 @@ class MainCover(Gtk.Image):
 
 	def _refresh(self, *args):
 		current_song=self._client.currentsong()
-		self.set_from_pixbuf(self._client.get_cover(current_song, self._settings.get_int("track-cover")))
+		self.set_from_pixbuf(self._client.get_cover(current_song).get_pixbuf(self._settings.get_int("track-cover")))
 
 	def _on_disconnected(self, *args):
 		size=self._settings.get_int("track-cover")
@@ -4002,7 +3988,7 @@ class MainWindow(Gtk.ApplicationWindow):
 				if not self.is_active() and self._client.status()["state"] == "play":
 					self._notify.close()  # clear previous notifications
 					self._notify.update(str(song["title"]), f"{song['artist']}\n{song['album']}{date}")
-					pixbuf=self._client.get_cover(song, 400)
+					pixbuf=self._client.get_cover(song).get_pixbuf(400)
 					self._notify.set_image_from_pixbuf(pixbuf)
 					self._notify.show()
 		else:
