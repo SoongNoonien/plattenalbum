@@ -26,6 +26,7 @@ import requests
 from bs4 import BeautifulSoup
 import threading
 import datetime
+import collections
 import os
 import sys
 import re
@@ -372,8 +373,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		Translate metadata returned by MPD to the MPRIS v2 syntax.
 		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
 		"""
-		mpd_meta=self._client.currentsong()  # raw values needed for cover
-		song=ClientHelper.song_to_list_dict(mpd_meta)
+		song=self._client.currentsong()
 		self._metadata={}
 		for tag, xesam_tag in (("album","album"),("title","title"),("date","contentCreated")):
 			if tag in song:
@@ -385,17 +385,17 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			if tag in song:
 				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("as", song[tag])
 		if "id" in song:
-			self._metadata["mpris:trackid"]=GLib.Variant("o", f"{self._MPRIS_PATH}/Track/{song['id'][0]}")
+			self._metadata["mpris:trackid"]=GLib.Variant("o", f"{self._MPRIS_PATH}/Track/{song['id']}")
 		if "duration" in song:
-			self._metadata["mpris:length"]=GLib.Variant("x", float(song["duration"][0])*1000000)
+			self._metadata["mpris:length"]=GLib.Variant("x", float(song["duration"])*1000000)
 		if "file" in song:
-			song_file=song["file"][0]
+			song_file=song["file"]
 			if "://" in song_file:  # remote file
 				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
 			else:
 				lib_path=self._settings.get_value("paths")[self._settings.get_int("active-profile")]
 				self._metadata["xesam:url"]=GLib.Variant("s", f"file://{os.path.join(lib_path, song_file)}")
-				cover_path=self._client.get_cover_path(mpd_meta)
+				cover_path=self._client.get_cover_path(song)
 				if cover_path is not None:
 					self._metadata["mpris:artUrl"]=GLib.Variant("s", f"file://{cover_path}")
 
@@ -441,9 +441,9 @@ class MPRISInterface:  # TODO emit Seeked if needed
 # MPD client wrapper #
 ######################
 
-class ClientHelper():
-	def seconds_to_display_time(seconds):
-		delta=datetime.timedelta(seconds=seconds)
+class Duration(float):
+	def __str__(self):
+		delta=datetime.timedelta(seconds=int(self))
 		if delta.days > 0:
 			days=ngettext("{days} day", "{days} days", delta.days).format(days=delta.days)
 			time_string=f"{days}, {datetime.timedelta(seconds=delta.seconds)}"
@@ -451,9 +451,24 @@ class ClientHelper():
 			time_string=str(delta).lstrip("0").lstrip(":")
 		return time_string.replace(":", "∶")  # use 'ratio' as delimiter
 
-	def convert_audio_format(audio_format):
+class LastModified():
+	def __init__(self, date):
+		self._date=date
+
+	def __str__(self):
+		time=datetime.datetime.strptime(self._date, "%Y-%m-%dT%H:%M:%SZ")
+		return time.strftime("%a %d %B %Y, %H∶%M UTC")
+
+	def raw(self):
+		return self._date
+
+class Format():
+	def __init__(self, audio_format):
+		self._format=audio_format
+
+	def __str__(self):
 		# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
-		samplerate, bits, channels=audio_format.split(":")
+		samplerate, bits, channels=self._format.split(":")
 		if bits == "f":
 			bits="32fp"
 		try:
@@ -467,52 +482,40 @@ class ClientHelper():
 		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=int_chan)
 		return f"{freq} kHz • {bits} bit • {channels}"
 
-	def song_to_str_dict(song):  # converts tags with multiple values to comma separated strings
-		return_song={}
-		for tag, value in song.items():
-			if isinstance(value, list):
-				return_song[tag]=(", ".join(value))
+	def raw(self):
+		return self._format
+
+class MultiTag(list):
+	def __str__(self):
+		return ", ".join(self)
+
+class Song(collections.UserDict):
+	def __setitem__(self, key, value):
+		# time is deprecated https://mpd.readthedocs.io/en/latest/protocol.html#other-metadata
+		if key != "time":
+			if key == "duration":
+				super().__setitem__(key, Duration(value))
+			elif key == "format":
+				super().__setitem__(key, Format(value))
+			elif key == "last-modified":
+				super().__setitem__(key, LastModified(value))
+			elif key in ("range", "file", "pos", "id"):
+				super().__setitem__(key, value)
 			else:
-				return_song[tag]=value
-		return return_song
+				if isinstance(value, list):
+					super().__setitem__(key, MultiTag(value))
+				else:
+					super().__setitem__(key, MultiTag([value]))
 
-	def song_to_first_str_dict(song):  # extracts the first value of multiple value tags
-		return_song={}
-		for tag, value in song.items():
-			if isinstance(value, list):
-				return_song[tag]=value[0]
-			else:
-				return_song[tag]=value
-		return return_song
+	def __missing__(self, key):
+		if key == "title":
+			return MultiTag([os.path.basename(self.data["file"])])
+		elif key == "duration":
+			return "0"
+		else:
+			return MultiTag([""])
 
-	def song_to_list_dict(song):  # converts all values to lists
-		return_song={}
-		for tag, value in song.items():
-			if isinstance(value, list):
-				return_song[tag]=value
-			else:
-				return_song[tag]=[value]
-		return return_song
-
-	def pepare_song_for_display(song):
-		base_song={
-			"title": os.path.basename(song["file"]),
-			"track": "",
-			"disc": "",
-			"artist": "",
-			"album": "",
-			"duration": "0.0",
-			"date": "",
-			"genre": ""
-		}
-		base_song.update(song)
-		base_song["human_duration"]=ClientHelper.seconds_to_display_time(int(float(base_song["duration"])))
-		for tag in ("disc", "track"):  # remove confusing multiple tags
-			if tag in song:
-				if isinstance(song[tag], list):
-					base_song[tag]=song[tag][0]
-		return base_song
-
+class ClientHelper():
 	def binary_to_pixbuf(binary, size):
 		loader=GdkPixbuf.PixbufLoader()
 		try:
@@ -569,6 +572,18 @@ class Client(MPDClient):
 
 		# connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
+
+	# overloads
+	def currentsong(self, *args):
+		return Song(super().currentsong(*args))
+	def search(self, *args):
+		return [Song(song) for song in super().search(*args)]
+	def find(self, *args):
+		return [Song(song) for song in super().find(*args)]
+	def playlistinfo(self):
+		return [Song(song) for song in super().playlistinfo()]
+	def plchanges(self, version):
+		return [Song(song) for song in super().plchanges(version)]
 
 	def start(self):
 		self.emitter.emit("disconnected")  # bring player in defined state
@@ -704,10 +719,9 @@ class Client(MPDClient):
 		else:
 			return([])
 
-	def get_cover_path(self, raw_song):
+	def get_cover_path(self, song):
 		path=None
-		song=ClientHelper.song_to_first_str_dict(raw_song)
-		song_file=song.get("file")
+		song_file=song["file"]
 		active_profile=self._settings.get_int("active-profile")
 		lib_path=self._settings.get_lib_path()
 		if lib_path is not None:
@@ -715,14 +729,14 @@ class Client(MPDClient):
 			if regex_str == "":
 				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
 			else:
-				regex_str=regex_str.replace("%AlbumArtist%", song.get("albumartist", ""))
-				regex_str=regex_str.replace("%Album%", song.get("album", ""))
+				regex_str=regex_str.replace("%AlbumArtist%", song["albumartist"][0])
+				regex_str=regex_str.replace("%Album%", song["album"][0])
 				try:
 					regex=re.compile(regex_str, flags=re.IGNORECASE)
 				except:
 					print("illegal regex:", regex_str)
 					return (None, None)
-			if song_file is not None:
+			if song_file:
 				song_dir=os.path.join(lib_path, os.path.dirname(song_file))
 				if song_dir.endswith(".cue"):
 					song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
@@ -758,7 +772,7 @@ class Client(MPDClient):
 			pixbuf=ClientHelper.file_to_pixbuf(cover_path, size)
 		return pixbuf
 
-	def get_metadata(self, uri):
+	def get_metadata(self, uri):  # TODO Song
 		meta_base=self.lsinfo(uri)[0]
 		try:  # .cue files produce an error here
 			meta_extra=self.readcomments(uri)  # contains comment tag
@@ -791,19 +805,20 @@ class Client(MPDClient):
 			years=self.comp_list("date", "album", album, artist_type, artist, *genre_filter)
 			for year in years:
 				count=self.count(artist_type, artist, "album", album, "date", year, *genre_filter)
+				duration=Duration(count["playtime"])
 				song=self.find("album", album, "date", year, artist_type, artist, *genre_filter, "window", "0:1")[0]
 				cover_path=self.get_cover_path(song)
 				if cover_path is None:
-					cover_binary=self.get_cover_binary(song.get("file"))
+					cover_binary=self.get_cover_binary(song["file"])
 					if cover_binary is None:
 						albums.append({"artist": artist,"album": album,"year": year,
-						"length": count["songs"],"duration": count["playtime"]})
+						"length": count["songs"],"duration": duration})
 					else:
 						albums.append({"artist": artist,"album": album,"year": year,
-						"length": count["songs"],"duration": count["playtime"],"cover_binary": cover_binary})
+						"length": count["songs"],"duration": duration,"cover_binary": cover_binary})
 				else:
 					albums.append({"artist": artist,"album": album,"year": year,
-					"length": count["songs"],"duration": count["playtime"], "cover_path": cover_path})
+					"length": count["songs"],"duration": duration, "cover_path": cover_path})
 		self.tagtypes("all")
 		return albums
 
@@ -1371,7 +1386,7 @@ class ServerStats(Gtk.Dialog):
 		stats=client.stats()
 		stats["protocol"]=str(client.mpd_version)
 		for key in ("uptime","playtime","db_playtime"):
-			stats[key]=ClientHelper.seconds_to_display_time(int(stats[key]))
+			stats[key]=str(Duration(stats[key]))
 		stats["db_update"]=str(datetime.datetime.fromtimestamp(int(stats["db_update"]))).replace(":", "∶")
 
 		for i, key in enumerate(("protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs")):
@@ -1573,18 +1588,14 @@ class SongPopover(Gtk.Popover):
 		window=self.get_toplevel()
 		self._scroll.set_max_content_height(window.get_size()[1]//2)
 		self._store.clear()
-		song=ClientHelper.song_to_str_dict(self._client.get_metadata(uri))
-		song.pop("time", None)
+		song=Song(self._client.get_metadata(uri))  # TODO Song
 		for tag, value in song.items():
 			if tag == "duration":
-				self._store.append([tag+":", ClientHelper.seconds_to_display_time(int(float(value))), locale.str(float(value))])
-			elif tag == "last-modified":
-				time=datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
-				self._store.append([tag+":", time.strftime("%a %d %B %Y, %H∶%M UTC"), value])
-			elif tag == "format":
-				self._store.append([tag+":", ClientHelper.convert_audio_format(value), value])
+				self._store.append([tag+":", str(value), locale.str(value)])
+			elif tag in ("last-modified", "format"):
+				self._store.append([tag+":", str(value), value.raw()])
 			else:
-				self._store.append([tag+":", value, GLib.markup_escape_text(value)])
+				self._store.append([tag+":", str(value), GLib.markup_escape_text(str(value))])
 		abs_path=self._client.get_absolute_path(uri)
 		if abs_path is None:  # show open with button when song is on the same computer
 			self._open_button_revealer.set_reveal_child(False)
@@ -1785,8 +1796,7 @@ class AlbumPopover(Gtk.Popover):
 		self._client.restrict_tagtypes("track", "title", "artist")
 		songs=self._client.find("album", album, "date", date, self._settings.get_artist_type(), album_artist, *genre_filter)
 		self._client.tagtypes("all")
-		for s in songs:
-			song=ClientHelper.song_to_list_dict(ClientHelper.pepare_song_for_display(s))
+		for song in songs:
 			track=song["track"][0]
 			title=(", ".join(song["title"]))
 			# only show artists =/= albumartist
@@ -1794,12 +1804,12 @@ class AlbumPopover(Gtk.Popover):
 				song["artist"].remove(album_artist)
 			except:
 				pass
-			artist=(", ".join(song["artist"]))
+			artist=str(song["artist"])
 			if artist == album_artist or artist == "":
 				title_artist=f"<b>{GLib.markup_escape_text(title)}</b>"
 			else:
 				title_artist=f"<b>{GLib.markup_escape_text(title)}</b> • {GLib.markup_escape_text(artist)}"
-			self._store.append([track, title_artist, song["human_duration"][0], song["file"][0], title])
+			self._store.append([track, title_artist, str(song["duration"]), song["file"], title])
 		self._songs_view.set_model(self._store)
 		self.popup()
 		self._songs_view.columns_autosize()
@@ -1990,19 +2000,18 @@ class SearchWindow(Gtk.Box):
 				stripe_start=stripe_size
 				while songs:
 					hits+=len(songs)
-					for s in songs:
+					for song in songs:
 						if self._stop_flag:
 							self._done_callback()
 							return
-						song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
 						try:
-							int_track=int(song["track"])
+							int_track=int(song["track"][0])
 						except:
 							int_track=0
 						self._store.insert_with_valuesv(-1, range(7), [
-								song["track"], song["title"],
-								song["artist"], song["album"],
-								song["human_duration"], song["file"],
+								str(song["track"]), str(song["title"]),
+								str(song["artist"]), str(song["album"]),
+								str(song["duration"]), song["file"],
 								int_track
 						])
 					self.search_entry.progress_pulse()
@@ -2193,11 +2202,11 @@ class ArtistWindow(SelectionList):
 		if genre is not None:
 			self.select_all()
 		else:
-			song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
-			if song != {}:
-				artist=song.get(self._settings.get_artist_type())
-				if artist is None:
-					artist=song.get("artist", "")
+			song=self._client.currentsong()
+			if song:
+				artist=song[self._settings.get_artist_type()][0]
+				if not artist:
+					artist=song["artist"][0]
 				self.select(artist)
 			else:
 				if self.length() > 0:
@@ -2315,8 +2324,8 @@ class AlbumWindow(FocusFrame):
 
 	def scroll_to_current_album(self):
 		def callback():
-			song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
-			album=song.get("album", "")
+			song=self._client.currentsong()
+			album=song["album"][0]
 			self._iconview.unselect_all()
 			row_num=len(self._store)
 			for i in range(0, row_num):
@@ -2381,7 +2390,7 @@ class AlbumWindow(FocusFrame):
 			fallback_cover=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 			for i, album in enumerate(albums):
 				# tooltip
-				duration=ClientHelper.seconds_to_display_time(int(album["duration"]))
+				duration=str(album["duration"])
 				length=int(album["length"])
 				tooltip=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(
 					number=length, duration=duration)
@@ -2564,16 +2573,16 @@ class Browser(Gtk.Paned):
 		self.pack2(self._albums_search_stack, True, False)
 
 	def _back_to_current_album(self, force=False):
-		song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
-		if song != {}:
+		song=self._client.currentsong()
+		if song:
 			self.search_button.set_active(False)
 			self._genres_button.set_active(False)
 			# get artist name
-			artist=song.get(self._settings.get_artist_type())
-			if artist is None:
-				artist=song.get("artist", "")
+			artist=song[self._settings.get_artist_type()][0]
+			if not artist:
+				artist=song["artist"][0]
 			# deactivate genre filter to show all artists (if needed)
-			if song.get("genre", "") != self._genre_select.get_selected() or force:
+			if song["genre"][0] != self._genre_select.get_selected() or force:
 				self._genre_select.deactivate()
 			# select artist
 			if self._artist_window.get_selected() is None and not force:  # all artists selected
@@ -2717,7 +2726,7 @@ class LyricsWindow(FocusFrame):
 	def _display_lyrics(self, current_song):
 		GLib.idle_add(self._text_buffer.set_text, _("searching…"), -1)
 		try:
-			text=self._get_lyrics(current_song.get("title", ""), current_song.get("artist", ""))
+			text=self._get_lyrics(current_song["title"][0], current_song["artist"][0])
 		except requests.exceptions.ConnectionError:
 			self._displayed_song_file=None
 			text=_("connection error")
@@ -2727,17 +2736,17 @@ class LyricsWindow(FocusFrame):
 
 	def _refresh(self, *args):
 		current_song=self._client.currentsong()
-		if current_song == {}:
-			self._displayed_song_file=None
-			self._text_buffer.set_text("", -1)
-		else:
+		if current_song:
 			self._displayed_song_file=current_song["file"]
 			update_thread=threading.Thread(
 					target=self._display_lyrics,
-					kwargs={"current_song": ClientHelper.song_to_first_str_dict(current_song)},
+					kwargs={"current_song": current_song},
 					daemon=True
 			)
 			update_thread.start()
+		else:
+			self._displayed_song_file=None
+			self._text_buffer.set_text("", -1)
 
 	def _on_disconnected(self, *args):
 		self._displayed_song_file=None
@@ -2763,14 +2772,13 @@ class CoverEventBox(Gtk.EventBox):
 				window.begin_move_drag(1, event.x_root, event.y_root, Gdk.CURRENT_TIME)
 		else:
 			if self._client.connected():
-				song=ClientHelper.song_to_first_str_dict(self._client.currentsong())
-				if song != {}:
-					try:
-						artist=song[self._settings.get_artist_type()]
-					except:
-						artist=song.get("artist", "")
-					album=song.get("album", "")
-					year=song.get("date", "")
+				song=self._client.currentsong()
+				if song:
+					artist=song[self._settings.get_artist_type()][0]
+					if not artist:
+						artist=song["artist"][0]
+					album=song["album"][0]
+					year=song["date"][0]
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 						self._client.album_to_playlist(album, artist, year, None)
 					elif event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
@@ -3031,32 +3039,31 @@ class PlaylistWindow(Gtk.Overlay):
 		else:
 			songs=self._client.playlistinfo()
 		self._client.tagtypes("all")
-		if songs != []:
+		if songs:
 			self._treeview.freeze_child_notify()
 			self._set_playlist_info("")
-			for s in songs:
-				song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(s))
+			for song in songs:
 				try:
 					treeiter=self._store.get_iter(song["pos"])
 					self._store.set(treeiter,
-						0, song["track"],
-						1, song["disc"],
-						2, song["title"],
-						3, song["artist"],
-						4, song["album"],
-						5, song["human_duration"],
-						6, song["date"],
-						7, song["genre"],
+						0, str(song["track"]),
+						1, str(song["disc"]),
+						2, str(song["title"]),
+						3, str(song["artist"]),
+						4, str(song["album"]),
+						5, str(song["duration"]),
+						6, str(song["date"]),
+						7, str(song["genre"]),
 						8, song["file"],
 						9, Pango.Weight.BOOK,
 						10, float(song["duration"])
 					)
 				except:
 					self._store.insert_with_valuesv(-1, range(11), [
-						song["track"], song["disc"],
-						song["title"], song["artist"],
-						song["album"], song["human_duration"],
-						song["date"], song["genre"],
+						str(song["track"]), str(song["disc"]),
+						str(song["title"]), str(song["artist"]),
+						str(song["album"]), str(song["duration"]),
+						str(song["date"]), str(song["genre"]),
 						song["file"], Pango.Weight.BOOK,
 						float(song["duration"])
 					])
@@ -3068,9 +3075,9 @@ class PlaylistWindow(Gtk.Overlay):
 		if playlist_length == 0:
 			self._set_playlist_info("")
 		else:
-			duration_human_readable=ClientHelper.seconds_to_display_time(int(sum([row[10] for row in self._store])))
+			duration=Duration(sum([row[10] for row in self._store]))
 			translated_string=ngettext("{number} song ({duration})", "{number} songs ({duration})", playlist_length)
-			self._set_playlist_info(translated_string.format(number=playlist_length, duration=duration_human_readable))
+			self._set_playlist_info(translated_string.format(number=playlist_length, duration=duration))
 		self._refresh_selection()
 		if self._playlist_version != version:
 			self._scroll_to_selected_title()
@@ -3312,12 +3319,12 @@ class SeekBar(Gtk.Box):
 			self._adjustment.set_upper(duration)
 			if self._update:
 				self._scale.set_value(elapsed)
-				self._elapsed.set_text(ClientHelper.seconds_to_display_time(int(elapsed)))
-				self._rest.set_text("-"+ClientHelper.seconds_to_display_time(int(duration-elapsed)))
+				self._elapsed.set_text(str(Duration(elapsed)))
+				self._rest.set_text(f"-{Duration(duration-elapsed)}")
 			self._scale.set_fill_level(elapsed)
 		else:
 			self._disable()
-			self._elapsed.set_text(ClientHelper.seconds_to_display_time(int(elapsed)))
+			self._elapsed.set_text(str(Duration(elapsed)))
 
 	def _disable(self, *args):
 		self.set_sensitive(False)
@@ -3354,8 +3361,8 @@ class SeekBar(Gtk.Box):
 				elapsed=duration
 			else:
 				elapsed=value
-			self._elapsed.set_text(ClientHelper.seconds_to_display_time(int(elapsed)))
-			self._rest.set_text("-"+ClientHelper.seconds_to_display_time(int(duration-elapsed)))
+			self._elapsed.set_text(str(Duration(elapsed)))
+			self._rest.set_text(f"-{Duration(duration-elapsed)}")
 			self._jumped=True
 
 	def _on_elapsed_button_release_event(self, widget, event):
@@ -3410,7 +3417,7 @@ class AudioFormat(Gtk.Box):
 		if audio_format is None:
 			self._format_label.set_markup("<small> </small>")
 		else:
-			self._format_label.set_markup(f"<small>{ClientHelper.convert_audio_format(audio_format)}</small>")
+			self._format_label.set_markup(f"<small>{Format(audio_format)}</small>")
 
 	def _on_bitrate(self, emitter, brate):
 		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
@@ -3987,29 +3994,28 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_song_changed(self, *args):
 		song=self._client.currentsong()
-		if song == {}:
-			self.set_title("mpdevil")
-			if self._use_csd:
-				self._header_bar.set_subtitle("")
-		else:
-			song=ClientHelper.song_to_str_dict(ClientHelper.pepare_song_for_display(song))
-			if song["date"] == "":
-				date=""
-			else:
+		if song:
+			if "date" in song:
 				date=f"({song['date']})"
-			album_with_date=" ".join(filter(None, (song["album"], date)))
+			else:
+				date=""
+			album_with_date=" ".join(filter(None, (str(song["album"]), date)))
 			if self._use_csd:
-				self.set_title(" • ".join(filter(None, (song["title"], song["artist"]))))
+				self.set_title(" • ".join(filter(None, (str(song["title"]), str(song["artist"])))))
 				self._header_bar.set_subtitle(album_with_date)
 			else:
-				self.set_title(" • ".join(filter(None, (song["title"], song["artist"], album_with_date))))
+				self.set_title(" • ".join(filter(None, (str(song["title"]), str(song["artist"]), album_with_date))))
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
 					self._notify.close()  # clear previous notifications
-					self._notify.update(song["title"], f"{song['artist']}\n{song['album']}{date}")
+					self._notify.update(str(song["title"]), f"{song['artist']}\n{song['album']}{date}")
 					pixbuf=self._client.get_cover(song, 400)
 					self._notify.set_image_from_pixbuf(pixbuf)
 					self._notify.show()
+		else:
+			self.set_title("mpdevil")
+			if self._use_csd:
+				self._header_bar.set_subtitle("")
 
 	def _on_reconnected(self, *args):
 		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
