@@ -3986,7 +3986,6 @@ class MainWindow(Gtk.ApplicationWindow):
 				self.set_title(" • ".join(filter(None, (str(song["title"]), str(song["artist"]), album_with_date))))
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
-					self._notify.close()  # clear previous notifications
 					self._notify.update(str(song["title"]), f"{song['artist']}\n{song['album']}{date}")
 					pixbuf=self._client.get_cover(song).get_pixbuf(400)
 					self._notify.set_image_from_pixbuf(pixbuf)
