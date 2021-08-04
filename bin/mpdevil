@@ -584,6 +584,8 @@ class Client(MPDClient):
 		return [Song(song) for song in super().playlistinfo()]
 	def plchanges(self, version):
 		return [Song(song) for song in super().plchanges(version)]
+	def lsinfo(self, uri):
+		return [Song(song) for song in super().lsinfo(uri)]
 
 	def start(self):
 		self.emitter.emit("disconnected")  # bring player in defined state
@@ -771,15 +773,6 @@ class Client(MPDClient):
 		else:
 			pixbuf=ClientHelper.file_to_pixbuf(cover_path, size)
 		return pixbuf
-
-	def get_metadata(self, uri):  # TODO Song
-		meta_base=self.lsinfo(uri)[0]
-		try:  # .cue files produce an error here
-			meta_extra=self.readcomments(uri)  # contains comment tag
-			meta_base.update(meta_extra)
-		except:
-			pass
-		return meta_base
 
 	def get_absolute_path(self, uri):
 		lib_path=self._settings.get_lib_path()
@@ -1588,7 +1581,7 @@ class SongPopover(Gtk.Popover):
 		window=self.get_toplevel()
 		self._scroll.set_max_content_height(window.get_size()[1]//2)
 		self._store.clear()
-		song=Song(self._client.get_metadata(uri))  # TODO Song
+		song=self._client.lsinfo(uri)[0]
 		for tag, value in song.items():
 			if tag == "duration":
 				self._store.append([tag+":", str(value), locale.str(value)])
