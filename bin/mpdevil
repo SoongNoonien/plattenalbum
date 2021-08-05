@@ -1799,7 +1799,7 @@ class AlbumPopover(Gtk.Popover):
 		self._client.tagtypes("all")
 		for song in songs:
 			track=song["track"][0]
-			title=(", ".join(song["title"]))
+			title=str(song["title"])
 			# only show artists =/= albumartist
 			try:
 				song["artist"].remove(album_artist)
