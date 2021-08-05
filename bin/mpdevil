@@ -582,8 +582,6 @@ class EventEmitter(GObject.Object):
 		"add_to_playlist": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"show_info": (GObject.SignalFlags.RUN_FIRST, None, ())
 	}
-	def __init__(self):
-		super().__init__()
 
 class Client(MPDClient):
 	def __init__(self, settings):
