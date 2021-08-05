@@ -454,13 +454,19 @@ class Duration():
 		if self._fallback:
 			return "‒‒∶‒‒"
 		else:
-			delta=datetime.timedelta(seconds=int(self._value))
+			if self._value < 0:
+				sign="−"
+				value=-int(self._value)
+			else:
+				sign=""
+				value=int(self._value)
+			delta=datetime.timedelta(seconds=value)
 			if delta.days > 0:
 				days=ngettext("{days} day", "{days} days", delta.days).format(days=delta.days)
 				time_string=f"{days}, {datetime.timedelta(seconds=delta.seconds)}"
 			else:
 				time_string=str(delta).lstrip("0").lstrip(":")
-			return time_string.replace(":", "∶")  # use 'ratio' as delimiter
+			return sign+time_string.replace(":", "∶")  # use 'ratio' as delimiter
 
 	def __float__(self):
 		return self._value
@@ -3313,7 +3319,7 @@ class SeekBar(Gtk.Box):
 			if self._update:
 				self._scale.set_value(elapsed)
 				self._elapsed.set_text(str(Duration(elapsed)))
-				self._rest.set_text(f"−{Duration(duration-elapsed)}")
+				self._rest.set_text(str(Duration(elapsed-duration)))
 			self._scale.set_fill_level(elapsed)
 		else:
 			self._disable()
@@ -3323,8 +3329,8 @@ class SeekBar(Gtk.Box):
 		self.set_sensitive(False)
 		self._scale.set_fill_level(0)
 		self._scale.set_range(0, 0)
-		self._elapsed.set_text("‒‒∶‒‒")
-		self._rest.set_text("‒‒∶‒‒")
+		self._elapsed.set_text(str(Duration()))
+		self._rest.set_text(str(Duration()))
 
 	def _on_scale_button_press_event(self, widget, event):
 		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -3355,7 +3361,7 @@ class SeekBar(Gtk.Box):
 			else:
 				elapsed=value
 			self._elapsed.set_text(str(Duration(elapsed)))
-			self._rest.set_text(f"-{Duration(duration-elapsed)}")
+			self._rest.set_text(str(Duration(elapsed-duration)))
 			self._jumped=True
 
 	def _on_elapsed_button_release_event(self, widget, event):
