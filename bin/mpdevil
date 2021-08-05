@@ -528,12 +528,15 @@ class Song(collections.UserDict):
 				super().__setitem__(key, MultiTag([value]))
 
 	def __missing__(self, key):
-		if key == "title":
-			return MultiTag([os.path.basename(self.data["file"])])
-		elif key == "duration":
-			return Duration()
+		if self.data:
+			if key == "title":
+				return MultiTag([os.path.basename(self.data["file"])])
+			elif key == "duration":
+				return Duration()
+			else:
+				return MultiTag([""])
 		else:
-			return MultiTag([""])
+			return None
 
 class BinaryCover(bytes):
 	def get_pixbuf(self, size):
@@ -759,28 +762,24 @@ class Client(MPDClient):
 					return (None, None)
 			else:
 				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
-			if song_file:
-				song_dir=os.path.join(lib_path, os.path.dirname(song_file))
-				if song_dir.endswith(".cue"):
-					song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
-				if os.path.exists(song_dir):
-					for f in os.listdir(song_dir):
-						if regex.match(f):
-							path=os.path.join(song_dir, f)
-							break
+			song_dir=os.path.join(lib_path, os.path.dirname(song_file))
+			if song_dir.endswith(".cue"):
+				song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
+			if os.path.exists(song_dir):
+				for f in os.listdir(song_dir):
+					if regex.match(f):
+						path=os.path.join(song_dir, f)
+						break
 		return path
 
 	def get_cover_binary(self, uri):
-		if uri is None:
-			binary=None
-		else:
+		try:
+			binary=self.albumart(uri)["binary"]
+		except:
 			try:
-				binary=self.albumart(uri)["binary"]
+				binary=self.readpicture(uri)["binary"]
 			except:
-				try:
-					binary=self.readpicture(uri)["binary"]
-				except:
-					binary=None
+				binary=None
 		return binary
 
 	def get_cover(self, song):
@@ -2805,14 +2804,20 @@ class MainCover(Gtk.Image):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._settings.connect("changed::track-cover", self._on_settings_changed)
 
-	def _refresh(self, *args):
-		current_song=self._client.currentsong()
-		self.set_from_pixbuf(self._client.get_cover(current_song).get_pixbuf(self._settings.get_int("track-cover")))
-
-	def _on_disconnected(self, *args):
+	def _clear(self):
 		size=self._settings.get_int("track-cover")
 		self.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size))
+
+	def _refresh(self, *args):
+		song=self._client.currentsong()
+		if song:
+			self.set_from_pixbuf(self._client.get_cover(song).get_pixbuf(self._settings.get_int("track-cover")))
+		else:
+			self._clear()
+
+	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
+		self._clear()
 
 	def _on_reconnected(self, *args):
 		self.set_sensitive(True)
