@@ -751,13 +751,13 @@ class Client(MPDClient):
 		if lib_path is not None:
 			regex_str=self._settings.get_value("regex")[active_profile]
 			if regex_str:
-				regex_str=regex_str.replace("%AlbumArtist%", song["albumartist"][0])
-				regex_str=regex_str.replace("%Album%", song["album"][0])
+				regex_str=regex_str.replace("%AlbumArtist%", re.escape(song["albumartist"][0]))
+				regex_str=regex_str.replace("%Album%", re.escape(song["album"][0]))
 				try:
 					regex=re.compile(regex_str, flags=re.IGNORECASE)
-				except:
+				except re.error:
 					print("illegal regex:", regex_str)
-					return (None, None)
+					return None
 			else:
 				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
 			song_dir=os.path.join(lib_path, os.path.dirname(song_file))
