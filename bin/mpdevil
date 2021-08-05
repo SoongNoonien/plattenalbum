@@ -663,14 +663,14 @@ class Client(MPDClient):
 				play(files)
 			else:
 				self.moveid(status["songid"], 0)
-				current_song_file=self.playlistinfo()[0]["file"]
+				current_song_file=self.currentsong()["file"]
 				try:
 					self.delete((1,))  # delete all songs, but the first. bad song index possible
 				except MPDBase.CommandError:
 					pass
 				for f in files:
 					if f == current_song_file:
-						self.move(0, (len(self.playlistinfo())-1))
+						self.move(0, (int(self.status()["playlistlength"])-1))
 					else:
 						self.add(f)
 		if mode == "append":
