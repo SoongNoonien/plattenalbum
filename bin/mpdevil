@@ -441,15 +441,29 @@ class MPRISInterface:  # TODO emit Seeked if needed
 # MPD client wrapper #
 ######################
 
-class Duration(float):
-	def __str__(self):
-		delta=datetime.timedelta(seconds=int(self))
-		if delta.days > 0:
-			days=ngettext("{days} day", "{days} days", delta.days).format(days=delta.days)
-			time_string=f"{days}, {datetime.timedelta(seconds=delta.seconds)}"
+class Duration():
+	def __init__(self, value=None):
+		if value is None:
+			self._fallback=True
+			self._value=0.0
 		else:
-			time_string=str(delta).lstrip("0").lstrip(":")
-		return time_string.replace(":", "∶")  # use 'ratio' as delimiter
+			self._fallback=False
+			self._value=float(value)
+
+	def __str__(self):
+		if self._fallback:
+			return "––∶––"
+		else:
+			delta=datetime.timedelta(seconds=int(self._value))
+			if delta.days > 0:
+				days=ngettext("{days} day", "{days} days", delta.days).format(days=delta.days)
+				time_string=f"{days}, {datetime.timedelta(seconds=delta.seconds)}"
+			else:
+				time_string=str(delta).lstrip("0").lstrip(":")
+			return time_string.replace(":", "∶")  # use 'ratio' as delimiter
+
+	def __float__(self):
+		return self._value
 
 class LastModified():
 	def __init__(self, date):
@@ -511,7 +525,7 @@ class Song(collections.UserDict):
 		if key == "title":
 			return MultiTag([os.path.basename(self.data["file"])])
 		elif key == "duration":
-			return "0"
+			return Duration()
 		else:
 			return MultiTag([""])
 
