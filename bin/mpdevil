@@ -1789,7 +1789,6 @@ class AlbumPopover(Gtk.Popover):
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
 		self._scroll.set_max_content_height(4*widget.get_allocated_height()//7)
-		self._songs_view.set_model(None)  # clear old scroll position
 		self._store.clear()
 		if genre is None:
 			genre_filter=()
@@ -1812,7 +1811,7 @@ class AlbumPopover(Gtk.Popover):
 			else:
 				title_artist=f"<b>{GLib.markup_escape_text(title)}</b> • {GLib.markup_escape_text(artist)}"
 			self._store.append([track, title_artist, str(song["duration"]), song["file"], title])
-		self._songs_view.set_model(self._store)
+		self._songs_view.scroll_to_cell(Gtk.TreePath(0), None, False)  # clear old scroll position
 		self.popup()
 		self._songs_view.columns_autosize()
 
