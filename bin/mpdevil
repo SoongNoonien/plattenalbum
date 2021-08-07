@@ -500,7 +500,7 @@ class Format():
 		except ValueError:
 			freq=samplerate
 		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=int_chan)
-		return f"{freq} kHz • {bits} bit • {channels}"
+		return f"{freq} kHz • {bits} bit • {channels}"
 
 	def raw(self):
 		return self._format
@@ -3431,11 +3431,11 @@ class AudioFormat(Gtk.Box):
 		current_song=self._client.currentsong()
 		if current_song:
 			file_type=current_song["file"].split(".")[-1].split("/")[0].upper()
-			self._separator_label.set_text(" kb∕s • ")
+			self._separator_label.set_text(" kb∕s • ")
 			self._file_type_label.set_text(file_type)
 		else:
 			self._file_type_label.set_text("")
-			self._separator_label.set_text(" kb∕s")
+			self._separator_label.set_text(" kb∕s")
 			self._format_label.set_markup("<small> </small>")
 
 	def _on_mini_player(self, obj, typestring):
@@ -3452,7 +3452,7 @@ class AudioFormat(Gtk.Box):
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
 		self._brate_label.set_text("—")
-		self._separator_label.set_text(" kb/s")
+		self._separator_label.set_text(" kb/s")
 		self._file_type_label.set_text("")
 		self._format_label.set_markup("<small> </small>")
 
