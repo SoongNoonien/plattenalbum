@@ -529,7 +529,12 @@ class Song(collections.UserDict):
 
 	def __missing__(self, key):
 		if self.data:
-			if key == "title":
+			if key == "albumartist":
+				if "artist" in self.data:
+					return self.data["artist"]
+				else:
+					return MultiTag([""])
+			elif key == "title":
 				return MultiTag([os.path.basename(self.data["file"])])
 			elif key == "duration":
 				return Duration()
@@ -2206,8 +2211,6 @@ class ArtistWindow(SelectionList):
 			song=self._client.currentsong()
 			if song:
 				artist=song[self._settings.get_artist_type()][0]
-				if not artist:
-					artist=song["artist"][0]
 				self.select(artist)
 			else:
 				if self.length() > 0:
@@ -2574,8 +2577,6 @@ class Browser(Gtk.Paned):
 			self._genres_button.set_active(False)
 			# get artist name
 			artist=song[self._settings.get_artist_type()][0]
-			if not artist:
-				artist=song["artist"][0]
 			# deactivate genre filter to show all artists (if needed)
 			if song["genre"][0] != self._genre_select.get_selected() or force:
 				self._genre_select.deactivate()
@@ -2770,8 +2771,6 @@ class CoverEventBox(Gtk.EventBox):
 				song=self._client.currentsong()
 				if song:
 					artist=song[self._settings.get_artist_type()][0]
-					if not artist:
-						artist=song["artist"][0]
 					album=song["album"][0]
 					year=song["date"][0]
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
