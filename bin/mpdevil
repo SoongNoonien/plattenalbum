@@ -3569,8 +3569,8 @@ class VolumeButton(Gtk.VolumeButton):
 		self._client=client
 		self._popover=None
 		self._adj=self.get_adjustment()
-		self._adj.set_step_increment(0.05)
-		self._adj.set_page_increment(0.1)
+		self._adj.set_step_increment(5)
+		self._adj.set_page_increment(10)
 		self._adj.set_upper(0)  # do not allow volume change by user when MPD has not yet reported volume (no output enabled/avail)
 		settings.bind("icon-size", self.get_child(), "pixel-size", Gio.SettingsBindFlags.GET)
 
@@ -3582,7 +3582,7 @@ class VolumeButton(Gtk.VolumeButton):
 		self.connect("button-press-event", self._on_button_press_event)
 
 	def _set_volume(self, widget, value):
-		self._client.setvol(str(int(value*100)))
+		self._client.setvol(str(int(value)))
 
 	def _refresh(self, emitter, volume):
 		self.handler_block(self._changed)
@@ -3590,8 +3590,8 @@ class VolumeButton(Gtk.VolumeButton):
 			self.set_value(0)
 			self._adj.set_upper(0)
 		else:
-			self._adj.set_upper(1)
-			self.set_value(volume/100)
+			self._adj.set_upper(100)
+			self.set_value(volume)
 		self.handler_unblock(self._changed)
 
 	def _on_button_press_event(self, widget, event):
