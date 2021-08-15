@@ -981,79 +981,95 @@ class Settings(Gio.Settings):
 # settings dialog #
 ###################
 
-class GeneralSettings(Gtk.Box):
+class ToggleRow(Gtk.ListBoxRow):
+	def __init__(self, label, settings, key, restart_required=False):
+		super().__init__()
+		label=Gtk.Label(label=label, xalign=0, valign=Gtk.Align.CENTER, margin=6)
+		self._switch=Gtk.Switch(halign=Gtk.Align.END, valign=Gtk.Align.CENTER, margin_top=6, margin_bottom=6, margin_start=12, margin_end=12)
+		settings.bind(key, self._switch, "active", Gio.SettingsBindFlags.DEFAULT)
+		box=Gtk.Box()
+		box.pack_start(label, False, False, 0)
+		box.pack_end(self._switch, False, False, 0)
+		if restart_required:
+			box.pack_end(Gtk.Label(label=_("(restart required)"), margin=6, sensitive=False), False, False, 0)
+		self.add(box)
+
+	def toggle(self):
+		self._switch.set_active(not self._switch.get_active())
+
+class IntRow(Gtk.ListBoxRow):
+	def __init__(self, label, vmin, vmax, step, settings, key):
+		super().__init__(activatable=False)
+		label=Gtk.Label(label=label, xalign=0, valign=Gtk.Align.CENTER, margin=6)
+		spin_button=Gtk.SpinButton.new_with_range(vmin, vmax, step)
+		spin_button.set_valign(Gtk.Align.CENTER)
+		spin_button.set_halign(Gtk.Align.END)
+		spin_button.set_margin_end(12)
+		spin_button.set_margin_start(12)
+		spin_button.set_margin_top(6)
+		spin_button.set_margin_bottom(6)
+		settings.bind(key, spin_button, "value", Gio.SettingsBindFlags.DEFAULT)
+		box=Gtk.Box()
+		box.pack_start(label, False, False, 0)
+		box.pack_end(spin_button, False, False, 0)
+		self.add(box)
+
+class SettingsList(Gtk.Frame):
+	def __init__(self):
+		super().__init__(border_width=18, valign=Gtk.Align.START)
+		self._list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+		self._list_box.set_header_func(self._header_func)
+		self._list_box.connect("row-activated", self._on_row_activated)
+		self.add(self._list_box)
+
+	def append(self, row):
+		self._list_box.insert(row, -1)
+
+	def _header_func(self, row, before, *args):
+		if before is not None:
+			row.set_header(Gtk.Separator())
+
+	def _on_row_activated(self, list_box, row):
+		if isinstance(row, ToggleRow):
+			row.toggle()
+
+class ViewSettings(SettingsList):
 	def __init__(self, settings):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=18)
-		self._settings=settings
-
-		# int settings
-		int_settings={}
-		int_settings_data=[
-			(_("Main cover size:"), (100, 1200, 10), "track-cover"),
-			(_("Album view cover size:"), (50, 600, 10), "album-cover"),
-			(_("Action bar icon size:"), (16, 64, 2), "icon-size"),
+		super().__init__()
+		toggle_data=[
+			(_("Use Client-side decoration"), "use-csd", True),
+			(_("Show stop button"), "show-stop", False),
+			(_("Show audio format"), "show-audio-format", False),
+			(_("Show lyrics button"), "show-lyrics-button", False),
+			(_("Place playlist at the side"), "playlist-right", False),
 		]
-		for label, (vmin, vmax, step), key in int_settings_data:
-			int_settings[key]=(Gtk.Label(label=label, xalign=0), Gtk.SpinButton.new_with_range(vmin, vmax, step))
-			int_settings[key][1].set_value(self._settings.get_int(key))
-			self._settings.bind(key, int_settings[key][1], "value", Gio.SettingsBindFlags.DEFAULT)
-
-		# check buttons
-		check_buttons={}
-		check_buttons_data=[
-			(_("Use Client-side decoration"), "use-csd"),
-			(_("Show stop button"), "show-stop"),
-			(_("Show audio format"), "show-audio-format"),
-			(_("Show lyrics button"), "show-lyrics-button"),
-			(_("Place playlist at the side"), "playlist-right"),
-			(_("Use “Album Artist” tag"), "use-album-artist"),
-			(_("Send notification on title change"), "send-notify"),
-			(_("Stop playback on quit"), "stop-on-quit"),
-			(_("Play selected albums and titles immediately"), "force-mode"),
-			(_("Sort albums by year"), "sort-albums-by-year"),
-			(_("Support “MPRIS”"), "mpris"),
-			(_("Rewind via previous button"), "rewind-mode"),
+		for label, key, restart_required in toggle_data:
+			row=ToggleRow(label, settings, key, restart_required)
+			self.append(row)
+		int_data=[
+			(_("Main cover size"), (100, 1200, 10), "track-cover"),
+			(_("Album view cover size"), (50, 600, 10), "album-cover"),
+			(_("Action bar icon size"), (16, 64, 2), "icon-size"),
 		]
-		for label, key in check_buttons_data:
-			check_buttons[key]=Gtk.CheckButton(label=label, margin_start=12)
-			check_buttons[key].set_active(self._settings.get_boolean(key))
-			self._settings.bind(key, check_buttons[key], "active", Gio.SettingsBindFlags.DEFAULT)
+		for label, (vmin, vmax, step), key in int_data:
+			row=IntRow(label, vmin, vmax, step, settings, key)
+			self.append(row)
 
-		# headings
-		view_heading=Gtk.Label(label=_("<b>View</b>"), use_markup=True, xalign=0)
-		behavior_heading=Gtk.Label(label=_("<b>Behavior</b>"), use_markup=True, xalign=0)
-
-		# view grid
-		view_grid=Gtk.Grid(row_spacing=6, column_spacing=12, margin_start=12)
-		view_grid.add(int_settings["track-cover"][0])
-		view_grid.attach_next_to(int_settings["album-cover"][0], int_settings["track-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
-		view_grid.attach_next_to(int_settings["icon-size"][0], int_settings["album-cover"][0], Gtk.PositionType.BOTTOM, 1, 1)
-		view_grid.attach_next_to(int_settings["track-cover"][1], int_settings["track-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
-		view_grid.attach_next_to(int_settings["album-cover"][1], int_settings["album-cover"][0], Gtk.PositionType.RIGHT, 1, 1)
-		view_grid.attach_next_to(int_settings["icon-size"][1], int_settings["icon-size"][0], Gtk.PositionType.RIGHT, 1, 1)
-
-		# packing
-		csd_box=Gtk.Box(spacing=12)
-		csd_box.pack_start(check_buttons["use-csd"], False, False, 0)
-		csd_box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
-		self.pack_start(view_heading, False, False, 0)
-		self.pack_start(csd_box, False, False, 0)
-		self.pack_start(check_buttons["show-stop"], False, False, 0)
-		self.pack_start(check_buttons["show-audio-format"], False, False, 0)
-		self.pack_start(check_buttons["show-lyrics-button"], False, False, 0)
-		self.pack_start(check_buttons["playlist-right"], False, False, 0)
-		self.pack_start(view_grid, False, False, 0)
-		self.pack_start(behavior_heading, False, False, 0)
-		mpris_box=Gtk.Box(spacing=12)
-		mpris_box.pack_start(check_buttons["mpris"], False, False, 0)
-		mpris_box.pack_start(Gtk.Label(label=_("(restart required)"), sensitive=False), False, False, 0)
-		self.pack_start(mpris_box, False, False, 0)
-		self.pack_start(check_buttons["use-album-artist"], False, False, 0)
-		self.pack_start(check_buttons["sort-albums-by-year"], False, False, 0)
-		self.pack_start(check_buttons["send-notify"], False, False, 0)
-		self.pack_start(check_buttons["force-mode"], False, False, 0)
-		self.pack_start(check_buttons["rewind-mode"], False, False, 0)
-		self.pack_start(check_buttons["stop-on-quit"], False, False, 0)
+class BehaviorSettings(SettingsList):
+	def __init__(self, settings):
+		super().__init__()
+		toggle_data=[
+			(_("Support “MPRIS”"), "mpris", True),
+			(_("Use “Album Artist” tag"), "use-album-artist", False),
+			(_("Sort albums by year"), "sort-albums-by-year", False),
+			(_("Send notification on title change"), "send-notify", False),
+			(_("Play selected albums and titles immediately"), "force-mode", False),
+			(_("Rewind via previous button"), "rewind-mode", False),
+			(_("Stop playback on quit"), "stop-on-quit", False),
+		]
+		for label, key, restart_required in toggle_data:
+			row=ToggleRow(label, settings, key, restart_required)
+			self.append(row)
 
 class ProfileSettings(Gtk.Grid):
 	def __init__(self, parent, client, settings):
@@ -1322,7 +1338,7 @@ class PlaylistSettings(Gtk.Box):
 		self._save_permutation()
 
 class SettingsDialog(Gtk.Dialog):
-	def __init__(self, parent, client, settings, tab="general"):
+	def __init__(self, parent, client, settings, tab="view"):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
 			super().__init__(title=_("Settings"), transient_for=parent, use_header_bar=True)
@@ -1332,7 +1348,8 @@ class SettingsDialog(Gtk.Dialog):
 		self.set_default_size(500, 400)
 
 		# widgets
-		general=GeneralSettings(settings)
+		view=ViewSettings(settings)
+		behavior=BehaviorSettings(settings)
 		profiles=ProfileSettings(parent, client, settings)
 		playlist=PlaylistSettings(settings)
 
@@ -1340,7 +1357,8 @@ class SettingsDialog(Gtk.Dialog):
 		vbox=self.get_content_area()
 		if use_csd:
 			stack=Gtk.Stack()
-			stack.add_titled(general, "general", _("General"))
+			stack.add_titled(view, "view", _("View"))
+			stack.add_titled(behavior, "behavior", _("Behavior"))
 			stack.add_titled(profiles, "profiles", _("Profiles"))
 			stack.add_titled(playlist, "playlist", _("Playlist"))
 			stack_switcher=Gtk.StackSwitcher(stack=stack)
@@ -1349,7 +1367,8 @@ class SettingsDialog(Gtk.Dialog):
 			header_bar.set_custom_title(stack_switcher)
 		else:
 			tabs=Gtk.Notebook()
-			tabs.append_page(general, Gtk.Label(label=_("General")))
+			tabs.append_page(view, Gtk.Label(label=_("View")))
+			tabs.append_page(behavior, Gtk.Label(label=_("Behavior")))
 			tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 			tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
 			vbox.set_property("spacing", 6)
@@ -1359,7 +1378,7 @@ class SettingsDialog(Gtk.Dialog):
 		if use_csd:
 			stack.set_visible_child_name(tab)
 		else:
-			tabs.set_current_page({"general": 0, "profiles": 1, "playlist": 2}[tab])
+			tabs.set_current_page({"view": 0, "behavior": 1, "profiles": 2, "playlist": 3}[tab])
 
 #################
 # other dialogs #
