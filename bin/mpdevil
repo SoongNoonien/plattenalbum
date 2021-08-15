@@ -1356,7 +1356,7 @@ class SettingsDialog(Gtk.Dialog):
 		# packing
 		vbox=self.get_content_area()
 		if use_csd:
-			stack=Gtk.Stack()
+			stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
 			stack.add_titled(view, "view", _("View"))
 			stack.add_titled(behavior, "behavior", _("Behavior"))
 			stack.add_titled(profiles, "profiles", _("Profiles"))
