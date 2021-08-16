@@ -3278,14 +3278,14 @@ class PlaybackControl(Gtk.ButtonBox):
 
 class SeekBar(Gtk.Box):
 	def __init__(self, client):
-		super().__init__(hexpand=True)
+		super().__init__(hexpand=True, margin_start=6, margin_right=6)
 		self._client=client
 		self._update=True
 		self._jumped=False
 
 		# labels
-		self._elapsed=Gtk.Label(width_chars=5)
-		self._rest=Gtk.Label(width_chars=6)
+		self._elapsed=Gtk.Label(width_chars=5, xalign=0)
+		self._rest=Gtk.Label(width_chars=6, xalign=1)
 
 		# event boxes
 		self._elapsed_event_box=Gtk.EventBox()
