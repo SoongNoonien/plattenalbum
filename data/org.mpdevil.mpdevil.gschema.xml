@@ -1,176 +1,148 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.mpdevil.mpdevil" path="/org/mpdevil/mpdevil/">
-    <child name="profile1" schema="org.mpdevil.mpdevil.profile"/>
-    <child name="profile2" schema="org.mpdevil.mpdevil.profile"/>
-    <child name="profile3" schema="org.mpdevil.mpdevil.profile"/>
-    <key type="b" name="maximize">
-      <default>false</default>
-      <summary>Maximize mpdevil on startup</summary>
-      <description></description>
-    </key>
-    <key type="i" name="width">
-      <default>1006</default>
-      <summary>Default width of window</summary>
-      <description></description>
-    </key>
-    <key type="i" name="height">
-      <default>990</default>
-      <summary>Default height of window</summary>
-      <description></description>
-    </key>
-    <key type="i" name="paned0">
-      <default>370</default>
-      <summary>Default position of cover/playlist separator</summary>
-      <description></description>
-    </key>
-    <key type="i" name="paned1">
-      <default>246</default>
-      <summary>Default position of artist/albums separator</summary>
-      <description></description>
-    </key>
-    <key type="i" name="paned2">
-      <default>572</default>
-      <summary>Default position of paned1/paned0 separator</summary>
-      <description></description>
-    </key>
-    <key type="b" name="mini-player">
-      <default>false</default>
-      <summary>Start player in mini player mode</summary>
-      <description></description>
-    </key>
-    <key type="i" name="album-cover">
-      <default>170</default>
-      <summary>Size of covers in album view</summary>
-      <description></description>
-    </key>
-    <key type="i" name="track-cover">
-      <default>370</default>
-      <summary>Size of main cover</summary>
-      <description></description>
-    </key>
-    <key type="i" name="icon-size">
-      <default>24</default>
-      <summary>Size of icons in main control bar</summary>
-      <description></description>
-    </key>
-    <key type="b" name="use-csd">
-      <default>true</default>
-      <summary>Use Client-side decoration</summary>
-      <description></description>
-    </key>
-    <key type="b" name="show-stop">
-      <default>true</default>
-      <summary>Show stop button</summary>
-      <description></description>
-    </key>
-    <key type="b" name="show-audio-format">
-      <default>true</default>
-      <summary>Show audio format</summary>
-      <description></description>
-    </key>
-    <key type="b" name="show-lyrics-button">
-      <default>true</default>
-      <summary>Show lyrics button</summary>
-      <description></description>
-    </key>
-    <key type="b" name="sort-albums-by-year">
-      <default>true</default>
-      <summary>Sort albums by year</summary>
-      <description></description>
-    </key>
-    <key type="b" name="send-notify">
-      <default>false</default>
-      <summary>Send notification on title change</summary>
-      <description></description>
-    </key>
-    <key type="b" name="stop-on-quit">
-      <default>false</default>
-      <summary>Stop playback on quit</summary>
-      <description></description>
-    </key>
-    <key type="b" name="force-mode">
-      <default>false</default>
-      <summary>Play selected albums directly</summary>
-      <description></description>
-    </key>
-    <key type="b" name="use-album-artist">
-      <default>true</default>
-      <summary>Use 'Album Artist' tag to group albums</summary>
-      <description></description>
-    </key>
-    <key type="b" name="mpris">
-      <default>true</default>
-      <summary>Provide MPRIS</summary>
-      <description></description>
-    </key>
-    <key type="b" name="rewind-mode">
-      <default>false</default>
-      <summary>Classic previous button behavior</summary>
-      <description></description>
-    </key>
-    <key type="ai" name="column-permutation">
-      <default>[0, 1, 2, 3, 4, 5, 6, 7]</default>
-      <summary>Column order in playlist</summary>
-      <description></description>
-    </key>
-    <key type="ab" name="column-visibilities">
-      <default>[true, false, true, true, true, true, false, false]</default>
-      <summary>Visibility of columns in playlist</summary>
-      <description></description>
-    </key>
-    <key type="ai" name="column-sizes">
-      <default>[33, 0, 203, 153, 174, 0, 0, 0]</default>
-      <summary>Sizes of columns in playlist</summary>
-      <description></description>
-    </key>
-    <key type="b" name="playlist-right">
-      <default>false</default>
-      <summary>Move playlist to the right</summary>
-      <description></description>
-    </key>
-    <key type="i" name="active-profile">
-      <range min="0" max="2"/>
-      <default>0</default>
-      <summary>Active profile</summary>
-      <description></description>
-    </key>
-    <key type="i" name="refresh-interval">
-      <default>100</default>
-      <summary>Main refresh interval</summary>
-      <description>
-       This setting should only be used if you know what you are doing!
-       It controls the time in msec. between two status requests to MPD.
-       Too high values (long time) will make mpdevil very slow in terms
-       of showing the latest status of MPD (e.g. current song).
-       Too low values (short time) can cause gui blocks making mpdevil
-       unresponsive and cpu intensive.
-      </description>
-    </key>
-  </schema>
-  <schema id="org.mpdevil.mpdevil.profile">
-    <key type="s" name="host">
-      <default>"localhost"</default>
-      <summary>List of hosts</summary>
-    </key>
-    <key type="i" name="port">
-      <range min="0" max="65535"/>
-      <default>6600</default>
-      <summary>List of ports</summary>
-    </key>
-    <key type="s" name="password">
-      <default>""</default>
-      <summary>List of passwords</summary>
-    </key>
-    <key type="s" name="path">
-      <default>""</default>
-      <summary>List of library paths</summary>
-    </key>
-    <key type="s" name="regex">
-      <default>""</default>
-      <summary>List of cover regex</summary>
-    </key>
-  </schema>
+	<schema id="org.mpdevil.mpdevil" path="/org/mpdevil/mpdevil/">
+		<child name="profile1" schema="org.mpdevil.mpdevil.profile"/>
+		<child name="profile2" schema="org.mpdevil.mpdevil.profile"/>
+		<child name="profile3" schema="org.mpdevil.mpdevil.profile"/>
+		<key type="b" name="maximize">
+			<default>false</default>
+			<summary>Maximize mpdevil on startup</summary>
+		</key>
+		<key type="i" name="width">
+			<default>1006</default>
+			<summary>Default width of window</summary>
+		</key>
+		<key type="i" name="height">
+			<default>990</default>
+			<summary>Default height of window</summary>
+		</key>
+		<key type="i" name="paned0">
+			<default>370</default>
+			<summary>Default position of cover/playlist separator</summary>
+		</key>
+		<key type="i" name="paned1">
+			<default>246</default>
+			<summary>Default position of artist/albums separator</summary>
+		</key>
+		<key type="i" name="paned2">
+			<default>572</default>
+			<summary>Default position of paned1/paned0 separator</summary>
+		</key>
+		<key type="b" name="mini-player">
+			<default>false</default>
+			<summary>Start player in mini player mode</summary>
+		</key>
+		<key type="i" name="album-cover">
+			<default>170</default>
+			<summary>Size of covers in album view</summary>
+		</key>
+		<key type="i" name="track-cover">
+			<default>370</default>
+			<summary>Size of main cover</summary>
+		</key>
+		<key type="i" name="icon-size">
+			<default>24</default>
+			<summary>Size of icons in main control bar</summary>
+		</key>
+		<key type="b" name="use-csd">
+			<default>true</default>
+			<summary>Use Client-side decoration</summary>
+		</key>
+		<key type="b" name="show-stop">
+			<default>true</default>
+			<summary>Show stop button</summary>
+		</key>
+		<key type="b" name="show-audio-format">
+			<default>true</default>
+			<summary>Show audio format</summary>
+		</key>
+		<key type="b" name="show-lyrics-button">
+			<default>true</default>
+			<summary>Show lyrics button</summary>
+		</key>
+		<key type="b" name="sort-albums-by-year">
+			<default>true</default>
+			<summary>Sort albums by year</summary>
+		</key>
+		<key type="b" name="send-notify">
+			<default>false</default>
+			<summary>Send notification on title change</summary>
+		</key>
+		<key type="b" name="stop-on-quit">
+			<default>false</default>
+			<summary>Stop playback on quit</summary>
+		</key>
+		<key type="b" name="force-mode">
+			<default>false</default>
+			<summary>Play selected albums directly</summary>
+		</key>
+		<key type="b" name="use-album-artist">
+			<default>true</default>
+			<summary>Use 'Album Artist' tag to group albums</summary>
+		</key>
+		<key type="b" name="mpris">
+			<default>true</default>
+			<summary>Provide MPRIS</summary>
+		</key>
+		<key type="b" name="rewind-mode">
+			<default>false</default>
+			<summary>Classic previous button behavior</summary>
+		</key>
+		<key type="ai" name="column-permutation">
+			<default>[0, 1, 2, 3, 4, 5, 6, 7]</default>
+			<summary>Column order in playlist</summary>
+		</key>
+		<key type="ab" name="column-visibilities">
+			<default>[true, false, true, true, true, true, false, false]</default>
+			<summary>Visibility of columns in playlist</summary>
+		</key>
+		<key type="ai" name="column-sizes">
+			<default>[33, 0, 203, 153, 174, 0, 0, 0]</default>
+			<summary>Sizes of columns in playlist</summary>
+		</key>
+		<key type="b" name="playlist-right">
+			<default>false</default>
+			<summary>Move playlist to the right</summary>
+		</key>
+		<key type="i" name="active-profile">
+			<range min="0" max="2"/>
+			<default>0</default>
+			<summary>Active profile</summary>
+		</key>
+		<key type="i" name="refresh-interval">
+			<default>100</default>
+			<summary>Main refresh interval</summary>
+			<description>
+			This setting should only be used if you know what you are doing!
+			It controls the time in msec. between two status requests to MPD.
+			Too high values (long time) will make mpdevil very slow in terms
+			of showing the latest status of MPD (e.g. current song).
+			Too low values (short time) can cause gui blocks making mpdevil
+			unresponsive and cpu intensive.
+			</description>
+		</key>
+	</schema>
+	<schema id="org.mpdevil.mpdevil.profile">
+		<key type="s" name="host">
+			<default>"localhost"</default>
+			<summary>List of hosts</summary>
+		</key>
+		<key type="i" name="port">
+			<range min="0" max="65535"/>
+			<default>6600</default>
+			<summary>List of ports</summary>
+		</key>
+		<key type="s" name="password">
+			<default>""</default>
+			<summary>List of passwords</summary>
+		</key>
+		<key type="s" name="path">
+			<default>""</default>
+			<summary>List of library paths</summary>
+		</key>
+		<key type="s" name="regex">
+			<default>""</default>
+			<summary>List of cover regex</summary>
+		</key>
+	</schema>
 </schemalist>
-
-
