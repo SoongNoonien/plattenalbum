@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-15 20:56+0200\n"
-"PO-Revision-Date: 2021-08-15 20:58+0200\n"
+"POT-Creation-Date: 2021-08-21 00:29+0200\n"
+"PO-Revision-Date: 2021-08-21 00:31+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -32,75 +32,75 @@ msgid_plural "{channels} channels"
 msgstr[0] "{channels} kanaal"
 msgstr[1] "{channels} kanalen"
 
-#: mpdevil:994
+#: mpdevil:980
 msgid "(restart required)"
 msgstr "(herstart vereist)"
 
-#: mpdevil:1040
+#: mpdevil:1026
 msgid "Use Client-side decoration"
 msgstr "Gebruik vensterdecoratie van mpdevil"
 
-#: mpdevil:1041
+#: mpdevil:1027
 msgid "Show stop button"
 msgstr "Toon stopknop"
 
-#: mpdevil:1042
+#: mpdevil:1028
 msgid "Show audio format"
 msgstr "Toon audioformaat"
 
-#: mpdevil:1043
+#: mpdevil:1029
 msgid "Show lyrics button"
 msgstr "Toon songtekstknop"
 
-#: mpdevil:1044
+#: mpdevil:1030
 msgid "Place playlist at the side"
 msgstr "Plaats afspeellijst aan de zijkant"
 
-#: mpdevil:1050
+#: mpdevil:1036
 msgid "Main cover size"
 msgstr "Grootte albumhoes"
 
-#: mpdevil:1051
+#: mpdevil:1037
 msgid "Album view cover size"
 msgstr "Hoesgrootte in albumlijst"
 
-#: mpdevil:1052
+#: mpdevil:1038
 msgid "Action bar icon size"
 msgstr "Grootte iconen werkbalk"
 
-#: mpdevil:1062
+#: mpdevil:1048
 msgid "Support “MPRIS”"
 msgstr "Ondersteun „MPRIS”"
 
-#: mpdevil:1063
+#: mpdevil:1049
 msgid "Use “Album Artist” tag"
 msgstr "Gebruik tag „Album Artist”"
 
-#: mpdevil:1064
+#: mpdevil:1050
 msgid "Sort albums by year"
 msgstr "Sorteer albums op jaar"
 
-#: mpdevil:1065
+#: mpdevil:1051
 msgid "Send notification on title change"
 msgstr "Verstuur een melding bij titelwisseling"
 
-#: mpdevil:1066
+#: mpdevil:1052
 msgid "Play selected albums and titles immediately"
 msgstr "Geselecteerde albums en titels direct afspelen"
 
-#: mpdevil:1067
+#: mpdevil:1053
 msgid "Rewind via previous button"
 msgstr "Terugspoelen met „vorige” knop"
 
-#: mpdevil:1068
+#: mpdevil:1054
 msgid "Stop playback on quit"
 msgstr "Stop afspelen bij afsluiten"
 
-#: mpdevil:1087
-msgid "_Connect"
-msgstr "_Verbinden"
+#: mpdevil:1081
+msgid "Choose directory"
+msgstr "Kies een map"
 
-#: mpdevil:1098
+#: mpdevil:1107
 msgid ""
 "The first image in the same directory as the song file matching this regex "
 "will be displayed. %AlbumArtist% and %Album% will be replaced by the "
@@ -110,172 +110,180 @@ msgstr ""
 "met deze regex wordt getoond. %AlbumArtist% en %Album% worden vervangen door "
 "de bijbehorende tags van het muziekbestand."
 
-#: mpdevil:1102
-msgid "Profile:"
-msgstr "Profiel:"
-
-#: mpdevil:1103
+#: mpdevil:1112
 msgid "Host:"
 msgstr "Host:"
 
-#: mpdevil:1104
+#: mpdevil:1113
 msgid "Password:"
 msgstr "Wachtwoord:"
 
-#: mpdevil:1105
+#: mpdevil:1114
 msgid "Music lib:"
 msgstr "Muziekmap:"
 
-#: mpdevil:1106
+#: mpdevil:1115
 msgid "Cover regex:"
 msgstr "Regex albumhoes:"
 
-#: mpdevil:1210
-msgid "Choose directory"
-msgstr "Kies een map"
+#: mpdevil:1135 mpdevil:3752
+msgid "Profile 1"
+msgstr "Profiel 1"
 
-#: mpdevil:1237
+#: mpdevil:1136 mpdevil:3752
+msgid "Profile 2"
+msgstr "Profiel 2"
+
+#: mpdevil:1137 mpdevil:3752
+msgid "Profile 3"
+msgstr "Profiel 3"
+
+#: mpdevil:1141 mpdevil:3656
+msgid "Connect"
+msgstr "Verbinden"
+
+#: mpdevil:1167
 msgid "Choose the order of information to appear in the playlist:"
 msgstr "Kies de volgorde van de informatie getoond in de afspeellijst:"
 
-#: mpdevil:1254 mpdevil:1790 mpdevil:1915 mpdevil:2874
+#: mpdevil:1184 mpdevil:1676 mpdevil:1801 mpdevil:2760
 msgid "No"
 msgstr "Nr"
 
-#: mpdevil:1254 mpdevil:2875
+#: mpdevil:1184 mpdevil:2761
 msgid "Disc"
 msgstr "Disc"
 
-#: mpdevil:1254 mpdevil:1793 mpdevil:1920 mpdevil:2876 mpdevil:2990
-#: mpdevil:2992
+#: mpdevil:1184 mpdevil:1679 mpdevil:1806 mpdevil:2762 mpdevil:2876
+#: mpdevil:2878
 msgid "Title"
 msgstr "Titel"
 
-#: mpdevil:1254 mpdevil:1926 mpdevil:2877
+#: mpdevil:1184 mpdevil:1812 mpdevil:2763
 msgid "Artist"
 msgstr "Artiest"
 
-#: mpdevil:1254 mpdevil:1932 mpdevil:2878
+#: mpdevil:1184 mpdevil:1818 mpdevil:2764
 msgid "Album"
 msgstr "Album"
 
-#: mpdevil:1254 mpdevil:1796 mpdevil:1938 mpdevil:2879
+#: mpdevil:1184 mpdevil:1682 mpdevil:1824 mpdevil:2765
 msgid "Length"
 msgstr "Lengte"
 
-#: mpdevil:1254 mpdevil:2880
+#: mpdevil:1184 mpdevil:2766
 msgid "Year"
 msgstr "Jaar"
 
-#: mpdevil:1254 mpdevil:2881
+#: mpdevil:1184 mpdevil:2767
 msgid "Genre"
 msgstr "Genre"
 
-#: mpdevil:1344 mpdevil:1346 mpdevil:3771 mpdevil:3864
+#: mpdevil:1274 mpdevil:1276 mpdevil:3657 mpdevil:3743
 msgid "Settings"
 msgstr "Instellingen"
 
-#: mpdevil:1360 mpdevil:1370
+#: mpdevil:1290 mpdevil:1301
 msgid "View"
 msgstr "Beeld"
 
-#: mpdevil:1361 mpdevil:1371
+#: mpdevil:1291 mpdevil:1302
 msgid "Behavior"
 msgstr "Gedrag"
 
-#: mpdevil:1362 mpdevil:1372 mpdevil:3875
+#: mpdevil:1292 mpdevil:1303
 msgid "Profiles"
 msgstr "Profielen"
 
-#: mpdevil:1363 mpdevil:1373 mpdevil:3712
+#: mpdevil:1293 mpdevil:1304 mpdevil:3598
 msgid "Playlist"
 msgstr "Afspeellijst"
 
-#: mpdevil:1390
+#: mpdevil:1321
 msgid "Stats"
 msgstr "Statistieken"
 
-#: mpdevil:1400
+#: mpdevil:1331
 msgid "<b>Protocol:</b>"
 msgstr "<b>Protocol:</b>"
 
-#: mpdevil:1401
+#: mpdevil:1332
 msgid "<b>Uptime:</b>"
 msgstr "<b>Uptime:</b>"
 
-#: mpdevil:1402
+#: mpdevil:1333
 msgid "<b>Playtime:</b>"
 msgstr "<b>Afspeeltijd:</b>"
 
-#: mpdevil:1403
+#: mpdevil:1334
 msgid "<b>Artists:</b>"
 msgstr "<b>Artiesten:</b>"
 
-#: mpdevil:1404
+#: mpdevil:1335
 msgid "<b>Albums:</b>"
 msgstr "<b>Albums:</b>"
 
-#: mpdevil:1405
+#: mpdevil:1336
 msgid "<b>Songs:</b>"
 msgstr "<b>Titels:</b>"
 
-#: mpdevil:1406
+#: mpdevil:1337
 msgid "<b>Total Playtime:</b>"
 msgstr "<b>Totale speelduur:</b>"
 
-#: mpdevil:1407
+#: mpdevil:1338
 msgid "<b>Database Update:</b>"
 msgstr "<b>Database bijgewerkt:</b>"
 
-#: mpdevil:1431
+#: mpdevil:1362
 msgid "A simple music browser for MPD"
 msgstr "Een simpele muziekspeler voor MPD"
 
-#: mpdevil:1540
+#: mpdevil:1426
 msgid "Open with…"
 msgstr "Openen met…"
 
-#: mpdevil:1555 mpdevil:1849
+#: mpdevil:1441 mpdevil:1735
 msgid "Append"
 msgstr "Toevoegen"
 
-#: mpdevil:1556 mpdevil:1850
+#: mpdevil:1442 mpdevil:1736
 msgid "Play"
 msgstr "Afspelen"
 
-#: mpdevil:1557 mpdevil:1851
+#: mpdevil:1443 mpdevil:1737
 msgid "Enqueue"
 msgstr "In wachtrij plaatsen"
 
-#: mpdevil:1575
+#: mpdevil:1461
 msgid "MPD-Tag"
 msgstr "MPD-Tag"
 
-#: mpdevil:1578
+#: mpdevil:1464
 msgid "Value"
 msgstr "Waarde"
 
-#: mpdevil:1725
+#: mpdevil:1611
 msgid "_Append"
 msgstr "_Toevoegen"
 
-#: mpdevil:1725
+#: mpdevil:1611
 msgid "Add all titles to playlist"
 msgstr "Voeg alle titels toe aan de afspeellijst"
 
-#: mpdevil:1726
+#: mpdevil:1612
 msgid "_Play"
 msgstr "_Afspelen"
 
-#: mpdevil:1726
+#: mpdevil:1612
 msgid "Directly play all titles"
 msgstr "Alle titels direct afspelen"
 
-#: mpdevil:1727
+#: mpdevil:1613
 msgid "_Enqueue"
 msgstr "_In wachtrij plaatsen"
 
-#: mpdevil:1727
+#: mpdevil:1613
 msgid ""
 "Append all titles after the currently playing track and clear the playlist "
 "from all other songs"
@@ -283,259 +291,258 @@ msgstr ""
 "Alle titels toevoegen na de nu spelende titel en alle overige titels uit de "
 "afspeellijst verwijderen"
 
-#: mpdevil:1990
+#: mpdevil:1876
 msgid "all tags"
 msgstr "alle tags"
 
-#: mpdevil:2040
+#: mpdevil:1926
 #, python-brace-format
 msgid "{hits} hit"
 msgid_plural "{hits} hits"
 msgstr[0] "{hits} hit"
 msgstr[1] "{hits} treffers"
 
-#: mpdevil:2171
+#: mpdevil:2057
 msgid "all genres"
 msgstr "alle genres"
 
-#: mpdevil:2196
+#: mpdevil:2082
 msgid "all artists"
 msgstr "alle artiesten"
 
-#: mpdevil:2414 mpdevil:3093
+#: mpdevil:2300 mpdevil:2979
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
 msgstr[0] "{number} nummer ({duration})"
 msgstr[1] "{number} nummers ({duration})"
 
-#: mpdevil:2544 mpdevil:3731
+#: mpdevil:2430 mpdevil:3617
 msgid "Back to current album"
 msgstr "Terug naar huidige album"
 
-#: mpdevil:2546
+#: mpdevil:2432
 msgid "Search"
 msgstr "Zoeken"
 
-#: mpdevil:2549
+#: mpdevil:2435
 msgid "Filter by genre"
 msgstr "Filter op genre"
 
-#: mpdevil:2737
+#: mpdevil:2623
 msgid "searching…"
 msgstr "bezig met zoeken…"
 
-#: mpdevil:2742
+#: mpdevil:2628
 msgid "connection error"
 msgstr "verbindingsfout"
 
-#: mpdevil:2744
+#: mpdevil:2630
 msgid "lyrics not found"
 msgstr "geen songtekst gevonden"
 
-#: mpdevil:2852
+#: mpdevil:2738
 msgid "Scroll to current song"
 msgstr "Naar de huidige titel scrollen"
 
-#: mpdevil:3154
+#: mpdevil:3040
 msgid "Show lyrics"
 msgstr "Toon songtekst"
 
-#: mpdevil:3256 mpdevil:3257
+#: mpdevil:3142 mpdevil:3143
 #, python-brace-format
 msgid "{number} song"
 msgid_plural "{number} songs"
 msgstr[0] "{number} nummer"
 msgstr[1] "{number} nummers"
 
-#: mpdevil:3484
+#: mpdevil:3370
 msgid "Repeat mode"
 msgstr "Herhaalmodus"
 
-#: mpdevil:3485
+#: mpdevil:3371
 msgid "Random mode"
 msgstr "Willekeurige modus"
 
-#: mpdevil:3486
+#: mpdevil:3372
 msgid "Single mode"
 msgstr "Enkele modus"
 
-#: mpdevil:3487
+#: mpdevil:3373
 msgid "Consume mode"
 msgstr "Verbruiksmodus"
 
-#: mpdevil:3708
+#: mpdevil:3594
 msgid "General"
 msgstr "Algemeen"
 
-#: mpdevil:3709
+#: mpdevil:3595
 msgid "Window"
 msgstr "Venster"
 
-#: mpdevil:3710
+#: mpdevil:3596
 msgid "Playback"
 msgstr "Afspelen"
 
-#: mpdevil:3711
+#: mpdevil:3597
 msgid "Search, Album Dialog, Album List and Artist List"
 msgstr "Zoeken, Albumdialoog, Albumlijst en Artiestenlijst"
 
-#: mpdevil:3721
+#: mpdevil:3607
 msgid "Open online help"
 msgstr "Online hulp openen"
 
-#: mpdevil:3722
+#: mpdevil:3608
 msgid "Open shortcuts window"
 msgstr "Venster met sneltoetsen openen"
 
-#: mpdevil:3723
+#: mpdevil:3609
 msgid "Open menu"
 msgstr "Menu openen"
 
-#: mpdevil:3724 mpdevil:3870
+#: mpdevil:3610 mpdevil:3749
 msgid "Update database"
 msgstr "Database bijwerken"
 
-#: mpdevil:3725 mpdevil:3868
+#: mpdevil:3611 mpdevil:3747
 msgid "Quit"
 msgstr "Stoppen"
 
-#: mpdevil:3726
+#: mpdevil:3612
 msgid "Cycle through profiles"
 msgstr "Profielen doorlopen"
 
-#: mpdevil:3727
+#: mpdevil:3613
 msgid "Cycle through profiles in reversed order"
 msgstr "Profielen doorlopen in omgekeerde volgorde"
 
-#: mpdevil:3728
+#: mpdevil:3614
 msgid "Toggle mini player"
 msgstr "Omschakelen naar minispeler"
 
-#: mpdevil:3729
+#: mpdevil:3615
 msgid "Toggle lyrics"
 msgstr "Omschakelen naar songtekst"
 
-#: mpdevil:3730
+#: mpdevil:3616
 msgid "Toggle search"
 msgstr "Omschakelen naar zoeken"
 
-#: mpdevil:3732
+#: mpdevil:3618
 msgid "Play/Pause"
 msgstr "Afspelen/Pauzeren"
 
-#: mpdevil:3733
+#: mpdevil:3619
 msgid "Stop"
 msgstr "Stoppen"
 
-#: mpdevil:3734
+#: mpdevil:3620
 msgid "Next title"
 msgstr "Volgende titel"
 
-#: mpdevil:3735
+#: mpdevil:3621
 msgid "Previous title"
 msgstr "Vorige titel"
 
-#: mpdevil:3736
+#: mpdevil:3622
 msgid "Seek forward"
 msgstr "Vooruit spoelen"
 
-#: mpdevil:3737
+#: mpdevil:3623
 msgid "Seek backward"
 msgstr "Achteruit spoelen"
 
-#: mpdevil:3738
+#: mpdevil:3624
 msgid "Toggle repeat mode"
 msgstr "Omschakelen naar herhaalmodus"
 
-#: mpdevil:3739
+#: mpdevil:3625
 msgid "Toggle random mode"
 msgstr "Omschakelen naar willekeurige modus"
 
-#: mpdevil:3740
+#: mpdevil:3626
 msgid "Toggle single mode"
 msgstr "Omschakelen naar enkele modus"
 
-#: mpdevil:3741
+#: mpdevil:3627
 msgid "Toggle consume mode"
 msgstr "Omschakelen naar verbruiksmodus"
 
-#: mpdevil:3742
+#: mpdevil:3628
 msgid "Enqueue selected item"
 msgstr "Geselecteerde item in wachtrij plaatsen"
 
-#: mpdevil:3743
+#: mpdevil:3629
 msgid "Append selected item"
 msgstr "Geselecteerde item toevoegen"
 
-#: mpdevil:3743 mpdevil:3746
+#: mpdevil:3629 mpdevil:3632
 msgid "Middle-click"
 msgstr "Middelklik"
 
-#: mpdevil:3744
+#: mpdevil:3630
 msgid "Play selected item immediately"
 msgstr "Geselecteerde item direct afspelen"
 
-#: mpdevil:3744
+#: mpdevil:3630
 msgid "Double-click"
 msgstr "Dubbelklik"
 
-#: mpdevil:3745 mpdevil:3748
+#: mpdevil:3631 mpdevil:3634
 msgid "Show additional information"
 msgstr "Toon extra informatie"
 
-#: mpdevil:3745 mpdevil:3748
+#: mpdevil:3631 mpdevil:3634
 msgid "Right-click"
 msgstr "Rechtsklik"
 
-#: mpdevil:3746
+#: mpdevil:3632
 msgid "Remove selected song"
 msgstr "Geselecteerde titel verwijderen"
 
-#: mpdevil:3747
+#: mpdevil:3633
 msgid "Clear playlist"
 msgstr "Afspeellijst legen"
 
-#: mpdevil:3770
-msgid "Connect"
-msgstr "Verbinden"
-
-#: mpdevil:3791
+#: mpdevil:3677
 #, python-brace-format
-msgid "Connection to “{profile}” ({host}:{port}) failed"
-msgstr "Verbinding met „{profile}” ({host}:{port}) mislukt"
+msgid "Connection to “{host}:{port}” failed"
+msgstr "Verbinding met „{host}:{port}” mislukt"
 
-#: mpdevil:3865
+#: mpdevil:3744
 msgid "Keyboard shortcuts"
 msgstr "Sneltoetsen"
 
-#: mpdevil:3866
+#: mpdevil:3745
 msgid "Help"
 msgstr "Hulp"
 
-#: mpdevil:3867
+#: mpdevil:3746
 msgid "About"
 msgstr "Over"
 
-#: mpdevil:3871
+#: mpdevil:3750
 msgid "Server stats"
 msgstr "Serverstatistieken"
 
-#: mpdevil:3876
+#: mpdevil:3757
 msgid "Mini player"
 msgstr "Minispeler"
 
-#: mpdevil:3881
+#: mpdevil:3763
 msgid "Menu"
 msgstr "Menu"
 
-#: mpdevil:3932 mpdevil:3934
+#: mpdevil:3812 mpdevil:3814
 msgid "connecting…"
 msgstr "verbinding maken…"
 
-#: mpdevil:4096
+#: mpdevil:3959
 msgid "Debug mode"
 msgstr "Debugmodus"
+
+#~ msgid "_Connect"
+#~ msgstr "_Verbinden"
 
 #~ msgid "Unknown Title"
 #~ msgstr "Onbekende titel"
