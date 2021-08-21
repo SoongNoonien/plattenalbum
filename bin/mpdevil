@@ -927,7 +927,7 @@ class Settings(Gio.Settings):
 	cursor_watch=GObject.Property(type=bool, default=False)
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
-		self._profiles=[self.get_child("profile1"), self.get_child("profile2"), self.get_child("profile3")]
+		self._profiles=(self.get_child("profile1"), self.get_child("profile2"), self.get_child("profile3"))
 
 	def array_append(self, vtype, key, value):  # append to Gio.Settings array
 		array=self.get_value(key).unpack()
@@ -946,9 +946,9 @@ class Settings(Gio.Settings):
 
 	def get_artist_type(self):
 		if self.get_boolean("use-album-artist"):
-			return ("albumartist")
+			return "albumartist"
 		else:
-			return ("artist")
+			return "artist"
 
 	def get_lib_path(self):
 		lib_path=self.get_active_profile().get_string("path")
