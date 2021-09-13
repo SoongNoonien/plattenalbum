@@ -46,6 +46,8 @@ else:
 VERSION="1.3.0"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 FALLBACK_COVER=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
+FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
+FALLBACK_LIB=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 
 ##############
 # Decorators #
@@ -417,8 +419,9 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			if "://" in song_file:  # remote file
 				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
 			else:
-				lib_path=self._settings.get_lib_path()
-				self._metadata["xesam:url"]=GLib.Variant("s", f"file://{os.path.join(lib_path, song_file)}")
+				song_path=self._client.get_absolute_path(song_file)
+				if song_path is not None:
+					self._metadata["xesam:url"]=GLib.Variant("s", f"file://{song_path}")
 				cover_path=self._client.get_cover_path(song)
 				if cover_path is not None:
 					self._metadata["mpris:artUrl"]=GLib.Variant("s", f"file://{cover_path}")
@@ -620,6 +623,7 @@ class Client(MPDClient):
 		self._last_status={}
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
+		self.lib_path=None
 
 		# connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
@@ -641,14 +645,27 @@ class Client(MPDClient):
 	def start(self):
 		self.emitter.emit("disconnected")  # bring player in defined state
 		profile=self._settings.get_active_profile()
+		if profile.get_boolean("socket-connection"):
+			socket=profile.get_string("socket")
+			if not socket:
+				socket=FALLBACK_SOCKET
+			args=(socket, None)
+		else:
+			args=(profile.get_string("host"), profile.get_int("port"))
 		try:
-			self.connect(profile.get_string("host"), profile.get_int("port"))
+			self.connect(*args)
 			if profile.get_string("password"):
 				self.password(profile.get_string("password"))
-		except ConnectionRefusedError:
+		except:
 			self.emitter.emit("connection_error")
 			return False
 		# connect successful
+		if profile.get_boolean("socket-connection"):
+			self.lib_path=self.config()
+		else:
+			self.lib_path=self._settings.get_active_profile().get_string("path")
+			if not self.lib_path:
+				self.lib_path=FALLBACK_LIB
 		if "status" in self.commands():
 			self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
 			self.emitter.emit("reconnected")
@@ -776,8 +793,7 @@ class Client(MPDClient):
 		path=None
 		song_file=song["file"]
 		profile=self._settings.get_active_profile()
-		lib_path=self._settings.get_lib_path()
-		if lib_path is not None:
+		if self.lib_path is not None:
 			regex_str=profile.get_string("regex")
 			if regex_str:
 				regex_str=regex_str.replace("%AlbumArtist%", re.escape(song["albumartist"][0]))
@@ -789,7 +805,7 @@ class Client(MPDClient):
 					return None
 			else:
 				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
-			song_dir=os.path.join(lib_path, os.path.dirname(song_file))
+			song_dir=os.path.join(self.lib_path, os.path.dirname(song_file))
 			if song_dir.endswith(".cue"):
 				song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
 			if os.path.exists(song_dir):
@@ -822,9 +838,8 @@ class Client(MPDClient):
 		return cover
 
 	def get_absolute_path(self, uri):
-		lib_path=self._settings.get_lib_path()
-		if lib_path is not None:
-			path=os.path.join(lib_path, uri)
+		if self.lib_path is not None:
+			path=os.path.join(self.lib_path, uri)
 			if os.path.isfile(path):
 				return path
 			else:
@@ -953,12 +968,6 @@ class Settings(Gio.Settings):
 		else:
 			return "artist"
 
-	def get_lib_path(self):
-		lib_path=self.get_active_profile().get_string("path")
-		if not lib_path:
-			lib_path=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
-		return lib_path
-
 	def get_profile(self, num):
 		return self._profiles[num]
 
@@ -1075,7 +1084,7 @@ class PasswordEntry(Gtk.Entry):
 
 class LibPathEntry(Gtk.Entry):
 	def __init__(self, parent, **kwargs):
-		super().__init__(placeholder_text=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC), **kwargs)
+		super().__init__(placeholder_text=FALLBACK_LIB, **kwargs)
 		self.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "folder-open-symbolic")
 		self.connect("icon-release", self._on_icon_release, parent)
 
@@ -1092,18 +1101,24 @@ class LibPathEntry(Gtk.Entry):
 
 class ProfileEntryMask(Gtk.Grid):
 	def __init__(self, profile, parent):
-		super().__init__(row_spacing=6, column_spacing=12, border_width=18)
-		host_entry=Gtk.Entry(hexpand=True)
+		super().__init__(row_spacing=6, column_spacing=6, border_width=18)
+		socket_button=Gtk.CheckButton(label=_("Connect via Unix domain socket"))
+		profile.bind("socket-connection", socket_button, "active", Gio.SettingsBindFlags.DEFAULT)
+		socket_entry=Gtk.Entry(placeholder_text=FALLBACK_SOCKET, hexpand=True, no_show_all=True)
+		profile.bind("socket", socket_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		profile.bind("socket-connection", socket_entry, "visible", Gio.SettingsBindFlags.GET)
+		host_entry=Gtk.Entry(hexpand=True, no_show_all=True)
 		profile.bind("host", host_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		profile.bind("socket-connection", host_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		port_entry=Gtk.SpinButton.new_with_range(0, 65535, 1)
+		port_entry.set_property("no-show-all", True)
 		profile.bind("port", port_entry, "value", Gio.SettingsBindFlags.DEFAULT)
-		address_entry=Gtk.Box(spacing=6)
-		address_entry.pack_start(host_entry, True, True, 0)
-		address_entry.pack_start(port_entry, False, False, 0)
+		profile.bind("socket-connection", port_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		password_entry=PasswordEntry(hexpand=True)
 		profile.bind("password", password_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		path_entry=LibPathEntry(parent, hexpand=True)
+		path_entry=LibPathEntry(parent, hexpand=True, no_show_all=True)
 		profile.bind("path", path_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		profile.bind("socket-connection", path_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		regex_entry=Gtk.Entry(hexpand=True, placeholder_text=COVER_REGEX)
 		regex_entry.set_tooltip_text(
 			_("The first image in the same directory as the song file "\
@@ -1111,17 +1126,25 @@ class ProfileEntryMask(Gtk.Grid):
 			"%Album% will be replaced by the corresponding tags of the song.")
 		)
 		profile.bind("regex", regex_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		host_label=Gtk.Label(label=_("Host:"), xalign=1)
-		password_label=Gtk.Label(label=_("Password:"), xalign=1)
-		path_label=Gtk.Label(label=_("Music lib:"), xalign=1)
-		regex_label=Gtk.Label(label=_("Cover regex:"), xalign=1)
+		socket_label=Gtk.Label(label=_("Socket:"), xalign=1, margin_end=6, no_show_all=True)
+		profile.bind("socket-connection", socket_label, "visible", Gio.SettingsBindFlags.GET)
+		host_label=Gtk.Label(label=_("Host:"), xalign=1, margin_end=6, no_show_all=True)
+		profile.bind("socket-connection", host_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		password_label=Gtk.Label(label=_("Password:"), xalign=1, margin_end=6)
+		path_label=Gtk.Label(label=_("Music lib:"), xalign=1, no_show_all=True)
+		profile.bind("socket-connection", path_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		regex_label=Gtk.Label(label=_("Cover regex:"), xalign=1, margin_end=6)
 
 		# packing
-		self.add(host_label)
+		self.attach(socket_button, 0, 0, 3, 1)
+		self.attach(socket_label, 0, 1, 1, 1)
+		self.attach_next_to(host_label, socket_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(regex_label, path_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(address_entry, host_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(socket_entry, socket_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
+		self.attach_next_to(port_entry, host_entry, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(path_entry, path_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
@@ -3723,7 +3746,14 @@ class ConnectionNotify(Gtk.Revealer):
 
 	def _on_connection_error(self, *args):
 		profile=self._settings.get_active_profile()
-		self._label.set_text(_("Connection to “{host}:{port}” failed").format(host=profile.get_string("host"), port=profile.get_int("port")))
+		if profile.get_boolean("socket-connection"):
+			socket=profile.get_string("socket")
+			if not socket:
+				socket=FALLBACK_SOCKET
+			text=_("Connection to “{socket}” failed").format(socket=socket)
+		else:
+			text=_("Connection to “{host}:{port}” failed").format(host=profile.get_string("host"), port=profile.get_int("port"))
+		self._label.set_text(text)
 		self.set_reveal_child(True)
 
 	def _on_reconnected(self, *args):

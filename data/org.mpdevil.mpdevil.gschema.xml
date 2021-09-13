@@ -123,26 +123,34 @@
 		</key>
 	</schema>
 	<schema id="org.mpdevil.mpdevil.profile">
+		<key type="b" name="socket-connection">
+			<default>false</default>
+			<summary>Connect via Unix domain socket</summary>
+		</key>
+		<key type="s" name="socket">
+			<default>""</default>
+			<summary>Unix domain socket</summary>
+		</key>
 		<key type="s" name="host">
 			<default>"localhost"</default>
-			<summary>List of hosts</summary>
+			<summary>Hostname or IP address</summary>
 		</key>
 		<key type="i" name="port">
 			<range min="0" max="65535"/>
 			<default>6600</default>
-			<summary>List of ports</summary>
+			<summary>Network port</summary>
 		</key>
 		<key type="s" name="password">
 			<default>""</default>
-			<summary>List of passwords</summary>
+			<summary>Password</summary>
 		</key>
 		<key type="s" name="path">
 			<default>""</default>
-			<summary>List of library paths</summary>
+			<summary>Music library path</summary>
 		</key>
 		<key type="s" name="regex">
 			<default>""</default>
-			<summary>List of cover regex</summary>
+			<summary>Cover regex</summary>
 		</key>
 	</schema>
 </schemalist>
