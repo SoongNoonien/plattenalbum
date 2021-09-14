@@ -3800,11 +3800,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		shortcuts_window.set_modal(False)
 
 		# widgets
-		if self._use_csd:
-			icons={"open-menu-symbolic": Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.BUTTON)}
-		else:
-			icons={"open-menu-symbolic": AutoSizedIcon("open-menu-symbolic", "icon-size", self._settings)}
-
 		self._paned=Gtk.Paned()
 		self._browser=Browser(self._client, self._settings)
 		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings)
@@ -3836,7 +3831,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append_section(None, subsection)
 
 		# menu button / popover
-		self._menu_button=Gtk.MenuButton(image=icons["open-menu-symbolic"], tooltip_text=_("Menu"))
+		if self._use_csd:
+			menu_icon=Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.BUTTON)
+		else:
+			menu_icon=AutoSizedIcon("open-menu-symbolic", "icon-size", self._settings)
+		self._menu_button=Gtk.MenuButton(image=menu_icon, tooltip_text=_("Menu"))
 		self._menu_button.set_can_focus(False)
 		menu_popover=Gtk.Popover.new_from_model(self._menu_button, menu)
 		self._menu_button.set_popover(menu_popover)
