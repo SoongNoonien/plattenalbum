@@ -2559,6 +2559,8 @@ class Browser(Gtk.Paned):
 			else:  # one artist selected
 				self._artist_window.select(artist)
 			self._album_window.scroll_to_current_album()
+		else:
+			self._genre_select.deactivate()
 
 	def _on_back_to_current_album_button_clicked(self, *args):
 		self._back_to_current_album()
