@@ -1296,9 +1296,9 @@ class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, tab="view"):
 		use_csd=settings.get_boolean("use-csd")
 		if use_csd:
-			super().__init__(title=_("Settings"), transient_for=parent, use_header_bar=True)
+			super().__init__(title=_("Preferences"), transient_for=parent, use_header_bar=True)
 		else:
-			super().__init__(title=_("Settings"), transient_for=parent)
+			super().__init__(title=_("Preferences"), transient_for=parent)
 			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 		self.set_default_size(500, 400)
 
@@ -3723,7 +3723,7 @@ class ConnectionNotify(Gtk.Revealer):
 		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
 		close_button.set_relief(Gtk.ReliefStyle.NONE)
 		connect_button=Gtk.Button(label=_("Connect"))
-		settings_button=Gtk.Button(label=_("Settings"))
+		settings_button=Gtk.Button(label=_("Preferences"))
 		settings_button.set_action_name("win.profile-settings")
 
 		# connect
@@ -3815,7 +3815,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# menu
 		subsection=Gio.Menu()
-		subsection.append(_("Settings"), "win.settings")
+		subsection.append(_("Preferences"), "win.settings")
 		subsection.append(_("Keyboard Shortcuts"), "win.show-help-overlay")
 		subsection.append(_("Help"), "win.help")
 		subsection.append(_("About mpdevil"), "app.about")

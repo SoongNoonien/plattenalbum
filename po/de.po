@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-14 13:43+0200\n"
-"PO-Revision-Date: 2021-09-14 13:44+0200\n"
+"POT-Creation-Date: 2021-09-14 14:33+0200\n"
+"PO-Revision-Date: 2021-09-14 14:34+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -190,7 +190,7 @@ msgid "Genre"
 msgstr "Genre"
 
 #: mpdevil:1299 mpdevil:1301 mpdevil:3726 mpdevil:3818
-msgid "Settings"
+msgid "Preferences"
 msgstr "Einstellungen"
 
 #: mpdevil:1315 mpdevil:1326
@@ -559,6 +559,9 @@ msgstr "verbinden…"
 #: mpdevil:4033
 msgid "Debug mode"
 msgstr "Debugmodus"
+
+#~ msgid "Settings"
+#~ msgstr "Einstellungen"
 
 #~ msgid "About"
 #~ msgstr "Über"
