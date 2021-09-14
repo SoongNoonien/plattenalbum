@@ -3176,8 +3176,7 @@ class PlaybackControl(Gtk.ButtonBox):
 		self._play_button=Gtk.Button(image=self._play_button_icon)
 		self._play_button.set_action_name("mpd.toggle-play")
 		self._play_button.set_can_focus(False)
-		self._stop_button=Gtk.Button(image=AutoSizedIcon("media-playback-stop-symbolic", "icon-size", self._settings))
-		self._stop_button.set_property("no-show-all", not(self._settings.get_boolean("show-stop")))
+		self._stop_button=Gtk.Button(image=AutoSizedIcon("media-playback-stop-symbolic", "icon-size", self._settings), no_show_all=True)
 		self._stop_button.set_action_name("mpd.stop")
 		self._stop_button.set_can_focus(False)
 		self._prev_button=Gtk.Button(image=AutoSizedIcon("media-skip-backward-symbolic", "icon-size", self._settings))
@@ -3232,7 +3231,6 @@ class PlaybackControl(Gtk.ButtonBox):
 	def _on_show_stop_changed(self, *args):
 		visibility=(self._settings.get_boolean("show-stop") and not self._settings.get_boolean("mini-player"))
 		self._stop_button.set_property("visible", visibility)
-		self._stop_button.set_property("no-show-all", not(visibility))
 
 class SeekBar(Gtk.Box):
 	def __init__(self, client):
@@ -3362,7 +3360,6 @@ class AudioFormat(Gtk.Box):
 		self._separator_label=Gtk.Label(xalign=1)
 		self._brate_label=Gtk.Label(xalign=1, width_chars=5)
 		self._format_label=Gtk.Label()
-		self.set_property("no-show-all", not(self._settings.get_boolean("show-audio-format")))
 
 		# connect
 		self._settings.connect("changed::mini-player", self._on_mini_player)
