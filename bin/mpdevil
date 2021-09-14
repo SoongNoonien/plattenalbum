@@ -1314,8 +1314,8 @@ class SettingsDialog(Gtk.Dialog):
 			stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
 			stack.add_titled(view, "view", _("View"))
 			stack.add_titled(behavior, "behavior", _("Behavior"))
-			stack.add_titled(profiles, "profiles", _("Profiles"))
 			stack.add_titled(playlist, "playlist", _("Playlist"))
+			stack.add_titled(profiles, "profiles", _("Profiles"))
 			stack_switcher=Gtk.StackSwitcher(stack=stack)
 			vbox.set_property("border-width", 0)
 			vbox.pack_start(stack, True, True, 0)
@@ -1325,8 +1325,8 @@ class SettingsDialog(Gtk.Dialog):
 			tabs=Gtk.Notebook()
 			tabs.append_page(view, Gtk.Label(label=_("View")))
 			tabs.append_page(behavior, Gtk.Label(label=_("Behavior")))
-			tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 			tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
+			tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 			vbox.set_property("spacing", 6)
 			vbox.set_property("border-width", 6)
 			vbox.pack_start(tabs, True, True, 0)
@@ -1334,7 +1334,7 @@ class SettingsDialog(Gtk.Dialog):
 		if use_csd:
 			stack.set_visible_child_name(tab)
 		else:
-			tabs.set_current_page({"view": 0, "behavior": 1, "profiles": 2, "playlist": 3}[tab])
+			tabs.set_current_page({"view": 0, "behavior": 1, "playlist": 2, "profiles": 3}[tab])
 
 #################
 # other dialogs #
