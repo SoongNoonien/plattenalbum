@@ -806,9 +806,9 @@ class Client(MPDClient):
 			else:
 				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
 			song_dir=os.path.join(self.lib_path, os.path.dirname(song_file))
-			if song_dir.endswith(".cue"):
+			if song_dir.lower().endswith(".cue"):
 				song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
-			if os.path.exists(song_dir):
+			if os.path.isdir(song_dir):
 				for f in os.listdir(song_dir):
 					if regex.match(f):
 						path=os.path.join(song_dir, f)
