@@ -2226,6 +2226,8 @@ class AlbumLoadingThread(threading.Thread):
 					yield {"name": album, "artist": artist, "date": date}
 
 	def start(self):
+		self._settings.set_property("cursor-watch", True)
+		self._progress_bar.show()
 		self._callback=None
 		self._stop_flag=False
 		self._iconview.set_model(None)
@@ -2245,8 +2247,6 @@ class AlbumLoadingThread(threading.Thread):
 		super().start()
 
 	def run(self):
-		GLib.idle_add(self._settings.set_property, "cursor-watch", True)
-		GLib.idle_add(self._progress_bar.show)
 		# temporarily display all albums with fallback cover
 		fallback_cover=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, self._cover_size, self._cover_size)
 		add=main_thread_function(self._store.append)
@@ -2264,6 +2264,7 @@ class AlbumLoadingThread(threading.Thread):
 					self._exit()
 					return
 				GLib.idle_add(self._progress_bar.pulse)
+		# sort model
 		if main_thread_function(self._settings.get_boolean)("sort-albums-by-year"):
 			main_thread_function(self._store.set_sort_column_id)(4, Gtk.SortType.ASCENDING)
 		else:
@@ -2305,11 +2306,14 @@ class AlbumLoadingThread(threading.Thread):
 		self._exit()
 
 	def _exit(self):
-		GLib.idle_add(self._settings.set_property, "cursor-watch", False)
-		GLib.idle_add(self._progress_bar.hide)
-		GLib.idle_add(self._progress_bar.set_fraction, 0)
-		if self._callback is not None:
-			GLib.idle_add(self._callback)
+		def callback():
+			self._settings.set_property("cursor-watch", False)
+			self._progress_bar.hide()
+			self._progress_bar.set_fraction(0)
+			if self._callback is not None:
+				self._callback()
+			return False
+		GLib.idle_add(callback)
 
 class AlbumWindow(FocusFrame):
 	def __init__(self, client, settings, artist_window):
@@ -2374,7 +2378,6 @@ class AlbumWindow(FocusFrame):
 			self._album_popover.popdown()
 			self._artist_popover.popdown()
 			self._workaround_clear()
-			return False
 		if self._cover_thread.is_alive():
 			self._cover_thread.set_callback(callback)
 			self._cover_thread.stop()
@@ -2394,7 +2397,6 @@ class AlbumWindow(FocusFrame):
 					self._iconview.select_path(path)
 					self._iconview.scroll_to_path(path, True, 0, 0)
 					break
-			return False
 		if self._cover_thread.is_alive():
 			self._cover_thread.set_callback(callback)
 		else:
@@ -2415,7 +2417,6 @@ class AlbumWindow(FocusFrame):
 			genre=self._artist_window.genre_select.get_selected()
 			self._cover_thread=AlbumLoadingThread(self._client,self._settings,self._progress_bar,self._iconview,self._store,artist,genre)
 			self._cover_thread.start()
-			return False
 		if self._cover_thread.is_alive():
 			self._cover_thread.set_callback(callback)
 			self._cover_thread.stop()
