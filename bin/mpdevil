@@ -2327,9 +2327,7 @@ class AlbumWindow(FocusFrame):
 		self._store.set_default_sort_func(lambda *args: 0)
 
 		# iconview
-		self._iconview=Gtk.IconView(
-			model=self._store, item_width=0, pixbuf_column=0, markup_column=1, activate_on_single_click=True
-		)
+		self._iconview=Gtk.IconView(model=self._store, item_width=0, pixbuf_column=0, markup_column=1, activate_on_single_click=True)
 
 		# scroll
 		scroll=Gtk.ScrolledWindow()
