@@ -1737,7 +1737,7 @@ class AlbumPopover(Gtk.Popover):
 		self._client.tagtypes("all")
 		for song in songs:
 			track=song["track"][0]
-			title=str(song["title"])
+			title=song["title"][0]
 			# only show artists =/= albumartist
 			try:
 				song["artist"].remove(album_artist)
@@ -1869,8 +1869,8 @@ class SearchThread(threading.Thread):
 			except ValueError:
 				int_track=0
 			self._store.insert_with_valuesv(-1, range(7), [
-					str(song["track"]), str(song["title"]),
-					str(song["artist"]), str(song["album"]),
+					song["track"][0], song["title"][0],
+					str(song["artist"]), song["album"][0],
 					str(song["duration"]), song["file"],
 					int_track
 			])
@@ -3008,13 +3008,13 @@ class PlaylistWindow(Gtk.Overlay):
 				try:
 					treeiter=self._store.get_iter(song["pos"])
 					self._store.set(treeiter,
-						0, str(song["track"]),
-						1, str(song["disc"]),
-						2, str(song["title"]),
+						0, song["track"][0],
+						1, song["disc"][0],
+						2, song["title"][0],
 						3, str(song["artist"]),
-						4, str(song["album"]),
+						4, song["album"][0],
 						5, str(song["duration"]),
-						6, str(song["date"]),
+						6, song["date"][0],
 						7, str(song["genre"]),
 						8, song["file"],
 						9, Pango.Weight.BOOK,
@@ -3022,10 +3022,10 @@ class PlaylistWindow(Gtk.Overlay):
 					)
 				except:
 					self._store.insert_with_valuesv(-1, range(11), [
-						str(song["track"]), str(song["disc"]),
-						str(song["title"]), str(song["artist"]),
-						str(song["album"]), str(song["duration"]),
-						str(song["date"]), str(song["genre"]),
+						song["track"][0], song["disc"][0],
+						song["title"][0], str(song["artist"]),
+						song["album"][0], str(song["duration"]),
+						song["date"][0], str(song["genre"]),
 						song["file"], Pango.Weight.BOOK,
 						float(song["duration"])
 					])
