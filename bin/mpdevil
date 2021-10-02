@@ -3886,12 +3886,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		while Gtk.events_pending():  # ensure window is visible
 			Gtk.main_iteration_do(True)
 		# restore paned settings when window is visible (fixes a bug when window is maximized)
-		self._cover_playlist_window.set_position(self._settings.get_int("paned0"))
-		self._paned.set_position(self._settings.get_int("paned2"))
-
-		# auto save paned positions
-		self._cover_playlist_window.connect("notify::position", self._on_paned_position, "paned0")
-		self._paned.connect("notify::position", self._on_paned_position, "paned2")
+		self._settings.bind("paned0", self._cover_playlist_window, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned2", self._paned, "position", Gio.SettingsBindFlags.DEFAULT)
 
 		# start client
 		def callback(*args):
