@@ -3758,8 +3758,10 @@ class MainWindow(Gtk.ApplicationWindow):
 			else:
 				return AutoSizedIcon(name, "icon-size", self._settings)
 		self._search_button=Gtk.ToggleButton(image=icon("system-search-symbolic"), tooltip_text=_("Search"), no_show_all=True)
+		self._search_button.set_can_focus(False)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		self._back_button=Gtk.Button(image=icon("go-previous-symbolic"), tooltip_text=_("Back to current album"), no_show_all=True)
+		self._back_button.set_can_focus(False)
 		self._settings.bind("mini-player", self._back_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# stack
