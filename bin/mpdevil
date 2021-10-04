@@ -2641,9 +2641,10 @@ class PlaylistWindow(Gtk.Overlay):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("show-info", self._on_show_info)
 
-		self._settings.connect("changed::mini-player", self._on_mini_player)
 		self._settings.connect("changed::column-visibilities", self._load_settings)
 		self._settings.connect("changed::column-permutation", self._load_settings)
+		self._settings.bind("mini-player", self, "no-show-all", Gio.SettingsBindFlags.GET)
+		self._settings.bind("mini-player", self, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# packing
 		self.add(self._frame)
@@ -2849,14 +2850,6 @@ class PlaylistWindow(Gtk.Overlay):
 				path=self._store.get_path(treeiter)
 				cell=self._treeview.get_cell_area(path, None)
 				self._song_popover.open(self._store[path][8], self._treeview, int(cell.x), int(cell.y))
-
-	def _on_mini_player(self, settings, key):
-		if settings.get_boolean(key):
-			self.set_property("no-show-all", True)
-			self.set_property("visible", False)
-		else:
-			self.set_property("no-show-all", False)
-			self.show_all()
 
 ####################
 # cover and lyrics #
@@ -3127,8 +3120,8 @@ class PlaybackControl(Gtk.ButtonBox):
 		self._next_button.set_can_focus(False)
 
 		# connect
-		self._settings.connect("changed::mini-player", self._on_mini_player)
-		self._settings.connect("changed::show-stop", self._on_show_stop_changed)
+		self._settings.connect("changed::mini-player", self._mini_player)
+		self._settings.connect("changed::show-stop", self._mini_player)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("playlist_changed", self._refresh_tooltips)
 		self._client.emitter.connect("current_song_changed", self._refresh_tooltips)
@@ -3139,6 +3132,7 @@ class PlaybackControl(Gtk.ButtonBox):
 		self.pack_start(self._play_button, True, True, 0)
 		self.pack_start(self._stop_button, True, True, 0)
 		self.pack_start(self._next_button, True, True, 0)
+		self._mini_player()
 
 	def _refresh_tooltips(self, *args):
 		status=self._client.status()
@@ -3155,6 +3149,10 @@ class PlaybackControl(Gtk.ButtonBox):
 			self._prev_button.set_tooltip_text(elapsed_songs)
 			self._next_button.set_tooltip_text(rest_songs)
 
+	def _mini_player(self, *args):
+		visibility=(self._settings.get_boolean("show-stop") and not self._settings.get_boolean("mini-player"))
+		self._stop_button.set_property("visible", visibility)
+
 	def _on_state(self, emitter, state):
 		if state == "play":
 			self._play_button_icon.set_property("icon-name", "media-playback-pause-symbolic")
@@ -3164,13 +3162,6 @@ class PlaybackControl(Gtk.ButtonBox):
 	def _on_disconnected(self, *args):
 		self._prev_button.set_tooltip_text("")
 		self._next_button.set_tooltip_text("")
-
-	def _on_mini_player(self, settings, key):
-		self._on_show_stop_changed()
-
-	def _on_show_stop_changed(self, *args):
-		visibility=(self._settings.get_boolean("show-stop") and not self._settings.get_boolean("mini-player"))
-		self._stop_button.set_property("visible", visibility)
 
 class SeekBar(Gtk.Box):
 	def __init__(self, client):
@@ -3302,8 +3293,8 @@ class AudioFormat(Gtk.Box):
 		self._format_label=Gtk.Label()
 
 		# connect
-		self._settings.connect("changed::mini-player", self._on_mini_player)
-		self._settings.connect("changed::show-audio-format", self._on_show_audio_format_changed)
+		self._settings.connect("changed::mini-player", self._mini_player)
+		self._settings.connect("changed::show-audio-format", self._mini_player)
 		self._client.emitter.connect("audio", self._on_audio)
 		self._client.emitter.connect("bitrate", self._on_bitrate)
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
@@ -3321,6 +3312,12 @@ class AudioFormat(Gtk.Box):
 		self.pack_start(Gtk.Separator(), False, False, 0)
 		self.pack_start(vbox, False, False, 0)
 		self.pack_start(Gtk.Separator(), False, False, 0)
+		self._mini_player()
+
+	def _mini_player(self, *args):
+		visibility=(self._settings.get_boolean("show-audio-format") and not self._settings.get_boolean("mini-player"))
+		self.set_property("no-show-all", not(visibility))
+		self.set_property("visible", visibility)
 
 	def _on_audio(self, emitter, audio_format):
 		if audio_format is None:
@@ -3345,17 +3342,6 @@ class AudioFormat(Gtk.Box):
 			self._file_type_label.set_text("")
 			self._separator_label.set_text(" kb∕s")
 			self._format_label.set_markup("<small> </small>")
-
-	def _on_mini_player(self, settings, key):
-		self._on_show_audio_format_changed()
-
-	def _on_show_audio_format_changed(self, *args):
-		visibility=(self._settings.get_boolean("show-audio-format") and not self._settings.get_boolean("mini-player"))
-		self.set_property("no-show-all", not(visibility))
-		if visibility:
-			self.show_all()
-		else:
-			self.hide()
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
@@ -3398,7 +3384,8 @@ class PlaybackOptions(Gtk.ButtonBox):
 		self._buttons["single"][0].connect("button-press-event", self._on_single_button_press_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
-		self._settings.connect("changed::mini-player", self._on_mini_player)
+		self._settings.bind("mini-player", self, "no-show-all", Gio.SettingsBindFlags.GET)
+		self._settings.bind("mini-player", self, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 	def _set_option(self, widget, option):
 		func=getattr(self._client, option)
@@ -3437,14 +3424,6 @@ class PlaybackOptions(Gtk.ButtonBox):
 
 	def _on_reconnected(self, *args):
 		self.set_sensitive(True)
-
-	def _on_mini_player(self, settings, key):
-		if settings.get_boolean(key):
-			self.set_property("no-show-all", True)
-			self.set_property("visible", False)
-		else:
-			self.set_property("no-show-all", False)
-			self.show_all()
 
 class OutputPopover(Gtk.Popover):
 	def __init__(self, client, relative):
@@ -3714,8 +3693,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._notify=notify
 		self._use_csd=self._settings.get_boolean("use-csd")
 		self._size=None  # needed for window size saving
-		mini_player=self._settings.get_boolean("mini-player")
-		self._settings.set_boolean("mini-player", not(mini_player))
 
 		# MPRIS
 		if self._settings.get_boolean("mpris"):
@@ -3768,6 +3745,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
 		self._stack.add_named(self._browser, "browser")
 		self._stack.add_named(self._search_window, "search")
+		self._settings.bind("mini-player", self._stack, "no-show-all", Gio.SettingsBindFlags.GET)
+		self._settings.bind("mini-player", self._stack, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# menu
 		subsection=Gio.Menu()
@@ -3804,7 +3783,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._back_button.connect("clicked", self._on_back_button_clicked)
 		self._back_button.connect("button-press-event", self._on_back_button_press_event)
 		self._search_window.connect("close", lambda *args: self._search_button.set_active(False))
-		self._settings.connect_after("changed::mini-player", self._on_mini_player)
+		self._settings.connect_after("changed::mini-player", self._mini_player)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
 		self._client.emitter.connect("current_song_changed", self._on_song_changed)
@@ -3846,7 +3825,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.add(overlay)
 		# bring player in consistent state
 		self._client.emitter.emit("disconnected")
-		self._settings.set_boolean("mini-player", mini_player)
+		self._mini_player()
 		# indicate connection process in window title
 		if self._use_csd:
 			self._header_bar.set_subtitle(_("connecting…"))
@@ -3865,6 +3844,15 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._client.start()  # connect client
 			return False
 		GLib.idle_add(callback)
+
+	def _mini_player(self, *args):
+		if self._settings.get_boolean("mini-player"):
+			if self.is_maximized():
+				self.unmaximize()
+			self.resize(1,1)
+		else:
+			self.resize(self._settings.get_int("width"), self._settings.get_int("height"))
+			self.show_all()
 
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_lyrics_window.lyrics_button.emit("clicked")
@@ -3977,21 +3965,6 @@ class MainWindow(Gtk.ApplicationWindow):
 				self._settings.set_int("width", size[0])
 				self._settings.set_int("height", size[1])
 				self._size=size
-
-	def _on_paned_position(self, obj, typestring, key):
-		self._settings.set_int(key, obj.get_position())
-
-	def _on_mini_player(self, settings, key):
-		state=settings.get_boolean(key)
-		self._stack.set_property("no-show-all", state)
-		self._stack.set_property("visible", not(state))
-		if state:
-			if self.is_maximized():
-				self.unmaximize()
-			self.resize(1,1)
-		else:
-			self.resize(self._settings.get_int("width"), self._settings.get_int("height"))
-			self.show_all()
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
