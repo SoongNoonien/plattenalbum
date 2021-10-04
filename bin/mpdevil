@@ -2556,186 +2556,9 @@ class Browser(Gtk.Paned):
 			self._genres_button.get_image().set_text(genre)
 		self._genres_button.set_active(False)
 
-######################
-# playlist and cover #
-######################
-
-class LyricsWindow(FocusFrame):
-	def __init__(self, client, settings):
-		super().__init__()
-		self._settings=settings
-		self._client=client
-		self._displayed_song_file=None
-
-		# text view
-		self._text_view=Gtk.TextView(
-			editable=False,
-			cursor_visible=False,
-			wrap_mode=Gtk.WrapMode.WORD,
-			justification=Gtk.Justification.CENTER,
-			opacity=0.9
-		)
-		self._text_view.set_left_margin(5)
-		self._text_view.set_right_margin(5)
-		self._text_view.set_bottom_margin(5)
-		self._text_view.set_top_margin(3)
-		self.set_widget(self._text_view)
-
-		# text buffer
-		self._text_buffer=self._text_view.get_buffer()
-
-		# scroll
-		scroll=Gtk.ScrolledWindow()
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self._text_view)
-
-		# connect
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._song_changed=self._client.emitter.connect("current_song_changed", self._refresh)
-		self._client.emitter.handler_block(self._song_changed)
-
-		# packing
-		self.add(scroll)
-
-	def enable(self, *args):
-		current_song=self._client.currentsong()
-		if current_song:
-			if current_song["file"] != self._displayed_song_file:
-				self._refresh()
-		else:
-			if self._displayed_song_file is not None:
-				self._refresh()
-		self._client.emitter.handler_unblock(self._song_changed)
-		GLib.idle_add(self._text_view.grab_focus)  # focus textview
-
-	def disable(self, *args):
-		self._client.emitter.handler_block(self._song_changed)
-
-	def _get_lyrics(self, title, artist):
-		replaces=((" ", "+"),(".", "_"),("@", "_"),(",", "_"),(";", "_"),("&", "_"),("\\", "_"),("/", "_"),('"', "_"),("(", "_"),(")", "_"))
-		for char1, char2 in replaces:
-			title=title.replace(char1, char2)
-			artist=artist.replace(char1, char2)
-		req=requests.get(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}")
-		soup=BeautifulSoup(req.text, "html.parser")
-		soup=soup.find(id="letra-cnt")
-		if soup is None:
-			raise ValueError("Not found")
-		paragraphs=[i for i in soup.children][1]  # remove unneded paragraphs (NavigableString)
-		lyrics=""
-		for paragraph in paragraphs:
-			for line in paragraph.stripped_strings:
-				lyrics+=line+"\n"
-			lyrics+="\n"
-		output=lyrics[:-2]  # omit last two newlines
-		if output:
-			return output
-		else:  # assume song is instrumental when lyrics are empty
-			return "Instrumental"
-
-	def _display_lyrics(self, current_song):
-		GLib.idle_add(self._text_buffer.set_text, _("searching…"), -1)
-		try:
-			text=self._get_lyrics(current_song["title"][0], current_song["artist"][0])
-		except requests.exceptions.ConnectionError:
-			self._displayed_song_file=None
-			text=_("connection error")
-		except ValueError:
-			text=_("lyrics not found")
-		GLib.idle_add(self._text_buffer.set_text, text, -1)
-
-	def _refresh(self, *args):
-		current_song=self._client.currentsong()
-		if current_song:
-			self._displayed_song_file=current_song["file"]
-			update_thread=threading.Thread(
-					target=self._display_lyrics,
-					kwargs={"current_song": current_song},
-					daemon=True
-			)
-			update_thread.start()
-		else:
-			self._displayed_song_file=None
-			self._text_buffer.set_text("", -1)
-
-	def _on_disconnected(self, *args):
-		self._displayed_song_file=None
-		self._text_buffer.set_text("", -1)
-
-class CoverEventBox(Gtk.EventBox):
-	def __init__(self, client, settings):
-		super().__init__()
-		self._client=client
-		self._settings=settings
-
-		# album popover
-		self._album_popover=AlbumPopover(self._client, self._settings)
-
-		# connect
-		self._button_press_event=self.connect("button-press-event", self._on_button_press_event)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-
-	def _on_button_press_event(self, widget, event):
-		if self._settings.get_boolean("mini-player"):
-			if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-				window=self.get_toplevel()
-				window.begin_move_drag(1, event.x_root, event.y_root, Gdk.CURRENT_TIME)
-		else:
-			if self._client.connected():
-				song=self._client.currentsong()
-				if song:
-					artist=song[self._settings.get_artist_type()][0]
-					album=song["album"][0]
-					year=song["date"][0]
-					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, year, None)
-					elif event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, year, None, "play")
-					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, year, None, "append")
-					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._album_popover.open(album, artist, year, None, widget, event.x, event.y)
-
-	def _on_disconnected(self, *args):
-		self._album_popover.popdown()
-
-class MainCover(Gtk.Image):
-	def __init__(self, client, settings):
-		super().__init__()
-		self._client=client
-		self._settings=settings
-		# set default size
-		size=self._settings.get_int("track-cover")
-		self.set_size_request(size, size)
-
-		# connect
-		self._client.emitter.connect("current_song_changed", self._refresh)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
-		self._settings.connect("changed::track-cover", self._on_settings_changed)
-
-	def _clear(self):
-		size=self._settings.get_int("track-cover")
-		self.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size))
-
-	def _refresh(self, *args):
-		song=self._client.currentsong()
-		if song:
-			self.set_from_pixbuf(self._client.get_cover(song).get_pixbuf(self._settings.get_int("track-cover")))
-		else:
-			self._clear()
-
-	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
-		self._clear()
-
-	def _on_reconnected(self, *args):
-		self.set_sensitive(True)
-
-	def _on_settings_changed(self, *args):
-		size=self._settings.get_int("track-cover")
-		self.set_size_request(size, size)
-		self._refresh()
+############
+# playlist #
+############
 
 class PlaylistWindow(Gtk.Overlay):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
@@ -3035,7 +2858,188 @@ class PlaylistWindow(Gtk.Overlay):
 			self.set_property("no-show-all", False)
 			self.show_all()
 
-class CoverPlaylistWindow(Gtk.Paned):
+####################
+# cover and lyrics #
+####################
+
+class LyricsWindow(FocusFrame):
+	def __init__(self, client, settings):
+		super().__init__()
+		self._settings=settings
+		self._client=client
+		self._displayed_song_file=None
+
+		# text view
+		self._text_view=Gtk.TextView(
+			editable=False,
+			cursor_visible=False,
+			wrap_mode=Gtk.WrapMode.WORD,
+			justification=Gtk.Justification.CENTER,
+			opacity=0.9
+		)
+		self._text_view.set_left_margin(5)
+		self._text_view.set_right_margin(5)
+		self._text_view.set_bottom_margin(5)
+		self._text_view.set_top_margin(3)
+		self.set_widget(self._text_view)
+
+		# text buffer
+		self._text_buffer=self._text_view.get_buffer()
+
+		# scroll
+		scroll=Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		scroll.add(self._text_view)
+
+		# connect
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._song_changed=self._client.emitter.connect("current_song_changed", self._refresh)
+		self._client.emitter.handler_block(self._song_changed)
+
+		# packing
+		self.add(scroll)
+
+	def enable(self, *args):
+		current_song=self._client.currentsong()
+		if current_song:
+			if current_song["file"] != self._displayed_song_file:
+				self._refresh()
+		else:
+			if self._displayed_song_file is not None:
+				self._refresh()
+		self._client.emitter.handler_unblock(self._song_changed)
+		GLib.idle_add(self._text_view.grab_focus)  # focus textview
+
+	def disable(self, *args):
+		self._client.emitter.handler_block(self._song_changed)
+
+	def _get_lyrics(self, title, artist):
+		replaces=((" ", "+"),(".", "_"),("@", "_"),(",", "_"),(";", "_"),("&", "_"),("\\", "_"),("/", "_"),('"', "_"),("(", "_"),(")", "_"))
+		for char1, char2 in replaces:
+			title=title.replace(char1, char2)
+			artist=artist.replace(char1, char2)
+		req=requests.get(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}")
+		soup=BeautifulSoup(req.text, "html.parser")
+		soup=soup.find(id="letra-cnt")
+		if soup is None:
+			raise ValueError("Not found")
+		paragraphs=[i for i in soup.children][1]  # remove unneded paragraphs (NavigableString)
+		lyrics=""
+		for paragraph in paragraphs:
+			for line in paragraph.stripped_strings:
+				lyrics+=line+"\n"
+			lyrics+="\n"
+		output=lyrics[:-2]  # omit last two newlines
+		if output:
+			return output
+		else:  # assume song is instrumental when lyrics are empty
+			return "Instrumental"
+
+	def _display_lyrics(self, current_song):
+		GLib.idle_add(self._text_buffer.set_text, _("searching…"), -1)
+		try:
+			text=self._get_lyrics(current_song["title"][0], current_song["artist"][0])
+		except requests.exceptions.ConnectionError:
+			self._displayed_song_file=None
+			text=_("connection error")
+		except ValueError:
+			text=_("lyrics not found")
+		GLib.idle_add(self._text_buffer.set_text, text, -1)
+
+	def _refresh(self, *args):
+		current_song=self._client.currentsong()
+		if current_song:
+			self._displayed_song_file=current_song["file"]
+			update_thread=threading.Thread(
+					target=self._display_lyrics,
+					kwargs={"current_song": current_song},
+					daemon=True
+			)
+			update_thread.start()
+		else:
+			self._displayed_song_file=None
+			self._text_buffer.set_text("", -1)
+
+	def _on_disconnected(self, *args):
+		self._displayed_song_file=None
+		self._text_buffer.set_text("", -1)
+
+class CoverEventBox(Gtk.EventBox):
+	def __init__(self, client, settings):
+		super().__init__()
+		self._client=client
+		self._settings=settings
+
+		# album popover
+		self._album_popover=AlbumPopover(self._client, self._settings)
+
+		# connect
+		self._button_press_event=self.connect("button-press-event", self._on_button_press_event)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+
+	def _on_button_press_event(self, widget, event):
+		if self._settings.get_boolean("mini-player"):
+			if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+				window=self.get_toplevel()
+				window.begin_move_drag(1, event.x_root, event.y_root, Gdk.CURRENT_TIME)
+		else:
+			if self._client.connected():
+				song=self._client.currentsong()
+				if song:
+					artist=song[self._settings.get_artist_type()][0]
+					album=song["album"][0]
+					year=song["date"][0]
+					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+						self._client.album_to_playlist(album, artist, year, None)
+					elif event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+						self._client.album_to_playlist(album, artist, year, None, "play")
+					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+						self._client.album_to_playlist(album, artist, year, None, "append")
+					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+						self._album_popover.open(album, artist, year, None, widget, event.x, event.y)
+
+	def _on_disconnected(self, *args):
+		self._album_popover.popdown()
+
+class MainCover(Gtk.Image):
+	def __init__(self, client, settings):
+		super().__init__()
+		self._client=client
+		self._settings=settings
+		# set default size
+		size=self._settings.get_int("track-cover")
+		self.set_size_request(size, size)
+
+		# connect
+		self._client.emitter.connect("current_song_changed", self._refresh)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._settings.connect("changed::track-cover", self._on_settings_changed)
+
+	def _clear(self):
+		size=self._settings.get_int("track-cover")
+		self.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size))
+
+	def _refresh(self, *args):
+		song=self._client.currentsong()
+		if song:
+			self.set_from_pixbuf(self._client.get_cover(song).get_pixbuf(self._settings.get_int("track-cover")))
+		else:
+			self._clear()
+
+	def _on_disconnected(self, *args):
+		self.set_sensitive(False)
+		self._clear()
+
+	def _on_reconnected(self, *args):
+		self.set_sensitive(True)
+
+	def _on_settings_changed(self, *args):
+		size=self._settings.get_int("track-cover")
+		self.set_size_request(size, size)
+		self._refresh()
+
+class CoverLyricsWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
@@ -3044,9 +3048,6 @@ class CoverPlaylistWindow(Gtk.Paned):
 		# cover
 		main_cover=MainCover(self._client, self._settings)
 		self._cover_event_box=CoverEventBox(self._client, self._settings)
-
-		# playlist
-		self._playlist_window=PlaylistWindow(self._client, self._settings)
 
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(
@@ -3081,12 +3082,9 @@ class CoverPlaylistWindow(Gtk.Paned):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 		# packing
-		overlay=Gtk.Overlay()
-		overlay.add(main_cover)
-		overlay.add_overlay(self._stack)
-		overlay.add_overlay(self._lyrics_button_revealer)
-		self.pack1(overlay, False, False)
-		self.pack2(self._playlist_window, True, False)
+		self.add(main_cover)
+		self.add_overlay(self._stack)
+		self.add_overlay(self._lyrics_button_revealer)
 
 	def _on_reconnected(self, *args):
 		self.lyrics_button.set_sensitive(True)
@@ -3742,10 +3740,12 @@ class MainWindow(Gtk.ApplicationWindow):
 		shortcuts_window.set_modal(False)
 
 		# widgets
-		self._paned=Gtk.Paned()
+		self._paned0=Gtk.Paned()
+		self._paned2=Gtk.Paned()
 		self._browser=Browser(self._client, self._settings)
 		self._search_window=SearchWindow(self._client)
-		self._cover_playlist_window=CoverPlaylistWindow(self._client, self._settings)
+		self._cover_lyrics_window=CoverLyricsWindow(self._client, self._settings)
+		playlist_window=PlaylistWindow(self._client, self._settings)
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		audio=AudioFormat(self._client, self._settings)
@@ -3816,8 +3816,10 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# packing
 		self._on_playlist_pos_changed()  # set orientation
-		self._paned.pack1(self._stack, True, False)
-		self._paned.pack2(self._cover_playlist_window, False, False)
+		self._paned0.pack1(self._cover_lyrics_window, False, False)
+		self._paned0.pack2(playlist_window, True, False)
+		self._paned2.pack1(self._stack, True, False)
+		self._paned2.pack2(self._paned0, False, False)
 		action_bar=Gtk.ActionBar()
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar()
@@ -3836,7 +3838,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.pack_start(playback_options)
 		action_bar.pack_start(volume_button)
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		vbox.pack_start(self._paned, True, True, 0)
+		vbox.pack_start(self._paned2, True, True, 0)
 		vbox.pack_start(action_bar, False, False, 0)
 		overlay=Gtk.Overlay()
 		overlay.add(vbox)
@@ -3854,9 +3856,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		while Gtk.events_pending():  # ensure window is visible
 			Gtk.main_iteration_do(True)
 		# restore paned settings when window is visible (fixes a bug when window is maximized)
-		self._settings.bind("paned0", self._cover_playlist_window, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
 		self._settings.bind("paned1", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
-		self._settings.bind("paned2", self._paned, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned2", self._paned2, "position", Gio.SettingsBindFlags.DEFAULT)
 
 		# start client
 		def callback(*args):
@@ -3865,7 +3867,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		GLib.idle_add(callback)
 
 	def _on_toggle_lyrics(self, action, param):
-		self._cover_playlist_window.lyrics_button.set_active(not(self._cover_playlist_window.lyrics_button.get_active()))
+		self._cover_lyrics_window.lyrics_button.emit("clicked")
 
 	def _on_back_to_current_album(self, action, param):
 		self._back_button.emit("clicked")
@@ -4000,11 +4002,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_playlist_pos_changed(self, *args):
 		if self._settings.get_boolean("playlist-right"):
-			self._cover_playlist_window.set_orientation(Gtk.Orientation.VERTICAL)
-			self._paned.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self._paned0.set_orientation(Gtk.Orientation.VERTICAL)
+			self._paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
 		else:
-			self._cover_playlist_window.set_orientation(Gtk.Orientation.HORIZONTAL)
-			self._paned.set_orientation(Gtk.Orientation.VERTICAL)
+			self._paned0.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self._paned2.set_orientation(Gtk.Orientation.VERTICAL)
 
 ###################
 # Gtk application #
