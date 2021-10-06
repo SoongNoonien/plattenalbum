@@ -1437,6 +1437,10 @@ class ScrolledFocusFrame(FocusFrame):
 		scroll=Gtk.ScrolledWindow()
 		scroll.add(widget)
 
+		# allow hide/show without .show_all()
+		scroll.set_visible(True)
+		widget.set_visible(True)
+
 		self.add(scroll)
 
 class SongPopover(Gtk.Popover):
@@ -2485,42 +2489,32 @@ class AlbumWindow(FocusFrame):
 
 class Browser(Gtk.Paned):
 	def __init__(self, client, settings):
-		super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
+		super().__init__()
 		self._client=client
 		self._settings=settings
 
 		# widgets
-		label=Gtk.Label(ellipsize=Pango.EllipsizeMode.MIDDLE)
-		self._genres_button=Gtk.ToggleButton(image=label, tooltip_text=_("Filter by genre"))
 		self._genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self._genre_select)
 		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window)
+		genre_focus_frame=ScrolledFocusFrame(self._genre_select)
+		artist_focus_frame=ScrolledFocusFrame(self._artist_window)
 
-		# stacks
-		self._artists_genres_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.OVER_RIGHT_LEFT)
-		self._artists_genres_stack.add_named(ScrolledFocusFrame(self._artist_window), "artists")
-		self._artists_genres_stack.add_named(ScrolledFocusFrame(self._genre_select), "genres")
-
-		# connect
-		self._genres_button.connect("toggled", self._on_genres_toggled)
-		self._genre_select.connect("item-selected", self._on_genre_chnaged)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		# hide/show genre filter
+		self._settings.bind("genre-filter", genre_focus_frame, "no-show-all", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		self._settings.bind("genre-filter", genre_focus_frame, "visible", Gio.SettingsBindFlags.GET)
+		self._settings.connect("changed::genre-filter", self._on_genre_filter_changed)
 
 		# packing
-		hbox=Gtk.Box(spacing=6, border_width=6)
-		hbox.pack_start(self._genres_button, True, True, 0)
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		vbox.pack_start(hbox, False, False, 0)
-		vbox.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		vbox.pack_start(self._artists_genres_stack, True, True, 0)
-		self.pack1(vbox, False, False)
-		self.pack2(self._album_window, True, False)
+		self.paned1=Gtk.Paned()
+		self.paned1.pack1(artist_focus_frame, False, False)
+		self.paned1.pack2(self._album_window, True, False)
+		self.pack1(genre_focus_frame, False, False)
+		self.pack2(self.paned1, True, False)
 
 	def back_to_current_album(self, force=False):
 		song=self._client.currentsong()
 		if song:
-			self._genres_button.set_active(False)
 			# get artist name
 			artist=song[self._settings.get_artist_type()][0]
 			# deactivate genre filter to show all artists (if needed)
@@ -2535,26 +2529,10 @@ class Browser(Gtk.Paned):
 		else:
 			self._genre_select.deactivate()
 
-	def _on_genres_toggled(self, widget):
-		if widget.get_active():
-			self._artists_genres_stack.set_visible_child_name("genres")
-		else:
-			self._artists_genres_stack.set_visible_child_name("artists")
-
-	def _on_reconnected(self, *args):
-		self._genres_button.set_sensitive(True)
-
-	def _on_disconnected(self, *args):
-		self._genres_button.set_active(False)
-		self._genres_button.set_sensitive(False)
-
-	def _on_genre_chnaged(self, *args):
-		genre=self._genre_select.get_selected()
-		if genre is None:
-			self._genres_button.get_image().set_text(self._genre_select.select_all_string)
-		else:
-			self._genres_button.get_image().set_text(genre)
-		self._genres_button.set_active(False)
+	def _on_genre_filter_changed(self, settings, key):
+		if self._client.connected():
+			if not settings.get_boolean(key):
+				self._genre_select.deactivate()
 
 ############
 # playlist #
@@ -3601,6 +3579,7 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 			("<Shift><Control>p", _("Cycle through profiles in reversed order"), None, window_group),
 			("<Control>m", _("Toggle mini player"), None, window_group),
 			("<Control>l", _("Toggle lyrics"), None, window_group),
+			("<Control>g", _("Toggle genre filter"), None, window_group),
 			("<Control>f", _("Toggle search"), None, window_group),
 			("Escape", _("Back to current album"), None, window_group),
 			("space", _("Play/Pause"), None, playback_group),
@@ -3709,6 +3688,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
 		self.add_action(self._settings.create_action("mini-player"))
+		self.add_action(self._settings.create_action("genre-filter"))
 		self.add_action(self._settings.create_action("active-profile"))
 
 		# shortcuts
@@ -3740,6 +3720,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._back_button=Gtk.Button(image=icon("go-previous-symbolic"), tooltip_text=_("Back to current album"), no_show_all=True)
 		self._back_button.set_can_focus(False)
 		self._settings.bind("mini-player", self._back_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		self._genre_button=Gtk.ToggleButton(
+			image=icon("org.mpdevil.mpdevil-genre-symbolic"), tooltip_text=_("Filter by genre"), no_show_all=True)
+		self._genre_button.set_can_focus(False)
+		self._settings.bind("mini-player", self._genre_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		self._settings.bind("genre-filter", self._genre_button, "active", Gio.SettingsBindFlags.DEFAULT)
 
 		# stack
 		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
@@ -3805,12 +3790,14 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._header_bar.set_show_close_button(True)
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_start(self._back_button)
+			self._header_bar.pack_start(self._genre_button)
 			self._header_bar.pack_end(self._menu_button)
 			self._header_bar.pack_end(self._search_button)
 		else:
 			action_bar.pack_start(self._back_button)
 			action_bar.pack_end(self._menu_button)
 			action_bar.pack_end(self._search_button)
+			action_bar.pack_end(self._genre_button)
 		action_bar.pack_start(playback_control)
 		action_bar.pack_start(seek_bar)
 		action_bar.pack_start(audio)
@@ -3836,8 +3823,9 @@ class MainWindow(Gtk.ApplicationWindow):
 			Gtk.main_iteration_do(True)
 		# restore paned settings when window is visible (fixes a bug when window is maximized)
 		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
-		self._settings.bind("paned1", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned1", self._browser.paned1, "position", Gio.SettingsBindFlags.DEFAULT)
 		self._settings.bind("paned2", self._paned2, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned3", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
 
 		# start client
 		def callback(*args):
@@ -3947,6 +3935,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
 		self._back_button.set_sensitive(True)
+		self._genre_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
 		self.set_title("mpdevil")
@@ -3957,6 +3946,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
 		self._back_button.set_sensitive(False)
+		self._genre_button.set_sensitive(False)
 
 	def _on_size_allocate(self, widget, rect):
 		if not self.is_maximized() and not self._settings.get_boolean("mini-player"):
@@ -4011,7 +4001,7 @@ class mpdevil(Gtk.Application):
 				("mpd.consume", ["<Control>o"]),("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
 				("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"]),
 				("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),
-				("win.play", ["<Control>Return"]),("win.enqueue", ["<Control>e"])
+				("win.play", ["<Control>Return"]),("win.enqueue", ["<Control>e"]),("win.genre-filter", ["<Control>g"])
 			)
 			for action, accels in action_accels:
 				self.set_accels_for_action(action, accels)

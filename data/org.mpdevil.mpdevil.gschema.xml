@@ -28,6 +28,14 @@
 			<default>572</default>
 			<summary>Default position of paned1/paned0 separator</summary>
 		</key>
+		<key type="i" name="paned3">
+			<default>246</default>
+			<summary>Default position of genre/artist separator</summary>
+		</key>
+		<key type="b" name="genre-filter">
+			<default>false</default>
+			<summary>Show genre filter</summary>
+		</key>
 		<key type="b" name="mini-player">
 			<default>false</default>
 			<summary>Start player in mini player mode</summary>
