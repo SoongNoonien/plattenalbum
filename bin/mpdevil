@@ -596,7 +596,8 @@ class FileCover(str):
 
 class EventEmitter(GObject.Object):
 	__gsignals__={
-		"update": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"updating_db": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"updated_db": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"reconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
@@ -910,6 +911,8 @@ class Client(MPDClient):
 						self.emitter.emit(key, True)
 					else:
 						self.emitter.emit(key, False)
+				elif key == "updating_db":
+					self.emitter.emit("updating_db")
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
@@ -917,7 +920,7 @@ class Client(MPDClient):
 				elif "volume" == key:
 					self.emitter.emit("volume_changed", -1)
 				elif "updating_db" == key:
-					self.emitter.emit("update")
+					self.emitter.emit("updated_db")
 				elif "bitrate" == key:
 					self.emitter.emit("bitrate", None)
 				elif "audio" == key:
@@ -1930,7 +1933,7 @@ class SearchWindow(Gtk.Box):
 		self._tag_combo_box_changed=self._tag_combo_box.connect("changed", self._search)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("update", self._search)
+		self._client.emitter.connect("updated_db", self._search)
 		close_button.connect("clicked", lambda *args: self.emit("close"))
 
 		# packing
@@ -2093,7 +2096,7 @@ class GenreSelect(SelectionList):
 		# connect
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect_after("reconnected", self._on_reconnected)
-		self._client.emitter.connect("update", self._refresh)
+		self._client.emitter.connect("updated_db", self._refresh)
 
 	def deactivate(self):
 		self.select_all()
@@ -3610,6 +3613,35 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 # main window #
 ###############
 
+class UpdateNotify(Gtk.Revealer):
+	def __init__(self, client):
+		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.CENTER)
+		self._client=client
+
+		# widgets
+		self._spinner=Gtk.Spinner()
+		label=Gtk.Label(label=_("Updating Database…"))
+
+		# connect
+		self._client.emitter.connect("updating_db", self._show)
+		self._client.emitter.connect("updated_db", self._hide)
+		self._client.emitter.connect("disconnected", self._hide)
+
+		# packing
+		box=Gtk.Box(spacing=12)
+		box.get_style_context().add_class("app-notification")
+		box.pack_start(self._spinner, False, False, 0)
+		box.pack_end(label, True, True, 0)
+		self.add(box)
+
+	def _show(self, *args):
+		self._spinner.start()
+		self.set_reveal_child(True)
+
+	def _hide(self, *args):
+		self._spinner.stop()
+		self.set_reveal_child(False)
+
 class ConnectionNotify(Gtk.Revealer):
 	def __init__(self, client, settings):
 		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.CENTER)
@@ -3708,6 +3740,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		audio=AudioFormat(self._client, self._settings)
 		playback_options=PlaybackOptions(self._client, self._settings)
 		volume_button=VolumeButton(self._client, self._settings)
+		update_notify=UpdateNotify(self._client)
 		connection_notify=ConnectionNotify(self._client, self._settings)
 		def icon(name):
 			if self._use_csd:
@@ -3808,6 +3841,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		vbox.pack_start(action_bar, False, False, 0)
 		overlay=Gtk.Overlay()
 		overlay.add(vbox)
+		overlay.add_overlay(update_notify)
 		overlay.add_overlay(connection_notify)
 		self.add(overlay)
 		# bring player in consistent state
