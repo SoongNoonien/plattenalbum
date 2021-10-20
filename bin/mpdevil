@@ -3025,7 +3025,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(
-			image=Gtk.Image.new_from_icon_name("media-view-subtitles-symbolic", Gtk.IconSize.BUTTON),
+			image=Gtk.Image.new_from_icon_name("org.mpdevil.mpdevil-lyrics-symbolic", Gtk.IconSize.BUTTON),
 			tooltip_text=_("Show lyrics")
 		)
 		self.lyrics_button.set_can_focus(False)
