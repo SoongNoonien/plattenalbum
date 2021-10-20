@@ -705,7 +705,8 @@ class Client(MPDClient):
 		def enqueue(files):
 			status=self.status()
 			if status["state"] == "stop":
-				play(files)
+				self.clear()
+				append(files)
 			else:
 				self.moveid(status["songid"], 0)
 				current_song_file=self.currentsong()["file"]
@@ -766,7 +767,6 @@ class Client(MPDClient):
 			if status["state"] == "stop":
 				self.clear()
 				append()
-				self.play()
 			else:
 				self.moveid(status["songid"], 0)
 				current_song_file=self.currentsong()["file"]
