@@ -3746,11 +3746,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._back_button=Gtk.Button(image=icon("go-previous-symbolic"), tooltip_text=_("Back to current album"), no_show_all=True)
 		self._back_button.set_can_focus(False)
 		self._settings.bind("mini-player", self._back_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		self._genre_button=Gtk.ToggleButton(
-			image=icon("org.mpdevil.mpdevil-genre-symbolic"), tooltip_text=_("Filter by genre"), no_show_all=True)
-		self._genre_button.set_can_focus(False)
-		self._settings.bind("mini-player", self._genre_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		self._settings.bind("genre-filter", self._genre_button, "active", Gio.SettingsBindFlags.DEFAULT)
 
 		# stack
 		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
@@ -3775,6 +3770,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			profiles_subsection.append_item(item)
 		menu=Gio.Menu()
 		menu.append(_("Mini Player"), "win.mini-player")
+		menu.append(_("Genre Filter"), "win.genre-filter")
 		menu.append_section(None, profiles_subsection)
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
@@ -3816,14 +3812,12 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._header_bar.set_show_close_button(True)
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_start(self._back_button)
-			self._header_bar.pack_start(self._genre_button)
 			self._header_bar.pack_end(self._menu_button)
 			self._header_bar.pack_end(self._search_button)
 		else:
 			action_bar.pack_start(self._back_button)
 			action_bar.pack_end(self._menu_button)
 			action_bar.pack_end(self._search_button)
-			action_bar.pack_end(self._genre_button)
 		action_bar.pack_start(playback_control)
 		action_bar.pack_start(seek_bar)
 		action_bar.pack_start(audio)
@@ -3962,7 +3956,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
 		self._back_button.set_sensitive(True)
-		self._genre_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
 		self.set_title("mpdevil")
@@ -3973,7 +3966,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
 		self._back_button.set_sensitive(False)
-		self._genre_button.set_sensitive(False)
 
 	def _on_size_allocate(self, widget, rect):
 		if not self.is_maximized() and not self._settings.get_boolean("mini-player"):
