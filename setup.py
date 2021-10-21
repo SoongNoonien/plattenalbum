@@ -24,7 +24,7 @@ DistUtilsExtra.auto.setup(
 		('share/icons/hicolor/scalable/status/', ['data/icons/scalable/org.mpdevil.mpdevil-single-symbolic.svg']),
 		('share/icons/hicolor/scalable/status/', ['data/icons/scalable/org.mpdevil.mpdevil-consume-symbolic.svg']),
 		('share/icons/hicolor/scalable/status/', ['data/icons/scalable/org.mpdevil.mpdevil-consume-symbolic-rtl.svg']),
-		('share/icons/hicolor/scalable/actions/', ['data/icons/scalable/org.mpdevil.mpdevil-genre-symbolic.svg']),
+		('share/icons/hicolor/scalable/actions/', ['data/icons/scalable/org.mpdevil.mpdevil-lyrics-symbolic.svg']),
 	],
 )
 
