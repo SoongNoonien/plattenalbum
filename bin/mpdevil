@@ -3163,13 +3163,6 @@ class SeekBar(Gtk.Box):
 		self._scale.set_increments(10, 60)
 		self._adjustment=self._scale.get_adjustment()
 
-		# css (scale)
-		style_context=self._scale.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""scale fill { background-color: @theme_selected_bg_color; }"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 600)
-
 		# connect
 		self._elapsed_event_box.connect("button-release-event", self._on_elapsed_button_release_event)
 		self._rest_event_box.connect("button-release-event", self._on_rest_button_release_event)
