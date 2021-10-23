@@ -3076,8 +3076,8 @@ class SeekBar(Gtk.Box):
 		self._rest=Gtk.Label(width_chars=6, xalign=1)
 
 		# event boxes
-		self._elapsed_event_box=Gtk.EventBox(child=self._elapsed)
-		self._rest_event_box=Gtk.EventBox(child=self._rest)
+		elapsed_event_box=Gtk.EventBox(child=self._elapsed)
+		rest_event_box=Gtk.EventBox(child=self._rest)
 
 		# progress bar
 		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL)
@@ -3089,8 +3089,8 @@ class SeekBar(Gtk.Box):
 		self._adjustment=self._scale.get_adjustment()
 
 		# connect
-		self._elapsed_event_box.connect("button-release-event", self._on_elapsed_button_release_event)
-		self._rest_event_box.connect("button-release-event", self._on_rest_button_release_event)
+		elapsed_event_box.connect("button-release-event", self._on_elapsed_button_release_event)
+		rest_event_box.connect("button-release-event", self._on_rest_button_release_event)
 		self._scale.connect("change-value", self._on_change_value)
 		self._scale.connect("scroll-event", lambda *args: True)  # disable mouse wheel
 		self._scale.connect("button-press-event", self._on_scale_button_press_event)
@@ -3100,9 +3100,9 @@ class SeekBar(Gtk.Box):
 		self._client.emitter.connect("elapsed_changed", self._refresh)
 
 		# packing
-		self.pack_start(self._elapsed_event_box, False, False, 0)
+		self.pack_start(elapsed_event_box, False, False, 0)
 		self.pack_start(self._scale, True, True, 0)
-		self.pack_end(self._rest_event_box, False, False, 0)
+		self.pack_end(rest_event_box, False, False, 0)
 
 	def _refresh(self, emitter, elapsed, duration):
 		self.set_sensitive(True)
