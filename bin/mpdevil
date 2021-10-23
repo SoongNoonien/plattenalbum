@@ -1414,7 +1414,7 @@ class SongPopover(Gtk.Popover):
 		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
 		open_button.set_margin_bottom(6)
 		open_button.set_margin_end(6)
-		open_button.get_style_context().add_class("circular")
+		open_button.get_style_context().add_class("osd")
 
 		# open button revealer
 		self._open_button_revealer=Gtk.Revealer()
@@ -2503,12 +2503,12 @@ class PlaylistWindow(Gtk.Overlay):
 
 		# back button
 		self._back_to_current_song_button=Gtk.Button(
-			image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.LARGE_TOOLBAR),
+			image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON),
 			tooltip_text=_("Scroll to current song"),
 			can_focus=False
 		)
-		self._back_to_current_song_button.set_margin_bottom(12)
-		self._back_to_current_song_button.set_margin_start(12)
+		self._back_to_current_song_button.set_margin_bottom(6)
+		self._back_to_current_song_button.set_margin_start(6)
 		self._back_to_current_song_button.get_style_context().add_class("osd")
 		self._back_button_revealer=Gtk.Revealer(transition_duration=0)
 		self._back_button_revealer.set_halign(Gtk.Align.START)
@@ -2968,7 +2968,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 		self.lyrics_button.set_can_focus(False)
 		self.lyrics_button.set_margin_top(6)
 		self.lyrics_button.set_margin_end(6)
-		self.lyrics_button.get_style_context().add_class("circular")
+		self.lyrics_button.get_style_context().add_class("osd")
 
 		# lyrics window
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
