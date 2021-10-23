@@ -1217,10 +1217,8 @@ class PlaylistSettings(Gtk.Box):
 		# toolbar
 		toolbar=Gtk.Toolbar(icon_size=Gtk.IconSize.SMALL_TOOLBAR)
 		toolbar.get_style_context().add_class("inline-toolbar")
-		self._up_button=Gtk.ToolButton(icon_name="go-up-symbolic")
-		self._up_button.set_sensitive(False)
-		self._down_button=Gtk.ToolButton(icon_name="go-down-symbolic")
-		self._down_button.set_sensitive(False)
+		self._up_button=Gtk.ToolButton(icon_name="go-up-symbolic", sensitive=False)
+		self._down_button=Gtk.ToolButton(icon_name="go-down-symbolic", sensitive=False)
 		toolbar.insert(self._up_button, 0)
 		toolbar.insert(self._down_button, 1)
 
@@ -1341,10 +1339,9 @@ class SettingsDialog(Gtk.Dialog):
 class ServerStats(Gtk.Dialog):
 	def __init__(self, parent, client, settings):
 		use_csd=settings.get_boolean("use-csd")
-		super().__init__(title=_("Stats"), transient_for=parent, use_header_bar=use_csd)
+		super().__init__(title=_("Stats"), transient_for=parent, use_header_bar=use_csd, resizable=False)
 		if not use_csd:
 			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
-		self.set_resizable(False)
 
 		# grid
 		grid=Gtk.Grid(row_spacing=6, column_spacing=12, border_width=6)
@@ -1408,15 +1405,14 @@ class SongPopover(Gtk.Popover):
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
 
 		# open-with button
-		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
-		open_button.set_margin_bottom(6)
-		open_button.set_margin_end(6)
+		open_button=Gtk.Button(
+			image=Gtk.Image.new_from_icon_name("document-open-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Open with…"),
+			margin_bottom=6, margin_end=6
+		)
 		open_button.get_style_context().add_class("osd")
 
 		# open button revealer
-		self._open_button_revealer=Gtk.Revealer(child=open_button)
-		self._open_button_revealer.set_halign(Gtk.Align.END)
-		self._open_button_revealer.set_valign(Gtk.Align.END)
+		self._open_button_revealer=Gtk.Revealer(child=open_button, halign=Gtk.Align.END, valign=Gtk.Align.END)
 
 		# buttons
 		if show_buttons:
@@ -1434,8 +1430,7 @@ class SongPopover(Gtk.Popover):
 		# treeview
 		# (tag, display-value, tooltip)
 		self._store=Gtk.ListStore(str, str, str)
-		self._treeview=Gtk.TreeView(model=self._store, headers_visible=False, search_column=-1, tooltip_column=2)
-		self._treeview.set_can_focus(False)
+		self._treeview=Gtk.TreeView(model=self._store, headers_visible=False, search_column=-1, tooltip_column=2, can_focus=False)
 		self._treeview.get_selection().set_mode(Gtk.SelectionMode.NONE)
 
 		# columns
@@ -1836,8 +1831,7 @@ class SearchWindow(Gtk.Box):
 		self._tag_combo_box=Gtk.ComboBoxText()
 		self.search_entry=Gtk.SearchEntry()
 		self._hits_label=Gtk.Label(xalign=1)
-		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON))
-		close_button.set_relief(Gtk.ReliefStyle.NONE)
+		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
 
 		# songs window
 		# (track, title, artist, album, duration, file, sort track)
@@ -2491,16 +2485,12 @@ class PlaylistWindow(Gtk.Overlay):
 
 		# back button
 		self._back_to_current_song_button=Gtk.Button(
-			image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON),
-			tooltip_text=_("Scroll to current song"),
-			can_focus=False
+			image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Scroll to current song"),
+			margin_bottom=6, margin_start=6, can_focus=False
 		)
-		self._back_to_current_song_button.set_margin_bottom(6)
-		self._back_to_current_song_button.set_margin_start(6)
 		self._back_to_current_song_button.get_style_context().add_class("osd")
-		self._back_button_revealer=Gtk.Revealer(child=self._back_to_current_song_button, transition_duration=0)
-		self._back_button_revealer.set_halign(Gtk.Align.START)
-		self._back_button_revealer.set_valign(Gtk.Align.END)
+		self._back_button_revealer=Gtk.Revealer(
+			child=self._back_to_current_song_button, transition_duration=0, halign=Gtk.Align.START, valign=Gtk.Align.END)
 
 		# treeview
 		# (track, disc, title, artist, album, human duration, date, genre, file, weight, duration)
@@ -2773,16 +2763,10 @@ class LyricsWindow(Gtk.ScrolledWindow):
 
 		# text view
 		self._text_view=Gtk.TextView(
-			editable=False,
-			cursor_visible=False,
-			wrap_mode=Gtk.WrapMode.WORD,
-			justification=Gtk.Justification.CENTER,
-			opacity=0.9
+			editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD,
+			justification=Gtk.Justification.CENTER, opacity=0.9,
+			left_margin=5, right_margin=5, bottom_margin=5, top_margin=3
 		)
-		self._text_view.set_left_margin(5)
-		self._text_view.set_right_margin(5)
-		self._text_view.set_bottom_margin(5)
-		self._text_view.set_top_margin(3)
 
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
@@ -2947,21 +2931,16 @@ class CoverLyricsWindow(Gtk.Overlay):
 
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(
-			image=Gtk.Image.new_from_icon_name("org.mpdevil.mpdevil-lyrics-symbolic", Gtk.IconSize.BUTTON),
-			tooltip_text=_("Show lyrics")
+			image=Gtk.Image.new_from_icon_name("org.mpdevil.mpdevil-lyrics-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Show lyrics"),
+			can_focus=False, margin_top=6, margin_end=6
 		)
-		self.lyrics_button.set_can_focus(False)
-		self.lyrics_button.set_margin_top(6)
-		self.lyrics_button.set_margin_end(6)
 		self.lyrics_button.get_style_context().add_class("osd")
 
 		# lyrics window
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
 
 		# revealer
-		self._lyrics_button_revealer=Gtk.Revealer(child=self.lyrics_button)
-		self._lyrics_button_revealer.set_halign(Gtk.Align.END)
-		self._lyrics_button_revealer.set_valign(Gtk.Align.START)
+		self._lyrics_button_revealer=Gtk.Revealer(child=self.lyrics_button, halign=Gtk.Align.END, valign=Gtk.Align.START)
 		self._settings.bind("show-lyrics-button", self._lyrics_button_revealer, "reveal-child", Gio.SettingsBindFlags.DEFAULT)
 
 		# stack
@@ -3007,18 +2986,15 @@ class PlaybackControl(Gtk.ButtonBox):
 
 		# widgets
 		self._play_button_icon=AutoSizedIcon("media-playback-start-symbolic", "icon-size", self._settings)
-		self._play_button=Gtk.Button(image=self._play_button_icon)
-		self._play_button.set_action_name("mpd.toggle-play")
-		self._play_button.set_can_focus(False)
-		self._stop_button=Gtk.Button(image=AutoSizedIcon("media-playback-stop-symbolic", "icon-size", self._settings), no_show_all=True)
-		self._stop_button.set_action_name("mpd.stop")
-		self._stop_button.set_can_focus(False)
-		self._prev_button=Gtk.Button(image=AutoSizedIcon("media-skip-backward-symbolic", "icon-size", self._settings))
-		self._prev_button.set_action_name("mpd.prev")
-		self._prev_button.set_can_focus(False)
-		self._next_button=Gtk.Button(image=AutoSizedIcon("media-skip-forward-symbolic", "icon-size", self._settings))
-		self._next_button.set_action_name("mpd.next")
-		self._next_button.set_can_focus(False)
+		self._play_button=Gtk.Button(image=self._play_button_icon, action_name="mpd.toggle-play", can_focus=False)
+		self._stop_button=Gtk.Button(
+			image=AutoSizedIcon("media-playback-stop-symbolic", "icon-size", self._settings), action_name="mpd.stop",
+			can_focus=False, no_show_all=True
+		)
+		self._prev_button=Gtk.Button(
+			image=AutoSizedIcon("media-skip-backward-symbolic", "icon-size", self._settings), action_name="mpd.prev", can_focus=False)
+		self._next_button=Gtk.Button(
+			image=AutoSizedIcon("media-skip-forward-symbolic", "icon-size", self._settings), action_name="mpd.next", can_focus=False)
 
 		# connect
 		self._settings.connect("changed::mini-player", self._mini_player)
@@ -3080,11 +3056,8 @@ class SeekBar(Gtk.Box):
 		rest_event_box=Gtk.EventBox(child=self._rest)
 
 		# progress bar
-		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL)
-		self._scale.set_can_focus(False)
-		self._scale.set_show_fill_level(True)
-		self._scale.set_restrict_to_fill_level(False)
-		self._scale.set_draw_value(False)
+		self._scale=Gtk.Scale(
+			orientation=Gtk.Orientation.HORIZONTAL, show_fill_level=True, restrict_to_fill_level=False, draw_value=False, can_focus=False)
 		self._scale.set_increments(10, 60)
 		self._adjustment=self._scale.get_adjustment()
 
@@ -3562,8 +3535,7 @@ class ConnectionNotify(Gtk.Revealer):
 		# widgets
 		self._label=Gtk.Label(wrap=True)
 		connect_button=Gtk.Button(label=_("Connect"))
-		settings_button=Gtk.Button(label=_("Preferences"))
-		settings_button.set_action_name("win.profile-settings")
+		settings_button=Gtk.Button(label=_("Preferences"), action_name="win.profile-settings")
 
 		# connect
 		connect_button.connect("clicked", self._on_connect_button_clicked)
@@ -3651,11 +3623,11 @@ class MainWindow(Gtk.ApplicationWindow):
 				return Gtk.Image.new_from_icon_name(name, Gtk.IconSize.BUTTON)
 			else:
 				return AutoSizedIcon(name, "icon-size", self._settings)
-		self._search_button=Gtk.ToggleButton(image=icon("system-search-symbolic"), tooltip_text=_("Search"), no_show_all=True)
-		self._search_button.set_can_focus(False)
+		self._search_button=Gtk.ToggleButton(
+			image=icon("system-search-symbolic"), tooltip_text=_("Search"), can_focus=False, no_show_all=True)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		self._back_button=Gtk.Button(image=icon("go-previous-symbolic"), tooltip_text=_("Back to current album"), no_show_all=True)
-		self._back_button.set_can_focus(False)
+		self._back_button=Gtk.Button(
+			image=icon("go-previous-symbolic"), tooltip_text=_("Back to current album"), can_focus=False, no_show_all=True)
 		self._settings.bind("mini-player", self._back_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# stack
@@ -3691,8 +3663,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			menu_icon=Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.BUTTON)
 		else:
 			menu_icon=AutoSizedIcon("open-menu-symbolic", "icon-size", self._settings)
-		self._menu_button=Gtk.MenuButton(image=menu_icon, tooltip_text=_("Menu"))
-		self._menu_button.set_can_focus(False)
+		self._menu_button=Gtk.MenuButton(image=menu_icon, tooltip_text=_("Menu"), can_focus=False)
 		menu_popover=Gtk.Popover.new_from_model(self._menu_button, menu)
 		self._menu_button.set_popover(menu_popover)
 
@@ -3719,8 +3690,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._paned2.pack2(self._paned0, False, False)
 		action_bar=Gtk.ActionBar()
 		if self._use_csd:
-			self._header_bar=Gtk.HeaderBar()
-			self._header_bar.set_show_close_button(True)
+			self._header_bar=Gtk.HeaderBar(show_close_button=True)
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_start(self._back_button)
 			self._header_bar.pack_end(self._menu_button)
