@@ -2041,7 +2041,7 @@ class SelectionList(Gtk.TreeView):
 			self._selected_path=path
 			self.emit("item-selected")
 
-class GenreSelect(SelectionList):
+class GenreList(SelectionList):
 	def __init__(self, client):
 		super().__init__(_("all genres"))
 		self._client=client
@@ -2066,12 +2066,12 @@ class GenreSelect(SelectionList):
 		self._refresh()
 		self.set_sensitive(True)
 
-class ArtistWindow(SelectionList):
-	def __init__(self, client, settings, genre_select):
+class ArtistList(SelectionList):
+	def __init__(self, client, settings, genre_list):
 		super().__init__(_("all artists"))
 		self._client=client
 		self._settings=settings
-		self.genre_select=genre_select
+		self.genre_list=genre_list
 
 		# selection
 		self._selection=self.get_selection()
@@ -2087,10 +2087,10 @@ class ArtistWindow(SelectionList):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 		self._client.emitter.connect("show-info", self._on_show_info)
-		self.genre_select.connect_after("item-selected", self._refresh)
+		self.genre_list.connect_after("item-selected", self._refresh)
 
 	def _refresh(self, *args):
-		genre=self.genre_select.get_selected()
+		genre=self.genre_list.get_selected()
 		if genre is None:
 			artists=self._client.comp_list(self._settings.get_artist_type())
 		else:
@@ -2115,7 +2115,7 @@ class ArtistWindow(SelectionList):
 			path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 			if path_re is not None:
 				path=path_re[0]
-				genre=self.genre_select.get_selected()
+				genre=self.genre_list.get_selected()
 				artist=self.get_item(path)
 				if event.button == 1:
 					self._client.artist_to_playlist(artist, genre, "play")
@@ -2129,7 +2129,7 @@ class ArtistWindow(SelectionList):
 			selected_rows=self._selection.get_selected_rows()
 			if selected_rows is not None:
 				path=selected_rows[1][0]
-				genre=self.genre_select.get_selected()
+				genre=self.genre_list.get_selected()
 				artist=self.get_item(path)
 				self._client.artist_to_playlist(artist, genre, mode)
 
@@ -2138,7 +2138,7 @@ class ArtistWindow(SelectionList):
 			selected_rows=self._selection.get_selected_rows()
 			if selected_rows is not None:
 				path=selected_rows[1][0]
-				genre=self.genre_select.get_selected()
+				genre=self.genre_list.get_selected()
 				artist=self.get_item(path)
 				cell=self.get_cell_area(path, None)
 				self._artist_popover.open(artist, genre, self, cell.x, cell.y)
@@ -2274,11 +2274,11 @@ class AlbumLoadingThread(threading.Thread):
 		GLib.idle_add(callback)
 
 class AlbumWindow(Gtk.Box):
-	def __init__(self, client, settings, artist_window):
+	def __init__(self, client, settings, artist_list):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._settings=settings
 		self._client=client
-		self._artist_window=artist_window
+		self._artist_list=artist_list
 
 		# cover, display_label, display_label_artist, album, date, artist
 		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str)
@@ -2313,8 +2313,8 @@ class AlbumWindow(Gtk.Box):
 		self._client.emitter.connect("add-to-playlist", self._on_add_to_playlist)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
-		self._artist_window.connect("item-selected", self._refresh)
-		self._artist_window.connect("clear", self._clear)
+		self._artist_list.connect("item-selected", self._refresh)
+		self._artist_list.connect("clear", self._clear)
 
 		# packing
 		self.pack_start(scroll, True, True, 0)
@@ -2366,8 +2366,8 @@ class AlbumWindow(Gtk.Box):
 		def callback():
 			if self._cover_thread.is_alive():  # already started?
 				return False
-			artist=self._artist_window.get_selected()
-			genre=self._artist_window.genre_select.get_selected()
+			artist=self._artist_list.get_selected()
+			genre=self._artist_list.genre_list.get_selected()
 			self._cover_thread=AlbumLoadingThread(self._client,self._settings,self._progress_bar,self._iconview,self._store,artist,genre)
 			self._cover_thread.start()
 		if self._cover_thread.is_alive():
@@ -2380,7 +2380,7 @@ class AlbumWindow(Gtk.Box):
 		album=self._store[path][3]
 		year=self._store[path][4]
 		artist=self._store[path][5]
-		genre=self._artist_window.genre_select.get_selected()
+		genre=self._artist_list.genre_list.get_selected()
 		self._client.album_to_playlist(album, artist, year, genre, mode)
 
 	def _on_button_press_event(self, widget, event):
@@ -2394,7 +2394,7 @@ class AlbumWindow(Gtk.Box):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			v=self._scroll_vadj.get_value()
 			h=self._scroll_hadj.get_value()
-			genre=self._artist_window.genre_select.get_selected()
+			genre=self._artist_list.genre_list.get_selected()
 			if path is not None:
 				album=self._store[path][3]
 				year=self._store[path][4]
@@ -2402,14 +2402,14 @@ class AlbumWindow(Gtk.Box):
 				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
 				GLib.idle_add(self._album_popover.open, album, artist, year, genre, widget, event.x-h, event.y-v)
 			else:
-				artist=self._artist_window.get_selected()
+				artist=self._artist_list.get_selected()
 				GLib.idle_add(self._artist_popover.open, artist, genre, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
 		album=self._store[path][3]
 		year=self._store[path][4]
 		artist=self._store[path][5]
-		genre=self._artist_window.genre_select.get_selected()
+		genre=self._artist_list.genre_list.get_selected()
 		self._client.album_to_playlist(album, artist, year, genre)
 
 	def _on_disconnected(self, *args):
@@ -2425,7 +2425,7 @@ class AlbumWindow(Gtk.Box):
 				rect=self._iconview.get_cell_rect(paths[0], None)[1]
 				x=rect.x+rect.width//2
 				y=rect.y+rect.height//2
-				genre=self._artist_window.genre_select.get_selected()
+				genre=self._artist_list.genre_list.get_selected()
 				self._album_popover.open(
 					self._store[paths[0]][3], self._store[paths[0]][5], self._store[paths[0]][4], genre, self._iconview, x, y
 				)
@@ -2447,23 +2447,23 @@ class Browser(Gtk.Paned):
 		self._settings=settings
 
 		# widgets
-		self._genre_select=GenreSelect(self._client)
-		self._artist_window=ArtistWindow(self._client, self._settings, self._genre_select)
-		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window)
-		genre_scroll=Gtk.ScrolledWindow(child=self._genre_select)
-		artist_scroll=Gtk.ScrolledWindow(child=self._artist_window)
+		self._genre_list=GenreList(self._client)
+		self._artist_list=ArtistList(self._client, self._settings, self._genre_list)
+		self._album_window=AlbumWindow(self._client, self._settings, self._artist_list)
+		genre_window=Gtk.ScrolledWindow(child=self._genre_list)
+		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
 
 		# hide/show genre filter
-		self._genre_select.set_property("visible", True)
-		self._settings.bind("genre-filter", genre_scroll, "no-show-all", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		self._settings.bind("genre-filter", genre_scroll, "visible", Gio.SettingsBindFlags.GET)
+		self._genre_list.set_property("visible", True)
+		self._settings.bind("genre-filter", genre_window, "no-show-all", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		self._settings.bind("genre-filter", genre_window, "visible", Gio.SettingsBindFlags.GET)
 		self._settings.connect("changed::genre-filter", self._on_genre_filter_changed)
 
 		# packing
 		self.paned1=Gtk.Paned()
-		self.paned1.pack1(artist_scroll, False, False)
+		self.paned1.pack1(artist_window, False, False)
 		self.paned1.pack2(self._album_window, True, False)
-		self.pack1(genre_scroll, False, False)
+		self.pack1(genre_window, False, False)
 		self.pack2(self.paned1, True, False)
 
 	def back_to_current_album(self, force=False):
@@ -2472,21 +2472,21 @@ class Browser(Gtk.Paned):
 			# get artist name
 			artist=song[self._settings.get_artist_type()][0]
 			# deactivate genre filter to show all artists (if needed)
-			if song["genre"][0] != self._genre_select.get_selected() or force:
-				self._genre_select.deactivate()
+			if song["genre"][0] != self._genre_list.get_selected() or force:
+				self._genre_list.deactivate()
 			# select artist
-			if self._artist_window.get_selected() is None and not force:  # all artists selected
-				self._artist_window.highlight_selected()
+			if self._artist_list.get_selected() is None and not force:  # all artists selected
+				self._artist_list.highlight_selected()
 			else:  # one artist selected
-				self._artist_window.select(artist)
+				self._artist_list.select(artist)
 			self._album_window.scroll_to_current_album()
 		else:
-			self._genre_select.deactivate()
+			self._genre_list.deactivate()
 
 	def _on_genre_filter_changed(self, settings, key):
 		if self._client.connected():
 			if not settings.get_boolean(key):
-				self._genre_select.deactivate()
+				self._genre_list.deactivate()
 
 ############
 # playlist #
