@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-23 12:33+0200\n"
-"PO-Revision-Date: 2021-10-23 12:35+0200\n"
+"POT-Creation-Date: 2021-10-23 12:59+0200\n"
+"PO-Revision-Date: 2021-10-23 13:04+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -344,8 +344,8 @@ msgid "lyrics not found"
 msgstr "Liedtext nicht gefunden"
 
 #: mpdevil:2934
-msgid "Show lyrics"
-msgstr "Zeige Liedtext"
+msgid "Lyrics"
+msgstr "Liedtext"
 
 #: mpdevil:3025 mpdevil:3026
 #, python-brace-format
@@ -444,7 +444,7 @@ msgstr "Stopp"
 
 #: mpdevil:3478
 msgid "Stop after current title"
-msgstr "Wiedergabe nach aktuellem Titel stoppen"
+msgstr "Nach aktuellem Titel stoppen"
 
 #: mpdevil:3479
 msgid "Next title"
@@ -571,6 +571,9 @@ msgstr "verbinden…"
 #: mpdevil:3885
 msgid "Debug mode"
 msgstr "Debugmodus"
+
+#~ msgid "Show lyrics"
+#~ msgstr "Zeige Liedtext"
 
 #~ msgid "Filter by genre"
 #~ msgstr "Nach Genre filtern"
