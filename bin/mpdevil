@@ -1212,9 +1212,8 @@ class PlaylistSettings(Gtk.Box):
 		self._fill()
 
 		# scroll
-		scroll=Gtk.ScrolledWindow()
+		scroll=Gtk.ScrolledWindow(child=treeview)
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(treeview)
 
 		# toolbar
 		toolbar=Gtk.Toolbar(icon_size=Gtk.IconSize.SMALL_TOOLBAR)
@@ -1227,8 +1226,7 @@ class PlaylistSettings(Gtk.Box):
 		toolbar.insert(self._down_button, 1)
 
 		# column chooser
-		frame=Gtk.Frame()
-		frame.add(scroll)
+		frame=Gtk.Frame(child=scroll)
 		column_chooser=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		column_chooser.pack_start(frame, True, True, 0)
 		column_chooser.pack_start(toolbar, False, False, 0)
@@ -1417,10 +1415,9 @@ class SongPopover(Gtk.Popover):
 		open_button.get_style_context().add_class("osd")
 
 		# open button revealer
-		self._open_button_revealer=Gtk.Revealer()
+		self._open_button_revealer=Gtk.Revealer(child=open_button)
 		self._open_button_revealer.set_halign(Gtk.Align.END)
 		self._open_button_revealer.set_valign(Gtk.Align.END)
-		self._open_button_revealer.add(open_button)
 
 		# buttons
 		if show_buttons:
@@ -1453,22 +1450,19 @@ class SongPopover(Gtk.Popover):
 		self._treeview.append_column(column_value)
 
 		# scroll
-		self._scroll=Gtk.ScrolledWindow()
+		self._scroll=Gtk.ScrolledWindow(child=self._treeview)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		self._scroll.set_propagate_natural_height(True)
-		self._scroll.add(self._treeview)
 
 		# overlay
-		overlay=Gtk.Overlay()
-		overlay.add(self._scroll)
+		overlay=Gtk.Overlay(child=self._scroll)
 		overlay.add_overlay(self._open_button_revealer)
 
 		# connect
 		open_button.connect("clicked", self._on_open_button_clicked)
 
 		# packing
-		frame=Gtk.Frame()
-		frame.add(overlay)
+		frame=Gtk.Frame(child=overlay)
 		box.pack_start(frame, True, True, 0)
 		self.add(box)
 		box.show_all()
@@ -1589,9 +1583,8 @@ class SongsWindow(Gtk.Box):
 		self._songs_view=SongsView(client, store, file_column_id)
 
 		# scroll
-		self._scroll=Gtk.ScrolledWindow()
+		self._scroll=Gtk.ScrolledWindow(child=self._songs_view)
 		self._scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		self._scroll.add(self._songs_view)
 
 		# buttons
 		button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
@@ -2288,9 +2281,8 @@ class AlbumWindow(Gtk.Box):
 		self._iconview=Gtk.IconView(model=self._store, item_width=0, pixbuf_column=0, markup_column=1, activate_on_single_click=True)
 
 		# scroll
-		scroll=Gtk.ScrolledWindow()
+		scroll=Gtk.ScrolledWindow(child=self._iconview)
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self._iconview)
 		self._scroll_vadj=scroll.get_vadjustment()
 		self._scroll_hadj=scroll.get_hadjustment()
 
@@ -2510,10 +2502,9 @@ class PlaylistWindow(Gtk.Overlay):
 		self._back_to_current_song_button.set_margin_bottom(6)
 		self._back_to_current_song_button.set_margin_start(6)
 		self._back_to_current_song_button.get_style_context().add_class("osd")
-		self._back_button_revealer=Gtk.Revealer(transition_duration=0)
+		self._back_button_revealer=Gtk.Revealer(child=self._back_to_current_song_button, transition_duration=0)
 		self._back_button_revealer.set_halign(Gtk.Align.START)
 		self._back_button_revealer.set_valign(Gtk.Align.END)
-		self._back_button_revealer.add(self._back_to_current_song_button)
 
 		# treeview
 		# (track, disc, title, artist, album, human duration, date, genre, file, weight, duration)
@@ -2542,9 +2533,8 @@ class PlaylistWindow(Gtk.Overlay):
 		self._load_settings()
 
 		# scroll
-		scroll=Gtk.ScrolledWindow()
+		scroll=Gtk.ScrolledWindow(child=self._treeview)
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self._treeview)
 
 		# song popover
 		self._song_popover=SongPopover(self._client, show_buttons=False)
@@ -2974,10 +2964,9 @@ class CoverLyricsWindow(Gtk.Overlay):
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
 
 		# revealer
-		self._lyrics_button_revealer=Gtk.Revealer()
+		self._lyrics_button_revealer=Gtk.Revealer(child=self.lyrics_button)
 		self._lyrics_button_revealer.set_halign(Gtk.Align.END)
 		self._lyrics_button_revealer.set_valign(Gtk.Align.START)
-		self._lyrics_button_revealer.add(self.lyrics_button)
 		self._settings.bind("show-lyrics-button", self._lyrics_button_revealer, "reveal-child", Gio.SettingsBindFlags.DEFAULT)
 
 		# stack
@@ -3092,8 +3081,8 @@ class SeekBar(Gtk.Box):
 		self._rest=Gtk.Label(width_chars=6, xalign=1)
 
 		# event boxes
-		self._elapsed_event_box=Gtk.EventBox()
-		self._rest_event_box=Gtk.EventBox()
+		self._elapsed_event_box=Gtk.EventBox(child=self._elapsed)
+		self._rest_event_box=Gtk.EventBox(child=self._rest)
 
 		# progress bar
 		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL)
@@ -3116,8 +3105,6 @@ class SeekBar(Gtk.Box):
 		self._client.emitter.connect("elapsed_changed", self._refresh)
 
 		# packing
-		self._elapsed_event_box.add(self._elapsed)
-		self._rest_event_box.add(self._rest)
 		self.pack_start(self._elapsed_event_box, False, False, 0)
 		self.pack_start(self._scale, True, True, 0)
 		self.pack_end(self._rest_event_box, False, False, 0)
@@ -3755,8 +3742,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		vbox.pack_start(self._paned2, True, True, 0)
 		vbox.pack_start(action_bar, False, False, 0)
-		overlay=Gtk.Overlay()
-		overlay.add(vbox)
+		overlay=Gtk.Overlay(child=vbox)
 		overlay.add_overlay(update_notify)
 		overlay.add_overlay(connection_notify)
 		self.add(overlay)
