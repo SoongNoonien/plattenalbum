@@ -1402,48 +1402,6 @@ class AutoSizedIcon(Gtk.Image):
 		super().__init__(icon_name=icon_name)
 		settings.bind(settings_key, self, "pixel-size", Gio.SettingsBindFlags.GET)
 
-class FocusFrame(Gtk.Overlay):
-	def __init__(self):
-		super().__init__()
-		self._frame=Gtk.Frame(no_show_all=True)
-
-		# css
-		style_context=self._frame.get_style_context()
-		provider=Gtk.CssProvider()
-		css=b"""* {border-color: @theme_selected_bg_color; border-width: 0px; border-top-width: 3px;}"""
-		provider.load_from_data(css)
-		style_context.add_provider(provider, 600)
-
-		self.add_overlay(self._frame)
-		self.set_overlay_pass_through(self._frame, True)
-
-	def disable(self):
-		self._frame.hide()
-
-	def enable(self):
-		if self._widget.has_focus():
-			self._frame.show()
-
-	def set_widget(self, widget):
-		self._widget=widget
-		self._widget.connect("focus-in-event", lambda *args: self._frame.show())
-		self._widget.connect("focus-out-event", lambda *args: self._frame.hide())
-
-class ScrolledFocusFrame(FocusFrame):
-	def __init__(self, widget):
-		super().__init__()
-		self.set_widget(widget)
-
-		# scroll
-		scroll=Gtk.ScrolledWindow()
-		scroll.add(widget)
-
-		# allow hide/show without .show_all()
-		scroll.set_visible(True)
-		widget.set_visible(True)
-
-		self.add(scroll)
-
 class SongPopover(Gtk.Popover):
 	def __init__(self, client, show_buttons=True):
 		super().__init__()
@@ -1655,14 +1613,12 @@ class SongsWindow(Gtk.Box):
 		# packing
 		if popover_mode:
 			self.pack_end(button_box, False, False, 0)
-			frame=Gtk.Frame()
+			frame=Gtk.Frame(child=self._scroll)
+			self.pack_start(frame, True, True, 0)
 		else:
 			self._action_bar.pack_start(button_box)
 			self.pack_end(self._action_bar, False, False, 0)
-			frame=FocusFrame()
-			frame.set_widget(self._songs_view)
-		frame.add(self._scroll)
-		self.pack_start(frame, True, True, 0)
+			self.pack_start(self._scroll, True, True, 0)
 
 	def get_treeview(self):
 		return self._songs_view
@@ -2317,9 +2273,9 @@ class AlbumLoadingThread(threading.Thread):
 			return False
 		GLib.idle_add(callback)
 
-class AlbumWindow(FocusFrame):
+class AlbumWindow(Gtk.Box):
 	def __init__(self, client, settings, artist_window):
-		super().__init__()
+		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._settings=settings
 		self._client=client
 		self._artist_window=artist_window
@@ -2361,11 +2317,8 @@ class AlbumWindow(FocusFrame):
 		self._artist_window.connect("clear", self._clear)
 
 		# packing
-		self.set_widget(self._iconview)
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		box.pack_start(scroll, True, True, 0)
-		box.pack_start(self._progress_bar, False, False, 0)
-		self.add(box)
+		self.pack_start(scroll, True, True, 0)
+		self.pack_start(self._progress_bar, False, False, 0)
 
 	def _workaround_clear(self):
 		self._store.clear()
@@ -2497,19 +2450,20 @@ class Browser(Gtk.Paned):
 		self._genre_select=GenreSelect(self._client)
 		self._artist_window=ArtistWindow(self._client, self._settings, self._genre_select)
 		self._album_window=AlbumWindow(self._client, self._settings, self._artist_window)
-		genre_focus_frame=ScrolledFocusFrame(self._genre_select)
-		artist_focus_frame=ScrolledFocusFrame(self._artist_window)
+		genre_scroll=Gtk.ScrolledWindow(child=self._genre_select)
+		artist_scroll=Gtk.ScrolledWindow(child=self._artist_window)
 
 		# hide/show genre filter
-		self._settings.bind("genre-filter", genre_focus_frame, "no-show-all", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		self._settings.bind("genre-filter", genre_focus_frame, "visible", Gio.SettingsBindFlags.GET)
+		self._genre_select.set_property("visible", True)
+		self._settings.bind("genre-filter", genre_scroll, "no-show-all", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		self._settings.bind("genre-filter", genre_scroll, "visible", Gio.SettingsBindFlags.GET)
 		self._settings.connect("changed::genre-filter", self._on_genre_filter_changed)
 
 		# packing
 		self.paned1=Gtk.Paned()
-		self.paned1.pack1(artist_focus_frame, False, False)
+		self.paned1.pack1(artist_scroll, False, False)
 		self.paned1.pack2(self._album_window, True, False)
-		self.pack1(genre_focus_frame, False, False)
+		self.pack1(genre_scroll, False, False)
 		self.pack2(self.paned1, True, False)
 
 	def back_to_current_album(self, force=False):
@@ -2592,11 +2546,6 @@ class PlaylistWindow(Gtk.Overlay):
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scroll.add(self._treeview)
 
-		# frame
-		self._frame=FocusFrame()
-		self._frame.set_widget(self._treeview)
-		self._frame.add(scroll)
-
 		# song popover
 		self._song_popover=SongPopover(self._client, show_buttons=False)
 
@@ -2604,8 +2553,6 @@ class PlaylistWindow(Gtk.Overlay):
 		self._treeview.connect("row-activated", self._on_row_activated)
 		self._treeview.connect("button-press-event", self._on_button_press_event)
 		self._treeview.connect("key-release-event", self._on_key_release_event)
-		self._treeview.connect("drag-begin", lambda *args: self._frame.disable())
-		self._treeview.connect("drag-end", lambda *args: self._frame.enable())
 		self._row_deleted=self._store.connect("row-deleted", self._on_row_deleted)
 		self._row_inserted=self._store.connect("row-inserted", self._on_row_inserted)
 		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
@@ -2624,7 +2571,7 @@ class PlaylistWindow(Gtk.Overlay):
 		self._settings.bind("mini-player", self, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# packing
-		self.add(self._frame)
+		self.add(scroll)
 		self.add_overlay(self._back_button_revealer)
 
 	def _on_column_width(self, obj, typestring, pos):
@@ -2832,7 +2779,7 @@ class PlaylistWindow(Gtk.Overlay):
 # cover and lyrics #
 ####################
 
-class LyricsWindow(FocusFrame):
+class LyricsWindow(Gtk.ScrolledWindow):
 	def __init__(self, client, settings):
 		super().__init__()
 		self._settings=settings
@@ -2851,15 +2798,9 @@ class LyricsWindow(FocusFrame):
 		self._text_view.set_right_margin(5)
 		self._text_view.set_bottom_margin(5)
 		self._text_view.set_top_margin(3)
-		self.set_widget(self._text_view)
 
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
-
-		# scroll
-		scroll=Gtk.ScrolledWindow()
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		scroll.add(self._text_view)
 
 		# connect
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -2867,7 +2808,7 @@ class LyricsWindow(FocusFrame):
 		self._client.emitter.handler_block(self._song_changed)
 
 		# packing
-		self.add(scroll)
+		self.add(self._text_view)
 
 	def enable(self, *args):
 		current_song=self._client.currentsong()
