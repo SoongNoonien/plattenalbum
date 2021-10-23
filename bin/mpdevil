@@ -3377,10 +3377,10 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client=client
 
 		# actions
-		self._simple_actions_disable_on_stop_data=("next","prev","seek-forward","seek-backward")
-		self._simple_actions_enable_on_reconnect_data=("toggle-play","stop","clear","update","repeat","random","single","consume")
-		self._simple_actions_data=self._simple_actions_disable_on_stop_data+self._simple_actions_enable_on_reconnect_data
-		for name in self._simple_actions_data:
+		self._disable_on_stop_data=("next","prev","seek-forward","seek-backward")
+		self._enable_on_reconnect_data=("toggle-play","stop","clear","update","repeat","random","single","consume","single-oneshot")
+		self._data=self._disable_on_stop_data+self._enable_on_reconnect_data
+		for name in self._data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
@@ -3426,17 +3426,20 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 	def _on_consume(self, action, param):
 		self._client.toggle_option("consume")
 
+	def _on_single_oneshot(self, action, param):
+		self._client.single("oneshot")
+
 	def _on_state(self, emitter, state):
 		state_dict={"play": True, "pause": True, "stop": False}
-		for action in self._simple_actions_disable_on_stop_data:
+		for action in self._disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state_dict[state])
 
 	def _on_disconnected(self, *args):
-		for action in self._simple_actions_data:
+		for action in self._data:
 			self.lookup_action(action).set_enabled(False)
 
 	def _on_reconnected(self, *args):
-		for action in self._simple_actions_enable_on_reconnect_data:
+		for action in self._enable_on_reconnect_data:
 			self.lookup_action(action).set_enabled(True)
 
 ####################
@@ -3472,6 +3475,7 @@ class ShortcutsWindow(Gtk.ShortcutsWindow):
 			("Escape", _("Back to current album"), None, window_group),
 			("space", _("Play/Pause"), None, playback_group),
 			("<Shift>space", _("Stop"), None, playback_group),
+			("<Control>space", _("Stop after current title"), None, playback_group),
 			("KP_Add", _("Next title"), None, playback_group),
 			("KP_Subtract", _("Previous title"), None, playback_group),
 			("KP_Multiply", _("Seek forward"), None, playback_group),
@@ -3898,8 +3902,8 @@ class mpdevil(Gtk.Application):
 				("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),
 				("mpd.stop", ["<Shift>space"]),("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),
 				("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>s"]),("mpd.single", ["<Control>1"]),
-				("mpd.consume", ["<Control>o"]),("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
-				("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"]),
+				("mpd.consume", ["<Control>o"]),("mpd.single-oneshot", ["<Control>space"]),("mpd.seek-forward", ["KP_Multiply"]),
+				("mpd.seek-backward", ["KP_Divide"]),("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"]),
 				("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),
 				("win.play", ["<Control>Return"]),("win.enqueue", ["<Control>e"]),("win.genre-filter", ["<Control>g"])
 			)
