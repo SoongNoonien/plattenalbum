@@ -1213,7 +1213,6 @@ class PlaylistSettings(Gtk.Box):
 
 		# scroll
 		scroll=Gtk.ScrolledWindow(child=treeview)
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		# toolbar
 		toolbar=Gtk.Toolbar(icon_size=Gtk.IconSize.SMALL_TOOLBAR)
@@ -1450,9 +1449,8 @@ class SongPopover(Gtk.Popover):
 		self._treeview.append_column(column_value)
 
 		# scroll
-		self._scroll=Gtk.ScrolledWindow(child=self._treeview)
+		self._scroll=Gtk.ScrolledWindow(child=self._treeview, propagate_natural_height=True)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-		self._scroll.set_propagate_natural_height(True)
 
 		# overlay
 		overlay=Gtk.Overlay(child=self._scroll)
@@ -1584,7 +1582,6 @@ class SongsWindow(Gtk.Box):
 
 		# scroll
 		self._scroll=Gtk.ScrolledWindow(child=self._songs_view)
-		self._scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		# buttons
 		button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
@@ -2282,7 +2279,6 @@ class AlbumWindow(Gtk.Box):
 
 		# scroll
 		scroll=Gtk.ScrolledWindow(child=self._iconview)
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		self._scroll_vadj=scroll.get_vadjustment()
 		self._scroll_hadj=scroll.get_hadjustment()
 
@@ -2534,7 +2530,6 @@ class PlaylistWindow(Gtk.Overlay):
 
 		# scroll
 		scroll=Gtk.ScrolledWindow(child=self._treeview)
-		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
 		# song popover
 		self._song_popover=SongPopover(self._client, show_buttons=False)
