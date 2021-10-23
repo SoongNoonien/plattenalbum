@@ -1405,14 +1405,12 @@ class SongPopover(Gtk.Popover):
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
 
 		# open-with button
-		open_button=Gtk.Button(
-			image=Gtk.Image.new_from_icon_name("document-open-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Open with…"),
-			margin_bottom=6, margin_end=6
-		)
+		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
 		open_button.get_style_context().add_class("osd")
 
 		# open button revealer
-		self._open_button_revealer=Gtk.Revealer(child=open_button, halign=Gtk.Align.END, valign=Gtk.Align.END)
+		self._open_button_revealer=Gtk.Revealer(
+			child=open_button, transition_duration=0, margin_bottom=6, margin_end=6, halign=Gtk.Align.END, valign=Gtk.Align.END)
 
 		# buttons
 		if show_buttons:
@@ -2486,11 +2484,13 @@ class PlaylistWindow(Gtk.Overlay):
 		# back button
 		self._back_to_current_song_button=Gtk.Button(
 			image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Scroll to current song"),
-			margin_bottom=6, margin_start=6, can_focus=False
+			can_focus=False
 		)
 		self._back_to_current_song_button.get_style_context().add_class("osd")
 		self._back_button_revealer=Gtk.Revealer(
-			child=self._back_to_current_song_button, transition_duration=0, halign=Gtk.Align.START, valign=Gtk.Align.END)
+			child=self._back_to_current_song_button, transition_duration=0,
+			margin_bottom=6, margin_start=6, halign=Gtk.Align.START, valign=Gtk.Align.END
+		)
 
 		# treeview
 		# (track, disc, title, artist, album, human duration, date, genre, file, weight, duration)
@@ -2932,7 +2932,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(
 			image=Gtk.Image.new_from_icon_name("org.mpdevil.mpdevil-lyrics-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Show lyrics"),
-			can_focus=False, margin_top=6, margin_end=6
+			can_focus=False
 		)
 		self.lyrics_button.get_style_context().add_class("osd")
 
@@ -2940,7 +2940,8 @@ class CoverLyricsWindow(Gtk.Overlay):
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
 
 		# revealer
-		self._lyrics_button_revealer=Gtk.Revealer(child=self.lyrics_button, halign=Gtk.Align.END, valign=Gtk.Align.START)
+		self._lyrics_button_revealer=Gtk.Revealer(
+			child=self.lyrics_button, transition_duration=0, margin_top=6, margin_end=6, halign=Gtk.Align.END, valign=Gtk.Align.START)
 		self._settings.bind("show-lyrics-button", self._lyrics_button_revealer, "reveal-child", Gio.SettingsBindFlags.DEFAULT)
 
 		# stack
