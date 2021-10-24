@@ -9,27 +9,27 @@
 			<summary>Maximize mpdevil on startup</summary>
 		</key>
 		<key type="i" name="width">
-			<default>1006</default>
+			<default>1030</default>
 			<summary>Default width of window</summary>
 		</key>
 		<key type="i" name="height">
-			<default>990</default>
+			<default>950</default>
 			<summary>Default height of window</summary>
 		</key>
 		<key type="i" name="paned0">
-			<default>370</default>
+			<default>350</default>
 			<summary>Default position of cover/playlist separator</summary>
 		</key>
 		<key type="i" name="paned1">
-			<default>246</default>
+			<default>226</default>
 			<summary>Default position of artist/albums separator</summary>
 		</key>
 		<key type="i" name="paned2">
-			<default>572</default>
+			<default>551</default>
 			<summary>Default position of paned1/paned0 separator</summary>
 		</key>
 		<key type="i" name="paned3">
-			<default>246</default>
+			<default>196</default>
 			<summary>Default position of genre/artist separator</summary>
 		</key>
 		<key type="b" name="genre-filter">
@@ -41,11 +41,11 @@
 			<summary>Start player in mini player mode</summary>
 		</key>
 		<key type="i" name="album-cover">
-			<default>170</default>
+			<default>180</default>
 			<summary>Size of covers in album view</summary>
 		</key>
 		<key type="i" name="track-cover">
-			<default>370</default>
+			<default>350</default>
 			<summary>Size of main cover</summary>
 		</key>
 		<key type="i" name="icon-size">
@@ -105,7 +105,7 @@
 			<summary>Visibility of columns in playlist</summary>
 		</key>
 		<key type="ai" name="column-sizes">
-			<default>[33, 0, 203, 153, 174, 0, 0, 0]</default>
+			<default>[33, 0, 217, 173, 186, 0, 0, 0]</default>
 			<summary>Sizes of columns in playlist</summary>
 		</key>
 		<key type="b" name="playlist-right">
