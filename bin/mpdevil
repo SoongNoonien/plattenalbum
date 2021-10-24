@@ -43,7 +43,7 @@ if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
 else:
 	bindtextdomain("mpdevil", localedir=None)  # replace "None" by a static path if needed (e.g when installing on a non-FHS distro)
 
-VERSION="1.3.0"  # sync with setup.py
+VERSION="1.4.0"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 FALLBACK_COVER=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
 FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
