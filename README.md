@@ -61,7 +61,7 @@ Dependencies:
 - Python3
 
 Python modules:
-- mpd (python-mpd2 >=1.0)
+- mpd (python-mpd2 >=1.1)
 - gi (Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib, Notify)
 - requests
 - bs4 (beautifulsoup)
