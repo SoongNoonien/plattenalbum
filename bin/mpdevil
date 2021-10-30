@@ -207,8 +207,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 		# connect
 		self._client.emitter.connect("state", self._on_state_changed)
-		self._client.emitter.connect("current_song_changed", self._on_song_changed)
-		self._client.emitter.connect("volume_changed", self._on_volume_changed)
+		self._client.emitter.connect("current_song", self._on_song_changed)
+		self._client.emitter.connect("volume", self._on_volume_changed)
 		self._client.emitter.connect("repeat", self._on_loop_changed)
 		self._client.emitter.connect("single", self._on_loop_changed)
 		self._client.emitter.connect("random", self._on_random_changed)
@@ -601,11 +601,11 @@ class EventEmitter(GObject.Object):
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"reconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"current_song_changed": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"current_song": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-		"elapsed_changed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
-		"volume_changed": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
-		"playlist_changed": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
+		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
+		"volume": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
+		"playlist": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
 		"repeat": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"single": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -888,22 +888,22 @@ class Client(MPDClient):
 			for key, val in diff:
 				if key == "elapsed":
 					if "duration" in status:
-						self.emitter.emit("elapsed_changed", float(val), float(status["duration"]))
+						self.emitter.emit("elapsed", float(val), float(status["duration"]))
 					else:
-						self.emitter.emit("elapsed_changed", float(val), 0.0)
+						self.emitter.emit("elapsed", float(val), 0.0)
 				elif key == "bitrate":
 					if val == "0":
 						self.emitter.emit("bitrate", None)
 					else:
 						self.emitter.emit("bitrate", val)
 				elif key == "songid":
-					self.emitter.emit("current_song_changed")
+					self.emitter.emit("current_song")
 				elif key in ("state", "single", "audio"):
 					self.emitter.emit(key, val)
 				elif key == "volume":
-					self.emitter.emit("volume_changed", float(val))
+					self.emitter.emit("volume", float(val))
 				elif key == "playlist":
-					self.emitter.emit("playlist_changed", int(val))
+					self.emitter.emit("playlist", int(val))
 				elif key in ("repeat", "random", "consume"):
 					if val == "1":
 						self.emitter.emit(key, True)
@@ -914,9 +914,9 @@ class Client(MPDClient):
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
-					self.emitter.emit("current_song_changed")
+					self.emitter.emit("current_song")
 				elif "volume" == key:
-					self.emitter.emit("volume_changed", -1)
+					self.emitter.emit("volume", -1)
 				elif "updating_db" == key:
 					self.emitter.emit("updated_db")
 				elif "bitrate" == key:
@@ -2492,8 +2492,8 @@ class PlaylistView(Gtk.TreeView):
 		self._row_deleted=self._store.connect("row-deleted", self._on_row_deleted)
 		self._row_inserted=self._store.connect("row-inserted", self._on_row_inserted)
 
-		self._client.emitter.connect("playlist_changed", self._on_playlist_changed)
-		self._client.emitter.connect("current_song_changed", self._on_song_changed)
+		self._client.emitter.connect("playlist", self._on_playlist_changed)
+		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
@@ -2600,7 +2600,7 @@ class PlaylistView(Gtk.TreeView):
 			self._playlist_version=int(self._client.status()["playlist"])
 		except MPDBase.CommandError as e:
 			self._playlist_version=None
-			self._client.emitter.emit("playlist_changed", int(self._client.status()["playlist"]))
+			self._client.emitter.emit("playlist", int(self._client.status()["playlist"]))
 			raise e  # propagate exception
 
 	def _on_row_inserted(self, model, path, treeiter):
@@ -2747,7 +2747,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 
 		# connect
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._song_changed=self._client.emitter.connect("current_song_changed", self._refresh)
+		self._song_changed=self._client.emitter.connect("current_song", self._refresh)
 		self._client.emitter.handler_block(self._song_changed)
 
 		# packing
@@ -2865,7 +2865,7 @@ class MainCover(Gtk.Image):
 		self.set_size_request(size, size)
 
 		# connect
-		self._client.emitter.connect("current_song_changed", self._refresh)
+		self._client.emitter.connect("current_song", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._settings.connect("changed::track-cover", self._on_settings_changed)
@@ -2975,8 +2975,8 @@ class PlaybackControl(Gtk.ButtonBox):
 		self._settings.connect("changed::mini-player", self._mini_player)
 		self._settings.connect("changed::show-stop", self._mini_player)
 		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("playlist_changed", self._refresh_tooltips)
-		self._client.emitter.connect("current_song_changed", self._refresh_tooltips)
+		self._client.emitter.connect("playlist", self._refresh_tooltips)
+		self._client.emitter.connect("current_song", self._refresh_tooltips)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 		# packing
@@ -3045,7 +3045,7 @@ class SeekBar(Gtk.Box):
 		self._scale.connect("button-release-event", self._on_scale_button_release_event)
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("elapsed_changed", self._refresh)
+		self._client.emitter.connect("elapsed", self._refresh)
 
 		# packing
 		self.pack_start(elapsed_event_box, False, False, 0)
@@ -3137,7 +3137,7 @@ class AudioFormat(Gtk.Box):
 		self._settings.connect("changed::show-audio-format", self._mini_player)
 		self._client.emitter.connect("audio", self._on_audio)
 		self._client.emitter.connect("bitrate", self._on_bitrate)
-		self._client.emitter.connect("current_song_changed", self._on_song_changed)
+		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
@@ -3309,7 +3309,7 @@ class VolumeButton(Gtk.VolumeButton):
 
 		# connect
 		self._changed=self.connect("value-changed", self._set_volume)
-		self._client.emitter.connect("volume_changed", self._refresh)
+		self._client.emitter.connect("volume", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self.connect("button-press-event", self._on_button_press_event)
@@ -3658,7 +3658,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.connect_after("changed::mini-player", self._mini_player)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
-		self._client.emitter.connect("current_song_changed", self._on_song_changed)
+		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		# auto save window state and size
