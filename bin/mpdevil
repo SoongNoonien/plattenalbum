@@ -2363,11 +2363,7 @@ class AlbumList(Gtk.IconView):
 				GLib.idle_add(self._artist_popover.open, artist, genre, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
-		album=self._store[path][3]
-		year=self._store[path][4]
-		artist=self._store[path][5]
-		genre=self._artist_list.genre_list.get_selected()
-		self._client.album_to_playlist(album, artist, year, genre)
+		self._path_to_playlist(path)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
