@@ -3770,17 +3770,13 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_show_info(self, action, param):
 		widget=self.get_focus()
-		try:
+		if hasattr(widget, "show_info") and callable(widget.show_info):
 			widget.show_info()
-		except AttributeError:
-			pass
 
 	def _on_add_to_playlist(self, action, param, mode):
 		widget=self.get_focus()
-		try:
+		if hasattr(widget, "add_to_playlist") and callable(widget.add_to_playlist):
 			widget.add_to_playlist(mode)
-		except AttributeError:
-			pass
 
 	def _on_search_button_toggled(self, button):
 		if button.get_active():
