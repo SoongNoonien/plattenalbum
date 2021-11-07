@@ -1546,10 +1546,8 @@ class SongsView(TreeView):
 				self._client.files_to_playlist([self._store[path][self._file_column_id]], "append")
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				uri=self._store[path][self._file_column_id]
-				if self.get_property("headers-visible"):
-					self._song_popover.open(uri, widget, int(event.x), int(event.y))
-				else:
-					self._song_popover.open(uri, widget, int(event.x), int(event.y), offset=0)
+				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
+				self._song_popover.open(uri, widget, *point)
 
 	def show_info(self):
 		treeview, treeiter=self._selection.get_selected()
@@ -2580,7 +2578,8 @@ class PlaylistView(TreeView):
 			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 				self._store.remove(self._store.get_iter(path))
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self._song_popover.open(self._store[path][8], widget, int(event.x), int(event.y))
+				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
+				self._song_popover.open(self._store[path][8], widget, *point)
 
 	def _on_key_release_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
