@@ -1389,6 +1389,17 @@ class AboutDialog(Gtk.AboutDialog):
 # general purpose widgets #
 ###########################
 
+class TreeView(Gtk.TreeView):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+	def get_popover_point(self, path):
+		cell=self.get_cell_area(path, None)
+		cell.x,cell.y=self.convert_bin_window_to_widget_coords(cell.x,cell.y)
+		rect=self.get_visible_rect()
+		rect.x,rect.y=self.convert_tree_to_widget_coords(rect.x,rect.y)
+		return (rect.x+rect.width//2, max(min(cell.y+cell.height//2, rect.y+rect.height), rect.y))
+
 class AutoSizedIcon(Gtk.Image):
 	def __init__(self, icon_name, settings_key, settings):
 		super().__init__(icon_name=icon_name)
@@ -1456,12 +1467,9 @@ class SongPopover(Gtk.Popover):
 		self.add(box)
 		box.show_all()
 
-	def open(self, uri, widget, x, y, offset=26):
+	def open(self, uri, widget, x, y):
 		self._uri=uri
-		self._rect.x=x
-		# Gtk places popovers in treeviews 26px above the given position for no obvious reasons, so I move them 26px
-		# This seems to be related to the width/height of the headers in treeviews
-		self._rect.y=y+offset
+		self._rect.x,self._rect.y=x,y
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
 		window=self.get_toplevel()
@@ -1498,7 +1506,7 @@ class SongPopover(Gtk.Popover):
 		self._client.files_to_playlist([self._uri], mode)
 		self.popdown()
 
-class SongsView(Gtk.TreeView):
+class SongsView(TreeView):
 	def __init__(self, client, store, file_column_id):
 		super().__init__(model=store, search_column=-1, activate_on_single_click=True)
 		self._client=client
@@ -1547,8 +1555,7 @@ class SongsView(Gtk.TreeView):
 		treeview, treeiter=self._selection.get_selected()
 		if treeiter is not None:
 			path=self._store.get_path(treeiter)
-			cell=self.get_cell_area(path, None)
-			self._song_popover.open(self._store[path][self._file_column_id], self, cell.x, cell.y)
+			self._song_popover.open(self._store[path][self._file_column_id], self, *self.get_popover_point(path))
 
 	def add_to_playlist(self, mode):
 		treeview, treeiter=self._selection.get_selected()
@@ -1926,7 +1933,7 @@ class SearchWindow(Gtk.Box):
 # browser #
 ###########
 
-class SelectionList(Gtk.TreeView):
+class SelectionList(TreeView):
 	__gsignals__={"item-selected": (GObject.SignalFlags.RUN_FIRST, None, ()), "clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, select_all_string):
 		super().__init__(activate_on_single_click=True, search_column=0, headers_visible=False, fixed_height_mode=True)
@@ -2107,13 +2114,12 @@ class ArtistList(SelectionList):
 			self._client.artist_to_playlist(artist, genre, mode)
 
 	def show_info(self):
-		selected_rows=self._selection.get_selected_rows()
-		if selected_rows is not None:
-			path=selected_rows[1][0]
+		treeview, treeiter=self._selection.get_selected()
+		if treeiter is not None:
+			path=self._store.get_path(treeiter)
 			genre=self.genre_list.get_selected()
 			artist=self.get_item(path)
-			cell=self.get_cell_area(path, None)
-			self._artist_popover.open(artist, genre, self, cell.x, cell.y)
+			self._artist_popover.open(artist, genre, self, *self.get_popover_point(path))
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
@@ -2374,13 +2380,13 @@ class AlbumList(Gtk.IconView):
 	def show_info(self):
 		paths=self.get_selected_items()
 		if len(paths) > 0:
-			rect=self.get_cell_rect(paths[0], None)[1]
-			x=rect.x+rect.width//2
-			y=rect.y+rect.height//2
+			path=paths[0]
+			cell=self.get_cell_rect(path, None)[1]
+			rect=self.get_allocation()
+			x=max(min(rect.x+cell.width//2, rect.x+rect.width), rect.x)
+			y=max(min(cell.y+cell.height//2, rect.y+rect.height), rect.y)
 			genre=self._artist_list.genre_list.get_selected()
-			self._album_popover.open(
-				self._store[paths[0]][3], self._store[paths[0]][5], self._store[paths[0]][4], genre, self, x, y
-			)
+			self._album_popover.open(self._store[path][3], self._store[path][5], self._store[path][4], genre, self, x, y)
 
 	def add_to_playlist(self, mode):
 		paths=self.get_selected_items()
@@ -2447,7 +2453,7 @@ class Browser(Gtk.Paned):
 # playlist #
 ############
 
-class PlaylistView(Gtk.TreeView):
+class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
 	def __init__(self, client, settings):
 		super().__init__(activate_on_single_click=True, reorderable=True, search_column=2, fixed_height_mode=True)
@@ -2683,8 +2689,7 @@ class PlaylistView(Gtk.TreeView):
 		treeview, treeiter=self._selection.get_selected()
 		if treeiter is not None:
 			path=self._store.get_path(treeiter)
-			cell=self.get_cell_area(path, None)
-			self._song_popover.open(self._store[path][8], self, int(cell.x), int(cell.y))
+			self._song_popover.open(self._store[path][8], self, *self.get_popover_point(path))
 
 class PlaylistWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
