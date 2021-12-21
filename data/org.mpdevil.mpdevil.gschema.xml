@@ -84,10 +84,6 @@
 			<default>false</default>
 			<summary>Play selected albums directly</summary>
 		</key>
-		<key type="b" name="use-album-artist">
-			<default>true</default>
-			<summary>Use 'Album Artist' tag to group albums</summary>
-		</key>
 		<key type="b" name="mpris">
 			<default>true</default>
 			<summary>Provide MPRIS</summary>

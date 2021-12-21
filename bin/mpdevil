@@ -2083,7 +2083,6 @@ class ArtistList(SelectionList):
 		# connect
 		self.connect("clear", lambda *args: self._artist_popover.popdown())
 		self.connect("button-press-event", self._on_button_press_event)
-		self._settings.connect("changed::use-album-artist", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self.genre_list.connect_after("item-selected", self._refresh)
