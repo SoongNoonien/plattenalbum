@@ -557,10 +557,13 @@ class Song(collections.UserDict):
 	def __missing__(self, key):
 		if self.data:
 			if key == "albumartist":
-				if "artist" in self.data:
-					return self.data["artist"]
-				else:
-					return MultiTag([""])
+				return self["artist"]
+			elif key == "albumartistsort":
+				return self["albumartist"]
+			elif key == "artistsort":
+				return self["artist"]
+			elif key == "albumsort":
+				return self["album"]
 			elif key == "title":
 				return MultiTag([os.path.basename(self.data["file"])])
 			elif key == "duration":
@@ -627,6 +630,36 @@ class Client(MPDClient):
 		# connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
 
+	# workaround for list group
+	# see: https://github.com/Mic92/python-mpd2/pull/187
+	def _parse_objects(self, lines, delimiters=[], lookup_delimiter=False):
+		obj = {}
+		for key, value in self._parse_pairs(lines):
+			key = key.lower()
+			if lookup_delimiter and key not in delimiters:
+				delimiters = delimiters + [key]
+			if obj:
+				if key in delimiters:
+					if lookup_delimiter:
+						if key in obj:
+							yield obj
+							obj = obj.copy()
+							while delimiters[-1] != key:
+								obj.pop(delimiters[-1], None)
+								delimiters.pop()
+					else:
+						yield obj
+						obj = {}
+				elif key in obj:
+					if not isinstance(obj[key], list):
+						obj[key] = [obj[key], value]
+					else:
+						obj[key].append(value)
+					continue
+			obj[key] = value
+		if obj:
+			yield obj
+
 	# overloads
 	def currentsong(self, *args):
 		return Song(super().currentsong(*args))
@@ -690,70 +723,12 @@ class Client(MPDClient):
 		except:
 			return False
 
-	def files_to_playlist(self, files, mode="default"):  # modes: default, play, append, enqueue
-		def append(files):
-			for f in files:
-				self.add(f)
-		def play(files):
-			if files:
-				self.clear()
-				for f in files:
-					self.add(f)
-				self.play()
-		def enqueue(files):
-			status=self.status()
-			if status["state"] == "stop":
-				self.clear()
-				append(files)
-			else:
-				self.moveid(status["songid"], 0)
-				current_song_file=self.currentsong()["file"]
-				try:
-					self.delete((1,))  # delete all songs, but the first. bad song index possible
-				except MPDBase.CommandError:
-					pass
-				for f in files:
-					if f == current_song_file:
-						self.move(0, (int(self.status()["playlistlength"])-1))
-					else:
-						self.add(f)
-		if mode == "append":
-			append(files)
-		elif mode == "enqueue":
-			enqueue(files)
-		elif mode == "play":
-			play(files)
-		elif mode == "default":
+	def _to_playlist(self, append, mode="default"):  # modes: default, play, append, enqueue
+		if mode == "default":
 			if self._settings.get_boolean("force-mode"):
-				play(files)
+				mode="play"
 			else:
-				enqueue(files)
-
-	def album_to_playlist(self, album, artist, year, genre, mode="default"):
-		if genre is None:
-			genre_filter=()
-		else:
-			genre_filter=("genre", genre)
-		songs=self.find("album", album, "date", year, self._settings.get_artist_type(), artist, *genre_filter)
-		self.files_to_playlist([song["file"] for song in songs], mode)
-
-	def artist_to_playlist(self, artist, genre, mode):
-		def append():
-			if self._settings.get_boolean("sort-albums-by-year"):
-				sort_tag="date"
-			else:
-				sort_tag="album"
-			if artist is None:  # treat 'None' as 'all artists'
-				if genre is None:
-					self.searchadd("any", "", "sort", sort_tag)
-				else:
-					self.findadd("genre", genre, "sort", sort_tag)
-			else:
-				artist_type=self._settings.get_artist_type()
-				if genre is None:
-					self.findadd(artist_type, artist, "sort", sort_tag)
-				else:
-					self.findadd(artist_type, artist, "genre", genre, "sort", sort_tag)
+				mode="enqueue"
 		if mode == "append":
 			append()
 		elif mode == "play":
@@ -778,6 +753,32 @@ class Client(MPDClient):
 					self.move(0, duplicates[1]["pos"])
 					self.delete(int(duplicates[1]["pos"])-1)
 
+
+	def files_to_playlist(self, files, mode="default"):
+		def append():
+			for f in files:
+				self.add(f)
+		self._to_playlist(append, mode)
+
+	def filter_to_playlist(self, tag_filter, mode="default"):
+		def append():
+			if tag_filter:
+				self.findadd(*tag_filter)
+			else:
+				self.searchadd("any", "")
+		self._to_playlist(append, mode)
+
+	def album_to_playlist(self, albumartist, albumartistsort, album, albumsort, date, mode="default"):
+		tag_filter=("albumartist", albumartist, "albumartistsort", albumartistsort, "album", album, "albumsort", albumsort, "date", date)
+		self.filter_to_playlist(tag_filter, mode)
+
+	def artist_to_playlist(self, artist, genre, mode="default"):
+		def append():
+			for album in self.get_albums(artist, genre):
+				self.findadd("albumartist", album["albumartist"], "albumartistsort", album["albumartistsort"],
+					"album", album["album"], "albumsort", album["albumsort"], "date", album["date"])
+		self._to_playlist(append, mode)
+
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
 		if len(native_list) > 0:
@@ -787,6 +788,33 @@ class Client(MPDClient):
 				return native_list
 		else:
 			return([])
+
+	def get_artists(self, genre):
+		if genre is None:
+			artists=self.list("albumartist", "group", "albumartistsort")
+		else:
+			artists=self.list("albumartist", "genre", genre, "group", "albumartistsort")
+		return [(artist["albumartist"], artist["albumartistsort"]) for artist in artists]
+
+	def get_albums(self, artist, genre):
+		if genre is None:
+			genre_filter=()
+		else:
+			genre_filter=("genre", genre)
+		if artist is None:
+			artists=self.get_artists(genre)
+		else:
+			artists=[artist]
+		albums=[]
+		for albumartist, albumartistsort in artists:
+			albums0=self.list(
+				"album", "albumartist", albumartist, "albumartistsort", albumartistsort,
+				*genre_filter, "group", "date", "group", "albumsort")
+			for album in albums0:
+				album["albumartist"]=albumartist
+				album["albumartistsort"]=albumartistsort
+			albums+=albums0
+		return albums
 
 	def get_cover_path(self, song):
 		path=None
@@ -963,12 +991,6 @@ class Settings(Gio.Settings):
 		array[pos]=value
 		self.set_value(key, GLib.Variant(vtype, array))
 
-	def get_artist_type(self):
-		if self.get_boolean("use-album-artist"):
-			return "albumartist"
-		else:
-			return "artist"
-
 	def get_profile(self, num):
 		return self._profiles[num]
 
@@ -1058,7 +1080,6 @@ class BehaviorSettings(SettingsList):
 		super().__init__()
 		toggle_data=[
 			(_("Support “MPRIS”"), "mpris", True),
-			(_("Use “Album Artist” tag"), "use-album-artist", False),
 			(_("Sort albums by year"), "sort-albums-by-year", False),
 			(_("Send notification on title change"), "send-notify", False),
 			(_("Play selected albums and titles immediately"), "force-mode", False),
@@ -1657,36 +1678,32 @@ class AlbumPopover(Gtk.Popover):
 		self.add(songs_window)
 		songs_window.show_all()
 
-	def open(self, album, album_artist, date, genre, widget, x, y):
+	def open(self, albumartist, albumartistsort, album, albumsort, date, widget, x, y):
 		self._rect.x=x
 		self._rect.y=y
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
 		self._scroll.set_max_content_height(4*widget.get_allocated_height()//7)
 		self._store.clear()
-		if genre is None:
-			genre_filter=()
-		else:
-			genre_filter=("genre", genre)
-		artist_type=self._settings.get_artist_type()
-		count=self._client.count(artist_type, album_artist, "album", album, "date", date, *genre_filter)
+		tag_filter=("albumartist", albumartist, "albumartistsort", albumartistsort, "album", album, "albumsort", albumsort, "date", date)
+		count=self._client.count(*tag_filter)
 		duration=str(Duration(float(count["playtime"])))
 		length=int(count["songs"])
 		text=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(number=length, duration=duration)
 		self._column_title.set_title(" • ".join([_("Title"), text]))
 		self._client.restrict_tagtypes("track", "title", "artist")
-		songs=self._client.find("album", album, "date", date, artist_type, album_artist, *genre_filter)
+		songs=self._client.find(*tag_filter)
 		self._client.tagtypes("all")
 		for song in songs:
 			track=song["track"][0]
 			title=song["title"][0]
 			# only show artists =/= albumartist
 			try:
-				song["artist"].remove(album_artist)
+				song["artist"].remove(albumartist)
 			except ValueError:
 				pass
 			artist=str(song["artist"])
-			if artist == album_artist or not artist:
+			if artist == albumartist or not artist:
 				title_artist=f"<b>{GLib.markup_escape_text(title)}</b>"
 			else:
 				title_artist=f"<b>{GLib.markup_escape_text(title)}</b> • {GLib.markup_escape_text(artist)}"
@@ -1939,9 +1956,9 @@ class SelectionList(TreeView):
 		self._selected_path=None
 
 		# store
-		# (item, weight, initial-letter, weight-initials)
-		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
-		self._store.append([self.select_all_string, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+		# (item, weight, initial-letter, weight-initials, sort-string)
+		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight, str)
+		self._store.append([self.select_all_string, Pango.Weight.BOOK, "", Pango.Weight.BOOK, ""])
 		self.set_model(self._store)
 		self._selection=self.get_selection()
 
@@ -1962,27 +1979,28 @@ class SelectionList(TreeView):
 
 	def clear(self):
 		self._store.clear()
-		self._store.append([self.select_all_string, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+		self._store.append([self.select_all_string, Pango.Weight.BOOK, "", Pango.Weight.BOOK, ""])
 		self._selected_path=None
 		self.emit("clear")
 
 	def set_items(self, items):
 		self.clear()
 		current_char=""
-		items.sort(key=locale.strxfrm)
-		items.sort(key=lambda item: locale.strxfrm(item[:1]))
+		items.sort(key=lambda item: locale.strxfrm(item[1]))
+		items.sort(key=lambda item: locale.strxfrm(item[1][:1]))
 		for item in items:
-			if current_char == item[:1].upper():
-				self._store.insert_with_valuesv(-1, range(4), [item, Pango.Weight.BOOK, "", Pango.Weight.BOOK])
+			if current_char == item[1][:1].upper():
+				self._store.insert_with_valuesv(-1, range(5), [item[0], Pango.Weight.BOOK, "", Pango.Weight.BOOK, item[1]])
 			else:
-				self._store.insert_with_valuesv(-1, range(4), [item, Pango.Weight.BOOK, item[:1].upper(), Pango.Weight.BOLD])
-				current_char=item[:1].upper()
+				self._store.insert_with_valuesv(
+					-1, range(5), [item[0], Pango.Weight.BOOK, item[1][:1].upper(), Pango.Weight.BOLD, item[1]])
+				current_char=item[1][:1].upper()
 
-	def get_item(self, path):
+	def get_item_at_path(self, path):
 		if path == Gtk.TreePath(0):
 			return None
 		else:
-			return self._store[path][0]
+			return self._store[path][0,4]
 
 	def length(self):
 		return len(self._store)-1
@@ -1995,7 +2013,7 @@ class SelectionList(TreeView):
 		row_num=len(self._store)
 		for i in range(0, row_num):
 			path=Gtk.TreePath(i)
-			if self._store[path][0] == item:
+			if self._store[path][0] == item[0] and self._store[path][4] == item[1]:
 				self.select_path(path)
 				break
 
@@ -2003,13 +2021,14 @@ class SelectionList(TreeView):
 		self.set_cursor(Gtk.TreePath(0), None, False)
 		self.row_activated(Gtk.TreePath(0), self._column_item)
 
-	def get_selected(self):
+	def get_path_selected(self):
 		if self._selected_path is None:
 			raise ValueError("None selected")
-		elif self._selected_path == Gtk.TreePath(0):
-			return None
 		else:
-			return self._store[self._selected_path][0]
+			return self._selected_path
+
+	def get_item_selected(self):
+		return self.get_item_at_path(self.get_path_selected())
 
 	def highlight_selected(self):
 		self.set_cursor(self._selected_path, None, False)
@@ -2036,7 +2055,8 @@ class GenreList(SelectionList):
 		self.select_all()
 
 	def _refresh(self, *args):
-		self.set_items(self._client.comp_list("genre"))
+		l=self._client.comp_list("genre")
+		self.set_items(list(zip(l,l)))
 		self.select_all()
 
 	def _on_disconnected(self, *args):
@@ -2069,18 +2089,17 @@ class ArtistList(SelectionList):
 		self.genre_list.connect_after("item-selected", self._refresh)
 
 	def _refresh(self, *args):
-		genre=self.genre_list.get_selected()
-		if genre is None:
-			artists=self._client.comp_list(self._settings.get_artist_type())
-		else:
-			artists=self._client.comp_list(self._settings.get_artist_type(), "genre", genre)
+		genre=self.genre_list.get_item_selected()
+		if genre is not None:
+			genre=genre[0]
+		artists=self._client.get_artists(genre)
 		self.set_items(artists)
 		if genre is not None:
 			self.select_all()
 		else:
 			song=self._client.currentsong()
 			if song:
-				artist=song[self._settings.get_artist_type()][0]
+				artist=(song["albumartist"][0],song["albumartistsort"][0])
 				self.select(artist)
 			else:
 				if self.length() > 0:
@@ -2094,8 +2113,7 @@ class ArtistList(SelectionList):
 			path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 			if path_re is not None:
 				path=path_re[0]
-				genre=self.genre_list.get_selected()
-				artist=self.get_item(path)
+				artist,genre=self.get_artist_at_path(path)
 				if event.button == 1:
 					self._client.artist_to_playlist(artist, genre, "play")
 				elif event.button == 2:
@@ -2103,20 +2121,28 @@ class ArtistList(SelectionList):
 				elif event.button == 3:
 					self._artist_popover.open(artist, genre, self, event.x, event.y)
 
+	def get_artist_at_path(self, path):
+		genre=self.genre_list.get_item_selected()
+		artist=self.get_item_at_path(path)
+		if genre is not None:
+			genre=genre[0]
+		return (artist, genre)
+
+	def get_artist_selected(self):
+		return self.get_artist_at_path(self.get_path_selected())
+
 	def add_to_playlist(self, mode):
 		selected_rows=self._selection.get_selected_rows()
 		if selected_rows is not None:
 			path=selected_rows[1][0]
-			genre=self.genre_list.get_selected()
-			artist=self.get_item(path)
+			artist,genre=self.get_artist_at_path(path)
 			self._client.artist_to_playlist(artist, genre, mode)
 
 	def show_info(self):
 		treeview, treeiter=self._selection.get_selected()
 		if treeiter is not None:
 			path=self._store.get_path(treeiter)
-			genre=self.genre_list.get_selected()
-			artist=self.get_item(path)
+			artist,genre=self.get_artist_at_path(path)
 			self._artist_popover.open(artist, genre, self, *self.get_popover_point(path))
 
 	def _on_disconnected(self, *args):
@@ -2143,22 +2169,6 @@ class AlbumLoadingThread(threading.Thread):
 	def stop(self):
 		self._stop_flag=True
 
-	def _album_generator(self):
-		for artist in self._artists:
-			try:  # client cloud meanwhile disconnect
-				grouped_albums=main_thread_function(self._client.list)(
-						"album", self._artist_type, artist, *self._genre_filter, "group", "date")
-			except (MPDBase.ConnectionError, ConnectionResetError) as e:
-				return
-			for album_group in grouped_albums:
-				date=album_group["date"]
-				if isinstance(album_group["album"], str):
-					albums=[album_group["album"]]
-				else:
-					albums=album_group["album"]
-				for album in albums:
-					yield {"name": album, "artist": artist, "date": date}
-
 	def start(self):
 		self._settings.set_property("cursor-watch", True)
 		self._progress_bar.show()
@@ -2167,32 +2177,27 @@ class AlbumLoadingThread(threading.Thread):
 		self._iconview.set_model(None)
 		self._store.clear()
 		self._cover_size=self._settings.get_int("album-cover")
-		self._artist_type=self._settings.get_artist_type()
-		if self._genre is None:
-			self._genre_filter=()
-		else:
-			self._genre_filter=("genre", self._genre)
 		if self._artist is None:
 			self._iconview.set_markup_column(2)  # show artist names
-			self._artists=self._client.comp_list(self._artist_type, *self._genre_filter)
 		else:
 			self._iconview.set_markup_column(1)  # hide artist names
-			self._artists=[self._artist]
+		self._albums=self._client.get_albums(self._artist, self._genre)
 		super().start()
 
 	def run(self):
 		# temporarily display all albums with fallback cover
 		fallback_cover=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, self._cover_size, self._cover_size)
 		add=main_thread_function(self._store.append)
-		for i, album in enumerate(self._album_generator()):
+		for i, album in enumerate(self._albums):
 			# album label
 			if album["date"]:
-				display_label=f"<b>{GLib.markup_escape_text(album['name'])}</b> ({GLib.markup_escape_text(album['date'])})"
+				display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b> ({GLib.markup_escape_text(album['date'])})"
 			else:
-				display_label=f"<b>{GLib.markup_escape_text(album['name'])}</b>"
-			display_label_artist=f"{display_label}\n{GLib.markup_escape_text(album['artist'])}"
+				display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b>"
+			display_label_artist=f"{display_label}\n{GLib.markup_escape_text(album['albumartist'])}"
 			# add album
-			add([fallback_cover,display_label,display_label_artist,album["name"],album["date"],album["artist"]])
+			add([fallback_cover,display_label,display_label_artist,
+				album["albumartist"],album["albumartistsort"],album["album"],album["albumsort"],album["date"]])
 			if i%10 == 0:
 				if self._stop_flag:
 					self._exit()
@@ -2200,9 +2205,9 @@ class AlbumLoadingThread(threading.Thread):
 				GLib.idle_add(self._progress_bar.pulse)
 		# sort model
 		if main_thread_function(self._settings.get_boolean)("sort-albums-by-year"):
-			main_thread_function(self._store.set_sort_column_id)(4, Gtk.SortType.ASCENDING)
+			main_thread_function(self._store.set_sort_column_id)(7, Gtk.SortType.ASCENDING)
 		else:
-			main_thread_function(self._store.set_sort_column_id)(1, Gtk.SortType.ASCENDING)
+			main_thread_function(self._store.set_sort_column_id)(6, Gtk.SortType.ASCENDING)
 		GLib.idle_add(self._iconview.set_model, self._store)
 		# load covers
 		total=2*len(self._store)
@@ -2212,7 +2217,9 @@ class AlbumLoadingThread(threading.Thread):
 				return None
 			else:
 				self._client.restrict_tagtypes("albumartist", "album")
-				song=self._client.find("album",row[3],"date",row[4],self._artist_type,row[5],*self._genre_filter,"window","0:1")[0]
+				song=self._client.find("albumartist", row[3], "albumartistsort",
+					row[4], "album", row[5], "albumsort", row[6],
+					"date", row[7], "window", "0:1")[0]
 				self._client.tagtypes("all")
 				return self._client.get_cover(song)
 		covers=[]
@@ -2256,8 +2263,8 @@ class AlbumList(Gtk.IconView):
 		self._client=client
 		self._artist_list=artist_list
 
-		# cover, display_label, display_label_artist, album, date, artist
-		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str)
+		# cover, display_label, display_label_artist, albumartist, albumartistsort, album, albumsort, date
+		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str, str)
 		self._store.set_default_sort_func(lambda *args: 0)
 		self.set_model(self._store)
 
@@ -2266,7 +2273,6 @@ class AlbumList(Gtk.IconView):
 
 		# popover
 		self._album_popover=AlbumPopover(self._client, self._settings)
-		self._artist_popover=ArtistPopover(self._client)
 
 		# cover thread
 		self._cover_thread=AlbumLoadingThread(self._client, self._settings, self.progress_bar, self, self._store, None, None)
@@ -2290,7 +2296,6 @@ class AlbumList(Gtk.IconView):
 	def _clear(self, *args):
 		def callback():
 			self._album_popover.popdown()
-			self._artist_popover.popdown()
 			self._workaround_clear()
 		if self._cover_thread.is_alive():
 			self._cover_thread.set_callback(callback)
@@ -2306,7 +2311,7 @@ class AlbumList(Gtk.IconView):
 			row_num=len(self._store)
 			for i in range(0, row_num):
 				path=Gtk.TreePath(i)
-				if self._store[path][3] == album:
+				if self._store[path][5] == album:
 					self.set_cursor(path, None, False)
 					self.select_path(path)
 					self.scroll_to_path(path, True, 0, 0)
@@ -2319,16 +2324,15 @@ class AlbumList(Gtk.IconView):
 	def _sort_settings(self, *args):
 		if not self._cover_thread.is_alive():
 			if self._settings.get_boolean("sort-albums-by-year"):
-				self._store.set_sort_column_id(4, Gtk.SortType.ASCENDING)
+				self._store.set_sort_column_id(7, Gtk.SortType.ASCENDING)
 			else:
-				self._store.set_sort_column_id(1, Gtk.SortType.ASCENDING)
+				self._store.set_sort_column_id(6, Gtk.SortType.ASCENDING)
 
 	def _refresh(self, *args):
 		def callback():
 			if self._cover_thread.is_alive():  # already started?
 				return False
-			artist=self._artist_list.get_selected()
-			genre=self._artist_list.genre_list.get_selected()
+			artist,genre=self._artist_list.get_artist_selected()
 			self._cover_thread=AlbumLoadingThread(self._client,self._settings,self.progress_bar,self,self._store,artist,genre)
 			self._cover_thread.start()
 		if self._cover_thread.is_alive():
@@ -2338,11 +2342,8 @@ class AlbumList(Gtk.IconView):
 			callback()
 
 	def _path_to_playlist(self, path, mode="default"):
-		album=self._store[path][3]
-		year=self._store[path][4]
-		artist=self._store[path][5]
-		genre=self._artist_list.genre_list.get_selected()
-		self._client.album_to_playlist(album, artist, year, genre, mode)
+		tags=self._store[path][3:8]
+		self._client.album_to_playlist(*tags, mode)
 
 	def _on_button_press_event(self, widget, event):
 		path=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -2355,16 +2356,10 @@ class AlbumList(Gtk.IconView):
 		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 			v=self.get_vadjustment().get_value()
 			h=self.get_hadjustment().get_value()
-			genre=self._artist_list.genre_list.get_selected()
 			if path is not None:
-				album=self._store[path][3]
-				year=self._store[path][4]
-				artist=self._store[path][5]
+				tags=self._store[path][3:8]
 				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
-				GLib.idle_add(self._album_popover.open, album, artist, year, genre, widget, event.x-h, event.y-v)
-			else:
-				artist=self._artist_list.get_selected()
-				GLib.idle_add(self._artist_popover.open, artist, genre, widget, event.x-h, event.y-v)
+				GLib.idle_add(self._album_popover.open, *tags, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
 		self._path_to_playlist(path)
@@ -2383,8 +2378,8 @@ class AlbumList(Gtk.IconView):
 			rect=self.get_allocation()
 			x=max(min(rect.x+cell.width//2, rect.x+rect.width), rect.x)
 			y=max(min(cell.y+cell.height//2, rect.y+rect.height), rect.y)
-			genre=self._artist_list.genre_list.get_selected()
-			self._album_popover.open(self._store[path][3], self._store[path][5], self._store[path][4], genre, self, x, y)
+			tags=self._store[path][3:8]
+			self._album_popover.open(*tags, self, x, y)
 
 	def add_to_playlist(self, mode):
 		paths=self.get_selected_items()
@@ -2428,16 +2423,15 @@ class Browser(Gtk.Paned):
 	def back_to_current_album(self, force=False):
 		song=self._client.currentsong()
 		if song:
-			# get artist name
-			artist=song[self._settings.get_artist_type()][0]
+			artist,genre=self._artist_list.get_artist_selected()
 			# deactivate genre filter to show all artists (if needed)
-			if song["genre"][0] != self._genre_list.get_selected() or force:
+			if song["genre"][0] != genre or force:
 				self._genre_list.deactivate()
 			# select artist
-			if self._artist_list.get_selected() is None and not force:  # all artists selected
+			if artist is None and not force:  # all artists selected
 				self._artist_list.highlight_selected()
 			else:  # one artist selected
-				self._artist_list.select(artist)
+				self._artist_list.select((song["albumartist"][0],song["albumartistsort"][0]))
 			self._album_list.scroll_to_current_album()
 		else:
 			self._genre_list.deactivate()
@@ -2844,17 +2838,16 @@ class CoverEventBox(Gtk.EventBox):
 			if self._client.connected():
 				song=self._client.currentsong()
 				if song:
-					artist=song[self._settings.get_artist_type()][0]
-					album=song["album"][0]
-					year=song["date"][0]
+					tags=(song["albumartist"][0], song["albumartistsort"][0],
+						song["album"][0], song["albumsort"][0], song["date"][0])
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, year, None)
+						self._client.album_to_playlist(*tags)
 					elif event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, year, None, "play")
+						self._client.album_to_playlist(*tags, "play")
 					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._client.album_to_playlist(album, artist, year, None, "append")
+						self._client.album_to_playlist(*tags, "append")
 					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-						self._album_popover.open(album, artist, year, None, widget, event.x, event.y)
+						self._album_popover.open(*tags, widget, event.x, event.y)
 
 	def _on_disconnected(self, *args):
 		self._album_popover.popdown()
