@@ -659,6 +659,7 @@ class Client(MPDClient):
 			obj[key] = value
 		if obj:
 			yield obj
+	_parse_objects_direct = _parse_objects
 
 	# overloads
 	def currentsong(self, *args):
