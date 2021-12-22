@@ -775,9 +775,21 @@ class Client(MPDClient):
 
 	def artist_to_playlist(self, artist, genre, mode="default"):
 		def append():
-			for album in self.get_albums(artist, genre):
-				self.findadd("albumartist", album["albumartist"], "albumartistsort", album["albumartistsort"],
-					"album", album["album"], "albumsort", album["albumsort"], "date", album["date"])
+			if genre is None:
+				genre_filter=()
+			else:
+				genre_filter=("genre", genre)
+			if artist is None:
+				artists=self.get_artists(genre)
+			else:
+				artists=[artist]
+			for albumartist, albumartistsort in artists:
+				albums=self.list(
+					"album", "albumartist", albumartist, "albumartistsort", albumartistsort,
+					*genre_filter, "group", "date", "group", "albumsort")
+				for album in albums:
+					self.findadd("albumartist", albumartist, "albumartistsort", albumartistsort,
+						"album", album["album"], "albumsort", album["albumsort"], "date", album["date"])
 		self._to_playlist(append, mode)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
@@ -796,26 +808,6 @@ class Client(MPDClient):
 		else:
 			artists=self.list("albumartist", "genre", genre, "group", "albumartistsort")
 		return [(artist["albumartist"], artist["albumartistsort"]) for artist in artists]
-
-	def get_albums(self, artist, genre):
-		if genre is None:
-			genre_filter=()
-		else:
-			genre_filter=("genre", genre)
-		if artist is None:
-			artists=self.get_artists(genre)
-		else:
-			artists=[artist]
-		albums=[]
-		for albumartist, albumartistsort in artists:
-			albums0=self.list(
-				"album", "albumartist", albumartist, "albumartistsort", albumartistsort,
-				*genre_filter, "group", "date", "group", "albumsort")
-			for album in albums0:
-				album["albumartist"]=albumartist
-				album["albumartistsort"]=albumartistsort
-			albums+=albums0
-		return albums
 
 	def get_cover_path(self, song):
 		path=None
@@ -2163,6 +2155,16 @@ class AlbumLoadingThread(threading.Thread):
 		self._artist=artist
 		self._genre=genre
 
+	def _get_albums(self):
+		for albumartist, albumartistsort in self._artists:
+			albums=main_thread_function(self._client.list)(
+				"album", "albumartist", albumartist, "albumartistsort", albumartistsort,
+				*self._genre_filter, "group", "date", "group", "albumsort")
+			for album in albums:
+				album["albumartist"]=albumartist
+				album["albumartistsort"]=albumartistsort
+				yield album
+
 	def set_callback(self, callback):
 		self._callback=callback
 
@@ -2181,14 +2183,21 @@ class AlbumLoadingThread(threading.Thread):
 			self._iconview.set_markup_column(2)  # show artist names
 		else:
 			self._iconview.set_markup_column(1)  # hide artist names
-		self._albums=self._client.get_albums(self._artist, self._genre)
+		if self._genre is None:
+			self._genre_filter=()
+		else:
+			self._genre_filter=("genre", self._genre)
+		if self._artist is None:
+			self._artists=self._client.get_artists(self._genre)
+		else:
+			self._artists=[self._artist]
 		super().start()
 
 	def run(self):
 		# temporarily display all albums with fallback cover
 		fallback_cover=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, self._cover_size, self._cover_size)
 		add=main_thread_function(self._store.append)
-		for i, album in enumerate(self._albums):
+		for i, album in enumerate(self._get_albums()):
 			# album label
 			if album["date"]:
 				display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b> ({GLib.markup_escape_text(album['date'])})"
