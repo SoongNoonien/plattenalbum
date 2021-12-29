@@ -42,8 +42,8 @@ if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
 	bindtextdomain("mpdevil", "/app/share/locale")
 else:
 	bindtextdomain("mpdevil", localedir=None)  # replace "None" by a static path if needed (e.g when installing on a non-FHS distro)
+Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "mpdevil.gresource")))
 
-VERSION="1.4.1"  # sync with setup.py
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 FALLBACK_COVER=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
 FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
@@ -1385,19 +1385,6 @@ class ServerStats(Gtk.Dialog):
 		vbox.pack_start(grid, True, True, 0)
 		self.show_all()
 		self.run()
-
-class AboutDialog(Gtk.AboutDialog):
-	def __init__(self, window):
-		super().__init__(transient_for=window, modal=True)
-		self.set_program_name("mpdevil")
-		self.set_version(VERSION)
-		self.set_comments(_("A simple music browser for MPD"))
-		self.set_authors(["Martin Wagner"])
-		self.set_translator_credits("Martin de Reuver\nMartin Wagner")
-		self.set_website("https://github.com/SoongNoonien/mpdevil")
-		self.set_copyright("Copyright \xa9 2020-2021 Martin Wagner")
-		self.set_license_type(Gtk.License.GPL_3_0)
-		self.set_logo_icon_name("org.mpdevil.mpdevil")
 
 ###########################
 # general purpose widgets #
@@ -3422,62 +3409,6 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		for action in self._enable_on_reconnect_data:
 			self.lookup_action(action).set_enabled(True)
 
-####################
-# shortcuts window #
-####################
-class ShortcutsWindow(Gtk.ShortcutsWindow):
-	def __init__(self):
-		super().__init__()
-		general_group=Gtk.ShortcutsGroup(title=_("General"), visible=True)
-		window_group=Gtk.ShortcutsGroup(title=_("Window"), visible=True)
-		playback_group=Gtk.ShortcutsGroup(title=_("Playback"), visible=True)
-		items_group=Gtk.ShortcutsGroup(title=_("Search, Album Dialog, Album List and Artist List"), visible=True)
-		playlist_group=Gtk.ShortcutsGroup(title=_("Playlist"), visible=True)
-		section=Gtk.ShortcutsSection(section_name="shortcuts", visible=True)
-		section.add(general_group)
-		section.add(window_group)
-		section.add(playback_group)
-		section.add(items_group)
-		section.add(playlist_group)
-
-		shortcut_data=(
-			("F1", _("Open online help"), None, general_group),
-			("<Control>question", _("Open shortcuts window"), None, general_group),
-			("F10", _("Open menu"), None, general_group),
-			("F5", _("Update database"), None, general_group),
-			("<Control>q", _("Quit"), None, general_group),
-			("<Control>p", _("Cycle through profiles"), None, window_group),
-			("<Shift><Control>p", _("Cycle through profiles in reversed order"), None, window_group),
-			("<Control>m", _("Toggle mini player"), None, window_group),
-			("<Control>g", _("Toggle genre filter"), None, window_group),
-			("<Control>l", _("Toggle lyrics"), None, window_group),
-			("<Control>f", _("Toggle search"), None, window_group),
-			("Escape", _("Back to current album"), None, window_group),
-			("space", _("Play/Pause"), None, playback_group),
-			("<Shift>space", _("Stop"), None, playback_group),
-			("<Control>space", _("Stop after current title"), None, playback_group),
-			("KP_Add", _("Next title"), None, playback_group),
-			("KP_Subtract", _("Previous title"), None, playback_group),
-			("KP_Multiply", _("Seek forward"), None, playback_group),
-			("KP_Divide", _("Seek backward"), None, playback_group),
-			("<Control>r", _("Toggle repeat mode"), None, playback_group),
-			("<Control>s", _("Toggle random mode"), None, playback_group),
-			("<Control>1", _("Toggle single mode"), None, playback_group),
-			("<Control>o", _("Toggle consume mode"), None, playback_group),
-			("<Control>e", _("Enqueue selected item"), None, items_group),
-			("<Control>plus", _("Append selected item"), _("Middle-click"), items_group),
-			("<Control>Return", _("Play selected item immediately"), _("Double-click"), items_group),
-			("<Control>i Menu", _("Show additional information"), _("Right-click"), items_group),
-			("Delete", _("Remove selected song"), _("Middle-click"), playlist_group),
-			("<Shift>Delete", _("Clear playlist"), None, playlist_group),
-			("<Control>i Menu", _("Show additional information"), _("Right-click"), playlist_group)
-		)
-		for accel, title, subtitle, group in shortcut_data:
-			shortcut=Gtk.ShortcutsShortcut(visible=True, accelerator=accel, title=title, subtitle=subtitle)
-			group.pack_start(shortcut, False, False, 0)
-
-		self.add(section)
-
 ###############
 # main window #
 ###############
@@ -3589,9 +3520,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.add_action(self._settings.create_action("active-profile"))
 
 		# shortcuts
-		shortcuts_window=ShortcutsWindow()
-		self.set_help_overlay(shortcuts_window)
-		shortcuts_window.set_modal(False)
+		builder=Gtk.Builder()
+		builder.set_translation_domain("mpdevil")
+		builder.add_from_resource("/org/mpdevil/mpdevil/ShortcutsWindow.ui")
+		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
 		self._paned0=Gtk.Paned()
@@ -3914,7 +3846,11 @@ class mpdevil(Gtk.Application):
 		return 0
 
 	def _on_about(self, *args):
-		dialog=AboutDialog(self._window)
+		builder=Gtk.Builder()
+		builder.set_translation_domain("mpdevil")
+		builder.add_from_resource("/org/mpdevil/mpdevil/AboutDialog.ui")
+		dialog=builder.get_object("about_dialog")
+		dialog.set_transient_for(self._window)
 		dialog.run()
 		dialog.destroy()
 

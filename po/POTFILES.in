@@ -1,3 +1,5 @@
 [encoding: UTF-8]
-src/mpdevil
+src/mpdevil.in
 data/org.mpdevil.mpdevil.desktop.in
+[type: gettext/glade] data/AboutDialog.ui
+[type: gettext/glade] data/ShortcutsWindow.ui
