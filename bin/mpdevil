@@ -2506,8 +2506,6 @@ class PlaylistView(TreeView):
 
 		self._settings.connect("changed::column-visibilities", self._load_settings)
 		self._settings.connect("changed::column-permutation", self._load_settings)
-		self._settings.bind("mini-player", self, "no-show-all", Gio.SettingsBindFlags.GET)
-		self._settings.bind("mini-player", self, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 	def _on_column_width(self, obj, typestring, pos):
 		self._settings.array_modify("ai", "column-sizes", pos, obj.get_property("fixed-width"))
@@ -2712,6 +2710,8 @@ class PlaylistWindow(Gtk.Overlay):
 		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
 		scroll.get_vadjustment().connect("value-changed", self._on_show_hide_back_button)
 		self._treeview.connect("notify::selected-path", self._on_show_hide_back_button)
+		settings.bind("mini-player", self, "no-show-all", Gio.SettingsBindFlags.GET)
+		settings.bind("mini-player", self, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# packing
 		self.add(scroll)
