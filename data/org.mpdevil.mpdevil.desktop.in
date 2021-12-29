@@ -1,11 +1,10 @@
 [Desktop Entry]
 Name=mpdevil
 GenericName=MPD Client
-_Comment=A simple music browser for MPD
+Comment=A simple music browser for MPD
 Exec=mpdevil
 Icon=org.mpdevil.mpdevil
 Terminal=false
 Type=Application
 StartupNotify=true
 Categories=Audio;AudioVideo;Player;GTK
-
