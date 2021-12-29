@@ -32,16 +32,14 @@ import os
 import sys
 import re
 import locale
+from gettext import gettext as _, ngettext, textdomain, bindtextdomain
+
 try:
 	locale.setlocale(locale.LC_ALL, "")
 except locale.Error as e:
 	print(e)
-from gettext import gettext as _, ngettext, textdomain, bindtextdomain
+bindtextdomain("mpdevil", localedir="@LOCALE_DIR@")
 textdomain("mpdevil")
-if os.path.isfile("/.flatpak-info"):  # test for flatpak environment
-	bindtextdomain("mpdevil", "/app/share/locale")
-else:
-	bindtextdomain("mpdevil", localedir=None)  # replace "None" by a static path if needed (e.g when installing on a non-FHS distro)
 Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "mpdevil.gresource")))
 
 COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
