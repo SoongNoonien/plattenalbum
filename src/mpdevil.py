@@ -38,6 +38,8 @@ try:
 	locale.setlocale(locale.LC_ALL, "")
 except locale.Error as e:
 	print(e)
+locale.bindtextdomain("mpdevil", "@LOCALE_DIR@")
+locale.textdomain("mpdevil")
 bindtextdomain("mpdevil", localedir="@LOCALE_DIR@")
 textdomain("mpdevil")
 Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "mpdevil.gresource")))
@@ -3519,7 +3521,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# shortcuts
 		builder=Gtk.Builder()
-		builder.set_translation_domain("mpdevil")
 		builder.add_from_resource("/org/mpdevil/mpdevil/ShortcutsWindow.ui")
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
@@ -3845,7 +3846,6 @@ class mpdevil(Gtk.Application):
 
 	def _on_about(self, *args):
 		builder=Gtk.Builder()
-		builder.set_translation_domain("mpdevil")
 		builder.add_from_resource("/org/mpdevil/mpdevil/AboutDialog.ui")
 		dialog=builder.get_object("about_dialog")
 		dialog.set_transient_for(self._window)
