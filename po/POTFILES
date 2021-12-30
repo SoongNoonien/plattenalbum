@@ -1,0 +1,4 @@
+src/mpdevil.py
+data/org.mpdevil.mpdevil.desktop.in
+data/AboutDialog.ui
+data/ShortcutsWindow.ui
