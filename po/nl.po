@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-30 01:19+0100\n"
-"PO-Revision-Date: 2021-12-30 01:20+0100\n"
+"PO-Revision-Date: 2021-12-30 17:16+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -436,7 +436,7 @@ msgstr "mpdevil"
 
 #: data/org.mpdevil.mpdevil.desktop.in:4
 msgid "MPD Client"
-msgstr ""
+msgstr "MPD Client"
 
 #: data/org.mpdevil.mpdevil.desktop.in:5 data/AboutDialog.ui:7
 msgid "A simple music browser for MPD"
