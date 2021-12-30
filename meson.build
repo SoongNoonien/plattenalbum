@@ -1,7 +1,4 @@
-project('mpdevil',
-          version: '1.4.1',
-    meson_version: '>= 0.47.0',
-)
+project('mpdevil', version: '1.5.0')
 
 i18n = import('i18n')
 gnome = import('gnome')
