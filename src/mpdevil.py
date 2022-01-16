@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # mpdevil - MPD Client.
-# Copyright (C) 2020-2021 Martin Wagner <martin.wagner.dev@gmail.com>
+# Copyright (C) 2020-2022 Martin Wagner <martin.wagner.dev@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
