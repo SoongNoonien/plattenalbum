@@ -1639,15 +1639,18 @@ class AlbumPopover(Gtk.Popover):
 
 		# columns
 		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
-		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0)
+		attrs=Pango.AttrList()
+		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
+		renderer_text_tnum=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, attributes=attrs)
+		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1.0, attributes=attrs)
+		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign_tnum, text=0)
 		column_track.set_property("resizable", False)
 		self._songs_view.append_column(column_track)
 		self._column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
 		self._column_title.set_property("resizable", False)
 		self._column_title.set_property("expand", True)
 		self._songs_view.append_column(self._column_title)
-		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_ralign, text=2)
+		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2)
 		column_time.set_property("resizable", False)
 		self._songs_view.append_column(column_time)
 
@@ -1837,13 +1840,16 @@ class SearchWindow(Gtk.Box):
 
 		# columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
+		attrs=Pango.AttrList()
+		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
+		renderer_text_tnum=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, attributes=attrs)
+		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1.0, attributes=attrs)
 		column_data=(
-			(_("No"), renderer_text_ralign, False, 0, 6),
+			(_("No"), renderer_text_ralign_tnum, False, 0, 6),
 			(_("Title"), renderer_text, True, 1, 1),
 			(_("Artist"), renderer_text, True, 2, 2),
 			(_("Album"), renderer_text, True, 3, 3),
-			(_("Length"), renderer_text_ralign, False, 4, 4),
+			(_("Length"), renderer_text_tnum, False, 4, 4),
 		)
 		for title, renderer, expand, text, sort in column_data:
 			column=Gtk.TreeViewColumn(title, renderer, text=text)
@@ -2459,14 +2465,18 @@ class PlaylistView(TreeView):
 		# columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
+		attrs=Pango.AttrList()
+		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
+		renderer_text_tnum=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, attributes=attrs)
+		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1.0, attributes=attrs)
 		self._columns=(
-			Gtk.TreeViewColumn(_("No"), renderer_text_ralign, text=0, weight=9),
+			Gtk.TreeViewColumn(_("No"), renderer_text_ralign_tnum, text=0, weight=9),
 			Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9),
 			Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9),
 			Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9),
 			Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9),
-			Gtk.TreeViewColumn(_("Length"), renderer_text, text=5, weight=9),
-			Gtk.TreeViewColumn(_("Year"), renderer_text, text=6, weight=9),
+			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=5, weight=9),
+			Gtk.TreeViewColumn(_("Year"), renderer_text_tnum, text=6, weight=9),
 			Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
 		)
 		for i, column in enumerate(self._columns):
@@ -3016,8 +3026,10 @@ class SeekBar(Gtk.Box):
 		self._jumped=False
 
 		# labels
-		self._elapsed=Gtk.Label(width_chars=5, xalign=0)
-		self._rest=Gtk.Label(width_chars=6, xalign=1)
+		attrs=Pango.AttrList()
+		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
+		self._elapsed=Gtk.Label(xalign=0, attributes=attrs)
+		self._rest=Gtk.Label(xalign=1, attributes=attrs)
 
 		# event boxes
 		elapsed_event_box=Gtk.EventBox(child=self._elapsed)
@@ -3122,7 +3134,9 @@ class AudioFormat(Gtk.Box):
 		self._settings=settings
 		self._file_type_label=Gtk.Label(xalign=1, visible=True)
 		self._separator_label=Gtk.Label(xalign=1, visible=True)
-		self._brate_label=Gtk.Label(xalign=1, width_chars=5, visible=True)
+		attrs=Pango.AttrList()
+		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
+		self._brate_label=Gtk.Label(xalign=1, width_chars=5, visible=True, attributes=attrs)
 		self._format_label=Gtk.Label(visible=True)
 
 		# connect
