@@ -3607,7 +3607,7 @@ class MainWindow(Gtk.ApplicationWindow):
 				date=f"({song['date']})"
 			else:
 				date=""
-			album_with_date=" ".join(filter(None, (str(song["album"]), date)))
+			album_with_date=" ".join(filter(None, (song["album"][0], date)))
 			if self._use_csd:
 				self.set_title(" • ".join(filter(None, (str(song["title"]), str(song["artist"])))))
 				self._header_bar.set_subtitle(album_with_date)
