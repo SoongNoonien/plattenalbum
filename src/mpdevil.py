@@ -1520,7 +1520,7 @@ class AlbumPopover(Gtk.Popover):
 		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		attrs=Pango.AttrList()
 		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_tnum=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, attributes=attrs)
+		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs)
 		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1.0, attributes=attrs)
 		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_ralign_tnum, text=0)
 		column_track.set_property("resizable", False)
@@ -1721,7 +1721,7 @@ class SearchWindow(Gtk.Box):
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		attrs=Pango.AttrList()
 		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_tnum=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, attributes=attrs)
+		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs)
 		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1.0, attributes=attrs)
 		column_data=(
 			(_("No"), renderer_text_ralign_tnum, False, 0, 6),
