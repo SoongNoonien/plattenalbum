@@ -969,21 +969,6 @@ class Settings(Gio.Settings):
 		super().__init__(schema=self.BASE_KEY)
 		self._profiles=(self.get_child("profile1"), self.get_child("profile2"), self.get_child("profile3"))
 
-	def array_append(self, vtype, key, value):  # append to Gio.Settings array
-		array=self.get_value(key).unpack()
-		array.append(value)
-		self.set_value(key, GLib.Variant(vtype, array))
-
-	def array_delete(self, vtype, key, pos):  # delete entry of Gio.Settings array
-		array=self.get_value(key).unpack()
-		array.pop(pos)
-		self.set_value(key, GLib.Variant(vtype, array))
-
-	def array_modify(self, vtype, key, pos, value):  # modify entry of Gio.Settings array
-		array=self.get_value(key).unpack()
-		array[pos]=value
-		self.set_value(key, GLib.Variant(vtype, array))
-
 	def get_profile(self, num):
 		return self._profiles[num]
 
@@ -1197,109 +1182,6 @@ class ProfileSettings(Gtk.Box):
 		else:
 			self._settings.set_int("active-profile", selected)
 
-class PlaylistSettings(Gtk.Box):
-	def __init__(self, settings):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=18)
-		self._settings=settings
-
-		# label
-		label=Gtk.Label(label=_("Choose the order of information to appear in the playlist:"), wrap=True, xalign=0)
-
-		# treeview
-		# (toggle, header, actual_index)
-		self._store=Gtk.ListStore(bool, str, int)
-		treeview=Gtk.TreeView(model=self._store, reorderable=True, headers_visible=False, search_column=-1)
-		self._selection=treeview.get_selection()
-
-		# columns
-		renderer_text=Gtk.CellRendererText()
-		renderer_toggle=Gtk.CellRendererToggle()
-		column_toggle=Gtk.TreeViewColumn("", renderer_toggle, active=0)
-		treeview.append_column(column_toggle)
-		column_text=Gtk.TreeViewColumn("", renderer_text, text=1)
-		treeview.append_column(column_text)
-
-		# fill store
-		self._headers=[_("No"), _("Disc"), _("Title"), _("Artist"), _("Album"), _("Length"), _("Year"), _("Genre")]
-		self._fill()
-
-		# scroll
-		scroll=Gtk.ScrolledWindow(child=treeview)
-
-		# toolbar
-		toolbar=Gtk.Toolbar(icon_size=Gtk.IconSize.SMALL_TOOLBAR)
-		toolbar.get_style_context().add_class("inline-toolbar")
-		self._up_button=Gtk.ToolButton(icon_name="go-up-symbolic", sensitive=False)
-		self._down_button=Gtk.ToolButton(icon_name="go-down-symbolic", sensitive=False)
-		toolbar.insert(self._up_button, 0)
-		toolbar.insert(self._down_button, 1)
-
-		# column chooser
-		frame=Gtk.Frame(child=scroll)
-		column_chooser=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		column_chooser.pack_start(frame, True, True, 0)
-		column_chooser.pack_start(toolbar, False, False, 0)
-
-		# connect
-		self._row_deleted=self._store.connect("row-deleted", self._save_permutation)
-		renderer_toggle.connect("toggled", self._on_cell_toggled)
-		self._up_button.connect("clicked", self._on_up_button_clicked)
-		self._down_button.connect("clicked", self._on_down_button_clicked)
-		self._selection.connect("changed", self._set_button_sensitivity)
-
-		# packing
-		self.pack_start(label, False, False, 0)
-		self.pack_start(column_chooser, True, True, 0)
-
-	def _fill(self, *args):
-		visibilities=self._settings.get_value("column-visibilities").unpack()
-		for actual_index in self._settings.get_value("column-permutation"):
-			self._store.append([visibilities[actual_index], self._headers[actual_index], actual_index])
-
-	def _save_permutation(self, *args):
-		permutation=[]
-		for row in self._store:
-			permutation.append(row[2])
-		self._settings.set_value("column-permutation", GLib.Variant("ai", permutation))
-
-	def _set_button_sensitivity(self, *args):
-		treeiter=self._selection.get_selected()[1]
-		if treeiter is None:
-			self._up_button.set_sensitive(False)
-			self._down_button.set_sensitive(False)
-		else:
-			path=self._store.get_path(treeiter)
-			if self._store.iter_next(treeiter) is None:
-				self._up_button.set_sensitive(True)
-				self._down_button.set_sensitive(False)
-			elif not path.prev():
-				self._up_button.set_sensitive(False)
-				self._down_button.set_sensitive(True)
-			else:
-				self._up_button.set_sensitive(True)
-				self._down_button.set_sensitive(True)
-
-	def _on_cell_toggled(self, widget, path):
-		self._store[path][0]=not self._store[path][0]
-		self._settings.array_modify("ab", "column-visibilities", self._store[path][2], self._store[path][0])
-
-	def _on_up_button_clicked(self, *args):
-		treeiter=self._selection.get_selected()[1]
-		path=self._store.get_path(treeiter)
-		path.prev()
-		prev=self._store.get_iter(path)
-		self._store.move_before(treeiter, prev)
-		self._set_button_sensitivity()
-		self._save_permutation()
-
-	def _on_down_button_clicked(self, *args):
-		treeiter=self._selection.get_selected()[1]
-		path=self._store.get_path(treeiter)
-		next=self._store.iter_next(treeiter)
-		self._store.move_after(treeiter, next)
-		self._set_button_sensitivity()
-		self._save_permutation()
-
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, tab="view"):
 		use_csd=settings.get_boolean("use-csd")
@@ -1314,7 +1196,6 @@ class SettingsDialog(Gtk.Dialog):
 		view=ViewSettings(settings)
 		behavior=BehaviorSettings(settings)
 		profiles=ProfileSettings(parent, client, settings)
-		playlist=PlaylistSettings(settings)
 
 		# packing
 		vbox=self.get_content_area()
@@ -1322,7 +1203,6 @@ class SettingsDialog(Gtk.Dialog):
 			stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
 			stack.add_titled(view, "view", _("View"))
 			stack.add_titled(behavior, "behavior", _("Behavior"))
-			stack.add_titled(playlist, "playlist", _("Playlist"))
 			stack.add_titled(profiles, "profiles", _("Profiles"))
 			stack_switcher=Gtk.StackSwitcher(stack=stack)
 			vbox.set_property("border-width", 0)
@@ -1333,7 +1213,6 @@ class SettingsDialog(Gtk.Dialog):
 			tabs=Gtk.Notebook()
 			tabs.append_page(view, Gtk.Label(label=_("View")))
 			tabs.append_page(behavior, Gtk.Label(label=_("Behavior")))
-			tabs.append_page(playlist, Gtk.Label(label=_("Playlist")))
 			tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
 			vbox.set_property("spacing", 6)
 			vbox.set_property("border-width", 6)
@@ -1342,7 +1221,7 @@ class SettingsDialog(Gtk.Dialog):
 		if use_csd:
 			stack.set_visible_child_name(tab)
 		else:
-			tabs.set_current_page({"view": 0, "behavior": 1, "playlist": 2, "profiles": 3}[tab])
+			tabs.set_current_page({"view": 0, "behavior": 1, "profiles": 2}[tab])
 
 #################
 # other dialogs #
@@ -2450,7 +2329,7 @@ class Browser(Gtk.Paned):
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
 	def __init__(self, client, settings):
-		super().__init__(activate_on_single_click=True, reorderable=True, search_column=2, fixed_height_mode=True)
+		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5)
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
@@ -2458,33 +2337,28 @@ class PlaylistView(TreeView):
 		self._selection=self.get_selection()
 
 		# store
-		# (track, disc, title, artist, album, human duration, date, genre, file, weight, duration)
-		self._store=Gtk.ListStore(str, str, str, str, str, str, str, str, str, Pango.Weight, float)
+		# (track, title, human duration, file, duration, search, weight, weight_set)
+		self._store=Gtk.ListStore(str, str, str, str, float, str, Pango.Weight, bool)
 		self.set_model(self._store)
 
 		# columns
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0)
 		attrs=Pango.AttrList()
 		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_tnum=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, attributes=attrs)
-		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1.0, attributes=attrs)
-		self._columns=(
-			Gtk.TreeViewColumn(_("No"), renderer_text_ralign_tnum, text=0, weight=9),
-			Gtk.TreeViewColumn(_("Disc"), renderer_text_ralign, text=1, weight=9),
-			Gtk.TreeViewColumn(_("Title"), renderer_text, text=2, weight=9),
-			Gtk.TreeViewColumn(_("Artist"), renderer_text, text=3, weight=9),
-			Gtk.TreeViewColumn(_("Album"), renderer_text, text=4, weight=9),
-			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=5, weight=9),
-			Gtk.TreeViewColumn(_("Year"), renderer_text_tnum, text=6, weight=9),
-			Gtk.TreeViewColumn(_("Genre"), renderer_text, text=7, weight=9)
+		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs)
+		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
+		columns=(
+			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0, weight=6),
+			# the order of weight_set and weight seems to be important here
+			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1, weight_set=7, weight=6),
+			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2, weight=6)
 		)
-		for i, column in enumerate(self._columns):
-			column.set_property("resizable", True)
-			column.set_property("sizing", Gtk.TreeViewColumnSizing.FIXED)
-			column.set_min_width(30)
-			column.connect("notify::fixed-width", self._on_column_width, i)
-		self._load_settings()
+		for column in columns:
+			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+			column.set_property("resizable", False)
+			self.append_column(column)
+		self._column_title=columns[1]
+		self._column_title.set_property("expand", True)
 
 		# song popover
 		self._song_popover=SongPopover(self._client, show_buttons=False)
@@ -2501,24 +2375,6 @@ class PlaylistView(TreeView):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
-		self._settings.connect("changed::column-visibilities", self._load_settings)
-		self._settings.connect("changed::column-permutation", self._load_settings)
-
-	def _on_column_width(self, obj, typestring, pos):
-		self._settings.array_modify("ai", "column-sizes", pos, obj.get_property("fixed-width"))
-
-	def _load_settings(self, *args):
-		columns=self.get_columns()
-		for column in columns:
-			self.remove_column(column)
-		sizes=self._settings.get_value("column-sizes").unpack()
-		visibilities=self._settings.get_value("column-visibilities").unpack()
-		for i in self._settings.get_value("column-permutation"):
-			if sizes[i] > 0:
-				self._columns[i].set_fixed_width(sizes[i])
-			self._columns[i].set_visible(visibilities[i])
-			self.append_column(self._columns[i])
-
 	def _clear(self, *args):
 		self._song_popover.popdown()
 		self._set_playlist_info("")
@@ -2533,7 +2389,8 @@ class PlaylistView(TreeView):
 	def _select(self, path):
 		self._unselect()
 		try:
-			self._store[path][9]=Pango.Weight.BOLD
+			self._store[path][6]=Pango.Weight.BOLD
+			self._store[path][7]=True
 			self.set_property("selected-path", path)
 		except IndexError:  # invalid path
 			pass
@@ -2541,7 +2398,8 @@ class PlaylistView(TreeView):
 	def _unselect(self):
 		if self.get_property("selected-path") is not None:
 			try:
-				self._store[self.get_property("selected-path")][9]=Pango.Weight.BOOK
+				self._store[self.get_property("selected-path")][6]=Pango.Weight.BOOK
+				self._store[self.get_property("selected-path")][7]=False
 				self.set_property("selected-path", None)
 			except IndexError:  # invalid path
 				self.set_property("selected-path", None)
@@ -2565,9 +2423,9 @@ class PlaylistView(TreeView):
 
 	def _set_playlist_info(self, text):
 		if text:
-			self._columns[2].set_title(" • ".join([_("Title"), text]))
+			self._column_title.set_title(" • ".join([_("Title"), text]))
 		else:
-			self._columns[2].set_title(_("Title"))
+			self._column_title.set_title(_("Title"))
 
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -2577,7 +2435,7 @@ class PlaylistView(TreeView):
 				self._store.remove(self._store.get_iter(path))
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
-				self._song_popover.open(self._store[path][8], widget, *point)
+				self._song_popover.open(self._store[path][3], widget, *point)
 
 	def _on_key_release_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
@@ -2628,29 +2486,32 @@ class PlaylistView(TreeView):
 			self.freeze_child_notify()
 			self._set_playlist_info("")
 			for song in songs:
+				if "date" in song:
+					date=f"({song['date']})"
+				else:
+					date=""
+				album_with_date=" ".join(filter(None, ((song["album"][0], date))))
+				title=(f"<b>{GLib.markup_escape_text(song['title'][0])}</b>"
+					f" • {GLib.markup_escape_text(str(song['artist']))}\n"
+					f"<small>{GLib.markup_escape_text(album_with_date)}</small>")
 				try:
 					treeiter=self._store.get_iter(song["pos"])
 					self._store.set(treeiter,
 						0, song["track"][0],
-						1, song["disc"][0],
-						2, song["title"][0],
-						3, str(song["artist"]),
-						4, song["album"][0],
-						5, str(song["duration"]),
-						6, song["date"][0],
-						7, str(song["genre"]),
-						8, song["file"],
-						9, Pango.Weight.BOOK,
-						10, float(song["duration"])
+						1, title,
+						2, str(song["duration"]),
+						3, song["file"],
+						4, float(song["duration"]),
+						5, song["title"][0],
+						6, Pango.Weight.BOOK,
+						7, False
 					)
 				except:
-					self._store.insert_with_valuesv(-1, range(11), [
-						song["track"][0], song["disc"][0],
-						song["title"][0], str(song["artist"]),
-						song["album"][0], str(song["duration"]),
-						song["date"][0], str(song["genre"]),
-						song["file"], Pango.Weight.BOOK,
-						float(song["duration"])
+					self._store.insert_with_valuesv(-1, range(8), [
+						song["track"][0], title,
+						str(song["duration"]), song["file"],
+						float(song["duration"]), song["title"][0],
+						Pango.Weight.BOOK, False
 					])
 			self.thaw_child_notify()
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
@@ -2660,7 +2521,7 @@ class PlaylistView(TreeView):
 		if playlist_length == 0:
 			self._set_playlist_info("")
 		else:
-			duration=Duration(sum([row[10] for row in self._store]))
+			duration=Duration(sum([row[4] for row in self._store]))
 			translated_string=ngettext("{number} song ({duration})", "{number} songs ({duration})", playlist_length)
 			self._set_playlist_info(translated_string.format(number=playlist_length, duration=duration))
 		self._refresh_selection()
@@ -2686,7 +2547,7 @@ class PlaylistView(TreeView):
 		treeview, treeiter=self._selection.get_selected()
 		if treeiter is not None:
 			path=self._store.get_path(treeiter)
-			self._song_popover.open(self._store[path][8], self, *self.get_popover_point(path))
+			self._song_popover.open(self._store[path][3], self, *self.get_popover_point(path))
 
 class PlaylistWindow(Gtk.Overlay):
 	def __init__(self, client, settings):

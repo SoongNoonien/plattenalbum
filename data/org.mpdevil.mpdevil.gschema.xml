@@ -92,18 +92,6 @@
 			<default>false</default>
 			<summary>Classic previous button behavior</summary>
 		</key>
-		<key type="ai" name="column-permutation">
-			<default>[0, 1, 2, 3, 4, 5, 6, 7]</default>
-			<summary>Column order in playlist</summary>
-		</key>
-		<key type="ab" name="column-visibilities">
-			<default>[true, false, true, true, true, true, false, false]</default>
-			<summary>Visibility of columns in playlist</summary>
-		</key>
-		<key type="ai" name="column-sizes">
-			<default>[33, 0, 217, 173, 186, 0, 0, 0]</default>
-			<summary>Sizes of columns in playlist</summary>
-		</key>
 		<key type="b" name="playlist-right">
 			<default>false</default>
 			<summary>Move playlist to the right</summary>
