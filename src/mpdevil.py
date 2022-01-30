@@ -1823,7 +1823,7 @@ class SelectionList(TreeView):
 		# store
 		# (item, weight, initial-letter, weight-initials, sort-string)
 		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight, str)
-		self._store.append([self.select_all_string, Pango.Weight.BOOK, "", Pango.Weight.BOOK, ""])
+		self._store.append([self.select_all_string, Pango.Weight.NORMAL, "", Pango.Weight.NORMAL, ""])
 		self.set_model(self._store)
 		self._selection=self.get_selection()
 
@@ -1844,7 +1844,7 @@ class SelectionList(TreeView):
 
 	def clear(self):
 		self._store.clear()
-		self._store.append([self.select_all_string, Pango.Weight.BOOK, "", Pango.Weight.BOOK, ""])
+		self._store.append([self.select_all_string, Pango.Weight.NORMAL, "", Pango.Weight.NORMAL, ""])
 		self._selected_path=None
 		self.emit("clear")
 
@@ -1855,10 +1855,10 @@ class SelectionList(TreeView):
 		items.sort(key=lambda item: locale.strxfrm(item[1][:1]))
 		for item in items:
 			if current_char == item[1][:1].upper():
-				self._store.insert_with_valuesv(-1, range(5), [item[0], Pango.Weight.BOOK, "", Pango.Weight.BOOK, item[1]])
+				self._store.insert_with_valuesv(-1, range(5), [item[0], Pango.Weight.NORMAL, "", Pango.Weight.NORMAL, item[1]])
 			else:
 				self._store.insert_with_valuesv(
-					-1, range(5), [item[0], Pango.Weight.BOOK, item[1][:1].upper(), Pango.Weight.BOLD, item[1]])
+					-1, range(5), [item[0], Pango.Weight.NORMAL, item[1][:1].upper(), Pango.Weight.BOLD, item[1]])
 				current_char=item[1][:1].upper()
 
 	def get_item_at_path(self, path):
@@ -1901,7 +1901,7 @@ class SelectionList(TreeView):
 	def _on_row_activated(self, widget, path, view_column):
 		if path != self._selected_path:
 			if self._selected_path is not None:
-				self._store[self._selected_path][1]=Pango.Weight.BOOK
+				self._store[self._selected_path][1]=Pango.Weight.NORMAL
 			self._store[path][1]=Pango.Weight.BOLD
 			self._selected_path=path
 			self.emit("item-selected")
@@ -2398,7 +2398,7 @@ class PlaylistView(TreeView):
 	def _unselect(self):
 		if self.get_property("selected-path") is not None:
 			try:
-				self._store[self.get_property("selected-path")][6]=Pango.Weight.BOOK
+				self._store[self.get_property("selected-path")][6]=Pango.Weight.NORMAL
 				self._store[self.get_property("selected-path")][7]=False
 				self.set_property("selected-path", None)
 			except IndexError:  # invalid path
@@ -2503,7 +2503,7 @@ class PlaylistView(TreeView):
 						3, song["file"],
 						4, float(song["duration"]),
 						5, song["title"][0],
-						6, Pango.Weight.BOOK,
+						6, Pango.Weight.NORMAL,
 						7, False
 					)
 				except:
@@ -2511,7 +2511,7 @@ class PlaylistView(TreeView):
 						song["track"][0], title,
 						str(song["duration"]), song["file"],
 						float(song["duration"]), song["title"][0],
-						Pango.Weight.BOOK, False
+						Pango.Weight.NORMAL, False
 					])
 			self.thaw_child_notify()
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
