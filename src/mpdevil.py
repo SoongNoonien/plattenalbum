@@ -2329,7 +2329,7 @@ class Browser(Gtk.Paned):
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
 	def __init__(self, client, settings):
-		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5)
+		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5, fixed_height_mode=True)
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
@@ -2354,7 +2354,7 @@ class PlaylistView(TreeView):
 			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2, weight=6)
 		)
 		for column in columns:
-			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+			column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
 			column.set_property("resizable", False)
 			self.append_column(column)
 		self._column_title=columns[1]
