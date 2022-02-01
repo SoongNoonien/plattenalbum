@@ -1675,7 +1675,7 @@ class SearchThread(threading.Thread):
 		if self._stop_flag:
 			return []
 		else:
-			self._client.restrict_tagtypes("track", "title", "artist", "album")
+			self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
 			songs=self._client.search(self._search_tag, self._search_text, "window", f"{start}:{end}")
 			self._client.tagtypes("all")
 			return songs
@@ -1685,15 +1685,17 @@ class SearchThread(threading.Thread):
 		for song in songs:
 			if self._stop_flag:
 				return False
-			try:
-				int_track=int(song["track"][0])
-			except ValueError:
-				int_track=0
-			self._store.insert_with_valuesv(-1, range(7), [
-					song["track"][0], song["title"][0],
-					str(song["artist"]), song["album"][0],
-					str(song["duration"]), song["file"],
-					int_track
+			if "date" in song:
+				date=f"({song['date']})"
+			else:
+				date=""
+			album_with_date=" ".join(filter(None, ((song["album"][0], date))))
+			title=(f"<b>{GLib.markup_escape_text(song['title'][0])}</b>"
+				f" • {GLib.markup_escape_text(str(song['artist']))}\n"
+				f"<small>{GLib.markup_escape_text(album_with_date)}</small>")
+			self._store.insert_with_valuesv(-1, range(4), [
+					song["track"][0], title,
+					str(song["duration"]), song["file"]
 			])
 		return True
 
@@ -1710,10 +1712,9 @@ class SearchWindow(Gtk.Box):
 		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
 
 		# songs window
-		# (track, title, artist, album, duration, file, sort track)
-		self._store=Gtk.ListStore(str, str, str, str, str, str, int)
-		self._store.set_default_sort_func(lambda *args: 0)
-		self._songs_window=SongsWindow(self._client, self._store, 5)
+		# (track, title, duration, file)
+		self._store=Gtk.ListStore(str, str, str, str)
+		self._songs_window=SongsWindow(self._client, self._store, 3)
 		self._action_bar=self._songs_window.get_action_bar()
 		self._songs_view=self._songs_window.get_treeview()
 
@@ -1722,21 +1723,17 @@ class SearchWindow(Gtk.Box):
 		attrs=Pango.AttrList()
 		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
 		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs)
-		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1.0, attributes=attrs)
-		column_data=(
-			(_("No"), renderer_text_ralign_tnum, False, 0, 6),
-			(_("Title"), renderer_text, True, 1, 1),
-			(_("Artist"), renderer_text, True, 2, 2),
-			(_("Album"), renderer_text, True, 3, 3),
-			(_("Length"), renderer_text_tnum, False, 4, 4),
+		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
+		columns=(
+			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0),
+			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1),
+			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2)
 		)
-		for title, renderer, expand, text, sort in column_data:
-			column=Gtk.TreeViewColumn(title, renderer, text=text)
+		for column in columns:
 			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 			column.set_property("resizable", False)
-			column.set_property("expand", expand)
-			column.set_sort_column_id(sort)
 			self._songs_view.append_column(column)
+		columns[1].set_property("expand", True)
 
 		# search thread
 		self._search_thread=SearchThread(self._client, self.search_entry, self._songs_window, self._hits_label, "any")
