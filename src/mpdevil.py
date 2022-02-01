@@ -573,6 +573,17 @@ class Song(collections.UserDict):
 		else:
 			return None
 
+	def get_markup(self):
+		if "date" in self:
+			album=GLib.markup_escape_text(f"{self['album'][0]} ({self['date']})")
+		else:
+			album=GLib.markup_escape_text(self["album"][0])
+		if "artist" in self:
+			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b> • {GLib.markup_escape_text(str(self['artist']))}"
+		else:
+			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b>"
+		return f"{title}\n<small>{album}</small>"
+
 class BinaryCover(bytes):
 	def get_pixbuf(self, size):
 		loader=GdkPixbuf.PixbufLoader()
@@ -1685,16 +1696,8 @@ class SearchThread(threading.Thread):
 		for song in songs:
 			if self._stop_flag:
 				return False
-			if "date" in song:
-				date=f"({song['date']})"
-			else:
-				date=""
-			album_with_date=" ".join(filter(None, ((song["album"][0], date))))
-			title=(f"<b>{GLib.markup_escape_text(song['title'][0])}</b>"
-				f" • {GLib.markup_escape_text(str(song['artist']))}\n"
-				f"<small>{GLib.markup_escape_text(album_with_date)}</small>")
 			self._store.insert_with_valuesv(-1, range(4), [
-					song["track"][0], title,
+					song["track"][0], song.get_markup(),
 					str(song["duration"]), song["file"]
 			])
 		return True
@@ -2483,14 +2486,7 @@ class PlaylistView(TreeView):
 			self.freeze_child_notify()
 			self._set_playlist_info("")
 			for song in songs:
-				if "date" in song:
-					date=f"({song['date']})"
-				else:
-					date=""
-				album_with_date=" ".join(filter(None, ((song["album"][0], date))))
-				title=(f"<b>{GLib.markup_escape_text(song['title'][0])}</b>"
-					f" • {GLib.markup_escape_text(str(song['artist']))}\n"
-					f"<small>{GLib.markup_escape_text(album_with_date)}</small>")
+				title=song.get_markup()
 				try:
 					treeiter=self._store.get_iter(song["pos"])
 					self._store.set(treeiter,
