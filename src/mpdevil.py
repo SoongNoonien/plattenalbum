@@ -573,16 +573,18 @@ class Song(collections.UserDict):
 		else:
 			return None
 
-	def get_markup(self):
+	def get_album_with_date(self):
 		if "date" in self:
-			album=GLib.markup_escape_text(f"{self['album'][0]} ({self['date']})")
+			return f"{self['album'][0]} ({self['date']})"
 		else:
-			album=GLib.markup_escape_text(self["album"][0])
+			return self["album"][0]
+
+	def get_markup(self):
 		if "artist" in self:
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b> • {GLib.markup_escape_text(str(self['artist']))}"
 		else:
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b>"
-		return f"{title}\n<small>{album}</small>"
+		return f"{title}\n<small>{GLib.markup_escape_text(self.get_album_with_date())}</small>"
 
 class BinaryCover(bytes):
 	def get_pixbuf(self, size):
@@ -3596,19 +3598,16 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_song_changed(self, *args):
 		song=self._client.currentsong()
 		if song:
-			if "date" in song:
-				date=f"({song['date']})"
-			else:
-				date=""
-			album_with_date=" ".join(filter(None, (song["album"][0], date)))
+			album=song.get_album_with_date()
+			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
 			if self._use_csd:
-				self.set_title(" • ".join(filter(None, (str(song["title"]), str(song["artist"])))))
-				self._header_bar.set_subtitle(album_with_date)
+				self.set_title(title)
+				self._header_bar.set_subtitle(album)
 			else:
-				self.set_title(" • ".join(filter(None, (str(song["title"]), str(song["artist"]), album_with_date))))
+				self.set_title(" • ".join(filter(None, (title, album))))
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
-					self._notify.update(str(song["title"]), f"{song['artist']}\n{album_with_date}")
+					self._notify.update(str(song["title"]), f"{song['artist']}\n{album}")
 					pixbuf=self._client.get_cover(song).get_pixbuf(400)
 					self._notify.set_image_from_pixbuf(pixbuf)
 					self._notify.show()
