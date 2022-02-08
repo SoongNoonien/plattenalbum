@@ -1852,16 +1852,16 @@ class SelectionList(TreeView):
 
 	def set_items(self, items):
 		self.clear()
-		current_char=""
+		letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		items.extend(zip([None]*len(letters), letters))
 		items.sort(key=lambda item: locale.strxfrm(item[1]))
-		items.sort(key=lambda item: locale.strxfrm(item[1][:1]))
+		char=""
 		for item in items:
-			if current_char == item[1][:1].upper():
-				self._store.insert_with_valuesv(-1, range(5), [item[0], Pango.Weight.NORMAL, "", Pango.Weight.NORMAL, item[1]])
+			if item[0] is None:
+				char=item[1]
 			else:
-				self._store.insert_with_valuesv(
-					-1, range(5), [item[0], Pango.Weight.NORMAL, item[1][:1].upper(), Pango.Weight.BOLD, item[1]])
-				current_char=item[1][:1].upper()
+				self._store.insert_with_valuesv(-1, range(5), [item[0], Pango.Weight.NORMAL, char, Pango.Weight.BOLD, item[1]])
+				char=""
 
 	def get_item_at_path(self, path):
 		if path == Gtk.TreePath(0):
