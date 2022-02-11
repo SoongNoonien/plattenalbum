@@ -1144,7 +1144,7 @@ class ProfileEntryMask(Gtk.Grid):
 		host_label=Gtk.Label(label=_("Host:"), xalign=1, margin_end=6, no_show_all=True)
 		profile.bind("socket-connection", host_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		password_label=Gtk.Label(label=_("Password:"), xalign=1, margin_end=6)
-		path_label=Gtk.Label(label=_("Music lib:"), xalign=1, no_show_all=True)
+		path_label=Gtk.Label(label=_("Music lib:"), xalign=1, margin_end=6, no_show_all=True)
 		profile.bind("socket-connection", path_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		regex_label=Gtk.Label(label=_("Cover regex:"), xalign=1, margin_end=6)
 
