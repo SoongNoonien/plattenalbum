@@ -1399,15 +1399,49 @@ class SongPopover(Gtk.Popover):
 		self._client.files_to_playlist([self._uri], mode)
 		self.popdown()
 
-class SongsView(TreeView):
-	def __init__(self, client, store, file_column_id):
-		super().__init__(model=store, search_column=-1, activate_on_single_click=True)
+class SongsList(TreeView):
+	__gsignals__={"button-clicked": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	def __init__(self, client, width=-1):
+		super().__init__(search_column=-1, activate_on_single_click=True, headers_visible=False)
 		self._client=client
-		self._store=store
-		self._file_column_id=file_column_id
+
+		# store
+		# (track, title, duration, file)
+		self._store=Gtk.ListStore(str, str, str, str)
+		self.set_model(self._store)
+
+		# columns
+		renderer_text=Gtk.CellRendererText(width_chars=width, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
+		attrs=Pango.AttrList()
+		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
+		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs, ypad=6)
+		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
+		columns=(
+			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0),
+			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1),
+			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2)
+		)
+		for column in columns:
+			column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+			column.set_property("resizable", False)
+			self.append_column(column)
+		columns[1].set_property("expand", True)
 
 		# selection
 		self._selection=self.get_selection()
+
+		# buttons
+		self.buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND, halign=Gtk.Align.END)
+		data=((_("Add all titles to playlist"), "list-add-symbolic", "append"),
+			(_("Directly play all titles"), "media-playback-start-symbolic", "play"),
+			(_("Append all titles after the currently playing track and clear the playlist from all other songs"),
+			"insert-object-symbolic", "enqueue")
+		)
+		for tooltip, icon, mode in data:
+			button=Gtk.Button(image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+			button.set_tooltip_text(tooltip)
+			button.connect("clicked", self._on_button_clicked, mode)
+			self.buttons.pack_start(button, True, True, 0)
 
 		# song popover
 		self._song_popover=SongPopover(self._client)
@@ -1420,138 +1454,71 @@ class SongsView(TreeView):
 		self._song_popover.popdown()
 		self._store.clear()
 
-	def get_files(self):
-		return_list=[]
-		for row in self._store:
-			return_list.append(row[self._file_column_id])
-		return return_list
+	def append(self, track, title, duration, file):
+		self._store.insert_with_valuesv(-1, range(4), [track, title, duration, file])
 
 	def _on_row_activated(self, widget, path, view_column):
-		self._client.files_to_playlist([self._store[path][self._file_column_id]])
+		self._client.files_to_playlist([self._store[path][3]])
 
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
 		if path_re is not None:
 			path=path_re[0]
 			if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-				self._client.files_to_playlist([self._store[path][self._file_column_id]], "play")
+				self._client.files_to_playlist([self._store[path][3]], "play")
 			elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self._client.files_to_playlist([self._store[path][self._file_column_id]], "append")
+				self._client.files_to_playlist([self._store[path][3]], "append")
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-				uri=self._store[path][self._file_column_id]
+				uri=self._store[path][3]
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
 				self._song_popover.open(uri, widget, *point)
+
+	def _on_button_clicked(self, widget, mode):
+		self._client.files_to_playlist((row[3] for row in self._store), mode)
+		self.emit("button-clicked")
 
 	def show_info(self):
 		treeview, treeiter=self._selection.get_selected()
 		if treeiter is not None:
 			path=self._store.get_path(treeiter)
-			self._song_popover.open(self._store[path][self._file_column_id], self, *self.get_popover_point(path))
+			self._song_popover.open(self._store[path][3], self, *self.get_popover_point(path))
 
 	def add_to_playlist(self, mode):
 		treeview, treeiter=self._selection.get_selected()
 		if treeiter is not None:
-			self._client.files_to_playlist([self._store.get_value(treeiter, self._file_column_id)], mode)
-
-class SongsWindow(Gtk.Box):
-	__gsignals__={"button-clicked": (GObject.SignalFlags.RUN_FIRST, None, ())}
-	def __init__(self, client, store, file_column_id, popover_mode=False):
-		if popover_mode:
-			super().__init__(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
-		else:
-			super().__init__(orientation=Gtk.Orientation.VERTICAL)
-		self._client=client
-
-		# treeview
-		self._songs_view=SongsView(client, store, file_column_id)
-
-		# scroll
-		self._scroll=Gtk.ScrolledWindow(child=self._songs_view)
-
-		# buttons
-		button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
-		data=((_("_Append"), _("Add all titles to playlist"), "list-add-symbolic", "append"),
-			(_("_Play"), _("Directly play all titles"), "media-playback-start-symbolic", "play"),
-			(_("_Enqueue"), _("Append all titles after the currently playing track and clear the playlist from all other songs"),
-			"insert-object-symbolic", "enqueue")
-		)
-		for label, tooltip, icon, mode in data:
-			button=Gtk.Button.new_with_mnemonic(label)
-			button.set_image(Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
-			button.set_tooltip_text(tooltip)
-			button.connect("clicked", self._on_button_clicked, mode)
-			button_box.pack_start(button, True, True, 0)
-
-		# action bar
-		self._action_bar=Gtk.ActionBar()
-
-		# packing
-		if popover_mode:
-			self.pack_end(button_box, False, False, 0)
-			frame=Gtk.Frame(child=self._scroll)
-			self.pack_start(frame, True, True, 0)
-		else:
-			self._action_bar.pack_start(button_box)
-			self.pack_end(self._action_bar, False, False, 0)
-			self.pack_start(self._scroll, True, True, 0)
-
-	def get_treeview(self):
-		return self._songs_view
-
-	def get_action_bar(self):
-		return self._action_bar
-
-	def get_scroll(self):
-		return self._scroll
-
-	def _on_button_clicked(self, widget, mode):
-		self._client.files_to_playlist(self._songs_view.get_files(), mode)
-		self.emit("button-clicked")
+			self._client.files_to_playlist([self._store.get_value(treeiter, 3)], mode)
 
 class AlbumPopover(Gtk.Popover):
 	def __init__(self, client, settings):
-		super().__init__()
+		super().__init__(position=Gtk.PositionType.BOTTOM)
 		self._client=client
 		self._settings=settings
 		self._rect=Gdk.Rectangle()
 
-		# songs window
-		# (track, title (artist), duration, file, search text)
-		self._store=Gtk.ListStore(str, str, str, str, str)
-		songs_window=SongsWindow(self._client, self._store, 3, popover_mode=True)
+		# songs list
+		# sizing needed for correct popover height
+		self._songs_list=SongsList(self._client, width=80)
 
 		# scroll
-		self._scroll=songs_window.get_scroll()
-		self._scroll.set_propagate_natural_height(True)
+		self._scroll=Gtk.ScrolledWindow(child=self._songs_list, propagate_natural_height=True)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
-		# songs view
-		self._songs_view=songs_window.get_treeview()
-		self._songs_view.set_property("search-column", 4)
-
-		# columns
-		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, ypad=6)
-		attrs=Pango.AttrList()
-		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs)
-		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
-		column_track=Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0)
-		column_track.set_property("resizable", False)
-		self._songs_view.append_column(column_track)
-		self._column_title=Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1)
-		self._column_title.set_property("resizable", False)
-		self._column_title.set_property("expand", True)
-		self._songs_view.append_column(self._column_title)
-		column_time=Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2)
-		column_time.set_property("resizable", False)
-		self._songs_view.append_column(column_time)
+		# label
+		self._label=Gtk.Label()
 
 		# connect
-		songs_window.connect("button-clicked", lambda *args: self.popdown())
+		self._songs_list.connect("button-clicked", lambda *args: self.popdown())
 
 		# packing
-		self.add(songs_window)
-		songs_window.show_all()
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
+		hbox=Gtk.Box(spacing=6)
+		hbox.pack_end(self._songs_list.buttons, False, False, 0)
+		hbox.pack_start(self._label, False, False, 6)
+		vbox.pack_start(hbox, False, False, 0)
+		frame=Gtk.Frame(child=self._scroll)
+		vbox.pack_end(frame, True, True, 0)
+		self.add(vbox)
+		vbox.show_all()
 
 	def open(self, albumartist, albumartistsort, album, albumsort, date, widget, x, y):
 		self._rect.x=x
@@ -1559,33 +1526,31 @@ class AlbumPopover(Gtk.Popover):
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
 		self._scroll.set_max_content_height(4*widget.get_allocated_height()//7)
-		self._store.clear()
+		self._songs_list.clear()
 		tag_filter=("albumartist", albumartist, "albumartistsort", albumartistsort, "album", album, "albumsort", albumsort, "date", date)
 		count=self._client.count(*tag_filter)
 		duration=str(Duration(float(count["playtime"])))
 		length=int(count["songs"])
 		text=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(number=length, duration=duration)
-		self._column_title.set_title(" • ".join([_("Title"), text]))
+		self._label.set_text(text)
 		self._client.restrict_tagtypes("track", "title", "artist")
 		songs=self._client.find(*tag_filter)
 		self._client.tagtypes("all")
 		for song in songs:
-			track=song["track"][0]
-			title=song["title"][0]
 			# only show artists =/= albumartist
 			try:
 				song["artist"].remove(albumartist)
 			except ValueError:
 				pass
-			artist=str(song["artist"])
+			artist=str(song['artist'])
 			if artist == albumartist or not artist:
-				title_artist=f"<b>{GLib.markup_escape_text(title)}</b>"
+				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b>"
 			else:
-				title_artist=f"<b>{GLib.markup_escape_text(title)}</b> • {GLib.markup_escape_text(artist)}"
-			self._store.append([track, title_artist, str(song["duration"]), song["file"], title])
-		self._songs_view.scroll_to_cell(Gtk.TreePath(0), None, False)  # clear old scroll position
+				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b> • {GLib.markup_escape_text(artist)}"
+			self._songs_list.append(song["track"][0], title_artist, str(song["duration"]), song["file"])
+		self._songs_list.scroll_to_cell(Gtk.TreePath(0), None, False)  # clear old scroll position
 		self.popup()
-		self._songs_view.columns_autosize()
+		self._songs_list.columns_autosize()
 
 class ArtistPopover(Gtk.Popover):
 	def __init__(self, client):
@@ -1628,13 +1593,11 @@ class ArtistPopover(Gtk.Popover):
 ##########
 
 class SearchThread(threading.Thread):
-	def __init__(self, client, search_entry, songs_window, hits_label, search_tag):
+	def __init__(self, client, search_entry, songs_list, hits_label, search_tag):
 		super().__init__(daemon=True)
 		self._client=client
 		self._search_entry=search_entry
-		self._songs_view=songs_window.get_treeview()
-		self._store=self._songs_view.get_model()
-		self._action_bar=songs_window.get_action_bar()
+		self._songs_list=songs_list
 		self._hits_label=hits_label
 		self._search_tag=search_tag
 		self._stop_flag=False
@@ -1647,9 +1610,9 @@ class SearchThread(threading.Thread):
 		self._stop_flag=True
 
 	def start(self):
-		self._songs_view.clear()
+		self._songs_list.clear()
 		self._hits_label.set_text("")
-		self._action_bar.set_sensitive(False)
+		self._songs_list.buttons.set_sensitive(False)
 		self._search_text=self._search_entry.get_text()
 		if self._search_text:
 			super().start()
@@ -1672,12 +1635,13 @@ class SearchThread(threading.Thread):
 			songs=self._get_songs(stripe_start, stripe_end)
 			stripe_start=stripe_end
 		if hits > 0:
-			GLib.idle_add(self._action_bar.set_sensitive, True)
+			GLib.idle_add(self._songs_list.buttons.set_sensitive, True)
 		self._exit()
 
 	def _exit(self):
 		def callback():
 			self._search_entry.set_progress_fraction(0.0)
+			self._songs_list.columns_autosize()
 			if self._callback is not None:
 				self._callback()
 			return False
@@ -1698,10 +1662,7 @@ class SearchThread(threading.Thread):
 		for song in songs:
 			if self._stop_flag:
 				return False
-			self._store.insert_with_valuesv(-1, range(4), [
-					song["track"][0], song.get_markup(),
-					str(song["duration"]), song["file"]
-			])
+			self._songs_list.append(song["track"][0], song.get_markup(), str(song["duration"]), song["file"])
 		return True
 
 class SearchWindow(Gtk.Box):
@@ -1712,36 +1673,14 @@ class SearchWindow(Gtk.Box):
 
 		# widgets
 		self._tag_combo_box=Gtk.ComboBoxText()
-		self.search_entry=Gtk.SearchEntry()
-		self._hits_label=Gtk.Label(xalign=1)
-		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
+		self.search_entry=Gtk.SearchEntry(max_width_chars=40, truncate_multiline=True)
+		self._hits_label=Gtk.Label(xalign=1, ellipsize=Pango.EllipsizeMode.END)
 
-		# songs window
-		# (track, title, duration, file)
-		self._store=Gtk.ListStore(str, str, str, str)
-		self._songs_window=SongsWindow(self._client, self._store, 3)
-		self._action_bar=self._songs_window.get_action_bar()
-		self._songs_view=self._songs_window.get_treeview()
-
-		# columns
-		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		attrs=Pango.AttrList()
-		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs)
-		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
-		columns=(
-			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0),
-			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1),
-			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2)
-		)
-		for column in columns:
-			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-			column.set_property("resizable", False)
-			self._songs_view.append_column(column)
-		columns[1].set_property("expand", True)
+		# songs list
+		self._songs_list=SongsList(self._client)
 
 		# search thread
-		self._search_thread=SearchThread(self._client, self.search_entry, self._songs_window, self._hits_label, "any")
+		self._search_thread=SearchThread(self._client, self.search_entry, self._songs_list, self._hits_label, "any")
 
 		# connect
 		self.search_entry.connect("activate", self._search)
@@ -1752,26 +1691,24 @@ class SearchWindow(Gtk.Box):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("updated_db", self._search)
-		close_button.connect("clicked", lambda *args: self.emit("close"))
 
 		# packing
 		hbox=Gtk.Box(spacing=6, border_width=6)
-		hbox.pack_start(close_button, False, False, 0)
-		hbox.pack_start(self.search_entry, True, True, 0)
-		hbox.pack_end(self._tag_combo_box, False, False, 0)
-		self._hits_label.set_margin_end(6)
-		self._action_bar.pack_end(self._hits_label)
+		hbox.pack_start(self._tag_combo_box, False, False, 0)
+		hbox.set_center_widget(self.search_entry)
+		hbox.pack_end(self._songs_list.buttons, False, False, 0)
+		hbox.pack_end(self._hits_label, False, False, 6)
 		self.pack_start(hbox, False, False, 0)
 		self.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-		self.pack_start(self._songs_window, True, True, 0)
+		self.pack_start(Gtk.ScrolledWindow(child=self._songs_list), True, True, 0)
 
 	def _on_disconnected(self, *args):
 		self._search_thread.stop()
 
 	def _on_reconnected(self, *args):
 		def callback():
-			self._action_bar.set_sensitive(False)
-			self._songs_view.clear()
+			self._songs_list.buttons.set_sensitive(False)
+			self._songs_list.clear()
 			self._hits_label.set_text("")
 			self.search_entry.handler_block(self._search_entry_changed)
 			self.search_entry.set_text("")
@@ -1796,7 +1733,7 @@ class SearchWindow(Gtk.Box):
 				search_tag="any"
 			else:
 				search_tag=self._tag_combo_box.get_active_text()
-			self._search_thread=SearchThread(self._client, self.search_entry, self._songs_window, self._hits_label, search_tag)
+			self._search_thread=SearchThread(self._client, self.search_entry, self._songs_list, self._hits_label, search_tag)
 			self._search_thread.start()
 		if self._search_thread.is_alive():
 			self._search_thread.set_callback(callback)
