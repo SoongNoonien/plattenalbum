@@ -1663,6 +1663,7 @@ class SearchThread(threading.Thread):
 			if self._stop_flag:
 				return False
 			self._songs_list.append(song["track"][0], song.get_markup(), str(song["duration"]), song["file"])
+		self._songs_list.columns_autosize()
 		return True
 
 class SearchWindow(Gtk.Box):
@@ -1678,6 +1679,7 @@ class SearchWindow(Gtk.Box):
 
 		# songs list
 		self._songs_list=SongsList(self._client)
+		self._songs_list.set_property("fixed-height-mode", True)
 
 		# search thread
 		self._search_thread=SearchThread(self._client, self.search_entry, self._songs_list, self._hits_label, "any")
@@ -2268,7 +2270,7 @@ class Browser(Gtk.Paned):
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
 	def __init__(self, client, settings):
-		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5)
+		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5, fixed_height_mode=True)
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
@@ -2293,7 +2295,7 @@ class PlaylistView(TreeView):
 			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2, weight=6)
 		)
 		for column in columns:
-			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+			column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
 			column.set_property("resizable", False)
 			self.append_column(column)
 		self._column_title=columns[1]
@@ -2449,6 +2451,7 @@ class PlaylistView(TreeView):
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
+		self.columns_autosize()
 		playlist_length=len(self._store)
 		if playlist_length == 0:
 			self._set_playlist_info("")
