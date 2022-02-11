@@ -1300,32 +1300,34 @@ class AutoSizedIcon(Gtk.Image):
 
 class SongPopover(Gtk.Popover):
 	def __init__(self, client, show_buttons=True):
-		super().__init__()
+		super().__init__(position=Gtk.PositionType.BOTTOM)
 		self._client=client
 		self._rect=Gdk.Rectangle()
 		self._uri=None
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=6, halign=Gtk.Align.END, valign=Gtk.Align.END)
 
 		# open-with button
 		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
 		open_button.get_style_context().add_class("osd")
 
 		# open button revealer
-		self._open_button_revealer=Gtk.Revealer(
-			child=open_button, transition_duration=0, margin_bottom=6, margin_end=6, halign=Gtk.Align.END, valign=Gtk.Align.END)
+		self._open_button_revealer=Gtk.Revealer(child=open_button, transition_duration=0)
+		box.pack_end(self._open_button_revealer, False, False, 0)
 
 		# buttons
 		if show_buttons:
-			button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
+			button_box=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, layout_style=Gtk.ButtonBoxStyle.EXPAND, halign=Gtk.Align.END)
 			data=((_("Append"), "list-add-symbolic", "append"),
 				(_("Play"), "media-playback-start-symbolic", "play"),
 				(_("Enqueue"), "insert-object-symbolic", "enqueue")
 			)
-			for label, icon, mode in data:
-				button=Gtk.Button(label=label, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+			for tooltip, icon, mode in data:
+				button=Gtk.Button(tooltip_text=tooltip, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+				button.get_style_context().add_class("osd")
 				button.connect("clicked", self._on_button_clicked, mode)
 				button_box.pack_start(button, True, True, 0)
-			box.pack_end(button_box, False, False, 0)
+			button_box_revealer=Gtk.Revealer(child=button_box, transition_duration=0, reveal_child=True)  # needed for tooltips
+			box.pack_end(button_box_revealer, False, False, 0)
 
 		# treeview
 		# (tag, display-value, tooltip)
@@ -1349,16 +1351,15 @@ class SongPopover(Gtk.Popover):
 
 		# overlay
 		overlay=Gtk.Overlay(child=self._scroll)
-		overlay.add_overlay(self._open_button_revealer)
+		overlay.add_overlay(box)
 
 		# connect
 		open_button.connect("clicked", self._on_open_button_clicked)
 
 		# packing
-		frame=Gtk.Frame(child=overlay)
-		box.pack_start(frame, True, True, 0)
-		self.add(box)
-		box.show_all()
+		frame=Gtk.Frame(child=overlay, border_width=6)
+		self.add(frame)
+		frame.show_all()
 
 	def open(self, uri, widget, x, y):
 		self._uri=uri
