@@ -1999,7 +1999,7 @@ class AlbumLoadingThread(threading.Thread):
 		else:
 			self._genre_filter=("genre", self._genre)
 		if self._artist is None:
-			self._artists=self._client.comp_list("albumartist")
+			self._artists=self._client.comp_list("albumartist", *self._genre_filter)
 		else:
 			self._artists=[self._artist]
 		super().start()
