@@ -26,6 +26,7 @@ import requests
 from bs4 import BeautifulSoup
 import threading
 import functools
+import itertools
 import datetime
 import collections
 import os
@@ -782,9 +783,8 @@ class Client(MPDClient):
 				self.searchadd("any", "")
 		self._to_playlist(append, mode)
 
-	def album_to_playlist(self, albumartist, albumartistsort, album, albumsort, date, mode="default"):
-		tag_filter=("albumartist", albumartist, "albumartistsort", albumartistsort, "album", album, "albumsort", albumsort, "date", date)
-		self.filter_to_playlist(tag_filter, mode)
+	def album_to_playlist(self, albumartist, album, date, mode="default"):
+		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
 
 	def artist_to_playlist(self, artist, genre, mode="default"):
 		def append():
@@ -793,16 +793,13 @@ class Client(MPDClient):
 			else:
 				genre_filter=("genre", genre)
 			if artist is None:
-				artists=self.get_artists(genre)
+				artists=self.comp_list("albumartist", *genre_filter)
 			else:
 				artists=[artist]
-			for albumartist, albumartistsort in artists:
-				albums=self.list(
-					"album", "albumartist", albumartist, "albumartistsort", albumartistsort,
-					*genre_filter, "group", "date", "group", "albumsort")
+			for albumartist in artists:
+				albums=self.list("album", "albumartist", albumartist, *genre_filter, "group", "date")
 				for album in albums:
-					self.findadd("albumartist", albumartist, "albumartistsort", albumartistsort,
-						"album", album["album"], "albumsort", album["albumsort"], "date", album["date"])
+					self.findadd("albumartist", albumartist, "album", album["album"], "date", album["date"])
 		self._to_playlist(append, mode)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
@@ -814,13 +811,6 @@ class Client(MPDClient):
 				return native_list
 		else:
 			return([])
-
-	def get_artists(self, genre):
-		if genre is None:
-			artists=self.list("albumartist", "group", "albumartistsort")
-		else:
-			artists=self.list("albumartist", "genre", genre, "group", "albumartistsort")
-		return [(artist["albumartist"], artist["albumartistsort"]) for artist in artists]
 
 	def get_cover_path(self, song):
 		path=None
@@ -1521,14 +1511,14 @@ class AlbumPopover(Gtk.Popover):
 		self.add(vbox)
 		vbox.show_all()
 
-	def open(self, albumartist, albumartistsort, album, albumsort, date, widget, x, y):
+	def open(self, albumartist, album, date, widget, x, y):
 		self._rect.x=x
 		self._rect.y=y
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
 		self._scroll.set_max_content_height(4*widget.get_allocated_height()//7)
 		self._songs_list.clear()
-		tag_filter=("albumartist", albumartist, "albumartistsort", albumartistsort, "album", album, "albumsort", albumsort, "date", date)
+		tag_filter=("albumartist", albumartist, "album", album, "date", date)
 		count=self._client.count(*tag_filter)
 		duration=str(Duration(float(count["playtime"])))
 		length=int(count["songs"])
@@ -1763,9 +1753,9 @@ class SelectionList(TreeView):
 		self._selected_path=None
 
 		# store
-		# (item, weight, initial-letter, weight-initials, sort-string)
-		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight, str)
-		self._store.append([self.select_all_string, Pango.Weight.NORMAL, "", Pango.Weight.NORMAL, ""])
+		# item, weight, initial-letter, weight-initials
+		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
+		self._store.append([self.select_all_string, Pango.Weight.NORMAL, "", Pango.Weight.NORMAL])
 		self.set_model(self._store)
 		self._selection=self.get_selection()
 
@@ -1786,7 +1776,7 @@ class SelectionList(TreeView):
 
 	def clear(self):
 		self._store.clear()
-		self._store.append([self.select_all_string, Pango.Weight.NORMAL, "", Pango.Weight.NORMAL, ""])
+		self._store.append([self.select_all_string, Pango.Weight.NORMAL, "", Pango.Weight.NORMAL])
 		self._selected_path=None
 		self.emit("clear")
 
@@ -1800,14 +1790,14 @@ class SelectionList(TreeView):
 			if item[0] is None:
 				char=item[1]
 			else:
-				self._store.insert_with_valuesv(-1, range(5), [item[0], Pango.Weight.NORMAL, char, Pango.Weight.BOLD, item[1]])
+				self._store.insert_with_valuesv(-1, range(4), [item[0], Pango.Weight.NORMAL, char, Pango.Weight.BOLD])
 				char=""
 
 	def get_item_at_path(self, path):
 		if path == Gtk.TreePath(0):
 			return None
 		else:
-			return self._store[path][0,4]
+			return self._store[path][0]
 
 	def length(self):
 		return len(self._store)-1
@@ -1820,7 +1810,7 @@ class SelectionList(TreeView):
 		row_num=len(self._store)
 		for i in range(0, row_num):
 			path=Gtk.TreePath(i)
-			if self._store[path][0] == item[0] and self._store[path][4] == item[1]:
+			if self._store[path][0] == item:
 				self.select_path(path)
 				break
 
@@ -1896,16 +1886,23 @@ class ArtistList(SelectionList):
 
 	def _refresh(self, *args):
 		genre=self.genre_list.get_item_selected()
-		if genre is not None:
-			genre=genre[0]
-		artists=self._client.get_artists(genre)
-		self.set_items(artists)
+		if genre is None:
+			artists=self._client.list("albumartistsort", "group", "albumartist")
+		else:
+			artists=self._client.list("albumartistsort", "genre", genre, "group", "albumartist")
+		filtered_artists=[]
+		for name, artist in itertools.groupby(((artist["albumartist"], artist["albumartistsort"]) for artist in artists), key=lambda x: x[0]):
+			filtered_artists.append(next(artist))
+			# ignore multiple albumartistsort values
+			if next(artist, None) is not None:
+				filtered_artists[-1]=(name, name)
+		self.set_items(filtered_artists)
 		if genre is not None:
 			self.select_all()
 		else:
 			song=self._client.currentsong()
 			if song:
-				artist=(song["albumartist"][0],song["albumartistsort"][0])
+				artist=song["albumartist"][0]
 				self.select(artist)
 			else:
 				if self.length() > 0:
@@ -1930,8 +1927,6 @@ class ArtistList(SelectionList):
 	def get_artist_at_path(self, path):
 		genre=self.genre_list.get_item_selected()
 		artist=self.get_item_at_path(path)
-		if genre is not None:
-			genre=genre[0]
 		return (artist, genre)
 
 	def get_artist_selected(self):
@@ -1970,14 +1965,16 @@ class AlbumLoadingThread(threading.Thread):
 		self._genre=genre
 
 	def _get_albums(self):
-		for albumartist, albumartistsort in self._artists:
+		for albumartist in self._artists:
 			albums=main_thread_function(self._client.list)(
-				"album", "albumartist", albumartist, "albumartistsort", albumartistsort,
-				*self._genre_filter, "group", "date", "group", "albumsort")
-			for album in albums:
-				album["albumartist"]=albumartist
-				album["albumartistsort"]=albumartistsort
-				yield album
+				"albumsort", "albumartist", albumartist, *self._genre_filter, "group", "date", "group", "album")
+			for _, album in itertools.groupby(albums, key=lambda x: (x["album"], x["date"])):
+				tmp=next(album)
+				# ignore multiple albumsort values
+				if next(album, None) is None:
+					yield (albumartist, tmp["album"], tmp["date"], tmp["albumsort"])
+				else:
+					yield (albumartist, tmp["album"], tmp["date"], tmp["album"])
 
 	def set_callback(self, callback):
 		self._callback=callback
@@ -2002,7 +1999,7 @@ class AlbumLoadingThread(threading.Thread):
 		else:
 			self._genre_filter=("genre", self._genre)
 		if self._artist is None:
-			self._artists=self._client.get_artists(self._genre)
+			self._artists=self._client.comp_list("albumartist")
 		else:
 			self._artists=[self._artist]
 		super().start()
@@ -2011,16 +2008,15 @@ class AlbumLoadingThread(threading.Thread):
 		# temporarily display all albums with fallback cover
 		fallback_cover=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, self._cover_size, self._cover_size)
 		add=main_thread_function(self._store.append)
-		for i, album in enumerate(self._get_albums()):
+		for i, (albumartist, album, date, albumsort) in enumerate(self._get_albums()):
 			# album label
-			if album["date"]:
-				display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b> ({GLib.markup_escape_text(album['date'])})"
+			if date:
+				display_label=f"<b>{GLib.markup_escape_text(album)}</b> ({GLib.markup_escape_text(date)})"
 			else:
-				display_label=f"<b>{GLib.markup_escape_text(album['album'])}</b>"
-			display_label_artist=f"{display_label}\n{GLib.markup_escape_text(album['albumartist'])}"
+				display_label=f"<b>{GLib.markup_escape_text(album)}</b>"
+			display_label_artist=f"{display_label}\n{GLib.markup_escape_text(albumartist)}"
 			# add album
-			add([fallback_cover,display_label,display_label_artist,
-				album["albumartist"],album["albumartistsort"],album["album"],album["albumsort"],album["date"]])
+			add([fallback_cover, display_label, display_label_artist, albumartist, album, date, albumsort])
 			if i%10 == 0:
 				if self._stop_flag:
 					self._exit()
@@ -2028,7 +2024,7 @@ class AlbumLoadingThread(threading.Thread):
 				GLib.idle_add(self._progress_bar.pulse)
 		# sort model
 		if main_thread_function(self._settings.get_boolean)("sort-albums-by-year"):
-			main_thread_function(self._store.set_sort_column_id)(7, Gtk.SortType.ASCENDING)
+			main_thread_function(self._store.set_sort_column_id)(5, Gtk.SortType.ASCENDING)
 		else:
 			main_thread_function(self._store.set_sort_column_id)(6, Gtk.SortType.ASCENDING)
 		GLib.idle_add(self._iconview.set_model, self._store)
@@ -2040,9 +2036,7 @@ class AlbumLoadingThread(threading.Thread):
 				return None
 			else:
 				self._client.restrict_tagtypes("albumartist", "album")
-				song=self._client.find("albumartist", row[3], "albumartistsort",
-					row[4], "album", row[5], "albumsort", row[6],
-					"date", row[7], "window", "0:1")[0]
+				song=self._client.find("albumartist", row[3], "album", row[4], "date", row[5], "window", "0:1")[0]
 				self._client.tagtypes("all")
 				return self._client.get_cover(song)
 		covers=[]
@@ -2086,8 +2080,8 @@ class AlbumList(Gtk.IconView):
 		self._client=client
 		self._artist_list=artist_list
 
-		# cover, display_label, display_label_artist, albumartist, albumartistsort, album, albumsort, date
-		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str, str)
+		# cover, display_label, display_label_artist, albumartist, album, date, albumsort
+		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str)
 		self._store.set_default_sort_func(lambda *args: 0)
 		self.set_model(self._store)
 
@@ -2134,7 +2128,7 @@ class AlbumList(Gtk.IconView):
 			row_num=len(self._store)
 			for i in range(0, row_num):
 				path=Gtk.TreePath(i)
-				if self._store[path][5] == album:
+				if self._store[path][4] == album:
 					self.set_cursor(path, None, False)
 					self.select_path(path)
 					self.scroll_to_path(path, True, 0, 0)
@@ -2147,7 +2141,7 @@ class AlbumList(Gtk.IconView):
 	def _sort_settings(self, *args):
 		if not self._cover_thread.is_alive():
 			if self._settings.get_boolean("sort-albums-by-year"):
-				self._store.set_sort_column_id(7, Gtk.SortType.ASCENDING)
+				self._store.set_sort_column_id(5, Gtk.SortType.ASCENDING)
 			else:
 				self._store.set_sort_column_id(6, Gtk.SortType.ASCENDING)
 
@@ -2165,7 +2159,7 @@ class AlbumList(Gtk.IconView):
 			callback()
 
 	def _path_to_playlist(self, path, mode="default"):
-		tags=self._store[path][3:8]
+		tags=self._store[path][3:6]
 		self._client.album_to_playlist(*tags, mode)
 
 	def _on_button_press_event(self, widget, event):
@@ -2180,7 +2174,7 @@ class AlbumList(Gtk.IconView):
 			v=self.get_vadjustment().get_value()
 			h=self.get_hadjustment().get_value()
 			if path is not None:
-				tags=self._store[path][3:8]
+				tags=self._store[path][3:6]
 				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
 				GLib.idle_add(self._album_popover.open, *tags, widget, event.x-h, event.y-v)
 
@@ -2201,7 +2195,7 @@ class AlbumList(Gtk.IconView):
 			rect=self.get_allocation()
 			x=max(min(rect.x+cell.width//2, rect.x+rect.width), rect.x)
 			y=max(min(cell.y+cell.height//2, rect.y+rect.height), rect.y)
-			tags=self._store[path][3:8]
+			tags=self._store[path][3:6]
 			self._album_popover.open(*tags, self, x, y)
 
 	def add_to_playlist(self, mode):
@@ -2254,7 +2248,7 @@ class Browser(Gtk.Paned):
 			if artist is None and not force:  # all artists selected
 				self._artist_list.highlight_selected()
 			else:  # one artist selected
-				self._artist_list.select((song["albumartist"][0],song["albumartistsort"][0]))
+				self._artist_list.select(song["albumartist"][0])
 			self._album_list.scroll_to_current_album()
 		else:
 			self._genre_list.deactivate()
@@ -2641,8 +2635,7 @@ class CoverEventBox(Gtk.EventBox):
 			if self._client.connected():
 				song=self._client.currentsong()
 				if song:
-					tags=(song["albumartist"][0], song["albumartistsort"][0],
-						song["album"][0], song["albumsort"][0], song["date"][0])
+					tags=(song["albumartist"][0], song["album"][0], song["date"][0])
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 						self._client.album_to_playlist(*tags)
 					elif event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
