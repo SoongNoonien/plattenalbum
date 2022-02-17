@@ -2594,7 +2594,8 @@ class PlaylistWindow(Gtk.Overlay):
 		scroll=Gtk.ScrolledWindow(child=self._treeview)
 
 		# test
-		self.popover_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("pan-up-symbolic", Gtk.IconSize.BUTTON), can_focus=False)
+		self.popover_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("pan-up-symbolic", Gtk.IconSize.BUTTON),
+			tooltip_text=_("Playlists management"), can_focus=False)
 		provider=Gtk.CssProvider()
 		css=b"""* {min-width: 8px;}"""  # allow further shrinking
 		provider.load_from_data(css)
