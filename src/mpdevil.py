@@ -2262,15 +2262,117 @@ class Browser(Gtk.Paned):
 # playlist #
 ############
 
+class PlaylistRow(Gtk.ListBoxRow):
+	def __init__(self, name, client):
+		super().__init__()
+		self._name=name
+		self._client=client
+
+		# widgets
+		label=Gtk.Label(label=name, xalign=0, valign=Gtk.Align.CENTER, margin=6)
+		save_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-save-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
+		delete_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
+
+		# connect
+		save_button.connect("clicked", self._on_save_button_clicked)
+		delete_button.connect("clicked", self._on_delete_button_clicked)
+
+		# packing
+		box=Gtk.Box()
+		box.pack_start(label, False, False, 0)
+		box.pack_end(delete_button, False, False, 0)
+		box.pack_end(save_button, False, False, 0)
+		self.add(box)
+
+	def _on_save_button_clicked(self, *args):
+		self._client.rm(self._name)
+		self._client.save(self._name)
+
+	def _on_delete_button_clicked(self, *args):
+		self._client.rm(self._name)
+		self.destroy()
+
+	def to_playlist(self):
+		self._client.load(self._name)
+
+class PlaylistPopover(Gtk.Popover):
+	def __init__(self, client, label):
+		super().__init__(position=Gtk.PositionType.TOP)
+		self._client=client
+
+		# widgets
+		self._entry=Gtk.Entry()
+		save_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-save-symbolic", Gtk.IconSize.BUTTON), sensitive=False)
+		save_button.get_style_context().add_class("suggested-action")
+		clear_button=Gtk.Button(
+			image=Gtk.Image.new_from_icon_name("edit-clear-symbolic", Gtk.IconSize.BUTTON),
+			tooltip_text=_("Clear playlist"),
+			action_name="mpd.clear",
+			can_focus=False
+		)
+		clear_button.get_style_context().add_class("destructive-action")
+		self._list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+		self._scroll=Gtk.ScrolledWindow(child=self._list_box, propagate_natural_height=True)
+		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+		# connect
+		self._entry.connect("activate", self._save)
+		self._entry.connect("changed", lambda label: save_button.set_sensitive(bool(label.get_text())))
+		save_button.connect("clicked", self._save)
+		self._list_box.connect("row-activated", self._on_row_activated)
+
+		# packing
+		hbox0=Gtk.Box(spacing=6)
+		hbox0.pack_start(label, False, False, 6)
+		hbox0.pack_end(clear_button, False, False, 0)
+		hbox=Gtk.Box(spacing=6)
+		hbox.pack_start(self._entry, False, False, 0)
+		hbox.pack_start(save_button, False, False, 0)
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=6)
+		vbox.pack_start(hbox, False, False, 0)
+		vbox.pack_end(hbox0, False, False, 0)
+		vbox.pack_end(Gtk.Frame(child=self._scroll), True, True, 0)
+		self.add(vbox)
+		vbox.show_all()
+
+	def _refresh(self):
+		for row in self._list_box.get_children():
+			row.destroy()
+		for playlist in sorted(self._client.listplaylists(), key=lambda x: x["playlist"]):
+			row=PlaylistRow(playlist["playlist"], self._client)
+			self._list_box.insert(row, -1)
+			row.show_all()
+
+	def _save(self, *args):
+		if self._entry.get_text():
+			try:
+				self._client.save(self._entry.get_text())
+			except:
+				self._client.rm(self._entry.get_text())
+				self._client.save(self._entry.get_text())
+		self._refresh()
+
+	def _on_row_activated(self, list_box, row):
+		row.to_playlist()
+
+	def open(self, widget):
+		window=self.get_toplevel()
+		self._scroll.set_max_content_height(window.get_size()[1]//2)
+		self._refresh()
+		self.popup()
+
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
 	def __init__(self, client, settings):
-		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5, fixed_height_mode=True)
+		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5, fixed_height_mode=True, headers_visible=False)
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
 		self._inserted_path=None  # needed for drag and drop
 		self._selection=self.get_selection()
+
+		# label
+		self.label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
 
 		# store
 		# (track, title, human duration, file, duration, search, weight, weight_set)
@@ -2358,10 +2460,7 @@ class PlaylistView(TreeView):
 			self._select(path)
 
 	def _set_playlist_info(self, text):
-		if text:
-			self._column_title.set_title(" • ".join([_("Title"), text]))
-		else:
-			self._column_title.set_title(_("Title"))
+		self.label.set_label(text)
 
 	def _on_button_press_event(self, widget, event):
 		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
@@ -2446,7 +2545,7 @@ class PlaylistView(TreeView):
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
-		self.columns_autosize()
+		GLib.idle_add(self.columns_autosize)  # this seems to be necessary for correct sizing of the track column
 		playlist_length=len(self._store)
 		if playlist_length == 0:
 			self._set_playlist_info("")
@@ -2493,6 +2592,16 @@ class PlaylistWindow(Gtk.Overlay):
 		)
 		self._treeview=PlaylistView(client, settings)
 		scroll=Gtk.ScrolledWindow(child=self._treeview)
+
+		# test
+		self.popover_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("pan-up-symbolic", Gtk.IconSize.BUTTON), can_focus=False)
+		provider=Gtk.CssProvider()
+		css=b"""* {min-width: 8px;}"""  # allow further shrinking
+		provider.load_from_data(css)
+		self.popover_button.get_style_context().add_provider(provider, 600)
+		popover=PlaylistPopover(client, self._treeview.label)
+		popover.set_relative_to(self.popover_button)
+		self.popover_button.connect("clicked", popover.open)
 
 		# connect
 		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
@@ -2992,7 +3101,7 @@ class AudioFormat(Gtk.Box):
 
 class PlaybackOptions(Gtk.ButtonBox):
 	def __init__(self, client, settings):
-		super().__init__(layout_style=Gtk.ButtonBoxStyle.EXPAND)
+		super().__init__(layout_style=Gtk.ButtonBoxStyle.EXPAND, homogeneous=False)
 		self._client=client
 		self._settings=settings
 
@@ -3426,6 +3535,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.pack_start(playback_control)
 		action_bar.pack_start(seek_bar)
 		action_bar.pack_start(audio)
+		playback_options.pack_start(playlist_window.popover_button, True, True, 0)
 		action_bar.pack_start(playback_options)
 		action_bar.pack_start(volume_button)
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
