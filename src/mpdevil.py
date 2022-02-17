@@ -2338,7 +2338,7 @@ class PlaylistPopover(Gtk.Popover):
 	def _refresh(self):
 		for row in self._list_box.get_children():
 			row.destroy()
-		for playlist in sorted(self._client.listplaylists(), key=lambda x: x["playlist"]):
+		for playlist in sorted(self._client.listplaylists(), key=lambda x: locale.strxfrm(x["playlist"])):
 			row=PlaylistRow(playlist["playlist"], self._client)
 			self._list_box.insert(row, -1)
 			row.show_all()
