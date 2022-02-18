@@ -2592,20 +2592,14 @@ class PlaylistWindow(Gtk.Overlay):
 		)
 		self._treeview=PlaylistView(client, settings)
 		scroll=Gtk.ScrolledWindow(child=self._treeview)
-
-		# test
-		self.popover_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("pan-up-symbolic", Gtk.IconSize.BUTTON),
+		self.popover_button=Gtk.Button(image=AutoSizedIcon("view-list-symbolic", "icon-size", settings),
 			tooltip_text=_("Playlists management"), can_focus=False)
-		provider=Gtk.CssProvider()
-		css=b"""* {min-width: 8px;}"""  # allow further shrinking
-		provider.load_from_data(css)
-		self.popover_button.get_style_context().add_provider(provider, 600)
 		popover=PlaylistPopover(client, self._treeview.label)
 		popover.set_relative_to(self.popover_button)
-		self.popover_button.connect("clicked", popover.open)
 
 		# connect
 		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
+		self.popover_button.connect("clicked", popover.open)
 		scroll.get_vadjustment().connect("value-changed", self._on_show_hide_back_button)
 		self._treeview.connect("notify::selected-path", self._on_show_hide_back_button)
 		settings.bind("mini-player", self, "no-show-all", Gio.SettingsBindFlags.GET)
