@@ -69,7 +69,7 @@ def main_thread_function(func):
 			return False
 		event=threading.Event()
 		result=[]
-		GLib.idle_add(glib_callback, event, result, *args, **kwargs)
+		idle_add(glib_callback, event, result, *args, **kwargs)
 		event.wait()
 		if isinstance(result[0], Exception):
 			raise result[0]
