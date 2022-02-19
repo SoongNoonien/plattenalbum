@@ -50,9 +50,12 @@ FALLBACK_COVER=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk
 FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
 FALLBACK_LIB=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 
-##############
-# Decorators #
-##############
+############################
+# decorators and functions #
+############################
+
+def idle_add(*args, **kwargs):
+	GLib.idle_add(*args, priority=GLib.PRIORITY_DEFAULT , **kwargs)
 
 def main_thread_function(func):
 	@functools.wraps(func)
@@ -1620,13 +1623,13 @@ class SearchThread(threading.Thread):
 			if not self._append_songs(songs):
 				self._exit()
 				return
-			GLib.idle_add(self._search_entry.progress_pulse)
-			GLib.idle_add(self._hits_label.set_text, ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
+			idle_add(self._search_entry.progress_pulse)
+			idle_add(self._hits_label.set_text, ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
 			stripe_end=stripe_start+stripe_size
 			songs=self._get_songs(stripe_start, stripe_end)
 			stripe_start=stripe_end
 		if hits > 0:
-			GLib.idle_add(self._songs_list.buttons.set_sensitive, True)
+			idle_add(self._songs_list.buttons.set_sensitive, True)
 		self._exit()
 
 	def _exit(self):
@@ -1636,7 +1639,7 @@ class SearchThread(threading.Thread):
 			if self._callback is not None:
 				self._callback()
 			return False
-		GLib.idle_add(callback)
+		idle_add(callback)
 
 	@main_thread_function
 	def _get_songs(self, start, end):
@@ -1670,7 +1673,6 @@ class SearchWindow(Gtk.Box):
 
 		# songs list
 		self._songs_list=SongsList(self._client)
-		self._songs_list.set_property("fixed-height-mode", True)
 
 		# search thread
 		self._search_thread=SearchThread(self._client, self.search_entry, self._songs_list, self._hits_label, "any")
@@ -2021,13 +2023,13 @@ class AlbumLoadingThread(threading.Thread):
 				if self._stop_flag:
 					self._exit()
 					return
-				GLib.idle_add(self._progress_bar.pulse)
+				idle_add(self._progress_bar.pulse)
 		# sort model
 		if main_thread_function(self._settings.get_boolean)("sort-albums-by-year"):
 			main_thread_function(self._store.set_sort_column_id)(5, Gtk.SortType.ASCENDING)
 		else:
 			main_thread_function(self._store.set_sort_column_id)(6, Gtk.SortType.ASCENDING)
-		GLib.idle_add(self._iconview.set_model, self._store)
+		idle_add(self._iconview.set_model, self._store)
 		# load covers
 		total=2*len(self._store)
 		@main_thread_function
@@ -2046,7 +2048,7 @@ class AlbumLoadingThread(threading.Thread):
 				self._exit()
 				return
 			covers.append(cover)
-			GLib.idle_add(self._progress_bar.set_fraction, (i+1)/total)
+			idle_add(self._progress_bar.set_fraction, (i+1)/total)
 		treeiter=self._store.get_iter_first()
 		i=0
 		def set_cover(treeiter, cover):
@@ -2057,8 +2059,8 @@ class AlbumLoadingThread(threading.Thread):
 				self._exit()
 				return
 			cover=covers[i].get_pixbuf(self._cover_size)
-			GLib.idle_add(set_cover, treeiter, cover)
-			GLib.idle_add(self._progress_bar.set_fraction, 0.5+(i+1)/total)
+			idle_add(set_cover, treeiter, cover)
+			idle_add(self._progress_bar.set_fraction, 0.5+(i+1)/total)
 			i+=1
 			treeiter=self._store.iter_next(treeiter)
 		self._exit()
@@ -2071,7 +2073,7 @@ class AlbumLoadingThread(threading.Thread):
 			if self._callback is not None:
 				self._callback()
 			return False
-		GLib.idle_add(callback)
+		idle_add(callback)
 
 class AlbumList(Gtk.IconView):
 	def __init__(self, client, settings, artist_list):
@@ -2176,7 +2178,7 @@ class AlbumList(Gtk.IconView):
 			if path is not None:
 				tags=self._store[path][3:6]
 				# when using "button-press-event" in iconview popovers only show up in combination with idle_add (bug in GTK?)
-				GLib.idle_add(self._album_popover.open, *tags, widget, event.x-h, event.y-v)
+				idle_add(self._album_popover.open, *tags, widget, event.x-h, event.y-v)
 
 	def _on_item_activated(self, widget, path):
 		self._path_to_playlist(path)
@@ -2364,7 +2366,7 @@ class PlaylistPopover(Gtk.Popover):
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
 	def __init__(self, client, settings):
-		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5, fixed_height_mode=True, headers_visible=False)
+		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5, headers_visible=False)
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
@@ -2392,7 +2394,7 @@ class PlaylistView(TreeView):
 			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2, weight=6)
 		)
 		for column in columns:
-			column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 			column.set_property("resizable", False)
 			self.append_column(column)
 		self._column_title=columns[1]
@@ -2545,7 +2547,6 @@ class PlaylistView(TreeView):
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
-		GLib.idle_add(self.columns_autosize)  # this seems to be necessary for correct sizing of the track column
 		playlist_length=len(self._store)
 		if playlist_length == 0:
 			self._set_playlist_info("")
@@ -2661,7 +2662,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 			if self._displayed_song_file is not None:
 				self._refresh()
 		self._client.emitter.handler_unblock(self._song_changed)
-		GLib.idle_add(self._text_view.grab_focus)  # focus textview
+		idle_add(self._text_view.grab_focus)  # focus textview
 
 	def disable(self, *args):
 		self._client.emitter.handler_block(self._song_changed)
@@ -2689,7 +2690,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 			return "Instrumental"
 
 	def _display_lyrics(self, current_song):
-		GLib.idle_add(self._text_buffer.set_text, _("searching…"), -1)
+		idle_add(self._text_buffer.set_text, _("searching…"), -1)
 		try:
 			text=self._get_lyrics(current_song["title"][0], current_song["artist"][0])
 		except requests.exceptions.ConnectionError:
@@ -2697,7 +2698,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 			text=_("connection error")
 		except ValueError:
 			text=_("lyrics not found")
-		GLib.idle_add(self._text_buffer.set_text, text, -1)
+		idle_add(self._text_buffer.set_text, text, -1)
 
 	def _refresh(self, *args):
 		current_song=self._client.currentsong()
@@ -3561,7 +3562,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		def callback(*args):
 			self._client.start()  # connect client
 			return False
-		GLib.idle_add(callback)
+		idle_add(callback)
 
 	def _mini_player(self, *args):
 		if self._settings.get_boolean("mini-player"):
