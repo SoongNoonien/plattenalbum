@@ -2297,7 +2297,7 @@ class PlaylistRow(Gtk.ListBoxRow):
 	def to_playlist(self):
 		self._client.load(self._name)
 
-class PlaylistPopover(Gtk.Popover):
+class PlaylistsPopover(Gtk.Popover):
 	def __init__(self, client, label):
 		super().__init__(position=Gtk.PositionType.TOP)
 		self._client=client
@@ -2595,7 +2595,7 @@ class PlaylistWindow(Gtk.Overlay):
 		scroll=Gtk.ScrolledWindow(child=self._treeview)
 		self.popover_button=Gtk.Button(image=AutoSizedIcon("view-list-symbolic", "icon-size", settings),
 			tooltip_text=_("Playlists management"), can_focus=False)
-		popover=PlaylistPopover(client, self._treeview.label)
+		popover=PlaylistsPopover(client, self._treeview.label)
 		popover.set_relative_to(self.popover_button)
 
 		# connect
