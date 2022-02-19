@@ -1408,12 +1408,12 @@ class SongsList(TreeView):
 		renderer_text=Gtk.CellRendererText(width_chars=width, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		attrs=Pango.AttrList()
 		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs, ypad=6)
+		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1, attributes=attrs, ypad=6)
 		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
 		columns=(
 			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0),
 			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1),
-			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2)
+			Gtk.TreeViewColumn(_("Length"), renderer_text_ralign_tnum, text=2)
 		)
 		for column in columns:
 			column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
@@ -2385,13 +2385,13 @@ class PlaylistView(TreeView):
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
 		attrs=Pango.AttrList()
 		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_tnum=Gtk.CellRendererText(attributes=attrs)
+		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1, attributes=attrs)
 		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
 		columns=(
 			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0, weight=6),
 			# the order of weight_set and weight seems to be important here
 			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1, weight_set=7, weight=6),
-			Gtk.TreeViewColumn(_("Length"), renderer_text_tnum, text=2, weight=6)
+			Gtk.TreeViewColumn(_("Length"), renderer_text_ralign_tnum, text=2, weight=6)
 		)
 		for column in columns:
 			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
