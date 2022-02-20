@@ -218,6 +218,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._client.emitter.connect("random", self._on_random_changed)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 	def _handle_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
 		args=list(parameters.unpack())
@@ -461,6 +462,10 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		properties=("CanPlay","CanPause","CanSeek")
 		for p in properties:
 			self._update_property(self._MPRIS_PLAYER_IFACE, p)
+
+	def _on_disconnected(self, *args):
+		self._metadata={}
+		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
 	def _on_connection_error(self, *args):
 		self._metadata={}
