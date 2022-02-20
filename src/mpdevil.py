@@ -1666,7 +1666,6 @@ class SearchThread(threading.Thread):
 		return True
 
 class SearchWindow(Gtk.Box):
-	__gsignals__={"close": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
@@ -3505,7 +3504,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button.connect("toggled", self._on_search_button_toggled)
 		self._back_button.connect("clicked", self._on_back_button_clicked)
 		self._back_button.connect("button-press-event", self._on_back_button_press_event)
-		self._search_window.connect("close", lambda *args: self._search_button.set_active(False))
 		self._settings.connect_after("changed::mini-player", self._mini_player)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
