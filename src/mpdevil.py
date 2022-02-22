@@ -696,6 +696,8 @@ class Client(MPDClient):
 		return [Song(song) for song in super().plchanges(version)]
 	def lsinfo(self, uri):
 		return [Song(song) for song in super().lsinfo(uri)]
+	def listplaylistinfo(self, name):
+		return [Song(song) for song in super().listplaylistinfo(name)]
 
 	def start(self):
 		self.emitter.emit("disconnected")  # bring player in defined state
