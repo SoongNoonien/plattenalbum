@@ -810,6 +810,9 @@ class Client(MPDClient):
 					self.findadd("albumartist", albumartist, "album", album["album"], "date", album["date"])
 		self._to_playlist(append, mode)
 
+	def stored_to_playlist(self, name, mode="default"):
+		self._to_playlist(lambda: self.load(name), mode)
+
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
 		if len(native_list) > 0:
@@ -2271,7 +2274,7 @@ class Browser(Gtk.Paned):
 class PlaylistRow(Gtk.ListBoxRow):
 	def __init__(self, name, client):
 		super().__init__()
-		self._name=name
+		self.name=name
 		self._client=client
 
 		# widgets
@@ -2292,26 +2295,23 @@ class PlaylistRow(Gtk.ListBoxRow):
 		self.add(box)
 
 	def _on_save_button_clicked(self, *args):
-		self._client.rm(self._name)
-		self._client.save(self._name)
+		self._client.rm(self.name)
+		self._client.save(self.name)
 		self._refresh_label()
 
 	def _on_delete_button_clicked(self, *args):
-		self._client.rm(self._name)
+		self._client.rm(self.name)
 		self.destroy()
 
 	def _refresh_label(self):
 		self._client.restrict_tagtypes()
-		metadata=self._client.listplaylistinfo(self._name)
+		metadata=self._client.listplaylistinfo(self.name)
 		self._client.tagtypes("all")
 		duration=Duration(sum((float(x["duration"]) for x in metadata)))
 		length=len(metadata)
 		translated_string=ngettext("{number} song ({duration})", "{number} songs ({duration})", length)
 		formatted_string=translated_string.format(number=length, duration=duration)
-		self._label.set_markup(f"<b>{GLib.markup_escape_text(self._name)}</b> • {GLib.markup_escape_text(formatted_string)}")
-
-	def to_playlist(self):
-		self._client.load(self._name)
+		self._label.set_markup(f"<b>{GLib.markup_escape_text(self.name)}</b> • {GLib.markup_escape_text(formatted_string)}")
 
 class PlaylistsPopover(Gtk.Popover):
 	def __init__(self, client, label):
@@ -2371,7 +2371,7 @@ class PlaylistsPopover(Gtk.Popover):
 		self._refresh()
 
 	def _on_row_activated(self, list_box, row):
-		row.to_playlist()
+		self._client.stored_to_playlist(row.name)
 
 	def open(self, widget):
 		window=self.get_toplevel()
