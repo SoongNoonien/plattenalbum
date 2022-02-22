@@ -2272,12 +2272,11 @@ class Browser(Gtk.Paned):
 ############
 
 class PlaylistPopover(Gtk.Popover):
-	def __init__(self, client, name, delete, save):
+	__gsignals__={"playlist-changed": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	def __init__(self, client):
 		super().__init__()
 		self._client=client
-		self._name=name
-		self._delete=delete
-		self._save=save
+		self._name=None
 		self._rect=Gdk.Rectangle()
 
 		# buttons
@@ -2304,11 +2303,12 @@ class PlaylistPopover(Gtk.Popover):
 		self.add(vbox)
 		vbox.show_all()
 
-	def open(self, widget, x, y):
+	def open(self, widget, name, x, y):
 		self._rect.x=x
 		self._rect.y=y
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
+		self._name=name
 		self.popup()
 
 	def _on_button_clicked(self, widget, mode):
@@ -2316,59 +2316,15 @@ class PlaylistPopover(Gtk.Popover):
 		self.popdown()
 
 	def _on_delete_button_clicked(self, *args):
-		self._delete()
+		self._client.rm(self._name)
+		self.popdown()
+		self.emit("playlist-changed")
 
 	def _on_save_button_clicked(self, *args):
-		self._save()
-
-class PlaylistRow(Gtk.ListBoxRow):
-	def __init__(self, name, client):
-		super().__init__()
-		self.name=name
-		self._client=client
-
-		# widgets
-		self._label=Gtk.Label(xalign=0, valign=Gtk.Align.CENTER, margin=6)
-		self._refresh_label()
-		event_box=Gtk.EventBox(child=self._label)
-
-		# popover
-		self._playlist_popover=PlaylistPopover(self._client, self.name, self.delete, self.save)
-
-		# connect
-		event_box.connect("button-press-event", self._on_button_press_event)
-
-		# packing
-		box=Gtk.Box()
-		box.pack_start(event_box, True, True, 0)
-		self.add(box)
-
-	def delete(self):
-		self._client.rm(self.name)
-		self.destroy()
-
-	def save(self):
-		self._client.rm(self.name)
-		self._client.save(self.name)
-		self._refresh_label()
-
-	def _on_button_press_event(self, widget, event):
-		if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-			self._client.stored_to_playlist(self.name, "play")
-		elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self._client.stored_to_playlist(self.name, "append")
-		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self._playlist_popover.open(widget, event.x, event.y)
-
-	def _refresh_label(self):
-		self._client.restrict_tagtypes()
-		metadata=self._client.listplaylistinfo(self.name)
-		self._client.tagtypes("all")
-		duration=Duration(sum((float(x["duration"]) for x in metadata)))
-		length=len(metadata)
-		translated_string=ngettext("{number} song ({duration})", "{number} songs ({duration})", length)
-		formatted_string=translated_string.format(number=length, duration=duration)
-		self._label.set_markup(f"<b>{GLib.markup_escape_text(self.name)}</b> • {GLib.markup_escape_text(formatted_string)}")
+		self._client.rm(self._name)
+		self._client.save(self._name)
+		self.popdown()
+		self.emit("playlist-changed")
 
 class PlaylistsPopover(Gtk.Popover):
 	def __init__(self, client, label):
@@ -2386,15 +2342,29 @@ class PlaylistsPopover(Gtk.Popover):
 			can_focus=False
 		)
 		clear_button.get_style_context().add_class("destructive-action")
-		self._list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
-		self._scroll=Gtk.ScrolledWindow(child=self._list_box, propagate_natural_height=True)
+
+		# treeview
+		self._store=Gtk.ListStore(str, str)
+		self._treeview=Gtk.TreeView(model=self._store, search_column=-1, activate_on_single_click=True, headers_visible=False)
+		renderer_text=Gtk.CellRendererText(width_chars=80, ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, ypad=6)
+		column=Gtk.TreeViewColumn("", renderer_text, markup=0)
+		column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+		column.set_property("resizable", False)
+		column.set_property("expand", True)
+		self._treeview.append_column(column)
+		self._scroll=Gtk.ScrolledWindow(child=self._treeview, propagate_natural_height=True)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+		# popover
+		self._playlist_popover=PlaylistPopover(self._client)
 
 		# connect
 		self._entry.connect("activate", self._save)
 		self._entry.connect("changed", lambda label: save_button.set_sensitive(bool(label.get_text())))
 		save_button.connect("clicked", self._save)
-		self._list_box.connect("row-activated", self._on_row_activated)
+		self._treeview.connect("row-activated", self._on_row_activated)
+		self._treeview.connect("button-press-event", self._on_button_press_event)
+		self._playlist_popover.connect("playlist-changed", self._refresh)
 
 		# packing
 		hbox0=Gtk.Box(spacing=6)
@@ -2410,13 +2380,20 @@ class PlaylistsPopover(Gtk.Popover):
 		self.add(vbox)
 		vbox.show_all()
 
-	def _refresh(self):
-		for row in self._list_box.get_children():
-			row.destroy()
+	def _refresh(self, *args):
+		self._store.clear()
+		self._client.restrict_tagtypes()
 		for playlist in sorted(self._client.listplaylists(), key=lambda x: locale.strxfrm(x["playlist"])):
-			row=PlaylistRow(playlist["playlist"], self._client)
-			self._list_box.insert(row, -1)
-			row.show_all()
+			name=playlist["playlist"]
+			metadata=self._client.listplaylistinfo(name)
+			duration=Duration(sum((float(x["duration"]) for x in metadata)))
+			length=len(metadata)
+			translated_string=ngettext("{number} song ({duration})", "{number} songs ({duration})", length)
+			formatted_string=translated_string.format(number=length, duration=duration)
+			self._store.insert_with_valuesv(-1, range(2),
+				[f"<b>{GLib.markup_escape_text(name)}</b> • {GLib.markup_escape_text(formatted_string)}", name])
+		self._client.tagtypes("all")
+		self._treeview.columns_autosize()
 
 	def _save(self, *args):
 		if self._entry.get_text():
@@ -2427,8 +2404,19 @@ class PlaylistsPopover(Gtk.Popover):
 				self._client.save(self._entry.get_text())
 		self._refresh()
 
-	def _on_row_activated(self, list_box, row):
-		self._client.stored_to_playlist(row.name)
+	def _on_row_activated(self, widget, path, view_column):
+		self._client.stored_to_playlist(self._store[path][1])
+
+	def _on_button_press_event(self, widget, event):
+		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
+		if path_re is not None:
+			path=path_re[0]
+			if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+				self._client.stored_to_playlist(self._store[path][1], "play")
+			elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self._client.stored_to_playlist(self._store[path][1], "append")
+			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self._playlist_popover.open(widget, self._store[path][1], event.x, event.y)
 
 	def open(self, widget):
 		window=self.get_toplevel()
