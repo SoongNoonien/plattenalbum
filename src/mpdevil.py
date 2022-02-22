@@ -2271,6 +2271,56 @@ class Browser(Gtk.Paned):
 # playlist #
 ############
 
+class PlaylistPopover(Gtk.Popover):
+	def __init__(self, client, name, delete, save):
+		super().__init__()
+		self._client=client
+		self._name=name
+		self._delete=delete
+		self._save=save
+		self._rect=Gdk.Rectangle()
+
+		# buttons
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=9)
+		data=((_("Append"), "list-add-symbolic", "append"),
+			(_("Play"), "media-playback-start-symbolic", "play"),
+			(_("Enqueue"), "insert-object-symbolic", "enqueue")
+		)
+		for label, icon, mode in data:
+			button=Gtk.ModelButton(label=label, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+			button.get_child().set_property("xalign", 0)
+			button.connect("clicked", self._on_button_clicked, mode)
+			vbox.pack_start(button, True, True, 0)
+		vbox.pack_start(Gtk.Separator(), False, False, 0)
+		save_button=Gtk.ModelButton(label=_("Save"), image=Gtk.Image.new_from_icon_name("document-save-symbolic", Gtk.IconSize.BUTTON))
+		save_button.get_child().set_property("xalign", 0)
+		save_button.connect("clicked", self._on_save_button_clicked)
+		vbox.pack_start(save_button, True, True, 0)
+		delete_button=Gtk.ModelButton(label=_("Delete"), image=Gtk.Image.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.BUTTON))
+		delete_button.get_child().set_property("xalign", 0)
+		delete_button.connect("clicked", self._on_delete_button_clicked)
+		vbox.pack_start(delete_button, True, True, 0)
+
+		self.add(vbox)
+		vbox.show_all()
+
+	def open(self, widget, x, y):
+		self._rect.x=x
+		self._rect.y=y
+		self.set_pointing_to(self._rect)
+		self.set_relative_to(widget)
+		self.popup()
+
+	def _on_button_clicked(self, widget, mode):
+		self._client.stored_to_playlist(self._name, mode)
+		self.popdown()
+
+	def _on_delete_button_clicked(self, *args):
+		self._delete()
+
+	def _on_save_button_clicked(self, *args):
+		self._save()
+
 class PlaylistRow(Gtk.ListBoxRow):
 	def __init__(self, name, client):
 		super().__init__()
@@ -2280,28 +2330,35 @@ class PlaylistRow(Gtk.ListBoxRow):
 		# widgets
 		self._label=Gtk.Label(xalign=0, valign=Gtk.Align.CENTER, margin=6)
 		self._refresh_label()
-		save_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-save-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
-		delete_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
+		event_box=Gtk.EventBox(child=self._label)
+
+		# popover
+		self._playlist_popover=PlaylistPopover(self._client, self.name, self.delete, self.save)
 
 		# connect
-		save_button.connect("clicked", self._on_save_button_clicked)
-		delete_button.connect("clicked", self._on_delete_button_clicked)
+		event_box.connect("button-press-event", self._on_button_press_event)
 
 		# packing
 		box=Gtk.Box()
-		box.pack_start(self._label, False, False, 0)
-		box.pack_end(delete_button, False, False, 0)
-		box.pack_end(save_button, False, False, 0)
+		box.pack_start(event_box, True, True, 0)
 		self.add(box)
 
-	def _on_save_button_clicked(self, *args):
+	def delete(self):
+		self._client.rm(self.name)
+		self.destroy()
+
+	def save(self):
 		self._client.rm(self.name)
 		self._client.save(self.name)
 		self._refresh_label()
 
-	def _on_delete_button_clicked(self, *args):
-		self._client.rm(self.name)
-		self.destroy()
+	def _on_button_press_event(self, widget, event):
+		if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+			self._client.stored_to_playlist(self.name, "play")
+		elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+			self._client.stored_to_playlist(self.name, "append")
+		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+			self._playlist_popover.open(widget, event.x, event.y)
 
 	def _refresh_label(self):
 		self._client.restrict_tagtypes()
