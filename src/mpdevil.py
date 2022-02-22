@@ -2275,7 +2275,8 @@ class PlaylistRow(Gtk.ListBoxRow):
 		self._client=client
 
 		# widgets
-		label=Gtk.Label(label=name, xalign=0, valign=Gtk.Align.CENTER, margin=6)
+		self._label=Gtk.Label(xalign=0, valign=Gtk.Align.CENTER, margin=6)
+		self._refresh_label()
 		save_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-save-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
 		delete_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.BUTTON), relief=Gtk.ReliefStyle.NONE)
 
@@ -2285,7 +2286,7 @@ class PlaylistRow(Gtk.ListBoxRow):
 
 		# packing
 		box=Gtk.Box()
-		box.pack_start(label, False, False, 0)
+		box.pack_start(self._label, False, False, 0)
 		box.pack_end(delete_button, False, False, 0)
 		box.pack_end(save_button, False, False, 0)
 		self.add(box)
@@ -2293,10 +2294,21 @@ class PlaylistRow(Gtk.ListBoxRow):
 	def _on_save_button_clicked(self, *args):
 		self._client.rm(self._name)
 		self._client.save(self._name)
+		self._refresh_label()
 
 	def _on_delete_button_clicked(self, *args):
 		self._client.rm(self._name)
 		self.destroy()
+
+	def _refresh_label(self):
+		self._client.restrict_tagtypes()
+		metadata=self._client.listplaylistinfo(self._name)
+		self._client.tagtypes("all")
+		duration=Duration(sum((float(x["duration"]) for x in metadata)))
+		length=len(metadata)
+		translated_string=ngettext("{number} song ({duration})", "{number} songs ({duration})", length)
+		formatted_string=translated_string.format(number=length, duration=duration)
+		self._label.set_markup(f"<b>{GLib.markup_escape_text(self._name)}</b> • {GLib.markup_escape_text(formatted_string)}")
 
 	def to_playlist(self):
 		self._client.load(self._name)
