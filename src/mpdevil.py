@@ -2344,7 +2344,7 @@ class PlaylistsPopover(Gtk.Popover):
 		hbox0.pack_start(label, False, False, 6)
 		hbox0.pack_end(clear_button, False, False, 0)
 		hbox=Gtk.Box(spacing=6)
-		hbox.pack_start(self._entry, False, False, 0)
+		hbox.pack_start(self._entry, True, True, 0)
 		hbox.pack_start(save_button, False, False, 0)
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=6)
 		vbox.pack_start(hbox, False, False, 0)
