@@ -2395,7 +2395,6 @@ class PlaylistsPopover(Gtk.Popover):
 			self._store.insert_with_valuesv(-1, range(2),
 				[f"<b>{GLib.markup_escape_text(name)}</b> • {GLib.markup_escape_text(formatted_string)}", name])
 		self._client.tagtypes("all")
-		self._treeview.columns_autosize()
 
 	def _save(self, *args):
 		if self._entry.get_text():
@@ -2425,6 +2424,7 @@ class PlaylistsPopover(Gtk.Popover):
 		self._scroll.set_max_content_height(window.get_size()[1]//2)
 		self._refresh()
 		self.popup()
+		self._treeview.columns_autosize()
 
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
