@@ -2464,6 +2464,7 @@ class PlaylistsPopover(Gtk.Popover):
 	def _add(self, *args):
 		if self._add_button.get_sensitive():
 			self._playlists_view.add(self._entry.get_text())
+			self._add_button.set_sensitive(False)
 
 	def _on_entry_changed(self, *args):
 		name=self._entry.get_text()
