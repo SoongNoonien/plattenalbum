@@ -2701,7 +2701,7 @@ class PlaylistWindow(Gtk.Overlay):
 		self._treeview=PlaylistView(client, settings)
 		scroll=Gtk.ScrolledWindow(child=self._treeview)
 		self.popover_button=Gtk.Button(image=AutoSizedIcon("view-list-symbolic", "icon-size", settings),
-			tooltip_text=_("Playlists management"), can_focus=False)
+			tooltip_text=_("Playlists"), can_focus=False)
 		popover=PlaylistsPopover(client, self._treeview.label)
 		popover.set_relative_to(self.popover_button)
 
