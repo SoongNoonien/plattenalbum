@@ -9,11 +9,11 @@
 			<summary>Maximize mpdevil on startup</summary>
 		</key>
 		<key type="i" name="width">
-			<default>1030</default>
+			<default>1069</default>
 			<summary>Default width of window</summary>
 		</key>
 		<key type="i" name="height">
-			<default>950</default>
+			<default>691</default>
 			<summary>Default height of window</summary>
 		</key>
 		<key type="i" name="paned0">
@@ -21,15 +21,15 @@
 			<summary>Default position of cover/playlist separator</summary>
 		</key>
 		<key type="i" name="paned1">
-			<default>226</default>
+			<default>177</default>
 			<summary>Default position of artist/albums separator</summary>
 		</key>
 		<key type="i" name="paned2">
-			<default>551</default>
+			<default>718</default>
 			<summary>Default position of paned1/paned0 separator</summary>
 		</key>
 		<key type="i" name="paned3">
-			<default>196</default>
+			<default>177</default>
 			<summary>Default position of genre/artist separator</summary>
 		</key>
 		<key type="b" name="genre-filter">
@@ -41,7 +41,7 @@
 			<summary>Start player in mini player mode</summary>
 		</key>
 		<key type="i" name="album-cover">
-			<default>180</default>
+			<default>160</default>
 			<summary>Size of covers in album view</summary>
 		</key>
 		<key type="i" name="track-cover">
@@ -93,7 +93,7 @@
 			<summary>Classic previous button behavior</summary>
 		</key>
 		<key type="b" name="playlist-right">
-			<default>false</default>
+			<default>true</default>
 			<summary>Move playlist to the right</summary>
 		</key>
 		<key type="i" name="active-profile">
