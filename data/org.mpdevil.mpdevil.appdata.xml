@@ -23,12 +23,12 @@
     </ul>
   </description>
   <releases>
-    <release version="1.5.1" date="2021-12-30"/>
+    <release version="1.6.0" date="2022-02-24"/>
   </releases>
   <launchable type="desktop-id">org.mpdevil.mpdevil.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image type="source" width="1082" height="1049">https://raw.githubusercontent.com/SoongNoonien/mpdevil/v1.4.0/screenshots/mainwindow_1.4.0.png</image>
+      <image type="source" width="1121" height="790">https://raw.githubusercontent.com/SoongNoonien/mpdevil/v1.6.0/screenshots/mainwindow_1.6.0.png</image>
     </screenshot>
   </screenshots>
   <url type="homepage">https://github.com/SoongNoonien/mpdevil</url>
