@@ -1677,7 +1677,7 @@ class SearchWindow(Gtk.Box):
 
 		# widgets
 		self._tag_combo_box=Gtk.ComboBoxText()
-		self.search_entry=Gtk.SearchEntry(max_width_chars=40, truncate_multiline=True)
+		self.search_entry=Gtk.SearchEntry(max_width_chars=20, truncate_multiline=True)
 		self._hits_label=Gtk.Label(xalign=1, ellipsize=Pango.EllipsizeMode.END)
 
 		# songs list
