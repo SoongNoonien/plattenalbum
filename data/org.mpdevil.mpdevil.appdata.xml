@@ -13,13 +13,9 @@
       <li>play songs without doubleclick</li>
       <li>fetch lyrics</li>
       <li>MPRIS interface</li>
-      <li>notifications on title change</li>
-      <li>basic queue manipulation (move and delete single tracks)</li>
-      <li>search songs</li>
-      <li>filter by genre</li>
-      <li>media keys support</li>
-      <li>many shortcuts</li>
       <li>manage multiple mpd servers</li>
+      <li>basic queue manipulation (move and delete single tracks)</li>
+      <li>save and load playlists</li>
     </ul>
   </description>
   <releases>
