@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-02-23 18:31+0100\n"
-"PO-Revision-Date: 2022-02-23 18:45+0100\n"
+"PO-Revision-Date: 2022-02-26 18:49+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: bg\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.3.1\n"
+"X-Generator: Poedit 3.0.1\n"
 "X-Poedit-Bookmarks: -1,-1,-1,-1,30,-1,-1,-1,-1,-1\n"
 
 #: src/mpdevil.py:501
@@ -163,7 +163,7 @@ msgstr "Държане"
 
 #: src/mpdevil.py:1222 src/mpdevil.py:1232
 msgid "Profiles"
-msgstr "Профиле"
+msgstr "Профили"
 
 #: src/mpdevil.py:1249
 msgid "Stats"
@@ -199,7 +199,7 @@ msgstr "<b>Цялостно време на възпроизвеждане:</b>"
 
 #: src/mpdevil.py:1265
 msgid "<b>Database Update:</b>"
-msgstr "<b>Базата с данни се актуализира:</b>"
+msgstr "<b>Актуализация на базата с данни:</b>"
 
 #. open-with button
 #: src/mpdevil.py:1313
