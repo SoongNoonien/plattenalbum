@@ -2436,6 +2436,7 @@ class PlaylistsPopover(Gtk.Popover):
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
 		# connect
+		self.connect("show", self._on_show)
 		self._entry.connect("activate", self._add)
 		self._entry.connect("changed", self._on_entry_changed)
 		self._add_button.connect("clicked", self._add)
@@ -2454,13 +2455,6 @@ class PlaylistsPopover(Gtk.Popover):
 		self.add(vbox)
 		vbox.show_all()
 
-	def open(self, widget):
-		window=self.get_toplevel()
-		self._scroll.set_max_content_height(window.get_size()[1]//2)
-		self._playlists_view.refresh()
-		self.popup()
-		self._playlists_view.columns_autosize()
-
 	def _add(self, *args):
 		if self._add_button.get_sensitive():
 			self._playlists_view.add(self._entry.get_text())
@@ -2469,6 +2463,12 @@ class PlaylistsPopover(Gtk.Popover):
 	def _on_entry_changed(self, *args):
 		name=self._entry.get_text()
 		self._add_button.set_sensitive(name and not name in (x["playlist"] for x in self._client.listplaylists()))
+
+	def _on_show(self, *args):
+		window=self.get_toplevel()
+		self._scroll.set_max_content_height(window.get_size()[1]//2)
+		self._playlists_view.refresh()
+		self._playlists_view.columns_autosize()
 
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
@@ -2700,14 +2700,12 @@ class PlaylistWindow(Gtk.Overlay):
 		)
 		self._treeview=PlaylistView(client, settings)
 		scroll=Gtk.ScrolledWindow(child=self._treeview)
-		self.popover_button=Gtk.Button(image=AutoSizedIcon("view-list-symbolic", "icon-size", settings),
+		self.popover_button=Gtk.MenuButton(image=AutoSizedIcon("view-list-symbolic", "icon-size", settings),
+			popover=PlaylistsPopover(client, self._treeview.label),
 			tooltip_text=_("Playlists"), can_focus=False)
-		popover=PlaylistsPopover(client, self._treeview.label)
-		popover.set_relative_to(self.popover_button)
 
 		# connect
 		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
-		self.popover_button.connect("clicked", popover.open)
 		scroll.get_vadjustment().connect("value-changed", self._on_show_hide_back_button)
 		self._treeview.connect("notify::selected-path", self._on_show_hide_back_button)
 		settings.bind("mini-player", self, "no-show-all", Gio.SettingsBindFlags.GET)
