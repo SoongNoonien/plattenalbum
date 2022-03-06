@@ -426,10 +426,10 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			else:
 				song_path=self._client.get_absolute_path(song_file)
 				if song_path is not None:
-					self._metadata["xesam:url"]=GLib.Variant("s", f"file://{song_path}")
+					self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
 				cover_path=self._client.get_cover_path(song)
 				if cover_path is not None:
-					self._metadata["mpris:artUrl"]=GLib.Variant("s", f"file://{cover_path}")
+					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
 
 	def _update_property(self, interface_name, prop):
 		getter, setter=self._prop_mapping[interface_name][prop]
