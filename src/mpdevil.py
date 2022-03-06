@@ -1388,11 +1388,11 @@ class SongPopover(Gtk.Popover):
 
 	def _on_open_button_clicked(self, *args):
 		self.popdown()
-		path="file://"+self._client.get_absolute_path(self._uri)
+		file=Gio.File.new_for_path(self._client.get_absolute_path(self._uri))
 		bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
 		proxy=Gio.DBusProxy.new_sync(bus, Gio.DBusProxyFlags.NONE, None, "org.freedesktop.FileManager1",
 			"/org/freedesktop/FileManager1", "org.freedesktop.FileManager1", None)
-		proxy.call_sync("ShowItems", GLib.Variant("(ass)", ((path,),"")), Gio.DBusCallFlags.NONE, 500, None)
+		proxy.call_sync("ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), Gio.DBusCallFlags.NONE, 500, None)
 
 	def _on_button_clicked(self, widget, mode):
 		self._client.files_to_playlist([self._uri], mode)
