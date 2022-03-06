@@ -1310,7 +1310,8 @@ class SongPopover(Gtk.Popover):
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=6, halign=Gtk.Align.END, valign=Gtk.Align.END)
 
 		# open-with button
-		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("document-open-symbolic",Gtk.IconSize.BUTTON),tooltip_text=_("Open with…"))
+		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open-symbolic", Gtk.IconSize.BUTTON),
+			tooltip_text=_("Show in file manager"))
 		open_button.get_style_context().add_class("osd")
 
 		# open button revealer
@@ -1381,23 +1382,17 @@ class SongPopover(Gtk.Popover):
 			else:
 				self._store.append([tag+":", str(value), GLib.markup_escape_text(str(value))])
 		abs_path=self._client.get_absolute_path(uri)
-		if abs_path is None:  # show open with button when song is on the same computer
-			self._open_button_revealer.set_reveal_child(False)
-		else:
-			self._gfile=Gio.File.new_for_path(abs_path)
-			self._open_button_revealer.set_reveal_child(True)
+		self._open_button_revealer.set_reveal_child(abs_path is not None)  # show open with button when song is on the same computer
 		self.popup()
 		self._treeview.columns_autosize()
 
 	def _on_open_button_clicked(self, *args):
 		self.popdown()
-		dialog=Gtk.AppChooserDialog(gfile=self._gfile, transient_for=self.get_toplevel())
-		app_chooser=dialog.get_widget()
-		response=dialog.run()
-		if response == Gtk.ResponseType.OK:
-			app=app_chooser.get_app_info()
-			app.launch([self._gfile], None)
-		dialog.destroy()
+		path="file://"+self._client.get_absolute_path(self._uri)
+		bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
+		proxy=Gio.DBusProxy.new_sync(bus, Gio.DBusProxyFlags.NONE, None, "org.freedesktop.FileManager1",
+			"/org/freedesktop/FileManager1", "org.freedesktop.FileManager1", None)
+		proxy.call_sync("ShowItems", GLib.Variant("(ass)", ((path,),"")), Gio.DBusCallFlags.NONE, 500, None)
 
 	def _on_button_clicked(self, widget, mode):
 		self._client.files_to_playlist([self._uri], mode)
