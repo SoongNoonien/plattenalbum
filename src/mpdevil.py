@@ -2092,7 +2092,8 @@ class AlbumList(Gtk.IconView):
 		self.set_model(self._store)
 
 		# progress bar
-		self.progress_bar=Gtk.ProgressBar(no_show_all=True)
+		self.progress_bar=Gtk.ProgressBar(no_show_all=True, valign=Gtk.Align.END, vexpand=False)
+		self.progress_bar.get_style_context().add_class("osd")
 
 		# popover
 		self._album_popover=AlbumPopover(self._client, self._settings)
@@ -2234,12 +2235,11 @@ class Browser(Gtk.Paned):
 		self._settings.connect("changed::genre-filter", self._on_genre_filter_changed)
 
 		# packing
-		album_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		album_box.pack_start(album_window, True, True, 0)
-		album_box.pack_start(self._album_list.progress_bar, False, False, 0)
+		album_overlay=Gtk.Overlay(child=album_window)
+		album_overlay.add_overlay(self._album_list.progress_bar)
 		self.paned1=Gtk.Paned()
 		self.paned1.pack1(artist_window, False, False)
-		self.paned1.pack2(album_box, True, False)
+		self.paned1.pack2(album_overlay, True, False)
 		self.pack1(genre_window, False, False)
 		self.pack2(self.paned1, True, False)
 
