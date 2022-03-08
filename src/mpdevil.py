@@ -1560,7 +1560,7 @@ class ArtistPopover(Gtk.Popover):
 		self._genre=None
 
 		# buttons
-		vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, border_width=9)
+		vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, margin=10)
 		data=((_("Append"), "list-add-symbolic", "append"),
 			(_("Play"), "media-playback-start-symbolic", "play"),
 			(_("Enqueue"), "insert-object-symbolic", "enqueue")
@@ -2280,7 +2280,7 @@ class PlaylistPopover(Gtk.Popover):
 		self._rect=Gdk.Rectangle()
 
 		# buttons
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=9)
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin=10)
 		data=((_("Append"), "list-add-symbolic", "append"),
 			(_("Play"), "media-playback-start-symbolic", "play"),
 			(_("Enqueue"), "insert-object-symbolic", "enqueue")
