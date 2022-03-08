@@ -3283,6 +3283,7 @@ class VolumeButton(Gtk.VolumeButton):
 		# popover
 		popover=self.get_popup()
 		scale_box=popover.get_child()
+		scale_box.get_children()[1].set_hexpand(True)  # expand scale
 		popover.remove(scale_box)
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		box.pack_start(scale_box, False, False, 0)
