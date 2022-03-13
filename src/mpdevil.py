@@ -3018,7 +3018,6 @@ class SeekBar(Gtk.Box):
 		super().__init__(hexpand=True, margin_start=6, margin_right=6)
 		self._client=client
 		self._update=True
-		self._jumped=False
 
 		# labels
 		attrs=Pango.AttrList()
@@ -3037,9 +3036,12 @@ class SeekBar(Gtk.Box):
 		self._adjustment=self._scale.get_adjustment()
 
 		# connect
-		elapsed_event_box.connect("button-release-event", self._on_elapsed_button_release_event)
-		rest_event_box.connect("button-release-event", self._on_rest_button_release_event)
+		elapsed_dict={1: Gtk.ScrollType.STEP_BACKWARD, 3: Gtk.ScrollType.STEP_FORWARD}
+		rest_dict={1: Gtk.ScrollType.STEP_FORWARD, 3: Gtk.ScrollType.STEP_BACKWARD}
+		elapsed_event_box.connect("button-release-event", self._on_label_button_release_event, elapsed_dict)
+		rest_event_box.connect("button-release-event", self._on_label_button_release_event, rest_dict)
 		self._scale.connect("change-value", self._on_change_value)
+		self._scale.connect("value-changed", self._on_value_changed)
 		self._scale.connect("scroll-event", lambda *args: True)  # disable mouse wheel
 		self._scale.connect("button-press-event", self._on_scale_button_press_event)
 		self._scale.connect("button-release-event", self._on_scale_button_release_event)
@@ -3055,13 +3057,9 @@ class SeekBar(Gtk.Box):
 	def _refresh(self, emitter, elapsed, duration):
 		self.set_sensitive(True)
 		if duration > 0:
-			if elapsed > duration:  # fix display error
-				elapsed=duration
 			self._adjustment.set_upper(duration)
 			if self._update:
 				self._scale.set_value(elapsed)
-				self._elapsed.set_text(str(Duration(elapsed)))
-				self._rest.set_text(str(Duration(elapsed-duration)))
 			self._scale.set_fill_level(elapsed)
 		else:
 			self._disable()
@@ -3071,52 +3069,34 @@ class SeekBar(Gtk.Box):
 		self.set_sensitive(False)
 		self._scale.set_fill_level(0)
 		self._scale.set_range(0, 0)
-		self._elapsed.set_text(str(Duration()))
-		self._rest.set_text(str(Duration()))
 
 	def _on_scale_button_press_event(self, widget, event):
-		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self._update=False
-			self._scale.set_has_origin(False)
-		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			self._jumped=False
+		self._update=False
 
 	def _on_scale_button_release_event(self, widget, event):
-		if event.button == 1:
-			self._update=True
-			self._scale.set_has_origin(True)
-			if self._jumped:  # actual seek
-				self._client.seekcur(self._scale.get_value())
-				self._jumped=False
-			else:  # restore state
-				status=self._client.status()
-				self._refresh(None, float(status["elapsed"]), float(status["duration"]))
+		self._update=True
+		self._client.seekcur(self._scale.get_value())
 
-	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
-		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
-			scroll == Gtk.ScrollType.PAGE_BACKWARD or scroll == Gtk.ScrollType.PAGE_FORWARD):
+	def _on_change_value(self, scale, scroll, value):
+		if scroll in (Gtk.ScrollType.STEP_BACKWARD, Gtk.ScrollType.STEP_FORWARD , Gtk.ScrollType.PAGE_BACKWARD, Gtk.ScrollType.PAGE_FORWARD):
 			self._client.seekcur(value)
-		elif scroll == Gtk.ScrollType.JUMP:
-			duration=self._adjustment.get_upper()
-			if value > duration:  # fix display error
-				elapsed=duration
-			else:
-				elapsed=value
+
+	def _on_value_changed(self, scale):
+		duration=self._adjustment.get_upper()
+		value=self._scale.get_value()
+		if value > duration:  # fix display error
+			elapsed=duration
+		else:
+			elapsed=value
+		if duration > 0:
 			self._elapsed.set_text(str(Duration(elapsed)))
-			self._rest.set_text(str(Duration(elapsed-duration)))
-			self._jumped=True
+			self._rest.set_text(str(Duration(duration-elapsed)))
+		else:
+			self._elapsed.set_text(str(Duration()))
+			self._rest.set_text(str(Duration()))
 
-	def _on_elapsed_button_release_event(self, widget, event):
-		if event.button == 1:
-			self._client.seekcur("-"+str(self._adjustment.get_property("step-increment")))
-		elif event.button == 3:
-			self._client.seekcur("+"+str(self._adjustment.get_property("step-increment")))
-
-	def _on_rest_button_release_event(self, widget, event):
-		if event.button == 1:
-			self._client.seekcur("+"+str(self._adjustment.get_property("step-increment")))
-		elif event.button == 3:
-			self._client.seekcur("-"+str(self._adjustment.get_property("step-increment")))
+	def _on_label_button_release_event(self, widget, event, scroll_type):
+		self._scale.emit("move-slider", scroll_type.get(event.button, Gtk.ScrollType.NONE))
 
 	def _on_state(self, emitter, state):
 		if state == "stop":
