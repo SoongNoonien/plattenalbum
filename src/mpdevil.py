@@ -3483,10 +3483,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._use_csd=self._settings.get_boolean("use-csd")
 		self._size=None  # needed for window size saving
 
-		# MPRIS
-		if self._settings.get_boolean("mpris"):
-			dbus_service=MPRISInterface(self, self._client, self._settings)
-
 		# actions
 		simple_actions_data=(
 			"settings","profile-settings","stats","help","menu",
@@ -3789,6 +3785,9 @@ class mpdevil(Gtk.Application):
 		self._window=MainWindow(self._client, self._settings, self._notify, application=self)
 		self._window.connect("delete-event", self._on_quit)
 		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
+		# MPRIS
+		if self._settings.get_boolean("mpris"):
+			dbus_service=MPRISInterface(self._window, self._client, self._settings)
 		# actions
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
