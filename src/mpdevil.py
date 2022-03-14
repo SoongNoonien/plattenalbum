@@ -3104,7 +3104,7 @@ class SeekBar(Gtk.Box):
 
 class AudioFormat(Gtk.Box):
 	def __init__(self, client, settings):
-		super().__init__(spacing=6)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER)
 		self._client=client
 		self._settings=settings
 		self._file_type_label=Gtk.Label(xalign=1, visible=True)
@@ -3128,12 +3128,8 @@ class AudioFormat(Gtk.Box):
 		hbox.pack_start(self._brate_label, False, False, 0)
 		hbox.pack_start(self._separator_label, False, False, 0)
 		hbox.pack_start(self._file_type_label, False, False, 0)
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, visible=True)
-		vbox.pack_start(hbox, False, False, 0)
-		vbox.pack_start(self._format_label, False, False, 0)
-		self.pack_start(Gtk.Separator(visible=True), False, False, 0)
-		self.pack_start(vbox, False, False, 0)
-		self.pack_start(Gtk.Separator(visible=True), False, False, 0)
+		self.pack_start(hbox, False, False, 0)
+		self.pack_start(self._format_label, False, False, 0)
 		self._mini_player()
 
 	def _mini_player(self, *args):
