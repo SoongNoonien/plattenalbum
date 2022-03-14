@@ -168,7 +168,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	</node>
 	"""
 
-	def __init__(self, window, client, settings):
+	def __init__(self, application, window, client, settings):
+		self._application=application
 		self._window=window
 		self._client=client
 		self._settings=settings
@@ -211,7 +212,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			self._bus.register_object(self._MPRIS_PATH, interface, self._handle_method_call, None, None)
 
 		# connect
-		self._window.get_application().connect("shutdown", lambda *args: self._tmp_cover_file.delete(None))
+		self._application.connect("shutdown", lambda *args: self._tmp_cover_file.delete(None))
 		self._client.emitter.connect("state", self._on_state_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("volume", self._on_volume_changed)
@@ -353,7 +354,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._window.present()
 
 	def Quit(self):
-		self._window.get_application().quit()
+		self._application.quit()
 
 	# player methods
 	def Next(self):
@@ -3787,7 +3788,7 @@ class mpdevil(Gtk.Application):
 		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 		# MPRIS
 		if self._settings.get_boolean("mpris"):
-			dbus_service=MPRISInterface(self._window, self._client, self._settings)
+			dbus_service=MPRISInterface(self, self._window, self._client, self._settings)
 		# actions
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
