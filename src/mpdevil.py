@@ -3779,44 +3779,43 @@ class mpdevil(Gtk.Application):
 	def __init__(self):
 		super().__init__(application_id="org.mpdevil.mpdevil", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
 		self.add_main_option("debug", ord("d"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _("Debug mode"), None)
+
+	def do_startup(self):
+		Gtk.Application.do_startup(self)
 		self._settings=Settings()
 		self._client=Client(self._settings)
 		Notify.init("mpdevil")
 		self._notify=Notify.Notification()
-		self._window=None
-
-	def do_activate(self):
-		if not self._window:  # allow just one instance
-			self._window=MainWindow(self._client, self._settings, self._notify, application=self)
-			self._window.connect("delete-event", self._on_quit)
-			self._window.insert_action_group("mpd", MPDActionGroup(self._client))
-			# accelerators
-			action_accels=(
-				("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
-				("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-				("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<control>f"]),
-				("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),
-				("mpd.stop", ["<Shift>space"]),("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),
-				("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>s"]),("mpd.single", ["<Control>1"]),
-				("mpd.consume", ["<Control>o"]),("mpd.single-oneshot", ["<Control>space"]),("mpd.seek-forward", ["KP_Multiply"]),
-				("mpd.seek-backward", ["KP_Divide"]),("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"]),
-				("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),
-				("win.play", ["<Control>Return"]),("win.enqueue", ["<Control>e"]),("win.genre-filter", ["<Control>g"])
-			)
-			for action, accels in action_accels:
-				self.set_accels_for_action(action, accels)
-			# disable item activation on space key pressed in treeviews
-			Gtk.binding_entry_remove(Gtk.binding_set_find('GtkTreeView'), Gdk.keyval_from_name("space"), Gdk.ModifierType.MOD2_MASK)
-		self._window.present()
-
-	def do_startup(self):
-		Gtk.Application.do_startup(self)
+		self._window=MainWindow(self._client, self._settings, self._notify, application=self)
+		self._window.connect("delete-event", self._on_quit)
+		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
+		# actions
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
 		self.add_action(action)
 		action=Gio.SimpleAction.new("quit", None)
 		action.connect("activate", self._on_quit)
 		self.add_action(action)
+		# accelerators
+		action_accels=(
+			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
+			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
+			("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<control>f"]),
+			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),
+			("mpd.stop", ["<Shift>space"]),("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),
+			("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>s"]),("mpd.single", ["<Control>1"]),
+			("mpd.consume", ["<Control>o"]),("mpd.single-oneshot", ["<Control>space"]),("mpd.seek-forward", ["KP_Multiply"]),
+			("mpd.seek-backward", ["KP_Divide"]),("win.profile-next", ["<Control>p"]),("win.profile-prev", ["<Shift><Control>p"]),
+			("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),
+			("win.play", ["<Control>Return"]),("win.enqueue", ["<Control>e"]),("win.genre-filter", ["<Control>g"])
+		)
+		for action, accels in action_accels:
+			self.set_accels_for_action(action, accels)
+		# disable item activation on space key pressed in treeviews
+		Gtk.binding_entry_remove(Gtk.binding_set_find('GtkTreeView'), Gdk.keyval_from_name("space"), Gdk.ModifierType.MOD2_MASK)
+
+	def do_activate(self):
+		self._window.present()
 
 	def do_shutdown(self):
 		Gtk.Application.do_shutdown(self)
