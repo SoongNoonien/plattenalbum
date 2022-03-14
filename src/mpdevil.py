@@ -3820,6 +3820,13 @@ class mpdevil(Gtk.Application):
 		action.connect("activate", self._on_quit)
 		self.add_action(action)
 
+	def do_shutdown(self):
+		Gtk.Application.do_shutdown(self)
+		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
+			self._client.stop()
+		self._notify.close()
+		Notify.uninit()
+
 	def do_command_line(self, command_line):
 		# convert GVariantDict -> GVariant -> dict
 		options=command_line.get_options_dict().end().unpack()
@@ -3838,10 +3845,6 @@ class mpdevil(Gtk.Application):
 		dialog.destroy()
 
 	def _on_quit(self, *args):
-		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
-			self._client.stop()
-		self._notify.close()
-		Notify.uninit()
 		self.quit()
 
 if __name__ == "__main__":
