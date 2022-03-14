@@ -173,6 +173,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._client=client
 		self._settings=settings
 		self._metadata={}
+		self._tmp_cover_file,_=Gio.File.new_tmp(None)
 
 		# MPRIS property mappings
 		self._prop_mapping={
@@ -210,6 +211,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			self._bus.register_object(self._MPRIS_PATH, interface, self._handle_method_call, None, None)
 
 		# connect
+		self._window.get_application().connect("shutdown", lambda *args: self._tmp_cover_file.delete(None))
 		self._client.emitter.connect("state", self._on_state_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("volume", self._on_volume_changed)
@@ -406,6 +408,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		"""
 		song=self._client.currentsong()
 		self._metadata={}
+		self._tmp_cover_file.replace_contents(b"", None, False, Gio.FileCreateFlags.NONE, None)
 		for tag, xesam_tag in (("album","album"),("title","title"),("date","contentCreated")):
 			if tag in song:
 				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("s", song[tag][0])
@@ -430,6 +433,11 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				cover_path=self._client.get_cover_path(song)
 				if cover_path is not None:
 					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
+				else:
+					cover_binary=self._client.get_cover_binary(song["file"])
+					if cover_binary is not None:
+						self._tmp_cover_file.replace_contents(cover_binary, None, False, Gio.FileCreateFlags.NONE, None)
+						self._metadata["mpris:artUrl"]=GLib.Variant("s", self._tmp_cover_file.get_uri())
 
 	def _update_property(self, interface_name, prop):
 		getter, setter=self._prop_mapping[interface_name][prop]
@@ -465,10 +473,12 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	def _on_disconnected(self, *args):
 		self._metadata={}
+		self._tmp_cover_file.replace_contents(b"", None, False, Gio.FileCreateFlags.NONE, None)
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
 	def _on_connection_error(self, *args):
 		self._metadata={}
+		self._tmp_cover_file.replace_contents(b"", None, False, Gio.FileCreateFlags.NONE, None)
 		properties=("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle","CanPlay","CanPause","CanSeek")
 		for p in properties:
 			self._update_property(self._MPRIS_PLAYER_IFACE, p)
