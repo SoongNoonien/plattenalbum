@@ -353,9 +353,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._window.present()
 
 	def Quit(self):
-		app_action_group=self._window.get_action_group("app")
-		quit_action=app_action_group.lookup_action("quit")
-		quit_action.activate()
+		self._window.get_application().quit()
 
 	# player methods
 	def Next(self):
