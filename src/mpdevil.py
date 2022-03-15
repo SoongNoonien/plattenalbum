@@ -19,8 +19,7 @@
 
 import gi
 gi.require_version("Gtk", "3.0")
-gi.require_version("Notify", "0.7")
-from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib, Notify
+from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
 from mpd import MPDClient, base as MPDBase
 import requests
 from bs4 import BeautifulSoup
@@ -3473,7 +3472,7 @@ class ConnectionNotify(Gtk.Revealer):
 		self._client.reconnect()
 
 class MainWindow(Gtk.ApplicationWindow):
-	def __init__(self, client, settings, notify, **kwargs):
+	def __init__(self, client, settings, **kwargs):
 		super().__init__(title=("mpdevil"), icon_name="org.mpdevil.mpdevil", **kwargs)
 		self.set_default_icon_name("org.mpdevil.mpdevil")
 		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
@@ -3481,7 +3480,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.maximize()  # request maximize
 		self._client=client
 		self._settings=settings
-		self._notify=notify
 		self._use_csd=self._settings.get_boolean("use-csd")
 		self._size=None  # needed for window size saving
 
@@ -3721,10 +3719,14 @@ class MainWindow(Gtk.ApplicationWindow):
 				self.set_title(" • ".join(filter(None, (title, album))))
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
-					self._notify.update(str(song["title"]), f"{song['artist']}\n{album}")
-					pixbuf=self._client.get_cover(song).get_pixbuf(400)
-					self._notify.set_image_from_pixbuf(pixbuf)
-					self._notify.show()
+					notify=Gio.Notification()
+					notify.set_title(str(song["title"]))
+					notify.set_body(f"{song['artist']}\n{album}")
+					if (cover_path:=self._client.get_cover_path(song)) is not None:
+						notify.set_icon(Gio.FileIcon.new(Gio.File.new_for_path(cover_path)))
+					elif (cover_binary:=self._client.get_cover_binary(song["file"])) is not None:
+						notify.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(cover_binary)))
+					self.get_application().send_notification("title-change", notify)
 		else:
 			self.set_title("mpdevil")
 			if self._use_csd:
@@ -3782,9 +3784,7 @@ class mpdevil(Gtk.Application):
 		Gtk.Application.do_startup(self)
 		self._settings=Settings()
 		self._client=Client(self._settings)
-		Notify.init("mpdevil")
-		self._notify=Notify.Notification()
-		self._window=MainWindow(self._client, self._settings, self._notify, application=self)
+		self._window=MainWindow(self._client, self._settings, application=self)
 		self._window.connect("delete-event", self._on_quit)
 		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 		# MPRIS
@@ -3822,8 +3822,7 @@ class mpdevil(Gtk.Application):
 		Gtk.Application.do_shutdown(self)
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
 			self._client.stop()
-		self._notify.close()
-		Notify.uninit()
+		self.withdraw_notification("title-change")
 
 	def do_command_line(self, command_line):
 		# convert GVariantDict -> GVariant -> dict
