@@ -21,8 +21,9 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
 from mpd import MPDClient, base as MPDBase
-from bs4 import BeautifulSoup
-import urllib
+from urllib import request
+from urllib.error import URLError
+from html.parser import HTMLParser
 import threading
 import functools
 import itertools
@@ -2736,6 +2737,27 @@ class PlaylistWindow(Gtk.Overlay):
 # cover and lyrics #
 ####################
 
+class LetrasParser(HTMLParser):
+	def __init__(self):
+		super().__init__()
+		self._found_text=False
+		self.text=""
+
+	def handle_starttag(self, tag, attrs):
+		if tag == "div" and ("id", "letra-cnt") in attrs:
+			self._found_text=True
+
+	def handle_endtag(self, tag):
+		if self._found_text:
+			if tag == "p":
+				self.text+="\n"
+			elif tag == "div":
+				self._found_text=False
+
+	def handle_data(self, data):
+		if self._found_text and data:
+			self.text+=data+"\n"
+
 class LyricsWindow(Gtk.ScrolledWindow):
 	def __init__(self, client, settings):
 		super().__init__()
@@ -2780,28 +2802,18 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		for char1, char2 in replaces:
 			title=title.replace(char1, char2)
 			artist=artist.replace(char1, char2)
-		with urllib.request.urlopen(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}") as response:
-			soup=BeautifulSoup(response.read(), "html.parser")
-		soup=soup.find(id="letra-cnt")
-		if soup is None:
+		parser=LetrasParser()
+		with request.urlopen(request.quote(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}", safe=':/')) as response:
+			parser.feed(response.read().decode("utf-8"))
+		if not parser.text:
 			raise ValueError("Not found")
-		paragraphs=[i for i in soup.children][1]  # remove unneded paragraphs (NavigableString)
-		lyrics=""
-		for paragraph in paragraphs:
-			for line in paragraph.stripped_strings:
-				lyrics+=line+"\n"
-			lyrics+="\n"
-		output=lyrics[:-2]  # omit last two newlines
-		if output:
-			return output
-		else:  # assume song is instrumental when lyrics are empty
-			return "Instrumental"
+		return parser.text.strip("\n ")
 
 	def _display_lyrics(self, current_song):
 		idle_add(self._text_buffer.set_text, _("searching…"), -1)
 		try:
 			text=self._get_lyrics(current_song["title"][0], current_song["artist"][0])
-		except urllib.error.URLError:
+		except URLError:
 			self._displayed_song_file=None
 			text=_("connection error")
 		except ValueError:
