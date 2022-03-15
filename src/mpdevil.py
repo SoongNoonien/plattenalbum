@@ -3050,10 +3050,11 @@ class SeekBar(Gtk.Box):
 		elapsed_event_box.connect("button-release-event", self._on_label_button_release_event, elapsed_dict)
 		rest_event_box.connect("button-release-event", self._on_label_button_release_event, rest_dict)
 		self._scale.connect("change-value", self._on_change_value)
-		self._scale.connect("value-changed", self._on_value_changed)
 		self._scale.connect("scroll-event", lambda *args: True)  # disable mouse wheel
 		self._scale.connect("button-press-event", self._on_scale_button_press_event)
 		self._scale.connect("button-release-event", self._on_scale_button_release_event)
+		self._adjustment.connect("notify::value", self._update_labels)
+		self._adjustment.connect("notify::upper", self._update_labels)
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed", self._refresh)
@@ -3074,6 +3075,20 @@ class SeekBar(Gtk.Box):
 			self._disable()
 			self._elapsed.set_text(str(Duration(elapsed)))
 
+	def _update_labels(self, *args):
+		duration=self._adjustment.get_upper()
+		value=self._scale.get_value()
+		if value > duration:  # fix display error
+			elapsed=duration
+		else:
+			elapsed=value
+		if duration > 0:
+			self._elapsed.set_text(str(Duration(elapsed)))
+			self._rest.set_text(str(Duration(duration-elapsed)))
+		else:
+			self._elapsed.set_text(str(Duration()))
+			self._rest.set_text(str(Duration()))
+
 	def _disable(self, *args):
 		self.set_sensitive(False)
 		self._scale.set_fill_level(0)
@@ -3089,20 +3104,6 @@ class SeekBar(Gtk.Box):
 	def _on_change_value(self, scale, scroll, value):
 		if scroll in (Gtk.ScrollType.STEP_BACKWARD, Gtk.ScrollType.STEP_FORWARD , Gtk.ScrollType.PAGE_BACKWARD, Gtk.ScrollType.PAGE_FORWARD):
 			self._client.seekcur(value)
-
-	def _on_value_changed(self, scale):
-		duration=self._adjustment.get_upper()
-		value=self._scale.get_value()
-		if value > duration:  # fix display error
-			elapsed=duration
-		else:
-			elapsed=value
-		if duration > 0:
-			self._elapsed.set_text(str(Duration(elapsed)))
-			self._rest.set_text(str(Duration(duration-elapsed)))
-		else:
-			self._elapsed.set_text(str(Duration()))
-			self._rest.set_text(str(Duration()))
 
 	def _on_label_button_release_event(self, widget, event, scroll_type):
 		self._scale.emit("move-slider", scroll_type.get(event.button, Gtk.ScrollType.NONE))
