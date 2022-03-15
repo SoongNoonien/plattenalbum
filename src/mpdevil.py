@@ -3086,8 +3086,8 @@ class SeekBar(Gtk.Box):
 			self._elapsed.set_text(str(Duration(elapsed)))
 			self._rest.set_text(str(Duration(duration-elapsed)))
 		else:
-			self._elapsed.set_text(str(Duration()))
-			self._rest.set_text(str(Duration()))
+			self._elapsed.set_text("")
+			self._rest.set_text("")
 
 	def _disable(self, *args):
 		self.set_sensitive(False)
