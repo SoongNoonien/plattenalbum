@@ -21,8 +21,8 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
 from mpd import MPDClient, base as MPDBase
-import requests
 from bs4 import BeautifulSoup
+import urllib
 import threading
 import functools
 import itertools
@@ -2780,8 +2780,8 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		for char1, char2 in replaces:
 			title=title.replace(char1, char2)
 			artist=artist.replace(char1, char2)
-		req=requests.get(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}")
-		soup=BeautifulSoup(req.text, "html.parser")
+		with urllib.request.urlopen(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}") as response:
+			soup=BeautifulSoup(response.read(), "html.parser")
 		soup=soup.find(id="letra-cnt")
 		if soup is None:
 			raise ValueError("Not found")
@@ -2801,7 +2801,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		idle_add(self._text_buffer.set_text, _("searching…"), -1)
 		try:
 			text=self._get_lyrics(current_song["title"][0], current_song["artist"][0])
-		except requests.exceptions.ConnectionError:
+		except urllib.error.URLError:
 			self._displayed_song_file=None
 			text=_("connection error")
 		except ValueError:

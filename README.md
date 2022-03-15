@@ -59,7 +59,6 @@ Dependencies:
 Python modules:
 - mpd (python-mpd2 >=1.1)
 - gi (Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib)
-- requests
 - bs4 (beautifulsoup)
 
 Run:
