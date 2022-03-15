@@ -21,9 +21,10 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
 from mpd import MPDClient, base as MPDBase
-from urllib import request
-from urllib.error import URLError
 from html.parser import HTMLParser
+import urllib.request
+import urllib.parse
+import urllib.error
 import threading
 import functools
 import itertools
@@ -2795,12 +2796,10 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		self._client.emitter.handler_block(self._song_changed)
 
 	def _get_lyrics(self, title, artist):
-		replaces=((" ", "+"),(".", "_"),("@", "_"),(",", "_"),(";", "_"),("&", "_"),("\\", "_"),("/", "_"),('"', "_"),("(", "_"),(")", "_"))
-		for char1, char2 in replaces:
-			title=title.replace(char1, char2)
-			artist=artist.replace(char1, char2)
+		title=urllib.parse.quote_plus(title)
+		artist=urllib.parse.quote_plus(artist)
 		parser=LetrasParser()
-		with request.urlopen(request.quote(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}", safe=':/')) as response:
+		with urllib.request.urlopen(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}") as response:
 			parser.feed(response.read().decode("utf-8"))
 		if not parser.text:
 			raise ValueError("Not found")
@@ -2810,7 +2809,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		idle_add(self._text_buffer.set_text, _("searching…"), -1)
 		try:
 			text=self._get_lyrics(current_song["title"][0], current_song["artist"][0])
-		except URLError:
+		except urllib.error.URLError:
 			self._displayed_song_file=None
 			text=_("connection error")
 		except ValueError:
