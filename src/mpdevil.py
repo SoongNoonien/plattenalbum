@@ -20,7 +20,7 @@
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
-from mpd import MPDClient, base as MPDBase
+from mpd import MPDClient, MPDError, CommandError
 from html.parser import HTMLParser
 import urllib.request
 import urllib.parse
@@ -777,7 +777,7 @@ class Client(MPDClient):
 				current_song_file=self.currentsong()["file"]
 				try:
 					self.delete((1,))  # delete all songs, but the first. bad song index possible
-				except MPDBase.CommandError:
+				except CommandError:
 					pass
 				append()
 				duplicates=self.playlistfind("file", current_song_file)
@@ -968,7 +968,7 @@ class Client(MPDClient):
 				elif "audio" == key:
 					self.emitter.emit("audio", None)
 			self._last_status=status
-		except (MPDBase.ConnectionError, ConnectionResetError) as e:
+		except (MPDError, ConnectionResetError) as e:
 			self.disconnect()
 			self._last_status={}
 			self.emitter.emit("disconnected")
@@ -2605,7 +2605,7 @@ class PlaylistView(TreeView):
 			else:  # delete
 				self._client.delete(path)  # bad song index possible
 			self._playlist_version=int(self._client.status()["playlist"])
-		except MPDBase.CommandError as e:
+		except CommandError as e:
 			self._playlist_version=None
 			self._client.emitter.emit("playlist", int(self._client.status()["playlist"]))
 			raise e  # propagate exception
