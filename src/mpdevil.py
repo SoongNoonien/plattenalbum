@@ -20,7 +20,7 @@
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
-from mpd import MPDClient, MPDError, CommandError
+from mpd import MPDClient, CommandError, ConnectionError
 from html.parser import HTMLParser
 import urllib.request
 import urllib.parse
@@ -968,7 +968,7 @@ class Client(MPDClient):
 				elif "audio" == key:
 					self.emitter.emit("audio", None)
 			self._last_status=status
-		except (MPDError, ConnectionResetError) as e:
+		except (ConnectionError, ConnectionResetError) as e:
 			self.disconnect()
 			self._last_status={}
 			self.emitter.emit("disconnected")
