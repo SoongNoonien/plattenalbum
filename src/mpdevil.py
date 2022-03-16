@@ -3735,6 +3735,8 @@ class MainWindow(Gtk.ApplicationWindow):
 					elif (cover_binary:=self._client.get_cover_binary(song["file"])) is not None:
 						notify.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(cover_binary)))
 					self.get_application().send_notification("title-change", notify)
+				else:
+					self.get_application().withdraw_notification("title-change")
 		else:
 			self.set_title("mpdevil")
 			if self._use_csd:
