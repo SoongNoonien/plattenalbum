@@ -1,0 +1,553 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the mpdevil package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Oğuz Ersen <oguz@ersen.moe>, 2022.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: mpdevil\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-03-06 22:29+0100\n"
+"PO-Revision-Date: 2022-03-19 09:38+0300\n"
+"Last-Translator: Oğuz Ersen <oguz@ersen.moe>\n"
+"Language-Team: Turkish <tr>\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0\n"
+
+#: src/mpdevil.py:501
+#, python-brace-format
+msgid "{days} day"
+msgid_plural "{days} days"
+msgstr[0] "{days} gün"
+msgstr[1] "{days} gün"
+
+#: src/mpdevil.py:538
+#, python-brace-format
+msgid "{channels} channel"
+msgid_plural "{channels} channels"
+msgstr[0] "{channels} kanal"
+msgstr[1] "{channels} kanal"
+
+#: src/mpdevil.py:1008
+msgid "(restart required)"
+msgstr "(yeniden başlatma gerekli)"
+
+#: src/mpdevil.py:1054
+msgid "Use Client-side decoration"
+msgstr "İstemci tarafı süslemelerini kullan"
+
+#: src/mpdevil.py:1055
+msgid "Show stop button"
+msgstr "Durdur düğmesini göster"
+
+#: src/mpdevil.py:1056
+msgid "Show audio format"
+msgstr "Ses biçimini göster"
+
+#: src/mpdevil.py:1057
+msgid "Show lyrics button"
+msgstr "Şarkı sözleri düğmesini göster"
+
+#: src/mpdevil.py:1058
+msgid "Place playlist at the side"
+msgstr "Oynatma listesini yan tarafa yerleştir"
+
+#: src/mpdevil.py:1064
+msgid "Main cover size"
+msgstr "Ana kapak resmi boyutu"
+
+#: src/mpdevil.py:1065
+msgid "Album view cover size"
+msgstr "Albüm görünümü kapak resmi boyutu"
+
+#: src/mpdevil.py:1066
+msgid "Action bar icon size"
+msgstr "Eylem çubuğu simge boyutu"
+
+#: src/mpdevil.py:1076
+msgid "Support “MPRIS”"
+msgstr "“MPRIS” destekle"
+
+#: src/mpdevil.py:1077
+msgid "Sort albums by year"
+msgstr "Albümleri yıla göre sırala"
+
+#: src/mpdevil.py:1078
+msgid "Send notification on title change"
+msgstr "Şarkı değişikliğinde bildirim gönder"
+
+#: src/mpdevil.py:1079
+msgid "Play selected albums and titles immediately"
+msgstr "Seçilen albümleri ve şarkıları hemen oynat"
+
+#: src/mpdevil.py:1080
+msgid "Rewind via previous button"
+msgstr "Önceki düğmesi ile geri sar"
+
+#: src/mpdevil.py:1081
+msgid "Stop playback on quit"
+msgstr "Çıkışta oynatmayı durdur"
+
+#: src/mpdevil.py:1108
+msgid "Choose directory"
+msgstr "Dizin seç"
+
+#: src/mpdevil.py:1121
+msgid "Connect via Unix domain socket"
+msgstr "Unix etki alanı soketi ile bağlan"
+
+#: src/mpdevil.py:1140
+msgid ""
+"The first image in the same directory as the song file matching this regex "
+"will be displayed. %AlbumArtist% and %Album% will be replaced by the "
+"corresponding tags of the song."
+msgstr ""
+"Bu düzenli ifadeyle eşleşen şarkı dosyasıyla aynı dizindeki ilk resim "
+"görüntülenecektir. %AlbumArtist% ve %Album% şarkının ilgili etiketleri ile "
+"değiştirilecektir."
+
+#: src/mpdevil.py:1145
+msgid "Socket:"
+msgstr "Soket:"
+
+#: src/mpdevil.py:1147
+msgid "Host:"
+msgstr "Ana makine:"
+
+#: src/mpdevil.py:1149
+msgid "Password:"
+msgstr "Parola:"
+
+#: src/mpdevil.py:1150
+msgid "Music lib:"
+msgstr "Müzik kütüphanesi:"
+
+#: src/mpdevil.py:1152
+msgid "Cover regex:"
+msgstr "Kapak resmi düzenli ifadesi:"
+
+#: src/mpdevil.py:1176 src/mpdevil.py:3579
+msgid "Profile 1"
+msgstr "Profil 1"
+
+#: src/mpdevil.py:1177 src/mpdevil.py:3579
+msgid "Profile 2"
+msgstr "Profil 2"
+
+#: src/mpdevil.py:1178 src/mpdevil.py:3579
+msgid "Profile 3"
+msgstr "Profil 3"
+
+#. connect button
+#: src/mpdevil.py:1182 src/mpdevil.py:3462
+msgid "Connect"
+msgstr "Bağlan"
+
+#: src/mpdevil.py:1205 src/mpdevil.py:1207 src/mpdevil.py:3463
+#: src/mpdevil.py:3571
+msgid "Preferences"
+msgstr "Tercihler"
+
+#: src/mpdevil.py:1220 src/mpdevil.py:1230
+msgid "View"
+msgstr "Gürünüm"
+
+#: src/mpdevil.py:1221 src/mpdevil.py:1231
+msgid "Behavior"
+msgstr "Davranış"
+
+#: src/mpdevil.py:1222 src/mpdevil.py:1232
+msgid "Profiles"
+msgstr "Profiller"
+
+#: src/mpdevil.py:1249
+msgid "Stats"
+msgstr "İstatistikler"
+
+#: src/mpdevil.py:1258
+msgid "<b>Protocol:</b>"
+msgstr "<b>Protokol:</b>"
+
+#: src/mpdevil.py:1259
+msgid "<b>Uptime:</b>"
+msgstr "<b>Çalışma Süresi:</b>"
+
+#: src/mpdevil.py:1260
+msgid "<b>Playtime:</b>"
+msgstr "<b>Oynatma Süresi:</b>"
+
+#: src/mpdevil.py:1261
+msgid "<b>Artists:</b>"
+msgstr "<b>Sanatçılar:</b>"
+
+#: src/mpdevil.py:1262
+msgid "<b>Albums:</b>"
+msgstr "<b>Albümler:</b>"
+
+#: src/mpdevil.py:1263
+msgid "<b>Songs:</b>"
+msgstr "<b>Şarkılar:</b>"
+
+#: src/mpdevil.py:1264
+msgid "<b>Total Playtime:</b>"
+msgstr "<b>Toplam Oynatma Süresi:</b>"
+
+#: src/mpdevil.py:1265
+msgid "<b>Database Update:</b>"
+msgstr "<b>Veri Tabanı Güncellemesi:</b>"
+
+#: src/mpdevil.py:1314
+msgid "Show in file manager"
+msgstr "Dosya yöneticisinde göster"
+
+#: src/mpdevil.py:1324 src/mpdevil.py:1564 src/mpdevil.py:2284
+msgid "Append"
+msgstr "Sona ekle"
+
+#: src/mpdevil.py:1325 src/mpdevil.py:1565 src/mpdevil.py:2285
+msgid "Play"
+msgstr "Oynat"
+
+#: src/mpdevil.py:1326 src/mpdevil.py:1566 src/mpdevil.py:2286
+msgid "Enqueue"
+msgstr "Sıraya al"
+
+#: src/mpdevil.py:1345
+msgid "MPD-Tag"
+msgstr "MPD-Etiketi"
+
+#: src/mpdevil.py:1348
+msgid "Value"
+msgstr "Değer"
+
+#: src/mpdevil.py:1419 src/mpdevil.py:2493
+msgid "No"
+msgstr "Sayı"
+
+#. the order of weight_set and weight seems to be important here
+#: src/mpdevil.py:1420 src/mpdevil.py:2495
+msgid "Title"
+msgstr "Şarkı"
+
+#: src/mpdevil.py:1421 src/mpdevil.py:2496
+msgid "Length"
+msgstr "Uzunluk"
+
+#: src/mpdevil.py:1434
+msgid "Add all titles to playlist"
+msgstr "Tüm şarkıları oynatma listesine ekle"
+
+#: src/mpdevil.py:1435
+msgid "Directly play all titles"
+msgstr "Tüm şarkıları doğrudan oynat"
+
+#: src/mpdevil.py:1436
+msgid ""
+"Append all titles after the currently playing track and clear the playlist "
+"from all other songs"
+msgstr ""
+"Tüm şarkıları oynatılan parçadan sonra ekle ve diğer şarkıları oynatma "
+"listesinden kaldır"
+
+#: src/mpdevil.py:1533 src/mpdevil.py:2374 src/mpdevil.py:2657
+#, python-brace-format
+msgid "{number} song ({duration})"
+msgid_plural "{number} songs ({duration})"
+msgstr[0] "{number} şarkı ({duration})"
+msgstr[1] "{number} şarkı ({duration})"
+
+#: src/mpdevil.py:1632
+#, python-brace-format
+msgid "{hits} hit"
+msgid_plural "{hits} hits"
+msgstr[0] "{hits} oynatma"
+msgstr[1] "{hits} oynatma"
+
+#: src/mpdevil.py:1717
+msgid "all tags"
+msgstr "tüm etiketler"
+
+#: src/mpdevil.py:1849
+msgid "all genres"
+msgstr "tüm türler"
+
+#: src/mpdevil.py:1875
+msgid "all artists"
+msgstr "tüm sanatçılar"
+
+#: src/mpdevil.py:2294
+msgid "Save"
+msgstr "Kaydet"
+
+#: src/mpdevil.py:2298
+msgid "Delete"
+msgstr "Sil"
+
+#: src/mpdevil.py:2422 data/ShortcutsWindow.ui:240
+msgid "Clear playlist"
+msgstr "Oynatma listesini temizle"
+
+#: src/mpdevil.py:2688
+msgid "Scroll to current song"
+msgstr "Geçerli şarkıya kaydır"
+
+#: src/mpdevil.py:2700
+msgid "Playlists"
+msgstr "Oynatma listeleri"
+
+#: src/mpdevil.py:2793
+msgid "searching…"
+msgstr "aranıyor…"
+
+#: src/mpdevil.py:2798
+msgid "connection error"
+msgstr "bağlantı hatası"
+
+#: src/mpdevil.py:2800
+msgid "lyrics not found"
+msgstr "şarkı sözleri bulunamadı"
+
+#: src/mpdevil.py:2906
+msgid "Lyrics"
+msgstr "Şarkı sözleri"
+
+#: src/mpdevil.py:2997 src/mpdevil.py:2998
+#, python-brace-format
+msgid "{number} song"
+msgid_plural "{number} songs"
+msgstr[0] "{number} şarkı"
+msgstr[1] "{number} şarkı"
+
+#: src/mpdevil.py:3207
+msgid "Repeat mode"
+msgstr "Tekrar modu"
+
+#: src/mpdevil.py:3208
+msgid "Random mode"
+msgstr "Rastgele modu"
+
+#: src/mpdevil.py:3209
+msgid "Single mode"
+msgstr "Tekli modu"
+
+#: src/mpdevil.py:3210
+msgid "Consume mode"
+msgstr "Tüketim modu"
+
+#: src/mpdevil.py:3432
+msgid "Updating Database…"
+msgstr "Veri Tabanı Güncelleniyor…"
+
+#: src/mpdevil.py:3484
+#, python-brace-format
+msgid "Connection to “{socket}” failed"
+msgstr "“{socket}” bağlantısı başarısız"
+
+#: src/mpdevil.py:3486
+#, python-brace-format
+msgid "Connection to “{host}:{port}” failed"
+msgstr "“{host}:{port}” bağlantısı başarısız"
+
+#: src/mpdevil.py:3556
+msgid "Search"
+msgstr "Ara"
+
+#: src/mpdevil.py:3559 data/ShortcutsWindow.ui:99
+msgid "Back to current album"
+msgstr "Geçerli albüme geri dön"
+
+#: src/mpdevil.py:3572
+msgid "Keyboard Shortcuts"
+msgstr "Klavye Kısayolları"
+
+#: src/mpdevil.py:3573
+msgid "Help"
+msgstr "Yardım"
+
+#: src/mpdevil.py:3574
+msgid "About mpdevil"
+msgstr "mpdevil Hakkında"
+
+#: src/mpdevil.py:3576
+msgid "Update Database"
+msgstr "Veri Tabanını Güncelle"
+
+#: src/mpdevil.py:3577
+msgid "Server Stats"
+msgstr "Sunucu İstatistikleri"
+
+#: src/mpdevil.py:3584
+msgid "Mini Player"
+msgstr "Küçük Oynatıcı"
+
+#: src/mpdevil.py:3585
+msgid "Genre Filter"
+msgstr "Tür Filtresi"
+
+#: src/mpdevil.py:3595
+msgid "Menu"
+msgstr "Menü"
+
+#: src/mpdevil.py:3648 src/mpdevil.py:3650
+msgid "connecting…"
+msgstr "bağlanıyor…"
+
+#: src/mpdevil.py:3804
+msgid "Debug mode"
+msgstr "Hata ayıklama modu"
+
+#: data/org.mpdevil.mpdevil.desktop.in:3
+msgid "mpdevil"
+msgstr "mpdevil"
+
+#: data/org.mpdevil.mpdevil.desktop.in:4
+msgid "MPD Client"
+msgstr "MPD İstemcisi"
+
+#: data/org.mpdevil.mpdevil.desktop.in:5 data/AboutDialog.ui:7
+msgid "A simple music browser for MPD"
+msgstr "MPD için basit bir müzik tarayıcısı"
+
+#: data/ShortcutsWindow.ui:12
+msgid "General"
+msgstr "Genel"
+
+#: data/ShortcutsWindow.ui:16
+msgid "Open online help"
+msgstr "Çevrim içi yardımı aç"
+
+#: data/ShortcutsWindow.ui:23
+msgid "Open shortcuts window"
+msgstr "Kısayollar penceresini aç"
+
+#: data/ShortcutsWindow.ui:30
+msgid "Open menu"
+msgstr "Menüyü aç"
+
+#: data/ShortcutsWindow.ui:37
+msgid "Update database"
+msgstr "Veri tabanını güncelle"
+
+#: data/ShortcutsWindow.ui:44
+msgid "Quit"
+msgstr "Çıkış"
+
+#: data/ShortcutsWindow.ui:53
+msgid "Window"
+msgstr "Pencere"
+
+#: data/ShortcutsWindow.ui:57
+msgid "Cycle through profiles"
+msgstr "Profiller arasında geçiş yap"
+
+#: data/ShortcutsWindow.ui:64
+msgid "Cycle through profiles in reversed order"
+msgstr "Profiller arasında ters sırada geçiş yap"
+
+#: data/ShortcutsWindow.ui:71
+msgid "Toggle mini player"
+msgstr "Küçük oynatıcıyı aç/kapat"
+
+#: data/ShortcutsWindow.ui:78
+msgid "Toggle genre filter"
+msgstr "Tür filtresini aç/kapat"
+
+#: data/ShortcutsWindow.ui:85
+msgid "Toggle lyrics"
+msgstr "Şarkı sözlerini aç/kapat"
+
+#: data/ShortcutsWindow.ui:92
+msgid "Toggle search"
+msgstr "Aramayı aç/kapat"
+
+#: data/ShortcutsWindow.ui:108
+msgid "Playback"
+msgstr "Oynatım"
+
+#: data/ShortcutsWindow.ui:112
+msgid "Play/Pause"
+msgstr "Oynat/Duraklat"
+
+#: data/ShortcutsWindow.ui:119
+msgid "Stop"
+msgstr "Durdur"
+
+#: data/ShortcutsWindow.ui:126
+msgid "Stop after current title"
+msgstr "Oynatılan şarkıdan sonra durdur"
+
+#: data/ShortcutsWindow.ui:133
+msgid "Next title"
+msgstr "Sonraki şarkı"
+
+#: data/ShortcutsWindow.ui:140
+msgid "Previous title"
+msgstr "Önceki şarkı"
+
+#: data/ShortcutsWindow.ui:147
+msgid "Seek forward"
+msgstr "İleri sar"
+
+#: data/ShortcutsWindow.ui:154
+msgid "Seek backward"
+msgstr "Geri sar"
+
+#: data/ShortcutsWindow.ui:161
+msgid "Toggle repeat mode"
+msgstr "Tekrar modunu aç/kapat"
+
+#: data/ShortcutsWindow.ui:168
+msgid "Toggle random mode"
+msgstr "Rastgele modunu aç/kapat"
+
+#: data/ShortcutsWindow.ui:175
+msgid "Toggle single mode"
+msgstr "Tekli modunu aç/kapat"
+
+#: data/ShortcutsWindow.ui:182
+msgid "Toggle consume mode"
+msgstr "Tüketim modunu aç/kapat"
+
+#: data/ShortcutsWindow.ui:191
+msgid "Search, Album Dialog, Album List and Artist List"
+msgstr "Ara, Albüm İletişim Kutusu, Albüm Listesi ve Sanatçı Listesi"
+
+#: data/ShortcutsWindow.ui:195
+msgid "Enqueue selected item"
+msgstr "Seçilen ögeyi sıraya al"
+
+#: data/ShortcutsWindow.ui:202
+msgid "Append selected item"
+msgstr "Seçilen ögeyi sona ekle"
+
+#: data/ShortcutsWindow.ui:203 data/ShortcutsWindow.ui:233
+msgid "Middle-click"
+msgstr "Orta tık"
+
+#: data/ShortcutsWindow.ui:210
+msgid "Play selected item immediately"
+msgstr "Seçilen ögeyi hemen oynat"
+
+#: data/ShortcutsWindow.ui:211
+msgid "Double-click"
+msgstr "Çift tık"
+
+#: data/ShortcutsWindow.ui:218 data/ShortcutsWindow.ui:247
+msgid "Show additional information"
+msgstr "Ek bilgileri göster"
+
+#: data/ShortcutsWindow.ui:219 data/ShortcutsWindow.ui:248
+msgid "Right-click"
+msgstr "Sağ tık"
+
+#: data/ShortcutsWindow.ui:228
+msgid "Playlist"
+msgstr "Oynatma listesi"
+
+#: data/ShortcutsWindow.ui:232
+msgid "Remove selected song"
+msgstr "Seçilen şarkıyı kaldır"
