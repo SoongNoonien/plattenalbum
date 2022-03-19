@@ -1,6 +1,6 @@
 README for mpdevil
 ==================
-Mpdevil is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library mpdevil loads all tags and covers on demand. So you'll never see any outdated information in the browser. Mpdevil strongly relies on tags.
+mpdevil is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library, mpdevil loads all tags and covers on demand. So you'll never see any outdated information in the browser. mpdevil strongly relies on tags.
 
 ![ScreenShot](screenshots/mainwindow_1.6.0.png)
 
@@ -8,21 +8,21 @@ Features
 --------
 
 - display large covers
-- play songs without doubleclick
-- lyrics from 'www.letras.mus.br'
+- play songs without double click
+- lyrics from: https://www.letras.mus.br
 - MPRIS interface (based on mpDris2)
-- manage multiple mpd servers
+- manage multiple MPD servers
 - basic queue manipulation (move and delete single tracks)
 - save and load playlists
 
 See: https://github.com/SoongNoonien/mpdevil/wiki/Usage
-    
+
 Package Installation
 --------------------
 
 See:
 https://github.com/SoongNoonien/mpdevil/releases/latest
-    
+
 Ubuntu, Debian, Mint, Raspberry Pi OS:
 - Download the .deb file
 - Open a console
@@ -53,7 +53,7 @@ Build dependencies:
 - meson
 
 Dependencies:
-- Gtk3
+- GTK3
 - Python3
 
 Python modules:
@@ -74,5 +74,5 @@ sudo update-desktop-database
 Translation
 -----------
 
-Mpdevil is currently available in English, German, Dutch and Bulgarian. If you speek another language you can easily translate mpdevil by using `poedit`. Just import `po/mpdevil.pot` from this repo into `poedit`. To test your translation copy the new `.po` file into the `po` directory of your cloned mpdevil repo and proceed as described in the Building section. To get your translation integrated into mpdevil just send me an e-mail or create a pull request. Link to `poedit`: https://poedit.net/
+mpdevil is currently available in English, German, Dutch, Bulgarian and Turkish. If you speak another language, you can easily translate mpdevil by using `poedit`. Just import `po/mpdevil.pot` from this repo into `poedit`. To test your translation, copy the new `.po` file into the `po` directory of your cloned mpdevil repo and proceed as described in the [Building](#building) section. To get your translation integrated into mpdevil, just send me an e-mail or create a pull request. Link to `poedit`: https://poedit.net/
 
