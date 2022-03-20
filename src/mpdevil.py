@@ -430,10 +430,10 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				song_path=self._client.get_absolute_path(song_file)
 				if song_path is not None:
 					self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
-				if (cover_path:=self._client.get_cover_path(song)) is not None:
-					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
-				elif (cover_binary:=self._client.get_cover_binary(song["file"])) is not None:
-					self._tmp_cover_file.replace_contents(cover_binary, None, False, Gio.FileCreateFlags.NONE, None)
+				if isinstance(self._client.current_cover, FileCover):
+					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(self._client.current_cover).get_uri())
+				elif isinstance(self._client.current_cover, BinaryCover):
+					self._tmp_cover_file.replace_contents(self._client.current_cover, None, False, Gio.FileCreateFlags.NONE, None)
 					self._metadata["mpris:artUrl"]=GLib.Variant("s", self._tmp_cover_file.get_uri())
 
 	def _update_property(self, interface_name, prop):
@@ -655,6 +655,7 @@ class Client(MPDClient):
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
 		self.lib_path=None
+		self.current_cover=None
 
 		# connect
 		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
@@ -869,16 +870,12 @@ class Client(MPDClient):
 		return binary
 
 	def get_cover(self, song):
-		cover_path=self.get_cover_path(song)
-		if cover_path is None:
-			cover_binary=self.get_cover_binary(song["file"])
-			if cover_binary is None:
-				cover=FileCover(FALLBACK_COVER)
-			else:
-				cover=BinaryCover(cover_binary)
+		if (cover_path:=self.get_cover_path(song)) is not None:
+			return FileCover(cover_path)
+		elif (cover_binary:=self.get_cover_binary(song["file"])) is not None:
+			return BinaryCover(cover_binary)
 		else:
-			cover=FileCover(cover_path)
-		return cover
+			return None
 
 	def get_absolute_path(self, uri):
 		if self.lib_path is not None:
@@ -941,6 +938,7 @@ class Client(MPDClient):
 					else:
 						self.emitter.emit("bitrate", val)
 				elif key == "songid":
+					self.current_cover=self.get_cover(self.currentsong())
 					self.emitter.emit("current_song")
 				elif key in ("state", "single", "audio"):
 					self.emitter.emit(key, val)
@@ -958,6 +956,7 @@ class Client(MPDClient):
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
+					self.current_cover=None
 					self.emitter.emit("current_song")
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
@@ -974,6 +973,8 @@ class Client(MPDClient):
 			self.emitter.emit("disconnected")
 			self.emitter.emit("connection_error")
 			self._main_timeout_id=None
+			self.lib_path=None
+			self.current_cover=None
 			return False
 		return True
 
@@ -2046,7 +2047,7 @@ class AlbumLoadingThread(threading.Thread):
 		@main_thread_function
 		def get_cover(row):
 			if self._stop_flag:
-				return None
+				raise ValueError("Stop requested")
 			else:
 				self._client.restrict_tagtypes("albumartist", "album")
 				song=self._client.find("albumartist", row[3], "album", row[4], "date", row[5], "window", "0:1")[0]
@@ -2054,8 +2055,9 @@ class AlbumLoadingThread(threading.Thread):
 				return self._client.get_cover(song)
 		covers=[]
 		for i, row in enumerate(self._store):
-			cover=get_cover(row)
-			if cover is None:
+			try:
+				cover=get_cover(row)
+			except ValueError:
 				self._exit()
 				return
 			covers.append(cover)
@@ -2069,8 +2071,9 @@ class AlbumLoadingThread(threading.Thread):
 			if self._stop_flag:
 				self._exit()
 				return
-			cover=covers[i].get_pixbuf(self._cover_size)
-			idle_add(set_cover, treeiter, cover)
+			if covers[i] is not None:
+				cover=covers[i].get_pixbuf(self._cover_size)
+				idle_add(set_cover, treeiter, cover)
 			idle_add(self._progress_bar.set_fraction, 0.5+(i+1)/total)
 			i+=1
 			treeiter=self._store.iter_next(treeiter)
@@ -2889,11 +2892,10 @@ class MainCover(Gtk.Image):
 		self.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size))
 
 	def _refresh(self, *args):
-		song=self._client.currentsong()
-		if song:
-			self.set_from_pixbuf(self._client.get_cover(song).get_pixbuf(self._settings.get_int("track-cover")))
-		else:
+		if self._client.current_cover is None:
 			self._clear()
+		else:
+			self.set_from_pixbuf(self._client.current_cover.get_pixbuf(self._settings.get_int("track-cover")))
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
@@ -3730,10 +3732,10 @@ class MainWindow(Gtk.ApplicationWindow):
 					notify=Gio.Notification()
 					notify.set_title(str(song["title"]))
 					notify.set_body(f"{song['artist']}\n{album}")
-					if (cover_path:=self._client.get_cover_path(song)) is not None:
-						notify.set_icon(Gio.FileIcon.new(Gio.File.new_for_path(cover_path)))
-					elif (cover_binary:=self._client.get_cover_binary(song["file"])) is not None:
-						notify.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(cover_binary)))
+					if isinstance(self._client.current_cover, FileCover):
+						notify.set_icon(Gio.FileIcon.new(Gio.File.new_for_path(self._client.current_cover)))
+					elif isinstance(self._client.current_cover, BinaryCover):
+						notify.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(self._client.current_cover)))
 					self.get_application().send_notification("title-change", notify)
 				else:
 					self.get_application().withdraw_notification("title-change")
