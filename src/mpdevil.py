@@ -291,7 +291,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	def _set_volume(self, value):
 		if self._client.connected():
-			if value >= 0 and value <= 1:
+			if 0 <= value <= 1:
 				self._client.setvol(int(value * 100))
 
 	def _get_position(self):
@@ -388,7 +388,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		if str(trackid).split("/")[-1] != song["id"]:
 			return
 		mpd_pos=position/1000000
-		if mpd_pos >= 0 and mpd_pos <= float(song["duration"]):
+		if 0 <= mpd_pos <= float(song["duration"]):
 			self._client.seekcur(str(mpd_pos))
 
 	def OpenUri(self, uri):
@@ -423,12 +423,10 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		if "duration" in song:
 			self._metadata["mpris:length"]=GLib.Variant("x", float(song["duration"])*1000000)
 		if "file" in song:
-			song_file=song["file"]
-			if "://" in song_file:  # remote file
+			if "://" in (song_file:=song["file"]):  # remote file
 				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
 			else:
-				song_path=self._client.get_absolute_path(song_file)
-				if song_path is not None:
+				if (song_path:=self._client.get_absolute_path(song_file)) is not None:
 					self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
 				if isinstance(self._client.current_cover, FileCover):
 					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(self._client.current_cover).get_uri())
@@ -464,8 +462,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Shuffle")
 
 	def _on_reconnected(self, *args):
-		properties=("CanPlay","CanPause","CanSeek")
-		for p in properties:
+		for p in ("CanPlay","CanPause","CanSeek"):
 			self._update_property(self._MPRIS_PLAYER_IFACE, p)
 
 	def _on_disconnected(self, *args):
@@ -476,8 +473,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _on_connection_error(self, *args):
 		self._metadata={}
 		self._tmp_cover_file.replace_contents(b"", None, False, Gio.FileCreateFlags.NONE, None)
-		properties=("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle","CanPlay","CanPause","CanSeek")
-		for p in properties:
+		for p in ("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle","CanPlay","CanPause","CanSeek"):
 			self._update_property(self._MPRIS_PLAYER_IFACE, p)
 
 ######################
@@ -1058,21 +1054,21 @@ class SettingsList(Gtk.Frame):
 class ViewSettings(SettingsList):
 	def __init__(self, settings):
 		super().__init__()
-		toggle_data=[
+		toggle_data=(
 			(_("Use Client-side decoration"), "use-csd", True),
 			(_("Show stop button"), "show-stop", False),
 			(_("Show audio format"), "show-audio-format", False),
 			(_("Show lyrics button"), "show-lyrics-button", False),
 			(_("Place playlist at the side"), "playlist-right", False),
-		]
+		)
 		for label, key, restart_required in toggle_data:
 			row=ToggleRow(label, settings, key, restart_required)
 			self.append(row)
-		int_data=[
+		int_data=(
 			(_("Main cover size"), (100, 1200, 10), "track-cover"),
 			(_("Album view cover size"), (50, 600, 10), "album-cover"),
 			(_("Action bar icon size"), (16, 64, 2), "icon-size"),
-		]
+		)
 		for label, (vmin, vmax, step), key in int_data:
 			row=IntRow(label, vmin, vmax, step, settings, key)
 			self.append(row)
@@ -1080,14 +1076,14 @@ class ViewSettings(SettingsList):
 class BehaviorSettings(SettingsList):
 	def __init__(self, settings):
 		super().__init__()
-		toggle_data=[
+		toggle_data=(
 			(_("Support “MPRIS”"), "mpris", True),
 			(_("Sort albums by year"), "sort-albums-by-year", False),
 			(_("Send notification on title change"), "send-notify", False),
 			(_("Play selected albums and titles immediately"), "force-mode", False),
 			(_("Rewind via previous button"), "rewind-mode", False),
 			(_("Stop playback on quit"), "stop-on-quit", False),
-		]
+		)
 		for label, key, restart_required in toggle_data:
 			row=ToggleRow(label, settings, key, restart_required)
 			self.append(row)
@@ -1468,8 +1464,7 @@ class SongsList(TreeView):
 		self._client.files_to_playlist([self._store[path][3]])
 
 	def _on_button_press_event(self, widget, event):
-		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
-		if path_re is not None:
+		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
 			path=path_re[0]
 			if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
 				self._client.files_to_playlist([self._store[path][3]], "play")
@@ -1485,14 +1480,12 @@ class SongsList(TreeView):
 		self.emit("button-clicked")
 
 	def show_info(self):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
+		if (treeiter:=self._selection.get_selected()[1]) is not None:
 			path=self._store.get_path(treeiter)
 			self._song_popover.open(self._store[path][3], self, *self.get_popover_point(path))
 
 	def add_to_playlist(self, mode):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
+		if (treeiter:=self._selection.get_selected()[1]) is not None:
 			self._client.files_to_playlist([self._store.get_value(treeiter, 3)], mode)
 
 class AlbumPopover(Gtk.Popover):
@@ -1913,30 +1906,24 @@ class ArtistList(SelectionList):
 		self.set_items(filtered_artists)
 		if genre is not None:
 			self.select_all()
+		elif (song:=self._client.currentsong()):
+			artist=song["albumartist"][0]
+			self.select(artist)
+		elif self.length() > 0:
+			self.select_path(Gtk.TreePath(1))
 		else:
-			song=self._client.currentsong()
-			if song:
-				artist=song["albumartist"][0]
-				self.select(artist)
-			else:
-				if self.length() > 0:
-					self.select_path(Gtk.TreePath(1))
-				else:
-					self.select_path(Gtk.TreePath(0))
+			self.select_path(Gtk.TreePath(0))
 
 	def _on_button_press_event(self, widget, event):
-		if ((event.button in (2,3) and event.type == Gdk.EventType.BUTTON_PRESS)
-			or (event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS)):
-			path_re=widget.get_path_at_pos(int(event.x), int(event.y))
-			if path_re is not None:
-				path=path_re[0]
-				artist,genre=self.get_artist_at_path(path)
-				if event.button == 1:
-					self._client.artist_to_playlist(artist, genre, "play")
-				elif event.button == 2:
-					self._client.artist_to_playlist(artist, genre, "append")
-				elif event.button == 3:
-					self._artist_popover.open(artist, genre, self, event.x, event.y)
+		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
+			path=path_re[0]
+			artist,genre=self.get_artist_at_path(path)
+			if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+				self._client.artist_to_playlist(artist, genre, "play")
+			elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self._client.artist_to_playlist(artist, genre, "append")
+			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+				self._artist_popover.open(artist, genre, self, event.x, event.y)
 
 	def get_artist_at_path(self, path):
 		genre=self.genre_list.get_item_selected()
@@ -1954,8 +1941,7 @@ class ArtistList(SelectionList):
 			self._client.artist_to_playlist(artist, genre, mode)
 
 	def show_info(self):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
+		if (treeiter:=self._selection.get_selected()[1]) is not None:
 			path=self._store.get_path(treeiter)
 			artist,genre=self.get_artist_at_path(path)
 			self._artist_popover.open(artist, genre, self, *self.get_popover_point(path))
@@ -2254,8 +2240,7 @@ class Browser(Gtk.Paned):
 		self.pack2(self.paned1, True, False)
 
 	def back_to_current_album(self, force=False):
-		song=self._client.currentsong()
-		if song:
+		if (song:=self._client.currentsong()):
 			artist,genre=self._artist_list.get_artist_selected()
 			# deactivate genre filter to show all artists (if needed)
 			if song["genre"][0] != genre or force:
@@ -2389,8 +2374,7 @@ class PlaylistsView(TreeView):
 		self._client.stored_to_playlist(self._store[path][1])
 
 	def _on_button_press_event(self, widget, event):
-		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
-		if path_re is not None:
+		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
 			path=path_re[0]
 			if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
 				self._client.stored_to_playlist(self._store[path][1], "play")
@@ -2408,14 +2392,12 @@ class PlaylistsView(TreeView):
 		self.columns_autosize()
 
 	def show_info(self):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
+		if (treeiter:=self._selection.get_selected()[1]) is not None:
 			path=self._store.get_path(treeiter)
 			self._playlist_popover.open(self._store[path][1], self, *self.get_popover_point(path))
 
 	def add_to_playlist(self, mode):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
+		if (treeiter:=self._selection.get_selected()[1]) is not None:
 			self._client.stored_to_playlist(self._store.get_value(treeiter, 1), mode)
 
 class PlaylistsPopover(Gtk.Popover):
@@ -2557,9 +2539,8 @@ class PlaylistView(TreeView):
 				self.set_property("selected-path", None)
 
 	def scroll_to_selected_title(self):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
-			path=treeview.get_path(treeiter)
+		if (treeiter:=self._selection.get_selected()[1]) is not None:
+			path=self._store.get_path(treeiter)
 			self.scroll_to_cell(path, None, True, 0.25)
 
 	def _refresh_selection(self):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
@@ -2577,8 +2558,7 @@ class PlaylistView(TreeView):
 		self.label.set_label(text)
 
 	def _on_button_press_event(self, widget, event):
-		path_re=widget.get_path_at_pos(int(event.x), int(event.y))
-		if path_re is not None:
+		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
 			path=path_re[0]
 			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 				self._store.remove(self._store.get_iter(path))
@@ -2588,8 +2568,7 @@ class PlaylistView(TreeView):
 
 	def _on_key_release_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
-			treeview, treeiter=self._selection.get_selected()
-			if treeiter is not None:
+			if (treeiter:=self._selection.get_selected()[1]) is not None:
 				try:
 					self._store.remove(treeiter)
 				except:
@@ -2663,7 +2642,7 @@ class PlaylistView(TreeView):
 		if playlist_length == 0:
 			self._set_playlist_info("")
 		else:
-			duration=Duration(sum([row[4] for row in self._store]))
+			duration=Duration(sum((row[4] for row in self._store)))
 			translated_string=ngettext("{number} song ({duration})", "{number} songs ({duration})", playlist_length)
 			self._set_playlist_info(translated_string.format(number=playlist_length, duration=duration))
 		self._refresh_selection()
@@ -2686,8 +2665,7 @@ class PlaylistView(TreeView):
 		self.set_sensitive(True)
 
 	def show_info(self):
-		treeview, treeiter=self._selection.get_selected()
-		if treeiter is not None:
+		if (treeiter:=self._selection.get_selected()[1]) is not None:
 			path=self._store.get_path(treeiter)
 			self._song_popover.open(self._store[path][3], self, *self.get_popover_point(path))
 
@@ -2785,9 +2763,8 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		self.add(self._text_view)
 
 	def enable(self, *args):
-		current_song=self._client.currentsong()
-		if current_song:
-			if current_song["file"] != self._displayed_song_file:
+		if (song:=self._client.currentsong()):
+			if song["file"] != self._displayed_song_file:
 				self._refresh()
 		else:
 			if self._displayed_song_file is not None:
@@ -2808,10 +2785,10 @@ class LyricsWindow(Gtk.ScrolledWindow):
 			raise ValueError("Not found")
 		return parser.text.strip("\n ")
 
-	def _display_lyrics(self, current_song):
+	def _display_lyrics(self, song):
 		idle_add(self._text_buffer.set_text, _("searching…"), -1)
 		try:
-			text=self._get_lyrics(current_song["title"][0], current_song["artist"][0])
+			text=self._get_lyrics(song["title"][0], song["artist"][0])
 		except urllib.error.URLError:
 			self._displayed_song_file=None
 			text=_("connection error")
@@ -2820,12 +2797,11 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		idle_add(self._text_buffer.set_text, text, -1)
 
 	def _refresh(self, *args):
-		current_song=self._client.currentsong()
-		if current_song:
-			self._displayed_song_file=current_song["file"]
+		if (song:=self._client.currentsong()):
+			self._displayed_song_file=song["file"]
 			update_thread=threading.Thread(
 					target=self._display_lyrics,
-					kwargs={"current_song": current_song},
+					kwargs={"song": song},
 					daemon=True
 			)
 			update_thread.start()
@@ -2857,8 +2833,7 @@ class CoverEventBox(Gtk.EventBox):
 				window.begin_move_drag(1, event.x_root, event.y_root, Gdk.CURRENT_TIME)
 		else:
 			if self._client.connected():
-				song=self._client.currentsong()
-				if song:
+				if (song:=self._client.currentsong()):
 					tags=(song["albumartist"][0], song["album"][0], song["date"][0])
 					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
 						self._client.album_to_playlist(*tags)
@@ -3170,9 +3145,8 @@ class AudioFormat(Gtk.Box):
 			self._brate_label.set_text(brate)
 
 	def _on_song_changed(self, *args):
-		current_song=self._client.currentsong()
-		if current_song:
-			file_type=current_song["file"].split(".")[-1].split("/")[0].upper()
+		if (song:=self._client.currentsong()):
+			file_type=song["file"].split(".")[-1].split("/")[0].upper()
 			self._separator_label.set_text(" kb∕s • ")
 			self._file_type_label.set_text(file_type)
 		else:
@@ -3247,8 +3221,7 @@ class PlaybackOptions(Gtk.ButtonBox):
 
 	def _on_single_button_press_event(self, widget, event):
 		if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			state=self._client.status()["single"]
-			if state == "oneshot":
+			if self._client.status()["single"] == "oneshot":
 				self._client.single("0")
 			else:
 				self._client.single("oneshot")
@@ -3718,8 +3691,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._browser.back_to_current_album(force=True)
 
 	def _on_song_changed(self, *args):
-		song=self._client.currentsong()
-		if song:
+		if (song:=self._client.currentsong()):
 			album=song.get_album_with_date()
 			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
 			if self._use_csd:
@@ -3762,8 +3734,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_size_allocate(self, widget, rect):
 		if not self.is_maximized() and not self._settings.get_boolean("mini-player"):
-			size=self.get_size()
-			if size != self._size:  # prevent unneeded write operations
+			if (size:=self.get_size()) != self._size:  # prevent unneeded write operations
 				self._settings.set_int("width", size[0])
 				self._settings.set_int("height", size[1])
 				self._size=size
