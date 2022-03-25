@@ -3694,8 +3694,8 @@ class MainWindow(Gtk.ApplicationWindow):
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and self._client.status()["state"] == "play":
 					notify=Gio.Notification()
-					notify.set_title(str(song["title"]))
-					notify.set_body(f"{song['artist']}\n{album}")
+					notify.set_title(title)
+					notify.set_body(album)
 					if isinstance(self._client.current_cover, FileCover):
 						notify.set_icon(Gio.FileIcon.new(Gio.File.new_for_path(self._client.current_cover)))
 					elif isinstance(self._client.current_cover, BinaryCover):
@@ -3707,6 +3707,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_title("mpdevil")
 			if self._use_csd:
 				self._header_bar.set_subtitle("")
+			self.get_application().withdraw_notification("title-change")
 
 	def _on_reconnected(self, *args):
 		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
