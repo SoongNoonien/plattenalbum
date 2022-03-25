@@ -875,7 +875,7 @@ class Client(MPDClient):
 
 	def get_absolute_path(self, uri):
 		if self.lib_path is not None:
-			path=os.path.join(self.lib_path, uri)
+			path=re.sub(r"(.*\.cue)\/track\d+$", r"\1", os.path.join(self.lib_path, uri), flags=re.IGNORECASE)
 			if os.path.isfile(path):
 				return path
 			else:
