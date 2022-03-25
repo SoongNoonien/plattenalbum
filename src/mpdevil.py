@@ -1311,31 +1311,25 @@ class SongPopover(Gtk.Popover):
 		self._client=client
 		self._rect=Gdk.Rectangle()
 		self._uri=None
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, border_width=6, halign=Gtk.Align.END, valign=Gtk.Align.END)
+		hbox=Gtk.Box(spacing=6)
 
 		# open-with button
-		open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open-symbolic", Gtk.IconSize.BUTTON),
+		self._open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open-symbolic", Gtk.IconSize.BUTTON),
 			tooltip_text=_("Show in file manager"))
-		open_button.get_style_context().add_class("osd")
-
-		# open button revealer
-		self._open_button_revealer=Gtk.Revealer(child=open_button, transition_duration=0)
-		box.pack_end(self._open_button_revealer, False, False, 0)
+		hbox.pack_end(self._open_button, False, False, 0)
 
 		# buttons
 		if show_buttons:
-			button_box=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, layout_style=Gtk.ButtonBoxStyle.EXPAND, halign=Gtk.Align.END)
+			button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 			data=((_("Append"), "list-add-symbolic", "append"),
 				(_("Play"), "media-playback-start-symbolic", "play"),
 				(_("Enqueue"), "insert-object-symbolic", "enqueue")
 			)
 			for tooltip, icon, mode in data:
 				button=Gtk.Button(tooltip_text=tooltip, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
-				button.get_style_context().add_class("osd")
 				button.connect("clicked", self._on_button_clicked, mode)
 				button_box.pack_start(button, True, True, 0)
-			button_box_revealer=Gtk.Revealer(child=button_box, transition_duration=0, reveal_child=True)  # needed for tooltips
-			box.pack_end(button_box_revealer, False, False, 0)
+			hbox.pack_end(button_box, False, False, 0)
 
 		# treeview
 		# (tag, display-value, tooltip)
@@ -1357,17 +1351,16 @@ class SongPopover(Gtk.Popover):
 		self._scroll=Gtk.ScrolledWindow(child=self._treeview, propagate_natural_height=True)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
-		# overlay
-		overlay=Gtk.Overlay(child=self._scroll)
-		overlay.add_overlay(box)
-
 		# connect
-		open_button.connect("clicked", self._on_open_button_clicked)
+		self._open_button.connect("clicked", self._on_open_button_clicked)
 
 		# packing
-		frame=Gtk.Frame(child=overlay, border_width=6)
-		self.add(frame)
-		frame.show_all()
+		frame=Gtk.Frame(child=self._scroll)
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
+		vbox.pack_start(frame, True, True, 0)
+		vbox.pack_end(hbox, False, False, 0)
+		self.add(vbox)
+		vbox.show_all()
 
 	def open(self, uri, widget, x, y):
 		self._uri=uri
@@ -1386,7 +1379,7 @@ class SongPopover(Gtk.Popover):
 			else:
 				self._store.append([tag+":", str(value), GLib.markup_escape_text(str(value))])
 		abs_path=self._client.get_absolute_path(uri)
-		self._open_button_revealer.set_reveal_child(abs_path is not None)  # show open with button when song is on the same computer
+		self._open_button.set_sensitive(abs_path is not None)  # show open with button when song is on the same computer
 		self.popup()
 		self._treeview.columns_autosize()
 
@@ -1434,7 +1427,7 @@ class SongsList(TreeView):
 		self._selection=self.get_selection()
 
 		# buttons
-		self.buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND, halign=Gtk.Align.END)
+		self.buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		data=((_("Add all titles to playlist"), "list-add-symbolic", "append"),
 			(_("Directly play all titles"), "media-playback-start-symbolic", "play"),
 			(_("Append all titles after the currently playing track and clear the playlist from all other songs"),
@@ -1514,9 +1507,9 @@ class AlbumPopover(Gtk.Popover):
 		hbox=Gtk.Box(spacing=6)
 		hbox.pack_end(self._songs_list.buttons, False, False, 0)
 		hbox.pack_start(self._label, False, False, 6)
-		vbox.pack_start(hbox, False, False, 0)
 		frame=Gtk.Frame(child=self._scroll)
-		vbox.pack_end(frame, True, True, 0)
+		vbox.pack_start(frame, True, True, 0)
+		vbox.pack_end(hbox, False, False, 0)
 		self.add(vbox)
 		vbox.show_all()
 
