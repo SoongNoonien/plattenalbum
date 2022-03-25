@@ -2683,7 +2683,6 @@ class PlaylistWindow(Gtk.Overlay):
 		# connect
 		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
 		scroll.get_vadjustment().connect("value-changed", self._on_show_hide_back_button)
-		self._treeview.connect("notify::selected-path", self._on_show_hide_back_button)
 		settings.bind("mini-player", self, "no-show-all", Gio.SettingsBindFlags.GET)
 		settings.bind("mini-player", self, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
