@@ -2692,7 +2692,7 @@ class PlaylistWindow(Gtk.Overlay):
 		self.add_overlay(self._back_button_revealer)
 
 	def _on_show_hide_back_button(self, *args):
-		visible_range=self._treeview.get_visible_range()
+		visible_range=self._treeview.get_visible_range()  # not always accurate possibly due to a bug in Gtk
 		if visible_range is None or self._treeview.get_property("selected-path") is None:
 			self._back_button_revealer.set_reveal_child(False)
 		else:
