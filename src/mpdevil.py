@@ -1310,7 +1310,7 @@ class AddToPlaylistPopover(Gtk.Popover):
 		super().__init__()
 		self._client=client
 		self.uri=None
-		self._vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, margin=10)
+		self._vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, margin=10, valign=Gtk.Align.START)
 		self._scroll=Gtk.ScrolledWindow(child=self._vbox, propagate_natural_height=True)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		self.connect("show", self._on_show)
