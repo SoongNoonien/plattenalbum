@@ -1305,20 +1305,51 @@ class AutoSizedIcon(Gtk.Image):
 		super().__init__(icon_name=icon_name)
 		settings.bind(settings_key, self, "pixel-size", Gio.SettingsBindFlags.GET)
 
+class AddToPlaylistPopover(Gtk.Popover):
+	def __init__(self, client):
+		super().__init__()
+		self._client=client
+		self.uri=None
+		self._vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, margin=10)
+		self._scroll=Gtk.ScrolledWindow(child=self._vbox, propagate_natural_height=True)
+		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		self.connect("show", self._on_show)
+		self.add(self._scroll)
+
+	def _on_show(self, *args):
+		for playlist in self._vbox.get_children():
+			self._vbox.remove(playlist)
+		for playlist in sorted((p["playlist"] for p in self._client.listplaylists()), key=locale.strxfrm):
+			button=Gtk.ModelButton(label=playlist)
+			button.get_child().set_property("xalign", 0)
+			button.connect("clicked", self._on_playlist_clicked, playlist)
+			self._vbox.pack_start(button, True, True, 0)
+		window=self.get_toplevel()
+		self._scroll.set_max_content_height(window.get_size()[1]//2)
+		self._scroll.show_all()
+
+	def _on_playlist_clicked(self, button, name):
+		if self.uri:
+			self._client.playlistadd(name, self.uri)
+
 class SongPopover(Gtk.Popover):
 	def __init__(self, client, show_buttons=True):
 		super().__init__(position=Gtk.PositionType.BOTTOM)
 		self._client=client
 		self._rect=Gdk.Rectangle()
 		self._uri=None
-		hbox=Gtk.Box(spacing=6)
 
-		# open-with button
+		# playlists popover
+		self._playlists_popover=AddToPlaylistPopover(self._client)
+
+		# buttons
+		hbox=Gtk.Box(spacing=6)
+		playlist_button=Gtk.MenuButton(image=Gtk.Image.new_from_icon_name("view-list-symbolic", Gtk.IconSize.BUTTON),
+			tooltip_text=_("Add to playlist"), popover=self._playlists_popover)
+		hbox.pack_start(playlist_button, False, False, 0)
 		self._open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open-symbolic", Gtk.IconSize.BUTTON),
 			tooltip_text=_("Show in file manager"))
 		hbox.pack_end(self._open_button, False, False, 0)
-
-		# buttons
 		if show_buttons:
 			button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 			data=((_("Append"), "list-add-symbolic", "append"),
@@ -1364,6 +1395,7 @@ class SongPopover(Gtk.Popover):
 
 	def open(self, uri, widget, x, y):
 		self._uri=uri
+		self._playlists_popover.uri=uri
 		self._rect.x,self._rect.y=x,y
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
