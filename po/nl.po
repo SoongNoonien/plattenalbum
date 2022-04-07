@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-06 22:29+0100\n"
-"PO-Revision-Date: 2022-02-23 18:35+0100\n"
+"POT-Creation-Date: 2022-04-07 12:12+0200\n"
+"PO-Revision-Date: 2022-04-07 12:14+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -18,89 +18,89 @@ msgstr ""
 "X-Generator: Poedit 2.3.1\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/mpdevil.py:501
+#: src/mpdevil.py:504
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days} dag"
 msgstr[1] "{days} dagen"
 
-#: src/mpdevil.py:538
+#: src/mpdevil.py:541
 #, python-brace-format
 msgid "{channels} channel"
 msgid_plural "{channels} channels"
 msgstr[0] "{channels} kanaal"
 msgstr[1] "{channels} kanalen"
 
-#: src/mpdevil.py:1008
+#: src/mpdevil.py:1012
 msgid "(restart required)"
 msgstr "(herstart vereist)"
 
-#: src/mpdevil.py:1054
+#: src/mpdevil.py:1058
 msgid "Use Client-side decoration"
 msgstr "Gebruik vensterdecoratie van mpdevil"
 
-#: src/mpdevil.py:1055
+#: src/mpdevil.py:1059
 msgid "Show stop button"
 msgstr "Toon stopknop"
 
-#: src/mpdevil.py:1056
+#: src/mpdevil.py:1060
 msgid "Show audio format"
 msgstr "Toon audioformaat"
 
-#: src/mpdevil.py:1057
+#: src/mpdevil.py:1061
 msgid "Show lyrics button"
 msgstr "Toon songtekstknop"
 
-#: src/mpdevil.py:1058
+#: src/mpdevil.py:1062
 msgid "Place playlist at the side"
 msgstr "Plaats afspeellijst aan de zijkant"
 
-#: src/mpdevil.py:1064
+#: src/mpdevil.py:1068
 msgid "Main cover size"
 msgstr "Grootte albumhoes"
 
-#: src/mpdevil.py:1065
+#: src/mpdevil.py:1069
 msgid "Album view cover size"
 msgstr "Hoesgrootte in albumlijst"
 
-#: src/mpdevil.py:1066
+#: src/mpdevil.py:1070
 msgid "Action bar icon size"
 msgstr "Grootte iconen werkbalk"
 
-#: src/mpdevil.py:1076
+#: src/mpdevil.py:1080
 msgid "Support “MPRIS”"
 msgstr "Ondersteun „MPRIS”"
 
-#: src/mpdevil.py:1077
+#: src/mpdevil.py:1081
 msgid "Sort albums by year"
 msgstr "Sorteer albums op jaar"
 
-#: src/mpdevil.py:1078
+#: src/mpdevil.py:1082
 msgid "Send notification on title change"
 msgstr "Verstuur een melding bij titelwisseling"
 
-#: src/mpdevil.py:1079
+#: src/mpdevil.py:1083
 msgid "Play selected albums and titles immediately"
 msgstr "Geselecteerde albums en titels direct afspelen"
 
-#: src/mpdevil.py:1080
+#: src/mpdevil.py:1084
 msgid "Rewind via previous button"
 msgstr "Terugspoelen met „vorige” knop"
 
-#: src/mpdevil.py:1081
+#: src/mpdevil.py:1085
 msgid "Stop playback on quit"
 msgstr "Stop afspelen bij afsluiten"
 
-#: src/mpdevil.py:1108
+#: src/mpdevil.py:1112
 msgid "Choose directory"
 msgstr "Kies een map"
 
-#: src/mpdevil.py:1121
+#: src/mpdevil.py:1125
 msgid "Connect via Unix domain socket"
 msgstr "Verbinden via Unix domain socket"
 
-#: src/mpdevil.py:1140
+#: src/mpdevil.py:1144
 msgid ""
 "The first image in the same directory as the song file matching this regex "
 "will be displayed. %AlbumArtist% and %Album% will be replaced by the "
@@ -110,142 +110,146 @@ msgstr ""
 "met deze regex wordt getoond. %AlbumArtist% en %Album% worden vervangen door "
 "de bijbehorende tags van het muziekbestand."
 
-#: src/mpdevil.py:1145
+#: src/mpdevil.py:1149
 msgid "Socket:"
 msgstr "Socket:"
 
-#: src/mpdevil.py:1147
+#: src/mpdevil.py:1151
 msgid "Host:"
 msgstr "Host:"
 
-#: src/mpdevil.py:1149
+#: src/mpdevil.py:1153
 msgid "Password:"
 msgstr "Wachtwoord:"
 
-#: src/mpdevil.py:1150
+#: src/mpdevil.py:1154
 msgid "Music lib:"
 msgstr "Muziekmap:"
 
-#: src/mpdevil.py:1152
+#: src/mpdevil.py:1156
 msgid "Cover regex:"
 msgstr "Regex albumhoes:"
 
-#: src/mpdevil.py:1176 src/mpdevil.py:3579
+#: src/mpdevil.py:1180 src/mpdevil.py:3560
 msgid "Profile 1"
 msgstr "Profiel 1"
 
-#: src/mpdevil.py:1177 src/mpdevil.py:3579
+#: src/mpdevil.py:1181 src/mpdevil.py:3560
 msgid "Profile 2"
 msgstr "Profiel 2"
 
-#: src/mpdevil.py:1178 src/mpdevil.py:3579
+#: src/mpdevil.py:1182 src/mpdevil.py:3560
 msgid "Profile 3"
 msgstr "Profiel 3"
 
 #. connect button
-#: src/mpdevil.py:1182 src/mpdevil.py:3462
+#: src/mpdevil.py:1186 src/mpdevil.py:3448
 msgid "Connect"
 msgstr "Verbinden"
 
-#: src/mpdevil.py:1205 src/mpdevil.py:1207 src/mpdevil.py:3463
-#: src/mpdevil.py:3571
+#: src/mpdevil.py:1209 src/mpdevil.py:1211 src/mpdevil.py:3449
+#: src/mpdevil.py:3552
 msgid "Preferences"
 msgstr "Voorkeuren"
 
-#: src/mpdevil.py:1220 src/mpdevil.py:1230
+#: src/mpdevil.py:1224 src/mpdevil.py:1234
 msgid "View"
 msgstr "Beeld"
 
-#: src/mpdevil.py:1221 src/mpdevil.py:1231
+#: src/mpdevil.py:1225 src/mpdevil.py:1235
 msgid "Behavior"
 msgstr "Gedrag"
 
-#: src/mpdevil.py:1222 src/mpdevil.py:1232
+#: src/mpdevil.py:1226 src/mpdevil.py:1236
 msgid "Profiles"
 msgstr "Profielen"
 
-#: src/mpdevil.py:1249
+#: src/mpdevil.py:1253
 msgid "Stats"
 msgstr "Statistieken"
 
-#: src/mpdevil.py:1258
+#: src/mpdevil.py:1262
 msgid "<b>Protocol:</b>"
 msgstr "<b>Protocol:</b>"
 
-#: src/mpdevil.py:1259
+#: src/mpdevil.py:1263
 msgid "<b>Uptime:</b>"
 msgstr "<b>Uptime:</b>"
 
-#: src/mpdevil.py:1260
+#: src/mpdevil.py:1264
 msgid "<b>Playtime:</b>"
 msgstr "<b>Afspeeltijd:</b>"
 
-#: src/mpdevil.py:1261
+#: src/mpdevil.py:1265
 msgid "<b>Artists:</b>"
 msgstr "<b>Artiesten:</b>"
 
-#: src/mpdevil.py:1262
+#: src/mpdevil.py:1266
 msgid "<b>Albums:</b>"
 msgstr "<b>Albums:</b>"
 
-#: src/mpdevil.py:1263
+#: src/mpdevil.py:1267
 msgid "<b>Songs:</b>"
 msgstr "<b>Titels:</b>"
 
-#: src/mpdevil.py:1264
+#: src/mpdevil.py:1268
 msgid "<b>Total Playtime:</b>"
 msgstr "<b>Totale speelduur:</b>"
 
-#: src/mpdevil.py:1265
+#: src/mpdevil.py:1269
 msgid "<b>Database Update:</b>"
 msgstr "<b>Database bijgewerkt:</b>"
 
-#: src/mpdevil.py:1314
+#: src/mpdevil.py:1348
+msgid "Add to playlist"
+msgstr ""
+
+#: src/mpdevil.py:1351
 msgid "Show in file manager"
 msgstr ""
 
-#: src/mpdevil.py:1324 src/mpdevil.py:1564 src/mpdevil.py:2284
+#: src/mpdevil.py:1355 src/mpdevil.py:1590 src/mpdevil.py:2304
 msgid "Append"
 msgstr "Toevoegen"
 
-#: src/mpdevil.py:1325 src/mpdevil.py:1565 src/mpdevil.py:2285
+#: src/mpdevil.py:1356 src/mpdevil.py:1591 src/mpdevil.py:2305
 msgid "Play"
 msgstr "Afspelen"
 
-#: src/mpdevil.py:1326 src/mpdevil.py:1566 src/mpdevil.py:2286
+#: src/mpdevil.py:1357 src/mpdevil.py:1592 src/mpdevil.py:2306
 msgid "Enqueue"
 msgstr "In wachtrij plaatsen"
 
-#: src/mpdevil.py:1345
+#: src/mpdevil.py:1374
 msgid "MPD-Tag"
 msgstr "MPD-Tag"
 
-#: src/mpdevil.py:1348
+#: src/mpdevil.py:1377
 msgid "Value"
 msgstr "Waarde"
 
-#: src/mpdevil.py:1419 src/mpdevil.py:2493
+#: src/mpdevil.py:1448 src/mpdevil.py:2510
 msgid "No"
 msgstr "Nr"
 
 #. the order of weight_set and weight seems to be important here
-#: src/mpdevil.py:1420 src/mpdevil.py:2495
+#: src/mpdevil.py:1449 src/mpdevil.py:2512
 msgid "Title"
 msgstr "Titel"
 
-#: src/mpdevil.py:1421 src/mpdevil.py:2496
+#: src/mpdevil.py:1450 src/mpdevil.py:2513
 msgid "Length"
 msgstr "Lengte"
 
-#: src/mpdevil.py:1434
+#: src/mpdevil.py:1463
 msgid "Add all titles to playlist"
 msgstr "Voeg alle titels toe aan de afspeellijst"
 
-#: src/mpdevil.py:1435
+#: src/mpdevil.py:1464
 msgid "Directly play all titles"
 msgstr "Alle titels direct afspelen"
 
-#: src/mpdevil.py:1436
+#: src/mpdevil.py:1465
 msgid ""
 "Append all titles after the currently playing track and clear the playlist "
 "from all other songs"
@@ -253,150 +257,150 @@ msgstr ""
 "Alle titels toevoegen na de nu spelende titel en alle overige titels uit de "
 "afspeellijst verwijderen"
 
-#: src/mpdevil.py:1533 src/mpdevil.py:2374 src/mpdevil.py:2657
+#: src/mpdevil.py:1559 src/mpdevil.py:2394 src/mpdevil.py:2671
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
 msgstr[0] "{number} nummer ({duration})"
 msgstr[1] "{number} nummers ({duration})"
 
-#: src/mpdevil.py:1632
+#: src/mpdevil.py:1658
 #, python-brace-format
 msgid "{hits} hit"
 msgid_plural "{hits} hits"
 msgstr[0] "{hits} hit"
 msgstr[1] "{hits} treffers"
 
-#: src/mpdevil.py:1717
+#: src/mpdevil.py:1743
 msgid "all tags"
 msgstr "alle tags"
 
-#: src/mpdevil.py:1849
+#: src/mpdevil.py:1875
 msgid "all genres"
 msgstr "alle genres"
 
-#: src/mpdevil.py:1875
+#: src/mpdevil.py:1901
 msgid "all artists"
 msgstr "alle artiesten"
 
-#: src/mpdevil.py:2294
+#: src/mpdevil.py:2314
 msgid "Save"
 msgstr "Opslaan"
 
-#: src/mpdevil.py:2298
+#: src/mpdevil.py:2318
 msgid "Delete"
 msgstr "Verwijderen"
 
-#: src/mpdevil.py:2422 data/ShortcutsWindow.ui:240
+#: src/mpdevil.py:2439 data/ShortcutsWindow.ui:240
 msgid "Clear playlist"
 msgstr "Afspeellijst legen"
 
-#: src/mpdevil.py:2688
+#: src/mpdevil.py:2701
 msgid "Scroll to current song"
 msgstr "Naar de huidige titel scrollen"
 
-#: src/mpdevil.py:2700
+#: src/mpdevil.py:2713
 msgid "Playlists"
 msgstr "Afspeellijsten"
 
-#: src/mpdevil.py:2793
+#: src/mpdevil.py:2814
 msgid "searching…"
 msgstr "bezig met zoeken…"
 
-#: src/mpdevil.py:2798
+#: src/mpdevil.py:2819
 msgid "connection error"
 msgstr "verbindingsfout"
 
-#: src/mpdevil.py:2800
+#: src/mpdevil.py:2821
 msgid "lyrics not found"
 msgstr "geen songtekst gevonden"
 
-#: src/mpdevil.py:2906
+#: src/mpdevil.py:2924
 msgid "Lyrics"
 msgstr "Songtekst"
 
-#: src/mpdevil.py:2997 src/mpdevil.py:2998
+#: src/mpdevil.py:3015 src/mpdevil.py:3016
 #, python-brace-format
 msgid "{number} song"
 msgid_plural "{number} songs"
 msgstr[0] "{number} nummer"
 msgstr[1] "{number} nummers"
 
-#: src/mpdevil.py:3207
+#: src/mpdevil.py:3201
 msgid "Repeat mode"
 msgstr "Herhaalmodus"
 
-#: src/mpdevil.py:3208
+#: src/mpdevil.py:3202
 msgid "Random mode"
 msgstr "Willekeurige modus"
 
-#: src/mpdevil.py:3209
+#: src/mpdevil.py:3203
 msgid "Single mode"
 msgstr "Enkele modus"
 
-#: src/mpdevil.py:3210
+#: src/mpdevil.py:3204
 msgid "Consume mode"
 msgstr "Verbruiksmodus"
 
-#: src/mpdevil.py:3432
+#: src/mpdevil.py:3418
 msgid "Updating Database…"
 msgstr "Database bijwerken…"
 
-#: src/mpdevil.py:3484
+#: src/mpdevil.py:3470
 #, python-brace-format
 msgid "Connection to “{socket}” failed"
 msgstr "Verbinding met „{socket}” mislukt"
 
-#: src/mpdevil.py:3486
+#: src/mpdevil.py:3472
 #, python-brace-format
 msgid "Connection to “{host}:{port}” failed"
 msgstr "Verbinding met „{host}:{port}” mislukt"
 
-#: src/mpdevil.py:3556
+#: src/mpdevil.py:3537
 msgid "Search"
 msgstr "Zoeken"
 
-#: src/mpdevil.py:3559 data/ShortcutsWindow.ui:99
+#: src/mpdevil.py:3540 data/ShortcutsWindow.ui:99
 msgid "Back to current album"
 msgstr "Terug naar huidige album"
 
-#: src/mpdevil.py:3572
+#: src/mpdevil.py:3553
 msgid "Keyboard Shortcuts"
 msgstr "Sneltoetsen"
 
-#: src/mpdevil.py:3573
+#: src/mpdevil.py:3554
 msgid "Help"
 msgstr "Hulp"
 
-#: src/mpdevil.py:3574
+#: src/mpdevil.py:3555
 msgid "About mpdevil"
 msgstr "Over mpdevil"
 
-#: src/mpdevil.py:3576
+#: src/mpdevil.py:3557
 msgid "Update Database"
 msgstr "Database bijwerken"
 
-#: src/mpdevil.py:3577
+#: src/mpdevil.py:3558
 msgid "Server Stats"
 msgstr "Serverstatistieken"
 
-#: src/mpdevil.py:3584
+#: src/mpdevil.py:3565
 msgid "Mini Player"
 msgstr "Minispeler"
 
-#: src/mpdevil.py:3585
+#: src/mpdevil.py:3566
 msgid "Genre Filter"
 msgstr "Genrefilter"
 
-#: src/mpdevil.py:3595
+#: src/mpdevil.py:3576
 msgid "Menu"
 msgstr "Menu"
 
-#: src/mpdevil.py:3648 src/mpdevil.py:3650
+#: src/mpdevil.py:3629 src/mpdevil.py:3631
 msgid "connecting…"
 msgstr "verbinding maken…"
 
-#: src/mpdevil.py:3804
+#: src/mpdevil.py:3790
 msgid "Debug mode"
 msgstr "Debugmodus"
 

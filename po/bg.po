@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-06 22:29+0100\n"
-"PO-Revision-Date: 2022-02-26 18:49+0200\n"
+"POT-Creation-Date: 2022-04-07 12:12+0200\n"
+"PO-Revision-Date: 2022-04-07 12:14+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: bg\n"
@@ -16,92 +16,92 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Poedit 2.3.1\n"
 "X-Poedit-Bookmarks: -1,-1,-1,-1,30,-1,-1,-1,-1,-1\n"
 
-#: src/mpdevil.py:501
+#: src/mpdevil.py:504
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days} ден"
 msgstr[1] "{days} дни"
 
-#: src/mpdevil.py:538
+#: src/mpdevil.py:541
 #, python-brace-format
 msgid "{channels} channel"
 msgid_plural "{channels} channels"
 msgstr[0] "{channels} канал"
 msgstr[1] "{channels} канали"
 
-#: src/mpdevil.py:1008
+#: src/mpdevil.py:1012
 msgid "(restart required)"
 msgstr "(необходим е рестарт)"
 
-#: src/mpdevil.py:1054
+#: src/mpdevil.py:1058
 msgid "Use Client-side decoration"
 msgstr "Използвай декорация от Клиентска страна"
 
-#: src/mpdevil.py:1055
+#: src/mpdevil.py:1059
 msgid "Show stop button"
 msgstr "Покажи бутон стоп"
 
-#: src/mpdevil.py:1056
+#: src/mpdevil.py:1060
 msgid "Show audio format"
 msgstr "Покажи аудио формат"
 
-#: src/mpdevil.py:1057
+#: src/mpdevil.py:1061
 msgid "Show lyrics button"
 msgstr "Покажи бутон за лирики"
 
-#: src/mpdevil.py:1058
+#: src/mpdevil.py:1062
 msgid "Place playlist at the side"
 msgstr "Постави плейлитът на страни"
 
-#: src/mpdevil.py:1064
+#: src/mpdevil.py:1068
 msgid "Main cover size"
 msgstr "Големина на главната обложка"
 
-#: src/mpdevil.py:1065
+#: src/mpdevil.py:1069
 msgid "Album view cover size"
 msgstr "Големина за основна облечка"
 
-#: src/mpdevil.py:1066
+#: src/mpdevil.py:1070
 msgid "Action bar icon size"
 msgstr "Големина за иконите на бутоните"
 
-#: src/mpdevil.py:1076
+#: src/mpdevil.py:1080
 msgid "Support “MPRIS”"
 msgstr "Поддръжка на “MPRIS”"
 
-#: src/mpdevil.py:1077
+#: src/mpdevil.py:1081
 msgid "Sort albums by year"
 msgstr "Сортирай албумите по година"
 
-#: src/mpdevil.py:1078
+#: src/mpdevil.py:1082
 msgid "Send notification on title change"
 msgstr "Прати известие при промяна на заглавие"
 
-#: src/mpdevil.py:1079
+#: src/mpdevil.py:1083
 msgid "Play selected albums and titles immediately"
 msgstr "Възпроизведи избраните албуми и заглавия веднага"
 
-#: src/mpdevil.py:1080
+#: src/mpdevil.py:1084
 msgid "Rewind via previous button"
 msgstr "Пренавий чрез бутон назад"
 
-#: src/mpdevil.py:1081
+#: src/mpdevil.py:1085
 msgid "Stop playback on quit"
 msgstr "Прекрати възпроизвеждането при изход"
 
-#: src/mpdevil.py:1108
+#: src/mpdevil.py:1112
 msgid "Choose directory"
 msgstr "Избери директория"
 
-#: src/mpdevil.py:1121
+#: src/mpdevil.py:1125
 msgid "Connect via Unix domain socket"
 msgstr "Свържи чрез Unix domain socket"
 
-#: src/mpdevil.py:1140
+#: src/mpdevil.py:1144
 msgid ""
 "The first image in the same directory as the song file matching this regex "
 "will be displayed. %AlbumArtist% and %Album% will be replaced by the "
@@ -111,142 +111,146 @@ msgstr ""
 "този регулярен израз. %AlbumArtist% и %Album% ще бъдат заместени от "
 "съответстващите тагове от песента."
 
-#: src/mpdevil.py:1145
+#: src/mpdevil.py:1149
 msgid "Socket:"
 msgstr "Сокет:"
 
-#: src/mpdevil.py:1147
+#: src/mpdevil.py:1151
 msgid "Host:"
 msgstr "Хост:"
 
-#: src/mpdevil.py:1149
+#: src/mpdevil.py:1153
 msgid "Password:"
 msgstr "Парола:"
 
-#: src/mpdevil.py:1150
+#: src/mpdevil.py:1154
 msgid "Music lib:"
 msgstr "Музикална библиотека:"
 
-#: src/mpdevil.py:1152
+#: src/mpdevil.py:1156
 msgid "Cover regex:"
 msgstr "Обложка - регулярен израз:"
 
-#: src/mpdevil.py:1176 src/mpdevil.py:3579
+#: src/mpdevil.py:1180 src/mpdevil.py:3560
 msgid "Profile 1"
 msgstr "Профил 1"
 
-#: src/mpdevil.py:1177 src/mpdevil.py:3579
+#: src/mpdevil.py:1181 src/mpdevil.py:3560
 msgid "Profile 2"
 msgstr "Профил 2"
 
-#: src/mpdevil.py:1178 src/mpdevil.py:3579
+#: src/mpdevil.py:1182 src/mpdevil.py:3560
 msgid "Profile 3"
 msgstr "Профил 3"
 
 #. connect button
-#: src/mpdevil.py:1182 src/mpdevil.py:3462
+#: src/mpdevil.py:1186 src/mpdevil.py:3448
 msgid "Connect"
 msgstr "Свържи"
 
-#: src/mpdevil.py:1205 src/mpdevil.py:1207 src/mpdevil.py:3463
-#: src/mpdevil.py:3571
+#: src/mpdevil.py:1209 src/mpdevil.py:1211 src/mpdevil.py:3449
+#: src/mpdevil.py:3552
 msgid "Preferences"
 msgstr "Предпочитания"
 
-#: src/mpdevil.py:1220 src/mpdevil.py:1230
+#: src/mpdevil.py:1224 src/mpdevil.py:1234
 msgid "View"
 msgstr "Поглед"
 
-#: src/mpdevil.py:1221 src/mpdevil.py:1231
+#: src/mpdevil.py:1225 src/mpdevil.py:1235
 msgid "Behavior"
 msgstr "Държане"
 
-#: src/mpdevil.py:1222 src/mpdevil.py:1232
+#: src/mpdevil.py:1226 src/mpdevil.py:1236
 msgid "Profiles"
 msgstr "Профили"
 
-#: src/mpdevil.py:1249
+#: src/mpdevil.py:1253
 msgid "Stats"
 msgstr "Статистика"
 
-#: src/mpdevil.py:1258
+#: src/mpdevil.py:1262
 msgid "<b>Protocol:</b>"
 msgstr "<b>Протокол:</b>"
 
-#: src/mpdevil.py:1259
+#: src/mpdevil.py:1263
 msgid "<b>Uptime:</b>"
 msgstr "<b>Време на работа:</b>"
 
-#: src/mpdevil.py:1260
+#: src/mpdevil.py:1264
 msgid "<b>Playtime:</b>"
 msgstr "<b>Време на възпроизвеждане:</b>"
 
-#: src/mpdevil.py:1261
+#: src/mpdevil.py:1265
 msgid "<b>Artists:</b>"
 msgstr "<b>Артисти:</b>"
 
-#: src/mpdevil.py:1262
+#: src/mpdevil.py:1266
 msgid "<b>Albums:</b>"
 msgstr "<b>Албуми:</b>"
 
-#: src/mpdevil.py:1263
+#: src/mpdevil.py:1267
 msgid "<b>Songs:</b>"
 msgstr "<b>Песни::</b>"
 
-#: src/mpdevil.py:1264
+#: src/mpdevil.py:1268
 msgid "<b>Total Playtime:</b>"
 msgstr "<b>Цялостно време на възпроизвеждане:</b>"
 
-#: src/mpdevil.py:1265
+#: src/mpdevil.py:1269
 msgid "<b>Database Update:</b>"
 msgstr "<b>Актуализация на базата с данни:</b>"
 
-#: src/mpdevil.py:1314
+#: src/mpdevil.py:1348
+msgid "Add to playlist"
+msgstr ""
+
+#: src/mpdevil.py:1351
 msgid "Show in file manager"
 msgstr ""
 
-#: src/mpdevil.py:1324 src/mpdevil.py:1564 src/mpdevil.py:2284
+#: src/mpdevil.py:1355 src/mpdevil.py:1590 src/mpdevil.py:2304
 msgid "Append"
 msgstr "Добави"
 
-#: src/mpdevil.py:1325 src/mpdevil.py:1565 src/mpdevil.py:2285
+#: src/mpdevil.py:1356 src/mpdevil.py:1591 src/mpdevil.py:2305
 msgid "Play"
 msgstr "Свири"
 
-#: src/mpdevil.py:1326 src/mpdevil.py:1566 src/mpdevil.py:2286
+#: src/mpdevil.py:1357 src/mpdevil.py:1592 src/mpdevil.py:2306
 msgid "Enqueue"
 msgstr "На опашката"
 
-#: src/mpdevil.py:1345
+#: src/mpdevil.py:1374
 msgid "MPD-Tag"
 msgstr "MPD-Етикет"
 
-#: src/mpdevil.py:1348
+#: src/mpdevil.py:1377
 msgid "Value"
 msgstr "Стойност"
 
-#: src/mpdevil.py:1419 src/mpdevil.py:2493
+#: src/mpdevil.py:1448 src/mpdevil.py:2510
 msgid "No"
 msgstr "№"
 
 #. the order of weight_set and weight seems to be important here
-#: src/mpdevil.py:1420 src/mpdevil.py:2495
+#: src/mpdevil.py:1449 src/mpdevil.py:2512
 msgid "Title"
 msgstr "Заглавие"
 
-#: src/mpdevil.py:1421 src/mpdevil.py:2496
+#: src/mpdevil.py:1450 src/mpdevil.py:2513
 msgid "Length"
 msgstr "Дължина"
 
-#: src/mpdevil.py:1434
+#: src/mpdevil.py:1463
 msgid "Add all titles to playlist"
 msgstr "Добави всички заглавия към плейлист"
 
-#: src/mpdevil.py:1435
+#: src/mpdevil.py:1464
 msgid "Directly play all titles"
 msgstr "Директно възпроизведи всички заглавия"
 
-#: src/mpdevil.py:1436
+#: src/mpdevil.py:1465
 msgid ""
 "Append all titles after the currently playing track and clear the playlist "
 "from all other songs"
@@ -254,150 +258,150 @@ msgstr ""
 "Добави всички заглавия след песента която се възпроизвежда и изчисти от "
 "всички други песни"
 
-#: src/mpdevil.py:1533 src/mpdevil.py:2374 src/mpdevil.py:2657
+#: src/mpdevil.py:1559 src/mpdevil.py:2394 src/mpdevil.py:2671
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
 msgstr[0] "{number} песен ({duration})"
 msgstr[1] "{number} песни ({duration})"
 
-#: src/mpdevil.py:1632
+#: src/mpdevil.py:1658
 #, python-brace-format
 msgid "{hits} hit"
 msgid_plural "{hits} hits"
 msgstr[0] "{hits} попадение"
 msgstr[1] "{hits} попадения"
 
-#: src/mpdevil.py:1717
+#: src/mpdevil.py:1743
 msgid "all tags"
 msgstr "всички тагове"
 
-#: src/mpdevil.py:1849
+#: src/mpdevil.py:1875
 msgid "all genres"
 msgstr "всички жанрове"
 
-#: src/mpdevil.py:1875
+#: src/mpdevil.py:1901
 msgid "all artists"
 msgstr "всички артисти"
 
-#: src/mpdevil.py:2294
+#: src/mpdevil.py:2314
 msgid "Save"
 msgstr "Запазване"
 
-#: src/mpdevil.py:2298
+#: src/mpdevil.py:2318
 msgid "Delete"
 msgstr "Изтриване"
 
-#: src/mpdevil.py:2422 data/ShortcutsWindow.ui:240
+#: src/mpdevil.py:2439 data/ShortcutsWindow.ui:240
 msgid "Clear playlist"
 msgstr "Изчисти плейлист"
 
-#: src/mpdevil.py:2688
+#: src/mpdevil.py:2701
 msgid "Scroll to current song"
 msgstr "Превъртане до моментната песен"
 
-#: src/mpdevil.py:2700
+#: src/mpdevil.py:2713
 msgid "Playlists"
 msgstr "Плейлисти"
 
-#: src/mpdevil.py:2793
+#: src/mpdevil.py:2814
 msgid "searching…"
 msgstr "търсене…"
 
-#: src/mpdevil.py:2798
+#: src/mpdevil.py:2819
 msgid "connection error"
 msgstr "грешка при свързване"
 
-#: src/mpdevil.py:2800
+#: src/mpdevil.py:2821
 msgid "lyrics not found"
 msgstr "лириките не са намерени"
 
-#: src/mpdevil.py:2906
+#: src/mpdevil.py:2924
 msgid "Lyrics"
 msgstr "Лирики"
 
-#: src/mpdevil.py:2997 src/mpdevil.py:2998
+#: src/mpdevil.py:3015 src/mpdevil.py:3016
 #, python-brace-format
 msgid "{number} song"
 msgid_plural "{number} songs"
 msgstr[0] "{number} песен"
 msgstr[1] "{number} песни"
 
-#: src/mpdevil.py:3207
+#: src/mpdevil.py:3201
 msgid "Repeat mode"
 msgstr "Повтарящ режим"
 
-#: src/mpdevil.py:3208
+#: src/mpdevil.py:3202
 msgid "Random mode"
 msgstr "Случаен режим"
 
-#: src/mpdevil.py:3209
+#: src/mpdevil.py:3203
 msgid "Single mode"
 msgstr "Единичен режим"
 
-#: src/mpdevil.py:3210
+#: src/mpdevil.py:3204
 msgid "Consume mode"
 msgstr "Консумиращ режим"
 
-#: src/mpdevil.py:3432
+#: src/mpdevil.py:3418
 msgid "Updating Database…"
 msgstr "Актуализиране на базата с данни…"
 
-#: src/mpdevil.py:3484
+#: src/mpdevil.py:3470
 #, python-brace-format
 msgid "Connection to “{socket}” failed"
 msgstr "Свързването със  “{socket}” се провали"
 
-#: src/mpdevil.py:3486
+#: src/mpdevil.py:3472
 #, python-brace-format
 msgid "Connection to “{host}:{port}” failed"
 msgstr "Свързването със “{host}:{port}” се провали"
 
-#: src/mpdevil.py:3556
+#: src/mpdevil.py:3537
 msgid "Search"
 msgstr "Търси"
 
-#: src/mpdevil.py:3559 data/ShortcutsWindow.ui:99
+#: src/mpdevil.py:3540 data/ShortcutsWindow.ui:99
 msgid "Back to current album"
 msgstr "Обратно в моментния албум"
 
-#: src/mpdevil.py:3572
+#: src/mpdevil.py:3553
 msgid "Keyboard Shortcuts"
 msgstr "Преки пътища на клавиатурата"
 
-#: src/mpdevil.py:3573
+#: src/mpdevil.py:3554
 msgid "Help"
 msgstr "Помощ"
 
-#: src/mpdevil.py:3574
+#: src/mpdevil.py:3555
 msgid "About mpdevil"
 msgstr "За mpdevil"
 
-#: src/mpdevil.py:3576
+#: src/mpdevil.py:3557
 msgid "Update Database"
 msgstr "Актуализирай базата с данни"
 
-#: src/mpdevil.py:3577
+#: src/mpdevil.py:3558
 msgid "Server Stats"
 msgstr "Статистика на сървърът"
 
-#: src/mpdevil.py:3584
+#: src/mpdevil.py:3565
 msgid "Mini Player"
 msgstr "Мини Плеър"
 
-#: src/mpdevil.py:3585
+#: src/mpdevil.py:3566
 msgid "Genre Filter"
 msgstr "Филтър на Жанрове"
 
-#: src/mpdevil.py:3595
+#: src/mpdevil.py:3576
 msgid "Menu"
 msgstr "Меню"
 
-#: src/mpdevil.py:3648 src/mpdevil.py:3650
+#: src/mpdevil.py:3629 src/mpdevil.py:3631
 msgid "connecting…"
 msgstr "свързване…"
 
-#: src/mpdevil.py:3804
+#: src/mpdevil.py:3790
 msgid "Debug mode"
 msgstr "Debug режим"
 
