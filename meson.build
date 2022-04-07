@@ -1,4 +1,4 @@
-project('mpdevil', version: '1.6.0')
+project('mpdevil', version: '1.7.0')
 
 i18n = import('i18n')
 gnome = import('gnome')
