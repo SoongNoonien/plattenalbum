@@ -2736,6 +2736,7 @@ class PlaylistWindow(Gtk.Overlay):
 		if self._treeview.get_property("selected-path") is not None:
 			self._treeview.get_selection().select_path(self._treeview.get_property("selected-path"))
 		self._treeview.scroll_to_selected_title()
+		self._back_button_revealer.set_reveal_child(False)  # workaround for Gtk bug in _on_show_hide_back_button
 
 ####################
 # cover and lyrics #
