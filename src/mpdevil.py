@@ -32,6 +32,7 @@ import datetime
 import collections
 import os
 import sys
+import signal
 import re
 import locale
 from gettext import gettext as _, ngettext, textdomain, bindtextdomain
@@ -3846,4 +3847,5 @@ class mpdevil(Gtk.Application):
 
 if __name__ == "__main__":
 	app=mpdevil()
+	signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
 	app.run(sys.argv)
