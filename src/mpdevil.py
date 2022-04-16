@@ -2264,20 +2264,18 @@ class Browser(Gtk.Paned):
 		self.pack1(genre_window, False, False)
 		self.pack2(self.paned1, True, False)
 
-	def back_to_current_album(self, force=False):
-		if (song:=self._client.currentsong()):
-			artist,genre=self._artist_list.get_artist_selected()
-			# deactivate genre filter to show all artists (if needed)
-			if song["genre"][0] != genre or force:
-				self._genre_list.deactivate()
-			# select artist
-			if artist is None and not force:  # all artists selected
-				self._artist_list.highlight_selected()
-			else:  # one artist selected
-				self._artist_list.select(song["albumartist"][0])
-			self._album_list.scroll_to_current_album()
-		else:
+	def back_to_current_album(self):
+		song=self._client.currentsong()
+		artist,genre=self._artist_list.get_artist_selected()
+		# deactivate genre filter to show all artists (if needed)
+		if song["genre"][0] != genre:
 			self._genre_list.deactivate()
+		# select artist
+		if artist is None:  # all artists selected
+			self._artist_list.highlight_selected()
+		else:  # one artist selected
+			self._artist_list.select(song["albumartist"][0])
+		self._album_list.scroll_to_current_album()
 
 	def _on_genre_filter_changed(self, settings, key):
 		if self._client.connected():
@@ -3537,9 +3535,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button=Gtk.ToggleButton(
 			image=icon("system-search-symbolic"), tooltip_text=_("Search"), can_focus=False, no_show_all=True)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		self._back_button=Gtk.Button(
-			image=icon("go-previous-symbolic"), tooltip_text=_("Back to current album"), can_focus=False, no_show_all=True)
-		self._settings.bind("mini-player", self._back_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		back_button=Gtk.Button(
+			image=icon("go-previous-symbolic"), tooltip_text=_("Back to current album"),
+			action_name="win.back-to-current-album", can_focus=False, no_show_all=True)
+		self._settings.bind("mini-player", back_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# stack
 		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
@@ -3580,8 +3579,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# connect
 		self._search_button.connect("toggled", self._on_search_button_toggled)
-		self._back_button.connect("clicked", self._on_back_button_clicked)
-		self._back_button.connect("button-press-event", self._on_back_button_press_event)
 		self._settings.connect_after("changed::mini-player", self._mini_player)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
@@ -3602,11 +3599,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(show_close_button=True)
 			self.set_titlebar(self._header_bar)
-			self._header_bar.pack_start(self._back_button)
+			self._header_bar.pack_start(back_button)
 			self._header_bar.pack_end(self._menu_button)
 			self._header_bar.pack_end(self._search_button)
 		else:
-			action_bar.pack_start(self._back_button)
+			action_bar.pack_start(back_button)
 			action_bar.pack_end(self._menu_button)
 			action_bar.pack_end(self._search_button)
 		action_bar.pack_start(playback_control)
@@ -3658,7 +3655,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._cover_lyrics_window.lyrics_button.emit("clicked")
 
 	def _on_back_to_current_album(self, action, param):
-		self._back_button.emit("clicked")
+		self._search_button.set_active(False)
+		self._browser.back_to_current_album()
 
 	def _on_toggle_search(self, action, param):
 		self._search_button.emit("clicked")
@@ -3708,16 +3706,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			self._stack.set_visible_child_name("browser")
 
-	def _on_back_button_clicked(self, *args):
-		self._search_button.set_active(False)
-		self._browser.back_to_current_album()
-
-	def _on_back_button_press_event(self, widget, event):
-		if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-			self._browser.back_to_current_album(force=True)
-
 	def _on_song_changed(self, *args):
 		if (song:=self._client.currentsong()):
+			self.lookup_action("back-to-current-album").set_enabled(True)
 			album=song.get_album_with_date()
 			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
 			if self._use_csd:
@@ -3738,6 +3729,7 @@ class MainWindow(Gtk.ApplicationWindow):
 				else:
 					self.get_application().withdraw_notification("title-change")
 		else:
+			self.lookup_action("back-to-current-album").set_enabled(False)
 			self.set_title("mpdevil")
 			if self._use_csd:
 				self._header_bar.set_subtitle("")
@@ -3747,7 +3739,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
-		self._back_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
 		self.set_title("mpdevil")
@@ -3757,7 +3748,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
-		self._back_button.set_sensitive(False)
 
 	def _on_size_allocate(self, widget, rect):
 		if not self.is_maximized() and not self._settings.get_boolean("mini-player"):
