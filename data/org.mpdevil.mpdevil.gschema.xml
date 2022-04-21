@@ -17,11 +17,11 @@
 			<summary>Default height of window</summary>
 		</key>
 		<key type="i" name="mini-player-width">
-			<default>300</default>
+			<default>400</default>
 			<summary>Default width of mini player</summary>
 		</key>
 		<key type="i" name="mini-player-height">
-			<default>300</default>
+			<default>447</default>
 			<summary>Default height of mini player</summary>
 		</key>
 		<key type="i" name="paned0">
