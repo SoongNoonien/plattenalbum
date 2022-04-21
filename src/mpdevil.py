@@ -600,23 +600,26 @@ class Song(collections.UserDict):
 		return f"{title}\n<small>{GLib.markup_escape_text(self.get_album_with_date())}</small>"
 
 class BinaryCover(bytes):
-	def get_pixbuf(self, size):
+	def get_pixbuf(self, size=-1):
 		loader=GdkPixbuf.PixbufLoader()
 		try:
 			loader.write(self)
 			loader.close()
-			raw_pixbuf=loader.get_pixbuf()
-			ratio=raw_pixbuf.get_width()/raw_pixbuf.get_height()
-			if ratio > 1:
-				pixbuf=raw_pixbuf.scale_simple(size,size/ratio,GdkPixbuf.InterpType.BILINEAR)
+			if size == -1:
+				pixbuf=loader.get_pixbuf()
 			else:
-				pixbuf=raw_pixbuf.scale_simple(size*ratio,size,GdkPixbuf.InterpType.BILINEAR)
+				raw_pixbuf=loader.get_pixbuf()
+				ratio=raw_pixbuf.get_width()/raw_pixbuf.get_height()
+				if ratio > 1:
+					pixbuf=raw_pixbuf.scale_simple(size,size/ratio,GdkPixbuf.InterpType.BILINEAR)
+				else:
+					pixbuf=raw_pixbuf.scale_simple(size*ratio,size,GdkPixbuf.InterpType.BILINEAR)
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
 			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 		return pixbuf
 
 class FileCover(str):
-	def get_pixbuf(self, size):
+	def get_pixbuf(self, size=-1):
 		try:
 			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(self, size, size)
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
@@ -1066,7 +1069,6 @@ class ViewSettings(SettingsList):
 			row=ToggleRow(label, settings, key, restart_required)
 			self.append(row)
 		int_data=(
-			(_("Main cover size"), (100, 1200, 10), "track-cover"),
 			(_("Album view cover size"), (50, 600, 10), "album-cover"),
 			(_("Action bar icon size"), (16, 64, 2), "icon-size"),
 		)
@@ -1211,7 +1213,6 @@ class SettingsDialog(Gtk.Dialog):
 		else:
 			super().__init__(title=_("Preferences"), transient_for=parent)
 			self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
-		self.set_default_size(500, 400)
 
 		# widgets
 		view=ViewSettings(settings)
@@ -2872,30 +2873,31 @@ class CoverEventBox(Gtk.EventBox):
 	def _on_disconnected(self, *args):
 		self._album_popover.popdown()
 
-class MainCover(Gtk.Image):
+class MainCover(Gtk.DrawingArea):
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
 		self._settings=settings
-		# set default size
-		size=self._settings.get_int("track-cover")
-		self.set_size_request(size, size)
+		self._pixbuf=GdkPixbuf.Pixbuf()
+		self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
 
 		# connect
 		self._client.emitter.connect("current_song", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
-		self._settings.connect("changed::track-cover", self._on_settings_changed)
 
 	def _clear(self):
-		size=self._settings.get_int("track-cover")
-		self.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size))
+		self._pixbuf=GdkPixbuf.Pixbuf.new_from_file(FALLBACK_COVER)
+		self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
+		self.queue_draw()
 
 	def _refresh(self, *args):
 		if self._client.current_cover is None:
 			self._clear()
 		else:
-			self.set_from_pixbuf(self._client.current_cover.get_pixbuf(self._settings.get_int("track-cover")))
+			self._pixbuf=self._client.current_cover.get_pixbuf()
+			self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
+			self.queue_draw()
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
@@ -2904,10 +2906,16 @@ class MainCover(Gtk.Image):
 	def _on_reconnected(self, *args):
 		self.set_sensitive(True)
 
-	def _on_settings_changed(self, *args):
-		size=self._settings.get_int("track-cover")
-		self.set_size_request(size, size)
-		self._refresh()
+	def do_draw(self, context):
+		height_factor=self.get_allocated_height()/self._pixbuf.get_height()
+		width_factor=self.get_allocated_width()/self._pixbuf.get_width()
+		if height_factor < width_factor:
+			context.scale(height_factor, height_factor)
+			context.set_source_surface(self._surface, ((self.get_allocated_width()/height_factor)-self._pixbuf.get_width())/2, 0)
+		else:
+			context.scale(width_factor, width_factor)
+			context.set_source_surface(self._surface, 0, ((self.get_allocated_height()/width_factor)-self._pixbuf.get_height())/2)
+		context.paint()
 
 class CoverLyricsWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
@@ -3644,10 +3652,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		idle_add(callback)
 
 	def _mini_player(self, *args):
+		if self.is_maximized():
+			self.unmaximize()
 		if self._settings.get_boolean("mini-player"):
-			if self.is_maximized():
-				self.unmaximize()
-			self.resize(1,1)
+			self.resize(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
 		else:
 			self.resize(self._settings.get_int("width"), self._settings.get_int("height"))
 			self.show_all()
@@ -3751,10 +3759,14 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button.set_sensitive(False)
 
 	def _on_size_allocate(self, widget, rect):
-		if not self.is_maximized() and not self._settings.get_boolean("mini-player"):
+		if not self.is_maximized():
 			if (size:=self.get_size()) != self._size:  # prevent unneeded write operations
-				self._settings.set_int("width", size[0])
-				self._settings.set_int("height", size[1])
+				if self._settings.get_boolean("mini-player"):
+					self._settings.set_int("mini-player-width", size[0])
+					self._settings.set_int("mini-player-height", size[1])
+				else:
+					self._settings.set_int("width", size[0])
+					self._settings.set_int("height", size[1])
 				self._size=size
 
 	def _on_cursor_watch(self, obj, typestring):

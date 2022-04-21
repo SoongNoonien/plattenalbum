@@ -16,6 +16,14 @@
 			<default>691</default>
 			<summary>Default height of window</summary>
 		</key>
+		<key type="i" name="mini-player-width">
+			<default>300</default>
+			<summary>Default width of mini player</summary>
+		</key>
+		<key type="i" name="mini-player-height">
+			<default>300</default>
+			<summary>Default height of mini player</summary>
+		</key>
 		<key type="i" name="paned0">
 			<default>350</default>
 			<summary>Default position of cover/playlist separator</summary>
@@ -43,10 +51,6 @@
 		<key type="i" name="album-cover">
 			<default>160</default>
 			<summary>Size of covers in album view</summary>
-		</key>
-		<key type="i" name="track-cover">
-			<default>350</default>
-			<summary>Size of main cover</summary>
 		</key>
 		<key type="i" name="icon-size">
 			<default>24</default>
