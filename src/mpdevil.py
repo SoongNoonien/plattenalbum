@@ -3481,9 +3481,6 @@ class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
 		super().__init__(title=("mpdevil"), icon_name="org.mpdevil.mpdevil", **kwargs)
 		self.set_default_icon_name("org.mpdevil.mpdevil")
-		self.set_default_size(settings.get_int("width"), settings.get_int("height"))
-		if settings.get_boolean("maximize"):
-			self.maximize()  # request maximize
 		self._client=client
 		self._settings=settings
 		self._use_csd=self._settings.get_boolean("use-csd")
@@ -3618,22 +3615,27 @@ class MainWindow(Gtk.ApplicationWindow):
 		overlay.add_overlay(update_notify)
 		overlay.add_overlay(connection_notify)
 		self.add(overlay)
+
 		# bring player in consistent state
 		self._client.emitter.emit("disconnected")
-		self._mini_player()
 		# indicate connection process in window title
 		if self._use_csd:
 			self._header_bar.set_subtitle(_("connecting…"))
 		else:
 			self.set_title("mpdevil "+_("connecting…"))
+		# set default window size
+		if self._settings.get_boolean("mini-player"):
+			self.set_default_size(settings.get_int("mini-player-width"), settings.get_int("mini-player-height"))
+		else:
+			self.set_default_size(settings.get_int("width"), settings.get_int("height"))
+			if settings.get_boolean("maximize"):
+				self.maximize()  # request maximize
+		# show window
 		self.show_all()
 		while Gtk.events_pending():  # ensure window is visible
 			Gtk.main_iteration_do(True)
-		# restore paned settings when window is visible (fixes a bug when window is maximized)
-		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
-		self._settings.bind("paned1", self._browser.paned1, "position", Gio.SettingsBindFlags.DEFAULT)
-		self._settings.bind("paned2", self._paned2, "position", Gio.SettingsBindFlags.DEFAULT)
-		self._settings.bind("paned3", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
+		if not self._settings.get_boolean("mini-player"):
+			self._bind_paned_settings()  # restore paned settings when window is visible (fixes a bug when window is maximized)
 
 		# start client
 		def callback(*args):
@@ -3641,14 +3643,30 @@ class MainWindow(Gtk.ApplicationWindow):
 			return False
 		idle_add(callback)
 
+	def _bind_paned_settings(self):
+		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned1", self._browser.paned1, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned2", self._paned2, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned3", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
+
+	def _unbind_paned_settings(self):
+		self._settings.unbind(self._paned0, "position")
+		self._settings.unbind(self._browser.paned1, "position")
+		self._settings.unbind(self._paned2, "position")
+		self._settings.unbind(self._browser, "position")
+
 	def _mini_player(self, *args):
 		if self.is_maximized():
 			self.unmaximize()
 		if self._settings.get_boolean("mini-player"):
+			self._unbind_paned_settings()
 			self.resize(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
 		else:
 			self.resize(self._settings.get_int("width"), self._settings.get_int("height"))
-			self.show_all()
+			while Gtk.events_pending():  # ensure window is resized
+				Gtk.main_iteration_do(True)
+			self._bind_paned_settings()
+			self.show_all()  # show hidden gui elements
 
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_lyrics_window.lyrics_button.emit("clicked")
