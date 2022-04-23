@@ -2217,7 +2217,7 @@ class AlbumList(Gtk.IconView):
 		if (path:=self.get_cursor()[1]) is not None:
 			cell=self.get_cell_rect(path, None)[1]
 			rect=self.get_allocation()
-			x=max(min(rect.x+cell.width//2, rect.x+rect.width), rect.x)
+			x=max(min(cell.x+cell.width//2, rect.x+rect.width), rect.x)
 			y=max(min(cell.y+cell.height//2, rect.y+rect.height), rect.y)
 			tags=self._store[path][3:6]
 			self._album_popover.open(*tags, self, x, y)
