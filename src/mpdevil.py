@@ -2483,21 +2483,24 @@ class PlaylistsPopover(Gtk.Popover):
 		self._playlists_view.columns_autosize()
 
 class PlaylistView(TreeView):
-	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song (bold text)
+	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song
 	def __init__(self, client, settings):
 		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5, headers_visible=False)
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
 		self._inserted_path=None  # needed for drag and drop
+
+		# selection
 		self._selection=self.get_selection()
+		self._selection.set_select_function(self._select_function)
 
 		# label
 		self.label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
 
 		# store
-		# (track, title, human duration, file, duration, search, weight, weight_set)
-		self._store=Gtk.ListStore(str, str, str, str, float, str, Pango.Weight, bool)
+		# (track, title, human duration, file, duration, search)
+		self._store=Gtk.ListStore(str, str, str, str, float, str)
 		self.set_model(self._store)
 
 		# columns
@@ -2507,10 +2510,9 @@ class PlaylistView(TreeView):
 		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1, attributes=attrs)
 		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
 		columns=(
-			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0, weight=6),
-			# the order of weight_set and weight seems to be important here
-			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1, weight_set=7, weight=6),
-			Gtk.TreeViewColumn(_("Length"), renderer_text_ralign_tnum, text=2, weight=6)
+			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0),
+			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1),
+			Gtk.TreeViewColumn(_("Length"), renderer_text_ralign_tnum, text=2)
 		)
 		for column in columns:
 			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
@@ -2548,20 +2550,18 @@ class PlaylistView(TreeView):
 	def _select(self, path):
 		self._unselect()
 		try:
-			self._store[path][6]=Pango.Weight.BOLD
-			self._store[path][7]=True
 			self.set_property("selected-path", path)
+			self._selection.select_path(path)
 		except IndexError:  # invalid path
 			pass
 
 	def _unselect(self):
-		if self.get_property("selected-path") is not None:
+		if (path:=self.get_property("selected-path")) is not None:
+			self.set_property("selected-path", None)
 			try:
-				self._store[self.get_property("selected-path")][6]=Pango.Weight.NORMAL
-				self._store[self.get_property("selected-path")][7]=False
-				self.set_property("selected-path", None)
+				self._selection.unselect_path(path)
 			except IndexError:  # invalid path
-				self.set_property("selected-path", None)
+				pass
 
 	def scroll_to_selected_title(self):
 		if (treeiter:=self._selection.get_selected()[1]) is not None:
@@ -2572,11 +2572,9 @@ class PlaylistView(TreeView):
 		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)
 		song=self._client.status().get("song")
 		if song is None:
-			self._selection.unselect_all()
 			self._unselect()
 		else:
 			path=Gtk.TreePath(int(song))
-			self._selection.select_path(path)
 			self._select(path)
 
 	def _set_playlist_info(self, text):
@@ -2593,9 +2591,9 @@ class PlaylistView(TreeView):
 
 	def _on_key_release_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
-			if (treeiter:=self._selection.get_selected()[1]) is not None:
+			if (path:=self.get_cursor()[0]) is not None:
 				try:
-					self._store.remove(treeiter)
+					self._store.remove(self._store.get_iter(path))
 				except:
 					pass
 
@@ -2648,16 +2646,13 @@ class PlaylistView(TreeView):
 						2, str(song["duration"]),
 						3, song["file"],
 						4, float(song["duration"]),
-						5, song["title"][0],
-						6, Pango.Weight.NORMAL,
-						7, False
+						5, song["title"][0]
 					)
 				except:
 					self._store.insert_with_valuesv(-1, range(8), [
 						song["track"][0], title,
 						str(song["duration"]), song["file"],
-						float(song["duration"]), song["title"][0],
-						Pango.Weight.NORMAL, False
+						float(song["duration"]), song["title"][0]
 					])
 			self.thaw_child_notify()
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
@@ -2689,9 +2684,11 @@ class PlaylistView(TreeView):
 	def _on_reconnected(self, *args):
 		self.set_sensitive(True)
 
+	def _select_function(self, selection, model, path, path_currently_selected):
+		return (path == self.get_property("selected-path")) == (not path_currently_selected)
+
 	def show_info(self):
-		if (treeiter:=self._selection.get_selected()[1]) is not None:
-			path=self._store.get_path(treeiter)
+		if (path:=self.get_cursor()[0]) is not None:
 			self._song_popover.open(self._store[path][3], self, *self.get_popover_point(path))
 
 class PlaylistWindow(Gtk.Overlay):
