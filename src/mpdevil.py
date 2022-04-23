@@ -2877,7 +2877,7 @@ class MainCover(Gtk.DrawingArea):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 	def _clear(self):
-		self._pixbuf=GdkPixbuf.Pixbuf.new_from_file(FALLBACK_COVER)
+		self._pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, 1000, 1000)
 		self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
 		self.queue_draw()
 
