@@ -1507,13 +1507,12 @@ class SongsList(TreeView):
 		self.emit("button-clicked")
 
 	def show_info(self):
-		if (treeiter:=self._selection.get_selected()[1]) is not None:
-			path=self._store.get_path(treeiter)
+		if (path:=self.get_cursor()[0]) is not None:
 			self._song_popover.open(self._store[path][3], self, *self.get_popover_point(path))
 
 	def add_to_playlist(self, mode):
-		if (treeiter:=self._selection.get_selected()[1]) is not None:
-			self._client.files_to_playlist([self._store.get_value(treeiter, 3)], mode)
+		if (path:=self.get_cursor()[0]) is not None:
+			self._client.files_to_playlist([self._store[path][3]], mode)
 
 class AlbumPopover(Gtk.Popover):
 	def __init__(self, client, settings):
@@ -1961,15 +1960,12 @@ class ArtistList(SelectionList):
 		return self.get_artist_at_path(self.get_path_selected())
 
 	def add_to_playlist(self, mode):
-		selected_rows=self._selection.get_selected_rows()
-		if selected_rows is not None:
-			path=selected_rows[1][0]
+		if (path:=self.get_cursor()[0]) is not None:
 			artist,genre=self.get_artist_at_path(path)
 			self._client.artist_to_playlist(artist, genre, mode)
 
 	def show_info(self):
-		if (treeiter:=self._selection.get_selected()[1]) is not None:
-			path=self._store.get_path(treeiter)
+		if (path:=self.get_cursor()[0]) is not None:
 			artist,genre=self.get_artist_at_path(path)
 			self._artist_popover.open(artist, genre, self, *self.get_popover_point(path))
 
@@ -2218,9 +2214,7 @@ class AlbumList(Gtk.IconView):
 		self.set_sensitive(True)
 
 	def show_info(self):
-		paths=self.get_selected_items()
-		if len(paths) > 0:
-			path=paths[0]
+		if (path:=self.get_cursor()[1]) is not None:
 			cell=self.get_cell_rect(path, None)[1]
 			rect=self.get_allocation()
 			x=max(min(rect.x+cell.width//2, rect.x+rect.width), rect.x)
@@ -2229,9 +2223,8 @@ class AlbumList(Gtk.IconView):
 			self._album_popover.open(*tags, self, x, y)
 
 	def add_to_playlist(self, mode):
-		paths=self.get_selected_items()
-		if len(paths) != 0:
-			self._path_to_playlist(paths[0], mode)
+		if (path:=self.get_cursor()[1]) is not None:
+			self._path_to_playlist(path, mode)
 
 	def _on_cover_size_changed(self, *args):
 		if self._client.connected():
