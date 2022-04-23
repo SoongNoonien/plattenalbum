@@ -3819,7 +3819,10 @@ class mpdevil(Gtk.Application):
 		Gtk.binding_entry_remove(Gtk.binding_set_find('GtkTreeView'), Gdk.keyval_from_name("space"), Gdk.ModifierType.MOD2_MASK)
 
 	def do_activate(self):
-		self._window.present()
+		try:
+			self._window.present()
+		except:  # failed to show window so the user can't see anything
+			self.quit()
 
 	def do_shutdown(self):
 		Gtk.Application.do_shutdown(self)
