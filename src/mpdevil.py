@@ -2900,16 +2900,13 @@ class MainCover(Gtk.DrawingArea):
 			size=min(self.get_allocated_height(), self.get_allocated_width())
 			self._pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 			self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
-			height_factor,width_factor=(1,1)
+			scale_factor=1
 		else:
-			height_factor=self.get_allocated_height()/self._pixbuf.get_height()
-			width_factor=self.get_allocated_width()/self._pixbuf.get_width()
-		if height_factor < width_factor:
-			context.scale(height_factor, height_factor)
-			context.set_source_surface(self._surface, ((self.get_allocated_width()/height_factor)-self._pixbuf.get_width())/2, 0)
-		else:
-			context.scale(width_factor, width_factor)
-			context.set_source_surface(self._surface, 0, ((self.get_allocated_height()/width_factor)-self._pixbuf.get_height())/2)
+			scale_factor=min(self.get_allocated_width()/self._pixbuf.get_width(), self.get_allocated_height()/self._pixbuf.get_height())
+		context.scale(scale_factor, scale_factor)
+		x=((self.get_allocated_width()/scale_factor)-self._pixbuf.get_width())/2
+		y=((self.get_allocated_height()/scale_factor)-self._pixbuf.get_height())/2
+		context.set_source_surface(self._surface, x, y)
 		context.paint()
 
 class CoverLyricsWindow(Gtk.Overlay):
