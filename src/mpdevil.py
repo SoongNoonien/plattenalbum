@@ -2868,8 +2868,7 @@ class MainCover(Gtk.DrawingArea):
 		super().__init__()
 		self._client=client
 		self._settings=settings
-		self._pixbuf=GdkPixbuf.Pixbuf()
-		self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
+		self._fallback=True
 
 		# connect
 		self._client.emitter.connect("current_song", self._refresh)
@@ -2877,8 +2876,7 @@ class MainCover(Gtk.DrawingArea):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 	def _clear(self):
-		self._pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, 1000, 1000)
-		self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
+		self._fallback=True
 		self.queue_draw()
 
 	def _refresh(self, *args):
@@ -2887,6 +2885,7 @@ class MainCover(Gtk.DrawingArea):
 		else:
 			self._pixbuf=self._client.current_cover.get_pixbuf()
 			self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
+			self._fallback=False
 			self.queue_draw()
 
 	def _on_disconnected(self, *args):
@@ -2897,8 +2896,14 @@ class MainCover(Gtk.DrawingArea):
 		self.set_sensitive(True)
 
 	def do_draw(self, context):
-		height_factor=self.get_allocated_height()/self._pixbuf.get_height()
-		width_factor=self.get_allocated_width()/self._pixbuf.get_width()
+		if self._fallback:
+			size=min(self.get_allocated_height(), self.get_allocated_width())
+			self._pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
+			self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
+			height_factor,width_factor=(1,1)
+		else:
+			height_factor=self.get_allocated_height()/self._pixbuf.get_height()
+			width_factor=self.get_allocated_width()/self._pixbuf.get_width()
 		if height_factor < width_factor:
 			context.scale(height_factor, height_factor)
 			context.set_source_surface(self._surface, ((self.get_allocated_width()/height_factor)-self._pixbuf.get_width())/2, 0)
