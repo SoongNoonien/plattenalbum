@@ -2946,7 +2946,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 
 		# packing
-		self.add(main_cover)
+		self.add(Gtk.AspectFrame(child=main_cover, shadow_type=Gtk.ShadowType.NONE))
 		self.add_overlay(self._stack)
 		self.add_overlay(self._lyrics_button_revealer)
 
