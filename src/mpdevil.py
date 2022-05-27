@@ -516,8 +516,8 @@ class LastModified():
 		self._date=date
 
 	def __str__(self):
-		time=datetime.datetime.strptime(self._date, "%Y-%m-%dT%H:%M:%SZ")
-		return time.strftime("%a %d %B %Y, %H∶%M UTC")
+		time=datetime.datetime.strptime(self._date, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
+		return time.astimezone(tz=None).strftime("%a %d %B %Y, %H∶%M")
 
 	def raw(self):
 		return self._date
@@ -1274,7 +1274,7 @@ class ServerStats(Gtk.Dialog):
 		stats["protocol"]=str(client.mpd_version)
 		for key in ("uptime","playtime","db_playtime"):
 			stats[key]=str(Duration(stats[key]))
-		stats["db_update"]=str(datetime.datetime.fromtimestamp(int(stats["db_update"]))).replace(":", "∶")
+		stats["db_update"]=datetime.datetime.fromtimestamp(int(stats["db_update"])).strftime("%a %d %B %Y, %H∶%M")
 
 		for i, key in enumerate(("protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs")):
 			grid.attach(Gtk.Label(label=display_str[key], use_markup=True, xalign=1), 0, i, 1, 1)
