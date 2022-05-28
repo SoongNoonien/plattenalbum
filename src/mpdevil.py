@@ -28,7 +28,6 @@ import urllib.error
 import threading
 import functools
 import itertools
-import datetime
 import collections
 import os
 import sys
@@ -482,34 +481,32 @@ class MPRISInterface:  # TODO emit Seeked if needed
 ######################
 
 class Duration():
-	def __init__(self, value=None):
-		if value is None:
+	def __init__(self, seconds=None):
+		if seconds is None:
 			self._fallback=True
-			self._value=0.0
+			self._seconds=0.0
 		else:
 			self._fallback=False
-			self._value=float(value)
+			self._seconds=float(seconds)
 
 	def __str__(self):
 		if self._fallback:
 			return "‒‒∶‒‒"
 		else:
-			if self._value < 0:
-				sign="−"
-				value=-int(self._value)
+			seconds=int(self._seconds)
+			days,seconds=divmod(seconds, 86400) # 86400 seconds make a day
+			hours,seconds=divmod(seconds, 3600) # 3600 seconds make an hour
+			minutes,seconds=divmod(seconds, 60)
+			if days > 0:
+				days_string=ngettext("{days} day", "{days} days", days).format(days=days)
+				return f"{days_string}, {hours:02d}∶{minutes:02d}∶{seconds:02d}"
+			elif hours > 0:
+				return f"{hours}∶{minutes:02d}∶{seconds:02d}"
 			else:
-				sign=""
-				value=int(self._value)
-			delta=datetime.timedelta(seconds=value)
-			if delta.days > 0:
-				days=ngettext("{days} day", "{days} days", delta.days).format(days=delta.days)
-				time_string=f"{days}, {datetime.timedelta(seconds=delta.seconds)}"
-			else:
-				time_string=str(delta).lstrip("0").lstrip(":")
-			return sign+time_string.replace(":", "∶")  # use 'ratio' as delimiter
+				return f"{minutes:02d}∶{seconds:02d}"
 
 	def __float__(self):
-		return self._value
+		return self._seconds
 
 class LastModified():
 	def __init__(self, date):
@@ -1554,7 +1551,7 @@ class AlbumPopover(Gtk.Popover):
 		self._songs_list.clear()
 		tag_filter=("albumartist", albumartist, "album", album, "date", date)
 		count=self._client.count(*tag_filter)
-		duration=str(Duration(float(count["playtime"])))
+		duration=str(Duration(count["playtime"]))
 		length=int(count["songs"])
 		text=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(number=length, duration=duration)
 		self._label.set_text(text)
