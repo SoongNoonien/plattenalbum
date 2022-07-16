@@ -2683,14 +2683,12 @@ class PlaylistView(TreeView):
 class PlaylistWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
 		super().__init__()
-		self._back_to_current_song_button=Gtk.Button(
-			image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON), tooltip_text=_("Scroll to current song"),
-			can_focus=False
-		)
+		self._back_button_icon=Gtk.Image.new_from_icon_name("go-down-symbolic", Gtk.IconSize.BUTTON)
+		self._back_to_current_song_button=Gtk.Button(image=self._back_button_icon, tooltip_text=_("Scroll to current song"), can_focus=False)
 		self._back_to_current_song_button.get_style_context().add_class("osd")
 		self._back_button_revealer=Gtk.Revealer(
 			child=self._back_to_current_song_button, transition_duration=0,
-			margin_bottom=6, margin_start=6, halign=Gtk.Align.START, valign=Gtk.Align.END
+			margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER, valign=Gtk.Align.END
 		)
 		self._treeview=PlaylistView(client, settings)
 		scroll=Gtk.ScrolledWindow(child=self._treeview)
@@ -2714,8 +2712,16 @@ class PlaylistWindow(Gtk.Overlay):
 		if visible_range is None or self._treeview.get_property("selected-path") is None:
 			self._back_button_revealer.set_reveal_child(False)
 		else:
-			current_song_visible=(visible_range[0] <= self._treeview.get_property("selected-path") <= visible_range[1])
-			self._back_button_revealer.set_reveal_child(not(current_song_visible))
+			if visible_range[0] > self._treeview.get_property("selected-path"):  # current song is above upper edge
+				self._back_button_icon.set_property("icon-name", "go-up-symbolic")
+				self._back_button_revealer.set_valign(Gtk.Align.START)
+				self._back_button_revealer.set_reveal_child(True)
+			elif self._treeview.get_property("selected-path") > visible_range[1]:  # current song is below lower edge
+				self._back_button_icon.set_property("icon-name", "go-down-symbolic")
+				self._back_button_revealer.set_valign(Gtk.Align.END)
+				self._back_button_revealer.set_reveal_child(True)
+			else:  # current song is visible
+				self._back_button_revealer.set_reveal_child(False)
 
 	def _on_back_to_current_song_button_clicked(self, *args):
 		self._treeview.set_cursor(Gtk.TreePath(len(self._treeview.get_model())), None, False)  # unset cursor
