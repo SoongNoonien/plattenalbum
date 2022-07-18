@@ -1298,6 +1298,17 @@ class TreeView(Gtk.TreeView):
 		rect.x,rect.y=self.convert_tree_to_widget_coords(rect.x,rect.y)
 		return (rect.x+rect.width//2, max(min(cell.y+cell.height//2, rect.y+rect.height), rect.y))
 
+	def save_set_cursor(self, *args, **kwargs):
+		# The standard set_cursor function should scroll normally, but it dosen't work as it should when the treeview is not completely
+		# initialized. This usually happens when the program is freshly started and the treeview isn't done with its internal tasks.
+		# See: https://lazka.github.io/pgi-docs/GLib-2.0/constants.html#GLib.PRIORITY_HIGH_IDLE
+		# Running set_cursor with a lower priority ensures that the treeview is done before it gets scrolled.
+		GLib.idle_add(self.set_cursor, *args, **kwargs)
+
+	def save_scroll_to_cell(self, *args, **kwargs):
+		# Similar problem as above.
+		GLib.idle_add(self.scroll_to_cell, *args, **kwargs)
+
 class AutoSizedIcon(Gtk.Image):
 	def __init__(self, icon_name, settings_key, settings):
 		super().__init__(icon_name=icon_name)
@@ -1832,7 +1843,7 @@ class SelectionList(TreeView):
 		return len(self._store)-1
 
 	def select_path(self, path):
-		self.set_cursor(path, None, False)
+		self.save_set_cursor(path, None, False)
 		self.row_activated(path, self._column_item)
 
 	def select(self, item):
@@ -1844,7 +1855,7 @@ class SelectionList(TreeView):
 				break
 
 	def select_all(self):
-		self.set_cursor(Gtk.TreePath(0), None, False)
+		self.save_set_cursor(Gtk.TreePath(0), None, False)
 		self.row_activated(Gtk.TreePath(0), self._column_item)
 
 	def get_path_selected(self):
@@ -1857,7 +1868,7 @@ class SelectionList(TreeView):
 		return self.get_item_at_path(self.get_path_selected())
 
 	def highlight_selected(self):
-		self.set_cursor(self._selected_path, None, False)
+		self.save_set_cursor(self._selected_path, None, False)
 
 	def _on_row_activated(self, widget, path, view_column):
 		if path != self._selected_path:
@@ -2555,7 +2566,7 @@ class PlaylistView(TreeView):
 	def scroll_to_selected_title(self):
 		if (treeiter:=self._selection.get_selected()[1]) is not None:
 			path=self._store.get_path(treeiter)
-			self.scroll_to_cell(path, None, True, 0.25)
+			self.save_scroll_to_cell(path, None, True, 0.25)
 
 	def _refresh_selection(self):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
 		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)
