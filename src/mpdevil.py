@@ -329,16 +329,17 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			setter(value)
 
 	def GetAll(self, interface_name):
-		read_props={}
 		try:
 			props=self._prop_mapping[interface_name]
+		except KeyError:  # interface has no properties
+			return {}
+		else:
+			read_props={}
 			for key, (getter, setter) in props.items():
 				if callable(getter):
 					getter=getter()
 				read_props[key]=getter
-		except KeyError:  # interface has no properties
-			pass
-		return read_props
+			return read_props
 
 	def PropertiesChanged(self, interface_name, changed_properties, invalidated_properties):
 		self._bus.emit_signal(
@@ -600,6 +601,9 @@ class BinaryCover(bytes):
 		loader=GdkPixbuf.PixbufLoader()
 		try:
 			loader.write(self)
+		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
+			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
+		else:
 			loader.close()
 			if size == -1:
 				pixbuf=loader.get_pixbuf()
@@ -610,8 +614,6 @@ class BinaryCover(bytes):
 					pixbuf=raw_pixbuf.scale_simple(size,size/ratio,GdkPixbuf.InterpType.BILINEAR)
 				else:
 					pixbuf=raw_pixbuf.scale_simple(size*ratio,size,GdkPixbuf.InterpType.BILINEAR)
-		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 		return pixbuf
 
 class FileCover(str):
@@ -2640,6 +2642,13 @@ class PlaylistView(TreeView):
 				title=song.get_markup()
 				try:
 					treeiter=self._store.get_iter(song["pos"])
+				except ValueError:
+					self._store.insert_with_valuesv(-1, range(8), [
+						song["track"][0], title,
+						str(song["duration"]), song["file"],
+						float(song["duration"]), song["title"][0]
+					])
+				else:
 					self._store.set(treeiter,
 						0, song["track"][0],
 						1, title,
@@ -2648,12 +2657,6 @@ class PlaylistView(TreeView):
 						4, float(song["duration"]),
 						5, song["title"][0]
 					)
-				except:
-					self._store.insert_with_valuesv(-1, range(8), [
-						song["track"][0], title,
-						str(song["duration"]), song["file"],
-						float(song["duration"]), song["title"][0]
-					])
 			self.thaw_child_notify()
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
 			treeiter=self._store.get_iter(i)
