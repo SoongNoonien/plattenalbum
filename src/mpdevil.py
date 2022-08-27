@@ -1847,7 +1847,6 @@ class SelectionList(TreeView):
 
 	def select_path(self, path):
 		self._selection.select_path(path)
-		self.scroll_to_path(path)
 
 	def select(self, item):
 		row_num=len(self._store)
@@ -1869,12 +1868,9 @@ class SelectionList(TreeView):
 	def get_item_selected(self):
 		return self.get_item_at_path(self.get_path_selected())
 
-	def scroll_to_path(self, path):
-		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)  # unset cursor
-		self.save_scroll_to_cell(path, None, True, 0.25)
-
 	def scroll_to_selected(self):
-		self.scroll_to_path(self.get_path_selected())
+		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)  # unset cursor
+		self.save_scroll_to_cell(self._selected_path, None, True, 0.25)
 
 	def _on_selection_changed(self, *args):
 		if (treeiter:=self._selection.get_selected()[1]) is not None:
@@ -1891,9 +1887,6 @@ class GenreList(SelectionList):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect_after("reconnected", self._on_reconnected)
 		self._client.emitter.connect("updated_db", self._refresh)
-
-	def deactivate(self):
-		self.select_all()
 
 	def _refresh(self, *args):
 		l=self._client.comp_list("genre")
@@ -1950,6 +1943,7 @@ class ArtistList(SelectionList):
 			self.select_path(Gtk.TreePath(1))
 		else:
 			self.select_path(Gtk.TreePath(0))
+		self.scroll_to_selected()
 
 	def _on_button_press_event(self, widget, event):
 		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
@@ -2272,19 +2266,18 @@ class Browser(Gtk.Paned):
 		song=self._client.currentsong()
 		artist,genre=self._artist_list.get_artist_selected()
 		if genre is None or song["genre"][0] == genre:
-			if artist is None or song["albumartist"][0] == artist:
-				self._artist_list.scroll_to_selected()
-			else:
+			if artist is not None and song["albumartist"][0] != artist:
 				self._artist_list.select(song["albumartist"][0])
-			self._genre_list.scroll_to_selected()
 		else:
-			self._genre_list.deactivate()
+			self._genre_list.select_all()
+		self._genre_list.scroll_to_selected()
+		self._artist_list.scroll_to_selected()
 		self._album_list.scroll_to_current_album()
 
 	def _on_genre_filter_changed(self, settings, key):
 		if self._client.connected():
 			if not settings.get_boolean(key):
-				self._genre_list.deactivate()
+				self._genre_list.select_all()
 
 ############
 # playlist #
