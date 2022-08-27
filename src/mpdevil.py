@@ -1951,9 +1951,7 @@ class ArtistList(SelectionList):
 		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
 			path=path_re[0]
 			artist,genre=self.get_artist_at_path(path)
-			if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-				self._client.artist_to_playlist(artist, genre, "play")
-			elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 				self._client.artist_to_playlist(artist, genre, "append")
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				self._artist_popover.open(artist, genre, self, event.x, event.y)
