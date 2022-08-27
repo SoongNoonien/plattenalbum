@@ -1792,6 +1792,7 @@ class SelectionList(TreeView):
 	def __init__(self, select_all_string):
 		super().__init__(search_column=0, headers_visible=False, fixed_height_mode=True)
 		self.select_all_string=select_all_string
+		self._selected_path=None
 
 		# store
 		# item, initial-letter, weight-initials
@@ -1819,6 +1820,7 @@ class SelectionList(TreeView):
 	def clear(self):
 		self._store.clear()
 		self._store.append([self.select_all_string, "", Pango.Weight.NORMAL])
+		self._selected_path=None
 		self.emit("clear")
 
 	def set_items(self, items):
@@ -1859,10 +1861,10 @@ class SelectionList(TreeView):
 		self.select_path(Gtk.TreePath(0))
 
 	def get_path_selected(self):
-		if (treeiter:=self._selection.get_selected()[1]) is None:
+		if self._selected_path is None:
 			raise ValueError("None selected")
 		else:
-			return self._store.get_path(treeiter)
+			return self._selected_path
 
 	def get_item_selected(self):
 		return self.get_item_at_path(self.get_path_selected())
@@ -1876,7 +1878,9 @@ class SelectionList(TreeView):
 
 	def _on_selection_changed(self, *args):
 		if (treeiter:=self._selection.get_selected()[1]) is not None:
-			self.emit("item-selected")
+			if (path:=self._store.get_path(treeiter)) != self._selected_path:
+				self._selected_path=path
+				self.emit("item-selected")
 
 class GenreList(SelectionList):
 	def __init__(self, client):
