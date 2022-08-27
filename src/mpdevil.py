@@ -1790,36 +1790,35 @@ class SearchWindow(Gtk.Box):
 class SelectionList(TreeView):
 	__gsignals__={"item-selected": (GObject.SignalFlags.RUN_FIRST, None, ()), "clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, select_all_string):
-		super().__init__(activate_on_single_click=True, search_column=0, headers_visible=False, fixed_height_mode=True)
+		super().__init__(search_column=0, headers_visible=False, fixed_height_mode=True)
 		self.select_all_string=select_all_string
-		self._selected_path=None
 
 		# store
-		# item, weight, initial-letter, weight-initials
-		self._store=Gtk.ListStore(str, Pango.Weight, str, Pango.Weight)
-		self._store.append([self.select_all_string, Pango.Weight.NORMAL, "", Pango.Weight.NORMAL])
+		# item, initial-letter, weight-initials
+		self._store=Gtk.ListStore(str, str, Pango.Weight)
+		self._store.append([self.select_all_string, "", Pango.Weight.NORMAL])
 		self.set_model(self._store)
 		self._selection=self.get_selection()
+		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
 
 		# columns
 		renderer_text_malign=Gtk.CellRendererText(xalign=0.5)
-		self._column_initial=Gtk.TreeViewColumn("", renderer_text_malign, text=2, weight=3)
+		self._column_initial=Gtk.TreeViewColumn("", renderer_text_malign, text=1, weight=2)
 		self._column_initial.set_property("sizing", Gtk.TreeViewColumnSizing.FIXED)
 		self._column_initial.set_property("min-width", 30)
 		self.append_column(self._column_initial)
 		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, ypad=6)
-		self._column_item=Gtk.TreeViewColumn("", renderer_text, text=0, weight=1)
+		self._column_item=Gtk.TreeViewColumn("", renderer_text, text=0)
 		self._column_item.set_property("sizing", Gtk.TreeViewColumnSizing.FIXED)
 		self._column_item.set_property("expand", True)
 		self.append_column(self._column_item)
 
 		# connect
-		self.connect("row-activated", self._on_row_activated)
+		self._selection.connect("changed", self._on_selection_changed)
 
 	def clear(self):
 		self._store.clear()
-		self._store.append([self.select_all_string, Pango.Weight.NORMAL, "", Pango.Weight.NORMAL])
-		self._selected_path=None
+		self._store.append([self.select_all_string, "", Pango.Weight.NORMAL])
 		self.emit("clear")
 
 	def set_items(self, items):
@@ -1832,7 +1831,7 @@ class SelectionList(TreeView):
 			if item[0] is None:
 				char=item[1]
 			else:
-				self._store.insert_with_valuesv(-1, range(4), [item[0], Pango.Weight.NORMAL, char, Pango.Weight.BOLD])
+				self._store.insert_with_valuesv(-1, range(3), [item[0], char, Pango.Weight.BOLD])
 				char=""
 
 	def get_item_at_path(self, path):
@@ -1845,8 +1844,8 @@ class SelectionList(TreeView):
 		return len(self._store)-1
 
 	def select_path(self, path):
-		self.save_set_cursor(path, None, False)
-		self.row_activated(path, self._column_item)
+		self._selection.select_path(path)
+		self.scroll_to_path(path)
 
 	def select(self, item):
 		row_num=len(self._store)
@@ -1857,27 +1856,26 @@ class SelectionList(TreeView):
 				break
 
 	def select_all(self):
-		self.save_set_cursor(Gtk.TreePath(0), None, False)
-		self.row_activated(Gtk.TreePath(0), self._column_item)
+		self.select_path(Gtk.TreePath(0))
 
 	def get_path_selected(self):
-		if self._selected_path is None:
+		if (treeiter:=self._selection.get_selected()[1]) is None:
 			raise ValueError("None selected")
 		else:
-			return self._selected_path
+			return self._store.get_path(treeiter)
 
 	def get_item_selected(self):
 		return self.get_item_at_path(self.get_path_selected())
 
-	def highlight_selected(self):
-		self.save_set_cursor(self._selected_path, None, False)
+	def scroll_to_path(self, path):
+		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)  # unset cursor
+		self.save_scroll_to_cell(path, None, False)
 
-	def _on_row_activated(self, widget, path, view_column):
-		if path != self._selected_path:
-			if self._selected_path is not None:
-				self._store[self._selected_path][1]=Pango.Weight.NORMAL
-			self._store[path][1]=Pango.Weight.BOLD
-			self._selected_path=path
+	def scroll_to_selected(self):
+		self.scroll_to_path(self.get_path_selected())
+
+	def _on_selection_changed(self, *args):
+		if (treeiter:=self._selection.get_selected()[1]) is not None:
 			self.emit("item-selected")
 
 class GenreList(SelectionList):
@@ -2271,14 +2269,13 @@ class Browser(Gtk.Paned):
 	def back_to_current_album(self):
 		song=self._client.currentsong()
 		artist,genre=self._artist_list.get_artist_selected()
-		# deactivate genre filter to show all artists (if needed)
-		if song["genre"][0] != genre:
+		if genre is None or song["genre"][0] == genre:
+			if artist is None or song["albumartist"][0] == artist:
+				self._artist_list.scroll_to_selected()
+			else:
+				self._artist_list.select(song["albumartist"][0])
+		else:
 			self._genre_list.deactivate()
-		# select artist
-		if artist is None:  # all artists selected
-			self._artist_list.highlight_selected()
-		else:  # one artist selected
-			self._artist_list.select(song["albumartist"][0])
 		self._album_list.scroll_to_current_album()
 
 	def _on_genre_filter_changed(self, settings, key):
