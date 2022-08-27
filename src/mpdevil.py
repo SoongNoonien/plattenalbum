@@ -1871,7 +1871,7 @@ class SelectionList(TreeView):
 
 	def scroll_to_path(self, path):
 		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)  # unset cursor
-		self.save_scroll_to_cell(path, None, False)
+		self.save_scroll_to_cell(path, None, True, 0.25)
 
 	def scroll_to_selected(self):
 		self.scroll_to_path(self.get_path_selected())
@@ -2276,6 +2276,7 @@ class Browser(Gtk.Paned):
 				self._artist_list.scroll_to_selected()
 			else:
 				self._artist_list.select(song["albumartist"][0])
+			self._genre_list.scroll_to_selected()
 		else:
 			self._genre_list.deactivate()
 		self._album_list.scroll_to_current_album()
