@@ -706,7 +706,6 @@ class Client(MPDClient):
 		return [Song(song) for song in super().listplaylistinfo(name)]
 
 	def start(self):
-		self.emitter.emit("disconnected")  # bring player in defined state
 		profile=self._settings.get_active_profile()
 		if profile.get_boolean("socket-connection"):
 			socket=profile.get_string("socket")
@@ -720,6 +719,7 @@ class Client(MPDClient):
 			if profile.get_string("password"):
 				self.password(profile.get_string("password"))
 		except:
+			self.emitter.emit("disconnected")
 			self.emitter.emit("connection_error")
 			return False
 		# connect successful
@@ -735,6 +735,7 @@ class Client(MPDClient):
 			return True
 		else:
 			self.disconnect()
+			self.emitter.emit("disconnected")
 			self.emitter.emit("connection_error")
 			print("No read permission, check your mpd config.")
 			return False
