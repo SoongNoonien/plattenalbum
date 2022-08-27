@@ -56,7 +56,7 @@ FALLBACK_LIB=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 ############################
 
 def idle_add(*args, **kwargs):
-	GLib.idle_add(*args, priority=GLib.PRIORITY_DEFAULT , **kwargs)
+	GLib.idle_add(*args, priority=GLib.PRIORITY_DEFAULT, **kwargs)
 
 def main_thread_function(func):
 	@functools.wraps(func)
