@@ -2055,6 +2055,9 @@ class AlbumLoadingThread(threading.Thread):
 		else:
 			main_thread_function(self._store.set_sort_column_id)(6, Gtk.SortType.ASCENDING)
 		idle_add(self._iconview.set_model, self._store)
+		# select first album
+		idle_add(self._iconview.set_cursor, Gtk.TreePath(0), None, False)
+		idle_add(self._iconview.select_path, Gtk.TreePath(0))
 		# load covers
 		total=2*len(self._store)
 		@main_thread_function
@@ -2104,7 +2107,7 @@ class AlbumLoadingThread(threading.Thread):
 
 class AlbumList(Gtk.IconView):
 	def __init__(self, client, settings, artist_list):
-		super().__init__(item_width=0, pixbuf_column=0, markup_column=1, activate_on_single_click=True)
+		super().__init__(item_width=0,pixbuf_column=0,markup_column=1,activate_on_single_click=True,selection_mode=Gtk.SelectionMode.BROWSE)
 		self._settings=settings
 		self._client=client
 		self._artist_list=artist_list
