@@ -2055,9 +2055,12 @@ class AlbumLoadingThread(threading.Thread):
 		else:
 			main_thread_function(self._store.set_sort_column_id)(6, Gtk.SortType.ASCENDING)
 		idle_add(self._iconview.set_model, self._store)
-		# select first album
-		idle_add(self._iconview.set_cursor, Gtk.TreePath(0), None, False)
-		idle_add(self._iconview.select_path, Gtk.TreePath(0))
+		# select album
+		path=main_thread_function(self._iconview.get_current_album_path)()
+		if path is None:
+			path=Gtk.TreePath(0)
+		idle_add(self._iconview.set_cursor, path, None, False)
+		idle_add(self._iconview.select_path, path)
 		# load covers
 		total=2*len(self._store)
 		@main_thread_function
@@ -2153,19 +2156,24 @@ class AlbumList(Gtk.IconView):
 		else:
 			callback()
 
-	def scroll_to_current_album(self):
-		def callback():
-			song=self._client.currentsong()
-			album=song["album"][0]
-			self.unselect_all()
+	def get_current_album_path(self):
+		if (song:=self._client.currentsong()) is not None:
+			album=[song["albumartist"][0], song["album"][0], song["date"][0]]
 			row_num=len(self._store)
 			for i in range(0, row_num):
 				path=Gtk.TreePath(i)
-				if self._store[path][4] == album:
-					self.set_cursor(path, None, False)
-					self.select_path(path)
-					self.scroll_to_path(path, True, 0, 0)
-					break
+				if self._store[path][3:6] == album:
+					return path
+			return None
+		else:
+			return None
+
+	def scroll_to_current_album(self):
+		def callback():
+			if (path:=self.get_current_album_path()) is not None:
+				self.set_cursor(path, None, False)
+				self.select_path(path)
+				self.scroll_to_path(path, True, 0, 0)
 		if self._cover_thread.is_alive():
 			self._cover_thread.set_callback(callback)
 		else:
