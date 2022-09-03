@@ -3668,6 +3668,11 @@ class MainWindow(Gtk.ApplicationWindow):
 			return False
 		idle_add(callback)
 
+	def _clear_title(self):
+		self.set_title("mpdevil")
+		if self._use_csd:
+			self._header_bar.set_subtitle("")
+
 	def _bind_paned_settings(self):
 		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
 		self._settings.bind("paned1", self._browser.paned1, "position", Gio.SettingsBindFlags.DEFAULT)
@@ -3772,20 +3777,17 @@ class MainWindow(Gtk.ApplicationWindow):
 					self.get_application().withdraw_notification("title-change")
 		else:
 			self.lookup_action("back-to-current-album").set_enabled(False)
-			self.set_title("mpdevil")
-			if self._use_csd:
-				self._header_bar.set_subtitle("")
+			self._clear_title()
 			self.get_application().withdraw_notification("title-change")
 
 	def _on_reconnected(self, *args):
+		self._clear_title()
 		for action in ("stats","toggle-lyrics","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
-		self.set_title("mpdevil")
-		if self._use_csd:
-			self._header_bar.set_subtitle("")
+		self._clear_title()
 		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
