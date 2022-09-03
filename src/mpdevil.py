@@ -2158,7 +2158,7 @@ class AlbumList(Gtk.IconView):
 			callback()
 
 	def get_current_album_path(self):
-		if (song:=self._client.currentsong()) is not None:
+		if (song:=self._client.currentsong()):
 			album=[song["albumartist"][0], song["album"][0], song["date"][0]]
 			row_num=len(self._store)
 			for i in range(0, row_num):
