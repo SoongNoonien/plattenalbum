@@ -2061,6 +2061,7 @@ class AlbumLoadingThread(threading.Thread):
 			path=Gtk.TreePath(0)
 		idle_add(self._iconview.set_cursor, path, None, False)
 		idle_add(self._iconview.select_path, path)
+		idle_add(self._iconview.scroll_to_path, path, True, 0.25, 0)
 		# load covers
 		total=2*len(self._store)
 		@main_thread_function
@@ -2173,7 +2174,7 @@ class AlbumList(Gtk.IconView):
 			if (path:=self.get_current_album_path()) is not None:
 				self.set_cursor(path, None, False)
 				self.select_path(path)
-				self.scroll_to_path(path, True, 0, 0)
+				self.scroll_to_path(path, True, 0.25, 0)
 		if self._cover_thread.is_alive():
 			self._cover_thread.set_callback(callback)
 		else:
@@ -2280,11 +2281,12 @@ class Browser(Gtk.Paned):
 		if genre is None or song["genre"][0] == genre:
 			if artist is not None and song["albumartist"][0] != artist:
 				self._artist_list.select(song["albumartist"][0])
+				self._artist_list.scroll_to_selected()
+			else:
+				self._album_list.scroll_to_current_album()
 		else:
 			self._genre_list.select_all()
 		self._genre_list.scroll_to_selected()
-		self._artist_list.scroll_to_selected()
-		self._album_list.scroll_to_current_album()
 
 	def _on_genre_filter_changed(self, settings, key):
 		if self._client.connected():
