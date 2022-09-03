@@ -3778,7 +3778,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.get_application().withdraw_notification("title-change")
 
 	def _on_reconnected(self, *args):
-		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
+		for action in ("stats","toggle-lyrics","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
 
