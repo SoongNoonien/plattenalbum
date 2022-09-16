@@ -6,9 +6,9 @@
 <property name="version">1.8.0</property>
 <property name="comments" translatable="yes">A simple music browser for MPD</property>
 <property name="authors">Martin Wagner</property>
-<property name="translator_credits">Martin de Reuver
+<property name="translator_credits">Martin Wagner
+Martin de Reuver
 Georgi Kamenov
-Martin Wagner
 Oğuz Ersen
 Łukasz Drukała</property>
 <property name="website">https://github.com/SoongNoonien/mpdevil</property>
