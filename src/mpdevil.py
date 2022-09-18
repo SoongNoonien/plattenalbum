@@ -2857,31 +2857,45 @@ class CoverEventBox(Gtk.EventBox):
 		super().__init__()
 		self._client=client
 		self._settings=settings
+		self._click_pos=()
+		self.set_events(Gdk.EventMask.POINTER_MOTION_MASK)
 
 		# album popover
 		self._album_popover=AlbumPopover(self._client, self._settings)
 
 		# connect
-		self._button_press_event=self.connect("button-press-event", self._on_button_press_event)
+		self.connect("button-press-event", self._on_button_press_event)
+		self.connect("button-release-event", self._on_button_release_event)
+		self.connect("motion-notify-event", self._on_motion_notify_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 	def _on_button_press_event(self, widget, event):
-		if self._settings.get_boolean("mini-player"):
-			if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-				window=self.get_toplevel()
-				window.begin_move_drag(1, event.x_root, event.y_root, Gdk.CURRENT_TIME)
-		else:
-			if self._client.connected():
+		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+			self._click_pos=(event.x, event.y)
+
+	def _on_button_release_event(self, widget, event):
+		if event.button != 1 or self._click_pos:
+			if not self._settings.get_boolean("mini-player") and self._client.connected():
 				if (song:=self._client.currentsong()):
 					tags=(song["albumartist"][0], song["album"][0], song["date"][0])
-					if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+					if event.button == 1:
 						self._client.album_to_playlist(*tags)
-					elif event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-						self._client.album_to_playlist(*tags, "play")
-					elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+					elif event.button == 2:
 						self._client.album_to_playlist(*tags, "append")
-					elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+					elif event.button == 3:
 						self._album_popover.open(*tags, widget, event.x, event.y)
+		self._click_pos=()
+
+	def _on_motion_notify_event(self, widget, event):
+		if self._click_pos:
+			# gtk-double-click-distance seems to be the right threshold for this
+			# according to: https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/1839
+			# I verified this via manipulating gtk-double-click-distance.
+			pointer_travel=max(abs(self._click_pos[0]-event.x), abs(self._click_pos[1]-event.y))
+			if pointer_travel > Gtk.Settings.get_default().get_property("gtk-double-click-distance"):
+				window=self.get_toplevel()
+				window.begin_move_drag(1, event.x_root, event.y_root, Gdk.CURRENT_TIME)
+				self._click_pos=()
 
 	def _on_disconnected(self, *args):
 		self._album_popover.popdown()
