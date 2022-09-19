@@ -689,7 +689,7 @@ class Client(MPDClient):
 			yield obj
 	_parse_objects_direct = _parse_objects
 
-	# overloads
+	# overloads to use Song class
 	def currentsong(self, *args):
 		return Song(super().currentsong(*args))
 	def search(self, *args):
@@ -719,7 +719,6 @@ class Client(MPDClient):
 			if profile.get_string("password"):
 				self.password(profile.get_string("password"))
 		except:
-			self.emitter.emit("disconnected")
 			self.emitter.emit("connection_error")
 			return False
 		# connect successful
@@ -735,7 +734,6 @@ class Client(MPDClient):
 			return True
 		else:
 			self.disconnect()
-			self.emitter.emit("disconnected")
 			self.emitter.emit("connection_error")
 			print("No read permission, check your mpd config.")
 			return False
@@ -744,9 +742,13 @@ class Client(MPDClient):
 		if self._main_timeout_id is not None:
 			GLib.source_remove(self._main_timeout_id)
 			self._main_timeout_id=None
-		self._last_status={}
 		self.disconnect()
 		self.start()
+
+	def disconnect(self):
+		super().disconnect()
+		self._last_status={}
+		self.emitter.emit("disconnected")
 
 	def connected(self):
 		try:
@@ -968,8 +970,6 @@ class Client(MPDClient):
 			self._last_status=status
 		except (ConnectionError, ConnectionResetError) as e:
 			self.disconnect()
-			self._last_status={}
-			self.emitter.emit("disconnected")
 			self.emitter.emit("connection_error")
 			self._main_timeout_id=None
 			self.lib_path=None
@@ -3637,6 +3637,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		overlay.add_overlay(connection_notify)
 		self.add(overlay)
 
+	def open(self):
 		# bring player in consistent state
 		self._client.emitter.emit("disconnected")
 		# indicate connection process in window title
@@ -3646,10 +3647,10 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_title("mpdevil "+_("connecting…"))
 		# set default window size
 		if self._settings.get_boolean("mini-player"):
-			self.set_default_size(settings.get_int("mini-player-width"), settings.get_int("mini-player-height"))
+			self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
 		else:
-			self.set_default_size(settings.get_int("width"), settings.get_int("height"))
-			if settings.get_boolean("maximize"):
+			self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
+			if self._settings.get_boolean("maximize"):
 				self.maximize()  # request maximize
 		# show window
 		self.show_all()
@@ -3657,7 +3658,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			Gtk.main_iteration_do(True)
 		if not self._settings.get_boolean("mini-player"):
 			self._bind_paned_settings()  # restore paned settings when window is visible (fixes a bug when window is maximized)
-
 		# start client
 		def callback(*args):
 			self._client.start()  # connect client
@@ -3831,6 +3831,7 @@ class mpdevil(Gtk.Application):
 		self._window=MainWindow(self._client, self._settings, application=self)
 		self._window.connect("delete-event", self._on_quit)
 		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
+		self._window.open()
 		# MPRIS
 		if self._settings.get_boolean("mpris"):
 			dbus_service=MPRISInterface(self, self._window, self._client, self._settings)
