@@ -3015,7 +3015,7 @@ class PlaybackControl(Gtk.ButtonBox):
 		# widgets
 		self._play_button_icon=AutoSizedIcon("media-playback-start-symbolic", "icon-size", self._settings)
 		self._play_button=Gtk.Button(
-			image=self._play_button_icon, action_name="mpd.toggle-play", tooltip_text=_("Play/Pause"), can_focus=False)
+			image=self._play_button_icon, action_name="mpd.toggle-play", tooltip_text=_("Play"), can_focus=False)
 		self._stop_button=Gtk.Button(
 			image=AutoSizedIcon("media-playback-stop-symbolic", "icon-size", self._settings), tooltip_text=_("Stop"),
 			action_name="mpd.stop", can_focus=False, no_show_all=True)
@@ -3045,8 +3045,10 @@ class PlaybackControl(Gtk.ButtonBox):
 	def _on_state(self, emitter, state):
 		if state == "play":
 			self._play_button_icon.set_property("icon-name", "media-playback-pause-symbolic")
+			self._play_button.set_tooltip_text(_("Pause"))
 		else:
 			self._play_button_icon.set_property("icon-name", "media-playback-start-symbolic")
+			self._play_button.set_tooltip_text(_("Play"))
 
 class SeekBar(Gtk.Box):
 	def __init__(self, client):
