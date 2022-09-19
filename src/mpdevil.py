@@ -3601,6 +3601,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connection_error", self._on_connection_error)
 		self._client.emitter.connect("reconnected", self._on_reconnected)
 		# auto save window state and size
 		self.connect("size-allocate", self._on_size_allocate)
@@ -3788,6 +3789,9 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
+
+	def _on_connection_error(self, *args):
+		self._clear_title()
 
 	def _on_size_allocate(self, widget, rect):
 		if not self.is_maximized():
