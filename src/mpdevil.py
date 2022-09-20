@@ -221,7 +221,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._client.emitter.connect("single", self._on_loop_changed)
 		self._client.emitter.connect("random", self._on_random_changed)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 	def _handle_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
@@ -462,7 +462,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _on_random_changed(self, *args):
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Shuffle")
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		for p in ("CanPlay","CanPause","CanSeek"):
 			self._update_property(self._MPRIS_PLAYER_IFACE, p)
 
@@ -629,7 +629,8 @@ class EventEmitter(GObject.Object):
 		"updating_db": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"updated_db": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"reconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"connected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"current_song": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -706,37 +707,39 @@ class Client(MPDClient):
 		return [Song(song) for song in super().listplaylistinfo(name)]
 
 	def start(self):
-		profile=self._settings.get_active_profile()
-		if profile.get_boolean("socket-connection"):
-			socket=profile.get_string("socket")
-			if not socket:
-				socket=FALLBACK_SOCKET
-			args=(socket, None)
-		else:
-			args=(profile.get_string("host"), profile.get_int("port"))
-		try:
-			self.connect(*args)
-			if profile.get_string("password"):
-				self.password(profile.get_string("password"))
-		except:
-			self.emitter.emit("connection_error")
+		self.emitter.emit("connecting")
+		def callback():
+			profile=self._settings.get_active_profile()
+			if profile.get_boolean("socket-connection"):
+				socket=profile.get_string("socket")
+				if not socket:
+					socket=FALLBACK_SOCKET
+				args=(socket, None)
+			else:
+				args=(profile.get_string("host"), profile.get_int("port"))
+			try:
+				self.connect(*args)
+				if profile.get_string("password"):
+					self.password(profile.get_string("password"))
+			except:
+				self.emitter.emit("connection_error")
+				return False
+			# connect successful
+			if profile.get_boolean("socket-connection"):
+				self.lib_path=self.config()
+			else:
+				self.lib_path=self._settings.get_active_profile().get_string("path")
+				if not self.lib_path:
+					self.lib_path=FALLBACK_LIB
+			if "status" in self.commands():
+				self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
+				self.emitter.emit("connected")
+			else:
+				self.disconnect()
+				self.emitter.emit("connection_error")
+				print("No read permission, check your mpd config.")
 			return False
-		# connect successful
-		if profile.get_boolean("socket-connection"):
-			self.lib_path=self.config()
-		else:
-			self.lib_path=self._settings.get_active_profile().get_string("path")
-			if not self.lib_path:
-				self.lib_path=FALLBACK_LIB
-		if "status" in self.commands():
-			self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
-			self.emitter.emit("reconnected")
-			return True
-		else:
-			self.disconnect()
-			self.emitter.emit("connection_error")
-			print("No read permission, check your mpd config.")
-			return False
+		GLib.idle_add(callback)
 
 	def reconnect(self):
 		if self._main_timeout_id is not None:
@@ -1724,7 +1727,7 @@ class SearchWindow(Gtk.Box):
 		self.search_entry.connect("focus_in_event", self._on_search_entry_focus_event, True)
 		self.search_entry.connect("focus_out_event", self._on_search_entry_focus_event, False)
 		self._tag_combo_box_changed=self._tag_combo_box.connect("changed", self._search)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("updated_db", self._search)
 
@@ -1741,7 +1744,7 @@ class SearchWindow(Gtk.Box):
 	def _on_disconnected(self, *args):
 		self._search_thread.stop()
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		def callback():
 			self._songs_list.buttons.set_sensitive(False)
 			self._songs_list.clear()
@@ -1886,7 +1889,7 @@ class GenreList(SelectionList):
 
 		# connect
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect_after("reconnected", self._on_reconnected)
+		self._client.emitter.connect_after("connected", self._on_connected)
 		self._client.emitter.connect("updated_db", self._refresh)
 
 	def _refresh(self, *args):
@@ -1898,7 +1901,7 @@ class GenreList(SelectionList):
 		self.set_sensitive(False)
 		self.clear()
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self._refresh()
 		self.set_sensitive(True)
 
@@ -1919,7 +1922,7 @@ class ArtistList(SelectionList):
 		self.connect("clear", lambda *args: self._artist_popover.popdown())
 		self.connect("button-press-event", self._on_button_press_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 		self.genre_list.connect_after("item-selected", self._refresh)
 
 	def _refresh(self, *args):
@@ -1977,7 +1980,7 @@ class ArtistList(SelectionList):
 		self.set_sensitive(False)
 		self.clear()
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
 class AlbumLoadingThread(threading.Thread):
@@ -2135,7 +2138,7 @@ class AlbumList(Gtk.IconView):
 		self.connect("item-activated", self._on_item_activated)
 		self.connect("button-press-event", self._on_button_press_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
 		self._artist_list.connect("item-selected", self._refresh)
@@ -2226,7 +2229,7 @@ class AlbumList(Gtk.IconView):
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
 	def show_info(self):
@@ -2543,7 +2546,7 @@ class PlaylistView(TreeView):
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 	def _clear(self, *args):
 		self._song_popover.popdown()
@@ -2691,7 +2694,7 @@ class PlaylistView(TreeView):
 		self.set_sensitive(False)
 		self._clear()
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
 	def _select_function(self, selection, model, path, path_currently_selected):
@@ -2910,7 +2913,7 @@ class MainCover(Gtk.DrawingArea):
 		# connect
 		self._client.emitter.connect("current_song", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 	def _clear(self):
 		self._fallback=True
@@ -2929,7 +2932,7 @@ class MainCover(Gtk.DrawingArea):
 		self.set_sensitive(False)
 		self._clear()
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
 	def do_draw(self, context):
@@ -2980,14 +2983,14 @@ class CoverLyricsWindow(Gtk.Overlay):
 		# connect
 		self.lyrics_button.connect("toggled", self._on_lyrics_toggled)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
 		self.add(Gtk.AspectFrame(child=main_cover, shadow_type=Gtk.ShadowType.NONE))
 		self.add_overlay(self._stack)
 		self.add_overlay(self._lyrics_button_revealer)
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.lyrics_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
@@ -3159,7 +3162,7 @@ class AudioFormat(Gtk.Box):
 		self._client.emitter.connect("bitrate", self._on_bitrate)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
 		hbox=Gtk.Box(halign=Gtk.Align.END, visible=True)
@@ -3205,7 +3208,7 @@ class AudioFormat(Gtk.Box):
 		self._file_type_label.set_text("")
 		self._format_label.set_markup("<small> </small>")
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
 class PlaybackOptions(Gtk.ButtonBox):
@@ -3238,7 +3241,7 @@ class PlaybackOptions(Gtk.ButtonBox):
 		self._client.emitter.connect("single", self._single_refresh)
 		self._buttons["single"][0].connect("button-press-event", self._on_single_button_press_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 		self._settings.bind("mini-player", self, "no-show-all", Gio.SettingsBindFlags.GET)
 		self._settings.bind("mini-player", self, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
@@ -3276,7 +3279,7 @@ class PlaybackOptions(Gtk.ButtonBox):
 			self._button_refresh(None, False, name)
 		self._single_refresh(None, "0")
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
 class VolumeButton(Gtk.VolumeButton):
@@ -3308,7 +3311,7 @@ class VolumeButton(Gtk.VolumeButton):
 		self._changed=self.connect("value-changed", self._set_volume)
 		self._client.emitter.connect("volume", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 	def _set_volume(self, widget, value):
 		self._client.setvol(str(int(value)))
@@ -3342,7 +3345,7 @@ class VolumeButton(Gtk.VolumeButton):
 			self._client.enableoutput(out_id)
 			button.set_property("active", True)
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
@@ -3369,7 +3372,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		# connect
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 	def _on_toggle_play(self, action, param):
 		self._client.toggle_play()
@@ -3419,7 +3422,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		for action in self._data:
 			self.lookup_action(action).set_enabled(False)
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		for action in self._enable_on_reconnect_data:
 			self.lookup_action(action).set_enabled(True)
 
@@ -3470,7 +3473,7 @@ class ConnectionNotify(Gtk.Revealer):
 		# connect
 		connect_button.connect("clicked", self._on_connect_button_clicked)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
 		box=Gtk.Box(spacing=12)
@@ -3492,7 +3495,7 @@ class ConnectionNotify(Gtk.Revealer):
 		self._label.set_text(text)
 		self.set_reveal_child(True)
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self.set_reveal_child(False)
 
 	def _on_connect_button_clicked(self, *args):
@@ -3600,9 +3603,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
+		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connecting", self._on_connecting)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
-		self._client.emitter.connect("reconnected", self._on_reconnected)
 		# auto save window state and size
 		self.connect("size-allocate", self._on_size_allocate)
 		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)
@@ -3641,11 +3645,6 @@ class MainWindow(Gtk.ApplicationWindow):
 	def open(self):
 		# bring player in consistent state
 		self._client.emitter.emit("disconnected")
-		# indicate connection process in window title
-		if self._use_csd:
-			self._header_bar.set_subtitle(_("connecting…"))
-		else:
-			self.set_title("mpdevil "+_("connecting…"))
 		# set default window size
 		if self._settings.get_boolean("mini-player"):
 			self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
@@ -3653,17 +3652,12 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
 			if self._settings.get_boolean("maximize"):
 				self.maximize()  # request maximize
-		# show window
 		self.show_all()
 		while Gtk.events_pending():  # ensure window is visible
 			Gtk.main_iteration_do(True)
 		if not self._settings.get_boolean("mini-player"):
 			self._bind_paned_settings()  # restore paned settings when window is visible (fixes a bug when window is maximized)
-		# start client
-		def callback(*args):
-			self._client.start()  # connect client
-			return False
-		idle_add(callback)
+		self._client.start()
 
 	def _clear_title(self):
 		self.set_title("mpdevil")
@@ -3777,7 +3771,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._clear_title()
 			self.get_application().withdraw_notification("title-change")
 
-	def _on_reconnected(self, *args):
+	def _on_connected(self, *args):
 		self._clear_title()
 		for action in ("stats","toggle-lyrics","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
@@ -3789,6 +3783,12 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
+
+	def _on_connecting(self, *args):
+		if self._use_csd:
+			self._header_bar.set_subtitle(_("connecting…"))
+		else:
+			self.set_title("mpdevil "+_("connecting…"))
 
 	def _on_connection_error(self, *args):
 		self._clear_title()
