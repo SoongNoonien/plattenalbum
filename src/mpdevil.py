@@ -1536,7 +1536,7 @@ class AlbumPopover(Gtk.Popover):
 
 		# songs list
 		# sizing needed for correct popover height
-		self._songs_list=SongsList(self._client, width=80)
+		self._songs_list=SongsList(self._client, width=60)
 
 		# scroll
 		self._scroll=Gtk.ScrolledWindow(child=self._songs_list, propagate_natural_height=True)
@@ -1564,7 +1564,8 @@ class AlbumPopover(Gtk.Popover):
 		self._rect.y=y
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
-		self._scroll.set_max_content_height(4*widget.get_allocated_height()//7)
+		window=self.get_toplevel()
+		self._scroll.set_max_content_height(window.get_size()[1]//2)
 		self._songs_list.clear()
 		tag_filter=("albumartist", albumartist, "album", album, "date", date)
 		count=self._client.count(*tag_filter)
