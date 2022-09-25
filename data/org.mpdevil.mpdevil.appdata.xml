@@ -19,7 +19,7 @@
     </ul>
   </description>
   <releases>
-    <release version="1.8.0" date="2022-09-11"/>
+    <release version="1.8.1" date="2022-09-25"/>
   </releases>
   <launchable type="desktop-id">org.mpdevil.mpdevil.desktop</launchable>
   <screenshots>
