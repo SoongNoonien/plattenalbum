@@ -2790,7 +2790,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		# text view
 		self._text_view=Gtk.TextView(
 			editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD,
-			justification=Gtk.Justification.CENTER, opacity=0.9,
+			justification=Gtk.Justification.CENTER,
 			left_margin=5, right_margin=5, bottom_margin=5, top_margin=3
 		)
 
@@ -2959,6 +2959,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 		# cover
 		main_cover=MainCover(self._client, self._settings)
 		self._cover_event_box=CoverEventBox(self._client, self._settings)
+		self._cover_event_box.add(Gtk.AspectFrame(child=main_cover, shadow_type=Gtk.ShadowType.NONE))
 
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(
@@ -2976,7 +2977,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 		self._settings.bind("show-lyrics-button", self._lyrics_button_revealer, "reveal-child", Gio.SettingsBindFlags.DEFAULT)
 
 		# stack
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.OVER_DOWN_UP)
+		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
 		self._stack.add_named(self._cover_event_box, "cover")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 		self._stack.set_visible_child(self._cover_event_box)
@@ -2987,8 +2988,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
-		self.add(Gtk.AspectFrame(child=main_cover, shadow_type=Gtk.ShadowType.NONE))
-		self.add_overlay(self._stack)
+		self.add(self._stack)
 		self.add_overlay(self._lyrics_button_revealer)
 
 	def _on_connected(self, *args):
