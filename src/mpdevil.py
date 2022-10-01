@@ -653,6 +653,7 @@ class Client(MPDClient):
 		self._last_status={}
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
+		self._start_idle_id=None
 		self.lib_path=None
 		self.current_cover=None
 
@@ -723,6 +724,7 @@ class Client(MPDClient):
 					self.password(profile.get_string("password"))
 			except:
 				self.emitter.emit("connection_error")
+				self._start_idle_id=None
 				return False
 			# connect successful
 			if profile.get_boolean("socket-connection"):
@@ -738,13 +740,17 @@ class Client(MPDClient):
 				self.disconnect()
 				self.emitter.emit("connection_error")
 				print("No read permission, check your mpd config.")
+			self._start_idle_id=None
 			return False
-		GLib.idle_add(callback)
+		self._start_idle_id=GLib.idle_add(callback)
 
 	def reconnect(self):
 		if self._main_timeout_id is not None:
 			GLib.source_remove(self._main_timeout_id)
 			self._main_timeout_id=None
+		if self._start_idle_id is not None:
+			GLib.source_remove(self._start_idle_id)
+			self._start_idle_id=None
 		self.disconnect()
 		self.start()
 
@@ -1823,6 +1829,7 @@ class SelectionList(TreeView):
 		self._selection.connect("changed", self._on_selection_changed)
 
 	def clear(self):
+		self._selection.set_mode(Gtk.SelectionMode.NONE)
 		self._store.clear()
 		self._store.append([self.select_all_string, "", Pango.Weight.NORMAL])
 		self._selected_path=None
@@ -1840,6 +1847,7 @@ class SelectionList(TreeView):
 			else:
 				self._store.insert_with_valuesv(-1, range(3), [item[0], char, Pango.Weight.BOLD])
 				char=""
+		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
 
 	def get_item_at_path(self, path):
 		if path == Gtk.TreePath(0):
@@ -1996,9 +2004,17 @@ class AlbumLoadingThread(threading.Thread):
 		self._genre=genre
 
 	def _get_albums(self):
+		@main_thread_function
+		def client_list(*args):
+			if self._stop_flag:
+				raise ValueError("Stop requested")
+			else:
+				return self._client.list(*args)
 		for albumartist in self._artists:
-			albums=main_thread_function(self._client.list)(
-				"albumsort", "albumartist", albumartist, *self._genre_filter, "group", "date", "group", "album")
+			try:
+				albums=client_list("albumsort", "albumartist", albumartist, *self._genre_filter, "group", "date", "group", "album")
+			except ValueError:
+				break
 			for _, album in itertools.groupby(albums, key=lambda x: (x["album"], x["date"])):
 				tmp=next(album)
 				# ignore multiple albumsort values
@@ -2053,6 +2069,9 @@ class AlbumLoadingThread(threading.Thread):
 					self._exit()
 					return
 				idle_add(self._progress_bar.pulse)
+		if self._stop_flag:
+			self._exit()
+			return
 		# sort model
 		if main_thread_function(self._settings.get_boolean)("sort-albums-by-year"):
 			main_thread_function(self._store.set_sort_column_id)(5, Gtk.SortType.ASCENDING)
@@ -2060,7 +2079,17 @@ class AlbumLoadingThread(threading.Thread):
 			main_thread_function(self._store.set_sort_column_id)(6, Gtk.SortType.ASCENDING)
 		idle_add(self._iconview.set_model, self._store)
 		# select album
-		path=main_thread_function(self._iconview.get_current_album_path)()
+		@main_thread_function
+		def get_current_album_path():
+			if self._stop_flag:
+				raise ValueError("Stop requested")
+			else:
+				return self._iconview.get_current_album_path()
+		try:
+			path=get_current_album_path()
+		except ValueError:
+			self._exit()
+			return
 		if path is None:
 			path=Gtk.TreePath(0)
 		idle_add(self._iconview.set_cursor, path, None, False)
