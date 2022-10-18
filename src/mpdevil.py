@@ -1417,7 +1417,7 @@ class SongPopover(Gtk.Popover):
 class SongsList(TreeView):
 	__gsignals__={"button-clicked": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client, width=-1):
-		super().__init__(search_column=-1, activate_on_single_click=True, headers_visible=False)
+		super().__init__(enable_search=False, activate_on_single_click=True, headers_visible=False)
 		self._client=client
 
 		# store
