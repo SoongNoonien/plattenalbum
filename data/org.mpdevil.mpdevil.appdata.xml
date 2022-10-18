@@ -15,7 +15,6 @@
       <li>MPRIS interface</li>
       <li>manage multiple mpd servers</li>
       <li>basic queue manipulation (move and delete single tracks)</li>
-      <li>save and load playlists</li>
     </ul>
   </description>
   <releases>

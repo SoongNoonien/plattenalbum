@@ -13,7 +13,6 @@ Features
 - MPRIS interface (based on mpDris2)
 - manage multiple MPD servers
 - basic queue manipulation (move and delete single tracks)
-- save and load playlists
 
 See: https://github.com/SoongNoonien/mpdevil/wiki/Usage
 
