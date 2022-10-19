@@ -2299,7 +2299,7 @@ class Browser(Gtk.Paned):
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song
 	def __init__(self, client, settings):
-		super().__init__(activate_on_single_click=True, reorderable=True, search_column=5, headers_visible=False)
+		super().__init__(activate_on_single_click=True, reorderable=True, search_column=4, headers_visible=False)
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
@@ -2309,12 +2309,9 @@ class PlaylistView(TreeView):
 		self._selection=self.get_selection()
 		self._selection.set_select_function(self._select_function)
 
-		# label
-		self.label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
-
 		# store
-		# (track, title, human duration, file, duration, search)
-		self._store=Gtk.ListStore(str, str, str, str, float, str)
+		# (track, title, duration, file, search)
+		self._store=Gtk.ListStore(str, str, str, str, str)
 		self.set_model(self._store)
 
 		# columns
@@ -2352,7 +2349,6 @@ class PlaylistView(TreeView):
 
 	def _clear(self, *args):
 		self._song_popover.popdown()
-		self._set_playlist_info("")
 		self._playlist_version=None
 		self.set_property("selected-path", None)
 		self._store.handler_block(self._row_inserted)
@@ -2390,9 +2386,6 @@ class PlaylistView(TreeView):
 		else:
 			path=Gtk.TreePath(int(song))
 			self._select(path)
-
-	def _set_playlist_info(self, text):
-		self.label.set_label(text)
 
 	def _on_button_press_event(self, widget, event):
 		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
@@ -2440,7 +2433,7 @@ class PlaylistView(TreeView):
 		self._store.handler_block(self._row_deleted)
 		self._song_popover.popdown()
 		self._unselect()
-		self._client.restrict_tagtypes("track", "disc", "title", "artist", "album", "date", "genre")
+		self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
 		songs=[]
 		if self._playlist_version is not None:
 			songs=self._client.plchanges(self._playlist_version)
@@ -2449,37 +2442,22 @@ class PlaylistView(TreeView):
 		self._client.tagtypes("all")
 		if songs:
 			self.freeze_child_notify()
-			self._set_playlist_info("")
 			for song in songs:
 				title=song.get_markup()
 				try:
 					treeiter=self._store.get_iter(song["pos"])
 				except ValueError:
-					self._store.insert_with_valuesv(-1, range(8), [
-						song["track"][0], title,
-						str(song["duration"]), song["file"],
-						float(song["duration"]), song["title"][0]
-					])
+					self._store.insert_with_valuesv(-1, range(5),
+						[song["track"][0], title, str(song["duration"]), song["file"], song["title"][0]]
+					)
 				else:
 					self._store.set(treeiter,
-						0, song["track"][0],
-						1, title,
-						2, str(song["duration"]),
-						3, song["file"],
-						4, float(song["duration"]),
-						5, song["title"][0]
+						0, song["track"][0], 1, title, 2, str(song["duration"]), 3, song["file"], 4, song["title"][0]
 					)
 			self.thaw_child_notify()
 		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
-		playlist_length=len(self._store)
-		if playlist_length == 0:
-			self._set_playlist_info("")
-		else:
-			duration=Duration(sum((row[4] for row in self._store)))
-			translated_string=ngettext("{number} song ({duration})", "{number} songs ({duration})", playlist_length)
-			self._set_playlist_info(translated_string.format(number=playlist_length, duration=duration))
 		self._refresh_selection()
 		if self._playlist_version != version:
 			self.scroll_to_selected_title()
