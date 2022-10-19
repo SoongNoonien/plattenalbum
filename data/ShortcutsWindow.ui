@@ -179,7 +179,6 @@
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
 			<property name="title" translatable="yes">Remove selected song</property>
-			<property name="subtitle" translatable="yes">Middle-click</property>
 			<property name="accelerator">Delete</property>
 			</object>
 		</child>
@@ -194,7 +193,6 @@
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
 			<property name="title" translatable="yes">Show additional information</property>
-			<property name="subtitle" translatable="yes">Right-click</property>
 			<property name="accelerator">&lt;Control&gt;i Menu</property>
 			</object>
 		</child>
@@ -242,7 +240,6 @@
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
 			<property name="title" translatable="yes">Append selected item</property>
-			<property name="subtitle" translatable="yes">Middle-click</property>
 			<property name="accelerator">&lt;Control&gt;plus</property>
 			</object>
 		</child>
@@ -250,7 +247,6 @@
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
 			<property name="title" translatable="yes">Play selected item immediately</property>
-			<property name="subtitle" translatable="yes">Double-click</property>
 			<property name="accelerator">&lt;Control&gt;Return</property>
 			</object>
 		</child>
@@ -258,7 +254,6 @@
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
 			<property name="title" translatable="yes">Show additional information</property>
-			<property name="subtitle" translatable="yes">Right-click</property>
 			<property name="accelerator">&lt;Control&gt;i Menu</property>
 			</object>
 		</child>
