@@ -830,9 +830,6 @@ class Client(MPDClient):
 					self.findadd("albumartist", albumartist, "album", album["album"], "date", album["date"])
 		self._to_playlist(append, mode)
 
-	def stored_to_playlist(self, name, mode="default"):
-		self._to_playlist(lambda: self.load(name), mode)
-
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
 		if len(native_list) > 0:
