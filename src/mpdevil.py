@@ -2373,10 +2373,12 @@ class PlaylistView(TreeView):
 			except IndexError:  # invalid path
 				pass
 
+	def _scroll_to_path(self, path):
+		self.save_scroll_to_cell(path, None, True, 0.25)
+
 	def scroll_to_selected_title(self):
-		if (treeiter:=self._selection.get_selected()[1]) is not None:
-			path=self._store.get_path(treeiter)
-			self.save_scroll_to_cell(path, None, True, 0.25)
+		if (path:=self.get_property("selected-path")) is not None:
+			self._scroll_to_path(path)
 
 	def _refresh_selection(self):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
 		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)
@@ -2459,8 +2461,11 @@ class PlaylistView(TreeView):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
 		self._refresh_selection()
-		if self._playlist_version != version:
-			self.scroll_to_selected_title()
+		if (path:=self.get_property("selected-path")) is None:
+			if len(self._store) > 0:
+				self._scroll_to_path(Gtk.TreePath(0))
+		else:
+			self._scroll_to_path(path)
 		self._playlist_version=version
 		self._store.handler_unblock(self._row_inserted)
 		self._store.handler_unblock(self._row_deleted)
@@ -2468,7 +2473,7 @@ class PlaylistView(TreeView):
 	def _on_song_changed(self, *args):
 		self._refresh_selection()
 		if self._client.status()["state"] == "play":
-			self.scroll_to_selected_title()
+			self._scroll_to_path(self.get_property("selected-path"))
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
