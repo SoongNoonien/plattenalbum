@@ -178,7 +178,7 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
-			<property name="title" translatable="yes">Remove selected song</property>
+			<property name="title" translatable="yes">Remove song</property>
 			<property name="accelerator">Delete</property>
 			</object>
 		</child>
@@ -192,7 +192,7 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
-			<property name="title" translatable="yes">Show additional information</property>
+			<property name="title" translatable="yes">Show information</property>
 			<property name="accelerator">&lt;Control&gt;i Menu</property>
 			</object>
 		</child>
@@ -228,25 +228,25 @@
 	<child>
 		<object class="GtkShortcutsGroup">
 		<property name="visible">True</property>
-		<property name="title" translatable="yes">Search, Album Dialog, Album List and Artist List</property>
+		<property name="title" translatable="yes">Search, Album Dialog and Album List</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
-			<property name="title" translatable="yes">Append selected item</property>
+			<property name="title" translatable="yes">Append</property>
 			<property name="accelerator">&lt;Control&gt;plus</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
-			<property name="title" translatable="yes">Play selected item immediately</property>
+			<property name="title" translatable="yes">Play immediately</property>
 			<property name="accelerator">&lt;Control&gt;Return</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
-			<property name="title" translatable="yes">Show additional information</property>
+			<property name="title" translatable="yes">Show information</property>
 			<property name="accelerator">&lt;Control&gt;i Menu</property>
 			</object>
 		</child>
