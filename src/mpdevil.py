@@ -2580,8 +2580,6 @@ class CoverEventBox(Gtk.EventBox):
 					tags=(song["albumartist"][0], song["album"][0], song["date"][0])
 					if event.button == 1:
 						self._client.album_to_playlist(*tags)
-					elif event.button == 2:
-						self._client.album_to_playlist(*tags, "append")
 					elif event.button == 3:
 						self._album_popover.open(*tags, widget, event.x, event.y)
 		self._click_pos=()
