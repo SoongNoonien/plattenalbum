@@ -3544,7 +3544,7 @@ class mpdevil(Gtk.Application):
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
 			("win.profile-1", ["<Control>1"]),("win.profile-2", ["<Control>2"]),("win.profile-3", ["<Control>3"]),
-			("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),("win.play", ["<Control>Return"]),
+			("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),("win.play", ["<Control>p"]),
 			("win.genre-filter", ["<Control>g"]),("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<Control>f"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
 			("mpd.next", ["<Alt>Down"]),("mpd.prev", ["<Alt>Up"]),("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>n"]),

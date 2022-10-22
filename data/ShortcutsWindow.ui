@@ -240,7 +240,7 @@
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
 			<property name="title" translatable="yes">Play immediately</property>
-			<property name="accelerator">&lt;Control&gt;Return</property>
+			<property name="accelerator">&lt;Control&gt;p</property>
 			</object>
 		</child>
 		<child>
