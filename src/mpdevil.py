@@ -2429,27 +2429,28 @@ class PlaylistWindow(Gtk.Overlay):
 		self.add_overlay(self._back_button_revealer)
 
 	def _on_show_hide_back_button(self, *args):
-		visible_range=self._treeview.get_visible_range()  # not always accurate possibly due to a bug in Gtk
-		if visible_range is None or self._treeview.get_property("selected-path") is None:
-			self._back_button_revealer.set_reveal_child(False)
-		else:
-			if visible_range[0] > self._treeview.get_property("selected-path"):  # current song is above upper edge
-				self._back_button_icon.set_property("icon-name", "go-up-symbolic")
-				self._back_button_revealer.set_valign(Gtk.Align.START)
-				self._back_button_revealer.set_reveal_child(True)
-			elif self._treeview.get_property("selected-path") > visible_range[1]:  # current song is below lower edge
-				self._back_button_icon.set_property("icon-name", "go-down-symbolic")
-				self._back_button_revealer.set_valign(Gtk.Align.END)
-				self._back_button_revealer.set_reveal_child(True)
-			else:  # current song is visible
+		def callback():
+			visible_range=self._treeview.get_visible_range()  # not always accurate possibly due to a bug in Gtk
+			if visible_range is None or self._treeview.get_property("selected-path") is None:
 				self._back_button_revealer.set_reveal_child(False)
+			else:
+				if visible_range[0] > self._treeview.get_property("selected-path"):  # current song is above upper edge
+					self._back_button_icon.set_property("icon-name", "go-up-symbolic")
+					self._back_button_revealer.set_valign(Gtk.Align.START)
+					self._back_button_revealer.set_reveal_child(True)
+				elif self._treeview.get_property("selected-path") > visible_range[1]:  # current song is below lower edge
+					self._back_button_icon.set_property("icon-name", "go-down-symbolic")
+					self._back_button_revealer.set_valign(Gtk.Align.END)
+					self._back_button_revealer.set_reveal_child(True)
+				else:  # current song is visible
+					self._back_button_revealer.set_reveal_child(False)
+		GLib.idle_add(callback)  # workaround for the Gtk bug from above
 
 	def _on_back_to_current_song_button_clicked(self, *args):
 		self._treeview.set_cursor(Gtk.TreePath(len(self._treeview.get_model())), None, False)  # unset cursor
 		if self._treeview.get_property("selected-path") is not None:
 			self._treeview.get_selection().select_path(self._treeview.get_property("selected-path"))
 		self._treeview.scroll_to_selected_title()
-		self._back_button_revealer.set_reveal_child(False)  # workaround for Gtk bug in _on_show_hide_back_button
 
 ####################
 # cover and lyrics #
