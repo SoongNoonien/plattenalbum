@@ -796,7 +796,6 @@ class Client(MPDClient):
 					self.move(0, duplicates[1]["pos"])
 					self.delete(int(duplicates[1]["pos"])-1)
 
-
 	def files_to_playlist(self, files, mode="default"):
 		def append():
 			for f in files:
@@ -813,22 +812,6 @@ class Client(MPDClient):
 
 	def album_to_playlist(self, albumartist, album, date, mode="default"):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
-
-	def artist_to_playlist(self, artist, genre, mode="default"):
-		def append():
-			if genre is None:
-				genre_filter=()
-			else:
-				genre_filter=("genre", genre)
-			if artist is None:
-				artists=self.comp_list("albumartist", *genre_filter)
-			else:
-				artists=[artist]
-			for albumartist in artists:
-				albums=self.list("album", "albumartist", albumartist, *genre_filter, "group", "date")
-				for album in albums:
-					self.findadd("albumartist", albumartist, "album", album["album"], "date", album["date"])
-		self._to_playlist(append, mode)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
 		native_list=self.list(*args)
@@ -1556,39 +1539,6 @@ class AlbumPopover(Gtk.Popover):
 		self.popup()
 		self._songs_list.columns_autosize()
 
-class ArtistPopover(Gtk.Popover):
-	def __init__(self, client):
-		super().__init__()
-		self._client=client
-		self._rect=Gdk.Rectangle()
-		self._artist=None
-		self._genre=None
-
-		# buttons
-		vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, margin=10)
-		data=((_("Append"), "list-add-symbolic", "append"), (_("Play"), "media-playback-start-symbolic", "play"))
-		for label, icon, mode in data:
-			button=Gtk.ModelButton(label=label, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
-			button.get_child().set_property("xalign", 0)
-			button.connect("clicked", self._on_button_clicked, mode)
-			vbox.pack_start(button, True, True, 0)
-
-		self.add(vbox)
-		vbox.show_all()
-
-	def open(self, artist, genre, widget, x, y):
-		self._rect.x=x
-		self._rect.y=y
-		self.set_pointing_to(self._rect)
-		self.set_relative_to(widget)
-		self._artist=artist
-		self._genre=genre
-		self.popup()
-
-	def _on_button_clicked(self, widget, mode):
-		self._client.artist_to_playlist(self._artist, self._genre, mode)
-		self.popdown()
-
 ##########
 # search #
 ##########
@@ -1879,12 +1829,7 @@ class ArtistList(SelectionList):
 		# selection
 		self._selection=self.get_selection()
 
-		# artist popover
-		self._artist_popover=ArtistPopover(self._client)
-
 		# connect
-		self.connect("clear", lambda *args: self._artist_popover.popdown())
-		self.connect("button-press-event", self._on_button_press_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self.genre_list.connect_after("item-selected", self._refresh)
@@ -1913,15 +1858,6 @@ class ArtistList(SelectionList):
 			self.select_path(Gtk.TreePath(0))
 		self.scroll_to_selected()
 
-	def _on_button_press_event(self, widget, event):
-		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
-			path=path_re[0]
-			artist,genre=self.get_artist_at_path(path)
-			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self._client.artist_to_playlist(artist, genre, "append")
-			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self._artist_popover.open(artist, genre, self, event.x, event.y)
-
 	def get_artist_at_path(self, path):
 		genre=self.genre_list.get_item_selected()
 		artist=self.get_item_at_path(path)
@@ -1929,16 +1865,6 @@ class ArtistList(SelectionList):
 
 	def get_artist_selected(self):
 		return self.get_artist_at_path(self.get_path_selected())
-
-	def add_to_playlist(self, mode):
-		if (path:=self.get_cursor()[0]) is not None:
-			artist,genre=self.get_artist_at_path(path)
-			self._client.artist_to_playlist(artist, genre, mode)
-
-	def show_info(self):
-		if (path:=self.get_cursor()[0]) is not None:
-			artist,genre=self.get_artist_at_path(path)
-			self._artist_popover.open(artist, genre, self, *self.get_popover_point(path))
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
