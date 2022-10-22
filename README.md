@@ -1,18 +1,18 @@
 README for mpdevil
 ==================
-mpdevil is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library, mpdevil loads all tags and covers on demand. So you'll never see any outdated information in the browser. mpdevil strongly relies on tags.
+Mpdevil is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library, mpdevil loads all tags and covers on demand. So you'll never see any outdated information in the browser. Mpdevil strongly relies on tags.
 
 ![ScreenShot](screenshots/mainwindow_1.8.0.png)
 
 Features
 --------
 
-- display large covers
-- play songs without double click
-- lyrics from: https://www.letras.mus.br
+- Display large covers
+- Play songs without double click
+- Lyrics from: https://www.letras.mus.br
 - MPRIS interface (based on mpDris2)
-- manage multiple MPD servers
-- basic queue manipulation (move and delete single tracks)
+- Manage multiple MPD servers
+- Basic queue manipulation (move and delete single tracks)
 
 See: https://github.com/SoongNoonien/mpdevil/wiki/Usage
 
