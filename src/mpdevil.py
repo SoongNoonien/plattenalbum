@@ -2193,11 +2193,11 @@ class Browser(Gtk.Paned):
 		song=self._client.currentsong()
 		artist,genre=self._artist_list.get_artist_selected()
 		if genre is None or song["genre"][0] == genre:
-			if artist is not None and song["albumartist"][0] != artist:
-				self._artist_list.select(song["albumartist"][0])
-				self._artist_list.scroll_to_selected()
-			else:
+			if artist is None or song["albumartist"][0] == artist:
 				self._album_list.scroll_to_current_album()
+			else:
+				self._artist_list.select(song["albumartist"][0])
+			self._artist_list.scroll_to_selected()
 		else:
 			self._genre_list.select_all()
 		self._genre_list.scroll_to_selected()
