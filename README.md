@@ -74,5 +74,4 @@ sudo update-desktop-database
 Translation
 -----------
 
-mpdevil is currently available in English, German, Dutch, Bulgarian, Turkish and Polish. If you speak one of these or even another language, you can easily translate mpdevil by using `poedit`. Just import `po/mpdevil.pot` from this repo into `poedit`. To test your translation, copy the new `.po` file into the `po` directory of your cloned mpdevil repo and proceed as described in the [Building](#building) section. To get your translation integrated into mpdevil, just send me an e-mail or create a pull request. Link to `poedit`: https://poedit.net/
-
+This program is currently available in English, German, Dutch, Bulgarian, Turkish and Polish. If you speak one of these or even another language, you can easily translate it by using [poedit](https://poedit.net). Just import `po/mpdevil.pot` from this repo into `poedit`. To test your translation, copy the new `.po` file into the `po` directory of your cloned mpdevil repo and proceed as described in the [Building](#building) section. To get your translation merged, just send me an e-mail or create a pull request.
