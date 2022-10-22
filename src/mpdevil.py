@@ -1337,10 +1337,7 @@ class SongPopover(Gtk.Popover):
 		hbox.pack_end(self._open_button, False, False, 0)
 		if show_buttons:
 			button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
-			data=((_("Append"), "list-add-symbolic", "append"),
-				(_("Play"), "media-playback-start-symbolic", "play"),
-				(_("Enqueue"), "insert-object-symbolic", "enqueue")
-			)
+			data=((_("Append"), "list-add-symbolic", "append"), (_("Play"), "media-playback-start-symbolic", "play"))
 			for tooltip, icon, mode in data:
 				button=Gtk.Button(tooltip_text=tooltip, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
 				button.connect("clicked", self._on_button_clicked, mode)
@@ -1445,9 +1442,7 @@ class SongsList(TreeView):
 		# buttons
 		self.buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		data=((_("Add all titles to playlist"), "list-add-symbolic", "append"),
-			(_("Directly play all titles"), "media-playback-start-symbolic", "play"),
-			(_("Append all titles after the currently playing track and clear the playlist from all other songs"),
-			"insert-object-symbolic", "enqueue")
+			(_("Directly play all titles"), "media-playback-start-symbolic", "play")
 		)
 		for tooltip, icon, mode in data:
 			button=Gtk.Button(image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
@@ -1571,10 +1566,7 @@ class ArtistPopover(Gtk.Popover):
 
 		# buttons
 		vbox=Gtk.ButtonBox(orientation=Gtk.Orientation.VERTICAL, margin=10)
-		data=((_("Append"), "list-add-symbolic", "append"),
-			(_("Play"), "media-playback-start-symbolic", "play"),
-			(_("Enqueue"), "insert-object-symbolic", "enqueue")
-		)
+		data=((_("Append"), "list-add-symbolic", "append"), (_("Play"), "media-playback-start-symbolic", "play"))
 		for label, icon, mode in data:
 			button=Gtk.ModelButton(label=label, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
 			button.get_child().set_property("xalign", 0)
@@ -3302,7 +3294,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", self._on_profile, i)
 			self.add_action(action)
-		for name in ("append","play","enqueue"):
+		for name in ("append","play"):
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", self._on_add_to_playlist, name)
 			self.add_action(action)
@@ -3628,11 +3620,11 @@ class mpdevil(Gtk.Application):
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
 			("win.profile-1", ["<Control>1"]),("win.profile-2", ["<Control>2"]),("win.profile-3", ["<Control>3"]),
 			("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),("win.play", ["<Control>Return"]),
-			("win.enqueue", ["<Control>e"]),("win.genre-filter", ["<Control>g"]),("win.back-to-current-album", ["Escape"]),
-			("win.toggle-search", ["<Control>f"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),
-			("mpd.stop", ["<Shift>space"]),("mpd.next", ["<Alt>Down"]),("mpd.prev", ["<Alt>Up"]),("mpd.repeat", ["<Control>r"]),
-			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
-			("mpd.single-oneshot", ["<Shift><Control>s"]),("mpd.seek-forward", ["<Alt>Right"]),("mpd.seek-backward", ["<Alt>Left"])
+			("win.genre-filter", ["<Control>g"]),("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<Control>f"]),
+			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
+			("mpd.next", ["<Alt>Down"]),("mpd.prev", ["<Alt>Up"]),("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>n"]),
+			("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),("mpd.single-oneshot", ["<Shift><Control>s"]),
+			("mpd.seek-forward", ["<Alt>Right"]),("mpd.seek-backward", ["<Alt>Left"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)

@@ -232,13 +232,6 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
-			<property name="title" translatable="yes">Enqueue selected item</property>
-			<property name="accelerator">&lt;Control&gt;e</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Append selected item</property>
 			<property name="accelerator">&lt;Control&gt;plus</property>
 			</object>
