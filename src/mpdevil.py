@@ -728,7 +728,10 @@ class Client(MPDClient):
 				return False
 			# connect successful
 			if profile.get_boolean("socket-connection"):
-				self.lib_path=self.config()
+				if "config" in self.commands():
+					self.lib_path=self.config()
+				else:
+					print("No permission to get music directory.")
 			else:
 				self.lib_path=self._settings.get_active_profile().get_string("path")
 				if not self.lib_path:
