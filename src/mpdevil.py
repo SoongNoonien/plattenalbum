@@ -46,7 +46,7 @@ bindtextdomain("mpdevil", localedir="@LOCALE_DIR@")
 textdomain("mpdevil")
 Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "mpdevil.gresource")))
 
-COVER_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
+FALLBACK_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 FALLBACK_COVER=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
 FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
 FALLBACK_LIB=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
@@ -708,10 +708,7 @@ class Client(MPDClient):
 		self.emitter.emit("connecting")
 		def callback():
 			if self._settings.get_boolean("socket-connection"):
-				socket=self._settings.get_string("socket")
-				if not socket:
-					socket=FALLBACK_SOCKET
-				args=(socket, None)
+				args=(self._settings.get_socket(), None)
 			else:
 				args=(self._settings.get_string("host"), self._settings.get_int("port"))
 			try:
@@ -729,9 +726,7 @@ class Client(MPDClient):
 				else:
 					print("No permission to get music directory.")
 			else:
-				self.lib_path=self._settings.get_string("path")
-				if not self.lib_path:
-					self.lib_path=FALLBACK_LIB
+				self.lib_path=self._settings.get_lib()
 			if "status" in self.commands():
 				self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
 				self.emitter.emit("connected")
@@ -836,7 +831,7 @@ class Client(MPDClient):
 					print("illegal regex:", regex_str)
 					return None
 			else:
-				regex=re.compile(COVER_REGEX, flags=re.IGNORECASE)
+				regex=re.compile(FALLBACK_REGEX, flags=re.IGNORECASE)
 			song_dir=os.path.join(self.lib_path, os.path.dirname(song_file))
 			if song_dir.lower().endswith(".cue"):
 				song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
@@ -974,6 +969,18 @@ class Settings(Gio.Settings):
 	cursor_watch=GObject.Property(type=bool, default=False)
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
+
+	def get_socket(self):
+		socket=self.get_string("socket")
+		if not socket:
+			socket=FALLBACK_SOCKET
+		return socket
+
+	def get_lib(self):
+		lib_path=self.get_string("path")
+		if not lib_path:
+			lib_path=FALLBACK_LIB
+		return lib_path
 
 ###################
 # settings dialog #
@@ -1121,7 +1128,7 @@ class ConnectionSettings(Gtk.Box):
 		path_entry=LibPathEntry(parent, hexpand=True, no_show_all=True)
 		settings.bind("path", path_entry, "text", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("socket-connection", path_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		regex_entry=Gtk.Entry(hexpand=True, placeholder_text=COVER_REGEX)
+		regex_entry=Gtk.Entry(hexpand=True, placeholder_text=FALLBACK_REGEX)
 		regex_entry.set_tooltip_text(
 			_("The first image in the same directory as the song file "\
 			"matching this regex will be displayed. %AlbumArtist% and "\
@@ -3151,10 +3158,7 @@ class ConnectionNotify(Gtk.Revealer):
 
 	def _on_connection_error(self, *args):
 		if self._settings.get_boolean("socket-connection"):
-			socket=self._settings.get_string("socket")
-			if not socket:
-				socket=FALLBACK_SOCKET
-			text=_("Connection to “{socket}” failed").format(socket=socket)
+			text=_("Connection to “{socket}” failed").format(socket=self._settings.get_socket())
 		else:
 			text=_("Connection to “{host}:{port}” failed").format(
 				host=self._settings.get_string("host"), port=self._settings.get_int("port"))
