@@ -38,7 +38,7 @@
 			<summary>Default position of genre/artist separator</summary>
 		</key>
 		<key type="b" name="socket-connection">
-			<default>false</default>
+			<default>true</default>
 			<summary>Connect via Unix domain socket</summary>
 		</key>
 		<key type="s" name="socket">
