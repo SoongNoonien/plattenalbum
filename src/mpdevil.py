@@ -1105,12 +1105,11 @@ class LibPathEntry(Gtk.Entry):
 			self.set_text(dialog.get_filename())
 		dialog.destroy()
 
-class ConnectionSettings(Gtk.Box):
+class ConnectionSettings(Gtk.Grid):
 	def __init__(self, parent, client, settings):
-		super().__init__()
+		super().__init__(row_spacing=6, column_spacing=6, border_width=18)
 
-		# grid
-		grid=Gtk.Grid(row_spacing=6, column_spacing=6, border_width=18)
+		# labels and entries
 		socket_button=Gtk.CheckButton(label=_("Connect via Unix domain socket"))
 		settings.bind("socket-connection", socket_button, "active", Gio.SettingsBindFlags.DEFAULT)
 		socket_entry=Gtk.Entry(placeholder_text=FALLBACK_SOCKET, hexpand=True, no_show_all=True)
@@ -1144,31 +1143,25 @@ class ConnectionSettings(Gtk.Box):
 		settings.bind("socket-connection", path_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		regex_label=Gtk.Label(label=_("Cover regex:"), xalign=1, margin_end=6)
 
-		# packing
-		grid.attach(socket_button, 0, 0, 3, 1)
-		grid.attach(socket_label, 0, 1, 1, 1)
-		grid.attach_next_to(host_label, socket_label, Gtk.PositionType.BOTTOM, 1, 1)
-		grid.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
-		grid.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
-		grid.attach_next_to(regex_label, path_label, Gtk.PositionType.BOTTOM, 1, 1)
-		grid.attach_next_to(socket_entry, socket_label, Gtk.PositionType.RIGHT, 2, 1)
-		grid.attach_next_to(host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
-		grid.attach_next_to(port_entry, host_entry, Gtk.PositionType.RIGHT, 1, 1)
-		grid.attach_next_to(password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
-		grid.attach_next_to(path_entry, path_label, Gtk.PositionType.RIGHT, 2, 1)
-		grid.attach_next_to(regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
-
-
 		# connect button
-		connect_button=Gtk.Button(label=_("Connect"), margin_start=18, margin_end=18, margin_bottom=18, halign=Gtk.Align.CENTER)
+		connect_button=Gtk.Button(label=_("Connect"), margin_start=18, margin_end=18, margin_top=18, halign=Gtk.Align.CENTER)
 		connect_button.get_style_context().add_class("suggested-action")
 		connect_button.connect("clicked", lambda *args: client.reconnect())
 
 		# packing
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		vbox.pack_start(grid, False, False, 0)
-		vbox.pack_start(connect_button, False, False, 0)
-		self.pack_start(vbox, True, True, 0)
+		self.attach(socket_button, 0, 0, 3, 1)
+		self.attach(socket_label, 0, 1, 1, 1)
+		self.attach_next_to(host_label, socket_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(regex_label, path_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(socket_entry, socket_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
+		self.attach_next_to(port_entry, host_entry, Gtk.PositionType.RIGHT, 1, 1)
+		self.attach_next_to(password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(path_entry, path_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach(connect_button, 0, 6, 3, 1)
 
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, tab="view"):
