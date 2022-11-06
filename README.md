@@ -11,7 +11,6 @@ Features
 - Play songs without double click
 - Lyrics from: https://www.letras.mus.br
 - MPRIS interface (based on mpDris2)
-- Manage multiple MPD servers
 - Basic queue manipulation (move and delete single tracks)
 
 See: https://github.com/SoongNoonien/mpdevil/wiki/Usage

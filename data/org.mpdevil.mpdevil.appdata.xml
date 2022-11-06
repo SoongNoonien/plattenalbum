@@ -13,7 +13,6 @@
       <li>Play songs without doubleclick</li>
       <li>Fetch lyrics</li>
       <li>MPRIS interface</li>
-      <li>Manage multiple mpd servers</li>
       <li>Basic queue manipulation (move and delete single tracks)</li>
     </ul>
   </description>
