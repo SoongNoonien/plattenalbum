@@ -657,6 +657,9 @@ class Client(MPDClient):
 		self.lib_path=None
 		self.current_cover=None
 
+		# connect
+		self._settings.connect("changed::socket-connection", lambda *args: self.reconnect())
+
 	# workaround for list group
 	# see: https://github.com/Mic92/python-mpd2/pull/187
 	def _parse_objects(self, lines, delimiters=[], lookup_delimiter=False):
