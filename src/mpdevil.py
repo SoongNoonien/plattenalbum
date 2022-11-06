@@ -657,9 +657,6 @@ class Client(MPDClient):
 		self.lib_path=None
 		self.current_cover=None
 
-		# connect
-		self._settings.connect("changed::active-profile", self._on_active_profile_changed)
-
 	# workaround for list group
 	# see: https://github.com/Mic92/python-mpd2/pull/187
 	def _parse_objects(self, lines, delimiters=[], lookup_delimiter=False):
@@ -710,30 +707,29 @@ class Client(MPDClient):
 	def start(self):
 		self.emitter.emit("connecting")
 		def callback():
-			profile=self._settings.get_active_profile()
-			if profile.get_boolean("socket-connection"):
-				socket=profile.get_string("socket")
+			if self._settings.get_boolean("socket-connection"):
+				socket=self._settings.get_string("socket")
 				if not socket:
 					socket=FALLBACK_SOCKET
 				args=(socket, None)
 			else:
-				args=(profile.get_string("host"), profile.get_int("port"))
+				args=(self._settings.get_string("host"), self._settings.get_int("port"))
 			try:
 				self.connect(*args)
-				if profile.get_string("password"):
-					self.password(profile.get_string("password"))
+				if self._settings.get_string("password"):
+					self.password(self._settings.get_string("password"))
 			except:
 				self.emitter.emit("connection_error")
 				self._start_idle_id=None
 				return False
 			# connect successful
-			if profile.get_boolean("socket-connection"):
+			if self._settings.get_boolean("socket-connection"):
 				if "config" in self.commands():
 					self.lib_path=self.config()
 				else:
 					print("No permission to get music directory.")
 			else:
-				self.lib_path=self._settings.get_active_profile().get_string("path")
+				self.lib_path=self._settings.get_string("path")
 				if not self.lib_path:
 					self.lib_path=FALLBACK_LIB
 			if "status" in self.commands():
@@ -829,9 +825,8 @@ class Client(MPDClient):
 	def get_cover_path(self, song):
 		path=None
 		song_file=song["file"]
-		profile=self._settings.get_active_profile()
 		if self.lib_path is not None:
-			regex_str=profile.get_string("regex")
+			regex_str=self._settings.get_string("regex")
 			if regex_str:
 				regex_str=regex_str.replace("%AlbumArtist%", re.escape(song["albumartist"][0]))
 				regex_str=regex_str.replace("%Album%", re.escape(song["album"][0]))
@@ -969,9 +964,6 @@ class Client(MPDClient):
 			return False
 		return True
 
-	def _on_active_profile_changed(self, *args):
-		self.reconnect()
-
 ########################
 # gio settings wrapper #
 ########################
@@ -982,13 +974,6 @@ class Settings(Gio.Settings):
 	cursor_watch=GObject.Property(type=bool, default=False)
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
-		self._profiles=(self.get_child("profile1"), self.get_child("profile2"), self.get_child("profile3"))
-
-	def get_profile(self, num):
-		return self._profiles[num]
-
-	def get_active_profile(self):
-		return self.get_profile(self.get_int("active-profile"))
 
 ###################
 # settings dialog #
@@ -1113,88 +1098,70 @@ class LibPathEntry(Gtk.Entry):
 			self.set_text(dialog.get_filename())
 		dialog.destroy()
 
-class ProfileEntryMask(Gtk.Grid):
-	def __init__(self, profile, parent):
-		super().__init__(row_spacing=6, column_spacing=6, border_width=18)
+class ConnectionSettings(Gtk.Box):
+	def __init__(self, parent, client, settings):
+		super().__init__()
+
+		# grid
+		grid=Gtk.Grid(row_spacing=6, column_spacing=6, border_width=18)
 		socket_button=Gtk.CheckButton(label=_("Connect via Unix domain socket"))
-		profile.bind("socket-connection", socket_button, "active", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", socket_button, "active", Gio.SettingsBindFlags.DEFAULT)
 		socket_entry=Gtk.Entry(placeholder_text=FALLBACK_SOCKET, hexpand=True, no_show_all=True)
-		profile.bind("socket", socket_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		profile.bind("socket-connection", socket_entry, "visible", Gio.SettingsBindFlags.GET)
+		settings.bind("socket", socket_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", socket_entry, "visible", Gio.SettingsBindFlags.GET)
 		host_entry=Gtk.Entry(hexpand=True, no_show_all=True)
-		profile.bind("host", host_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		profile.bind("socket-connection", host_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		settings.bind("host", host_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", host_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		port_entry=Gtk.SpinButton.new_with_range(0, 65535, 1)
 		port_entry.set_property("no-show-all", True)
-		profile.bind("port", port_entry, "value", Gio.SettingsBindFlags.DEFAULT)
-		profile.bind("socket-connection", port_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		settings.bind("port", port_entry, "value", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", port_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		password_entry=PasswordEntry(hexpand=True)
-		profile.bind("password", password_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("password", password_entry, "text", Gio.SettingsBindFlags.DEFAULT)
 		path_entry=LibPathEntry(parent, hexpand=True, no_show_all=True)
-		profile.bind("path", path_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		profile.bind("socket-connection", path_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		settings.bind("path", path_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", path_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		regex_entry=Gtk.Entry(hexpand=True, placeholder_text=COVER_REGEX)
 		regex_entry.set_tooltip_text(
 			_("The first image in the same directory as the song file "\
 			"matching this regex will be displayed. %AlbumArtist% and "\
 			"%Album% will be replaced by the corresponding tags of the song.")
 		)
-		profile.bind("regex", regex_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("regex", regex_entry, "text", Gio.SettingsBindFlags.DEFAULT)
 		socket_label=Gtk.Label(label=_("Socket:"), xalign=1, margin_end=6, no_show_all=True)
-		profile.bind("socket-connection", socket_label, "visible", Gio.SettingsBindFlags.GET)
+		settings.bind("socket-connection", socket_label, "visible", Gio.SettingsBindFlags.GET)
 		host_label=Gtk.Label(label=_("Host:"), xalign=1, margin_end=6, no_show_all=True)
-		profile.bind("socket-connection", host_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		settings.bind("socket-connection", host_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		password_label=Gtk.Label(label=_("Password:"), xalign=1, margin_end=6)
 		path_label=Gtk.Label(label=_("Music lib:"), xalign=1, margin_end=6, no_show_all=True)
-		profile.bind("socket-connection", path_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		settings.bind("socket-connection", path_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		regex_label=Gtk.Label(label=_("Cover regex:"), xalign=1, margin_end=6)
 
 		# packing
-		self.attach(socket_button, 0, 0, 3, 1)
-		self.attach(socket_label, 0, 1, 1, 1)
-		self.attach_next_to(host_label, socket_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(regex_label, path_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(socket_entry, socket_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(port_entry, host_entry, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(path_entry, path_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
+		grid.attach(socket_button, 0, 0, 3, 1)
+		grid.attach(socket_label, 0, 1, 1, 1)
+		grid.attach_next_to(host_label, socket_label, Gtk.PositionType.BOTTOM, 1, 1)
+		grid.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
+		grid.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
+		grid.attach_next_to(regex_label, path_label, Gtk.PositionType.BOTTOM, 1, 1)
+		grid.attach_next_to(socket_entry, socket_label, Gtk.PositionType.RIGHT, 2, 1)
+		grid.attach_next_to(host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
+		grid.attach_next_to(port_entry, host_entry, Gtk.PositionType.RIGHT, 1, 1)
+		grid.attach_next_to(password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
+		grid.attach_next_to(path_entry, path_label, Gtk.PositionType.RIGHT, 2, 1)
+		grid.attach_next_to(regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
 
-class ProfileSettings(Gtk.Box):
-	def __init__(self, parent, client, settings):
-		super().__init__()
-		self._client=client
-		self._settings=settings
-
-		# stack
-		self._stack=Gtk.Stack()
-		self._stack.add_titled(ProfileEntryMask(settings.get_profile(0), parent), "0", _("Profile 1"))
-		self._stack.add_titled(ProfileEntryMask(settings.get_profile(1), parent), "1", _("Profile 2"))
-		self._stack.add_titled(ProfileEntryMask(settings.get_profile(2), parent), "2", _("Profile 3"))
-		self._stack.connect("show", lambda *args: self._stack.set_visible_child_name(str(self._settings.get_int("active-profile"))))
 
 		# connect button
 		connect_button=Gtk.Button(label=_("Connect"), margin_start=18, margin_end=18, margin_bottom=18, halign=Gtk.Align.CENTER)
 		connect_button.get_style_context().add_class("suggested-action")
-		connect_button.connect("clicked", self._on_connect_button_clicked)
+		connect_button.connect("clicked", lambda *args: client.reconnect())
 
 		# packing
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		vbox.pack_start(self._stack, False, False, 0)
+		vbox.pack_start(grid, False, False, 0)
 		vbox.pack_start(connect_button, False, False, 0)
-		switcher=Gtk.StackSidebar(stack=self._stack)
-		self.pack_start(switcher, False, False, 0)
 		self.pack_start(vbox, True, True, 0)
-
-	def _on_connect_button_clicked(self, *args):
-		selected=int(self._stack.get_visible_child_name())
-		if selected == self._settings.get_int("active-profile"):
-			self._client.reconnect()
-		else:
-			self._settings.set_int("active-profile", selected)
 
 class SettingsDialog(Gtk.Dialog):
 	def __init__(self, parent, client, settings, tab="view"):
@@ -1208,7 +1175,7 @@ class SettingsDialog(Gtk.Dialog):
 		# widgets
 		view=ViewSettings(settings)
 		behavior=BehaviorSettings(settings)
-		profiles=ProfileSettings(parent, client, settings)
+		connection=ConnectionSettings(parent, client, settings)
 
 		# packing
 		vbox=self.get_content_area()
@@ -1216,7 +1183,7 @@ class SettingsDialog(Gtk.Dialog):
 			stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
 			stack.add_titled(view, "view", _("View"))
 			stack.add_titled(behavior, "behavior", _("Behavior"))
-			stack.add_titled(profiles, "profiles", _("Profiles"))
+			stack.add_titled(connection, "connection", _("Connection"))
 			stack_switcher=Gtk.StackSwitcher(stack=stack)
 			vbox.set_property("border-width", 0)
 			vbox.pack_start(stack, True, True, 0)
@@ -1226,7 +1193,7 @@ class SettingsDialog(Gtk.Dialog):
 			tabs=Gtk.Notebook()
 			tabs.append_page(view, Gtk.Label(label=_("View")))
 			tabs.append_page(behavior, Gtk.Label(label=_("Behavior")))
-			tabs.append_page(profiles, Gtk.Label(label=_("Profiles")))
+			tabs.append_page(connection, Gtk.Label(label=_("Connection")))
 			vbox.set_property("spacing", 6)
 			vbox.set_property("border-width", 6)
 			vbox.pack_start(tabs, True, True, 0)
@@ -1234,7 +1201,7 @@ class SettingsDialog(Gtk.Dialog):
 		if use_csd:
 			stack.set_visible_child_name(tab)
 		else:
-			tabs.set_current_page({"view": 0, "behavior": 1, "profiles": 2}[tab])
+			tabs.set_current_page({"view": 0, "behavior": 1, "connection": 2}[tab])
 
 #################
 # other dialogs #
@@ -3167,7 +3134,7 @@ class ConnectionNotify(Gtk.Revealer):
 		# widgets
 		self._label=Gtk.Label(wrap=True)
 		connect_button=Gtk.Button(label=_("Connect"))
-		settings_button=Gtk.Button(label=_("Preferences"), action_name="win.profile-settings")
+		settings_button=Gtk.Button(label=_("Preferences"), action_name="win.connection-settings")
 
 		# connect
 		connect_button.connect("clicked", self._on_connect_button_clicked)
@@ -3183,14 +3150,14 @@ class ConnectionNotify(Gtk.Revealer):
 		self.add(box)
 
 	def _on_connection_error(self, *args):
-		profile=self._settings.get_active_profile()
-		if profile.get_boolean("socket-connection"):
-			socket=profile.get_string("socket")
+		if self._settings.get_boolean("socket-connection"):
+			socket=self._settings.get_string("socket")
 			if not socket:
 				socket=FALLBACK_SOCKET
 			text=_("Connection to “{socket}” failed").format(socket=socket)
 		else:
-			text=_("Connection to “{host}:{port}” failed").format(host=profile.get_string("host"), port=profile.get_int("port"))
+			text=_("Connection to “{host}:{port}” failed").format(
+				host=self._settings.get_string("host"), port=self._settings.get_int("port"))
 		self._label.set_text(text)
 		self.set_reveal_child(True)
 
@@ -3211,16 +3178,12 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# actions
 		simple_actions_data=(
-			"settings","profile-settings","stats","help","menu",
+			"settings","connection-settings","stats","help","menu",
 			"toggle-lyrics","back-to-current-album","toggle-search","show-info"
 		)
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
-			self.add_action(action)
-		for i, name in enumerate(("profile-1","profile-2","profile-3")):
-			action=Gio.SimpleAction.new(name, None)
-			action.connect("activate", self._on_profile, i)
 			self.add_action(action)
 		for name in ("append","play"):
 			action=Gio.SimpleAction.new(name, None)
@@ -3228,7 +3191,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.add_action(action)
 		self.add_action(self._settings.create_action("mini-player"))
 		self.add_action(self._settings.create_action("genre-filter"))
-		self.add_action(self._settings.create_action("active-profile"))
 
 		# shortcuts
 		builder=Gtk.Builder()
@@ -3278,15 +3240,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		mpd_subsection=Gio.Menu()
 		mpd_subsection.append(_("Update Database"), "mpd.update")
 		mpd_subsection.append(_("Server Stats"), "win.stats")
-		profiles_subsection=Gio.Menu()
-		for num, profile in enumerate((_("Profile 1"), _("Profile 2"), _("Profile 3"))):
-			item=Gio.MenuItem.new(profile, None)
-			item.set_action_and_target_value("win.active-profile", GLib.Variant("i", num))
-			profiles_subsection.append_item(item)
 		menu=Gio.Menu()
 		menu.append(_("Mini Player"), "win.mini-player")
 		menu.append(_("Genre Filter"), "win.genre-filter")
-		menu.append_section(None, profiles_subsection)
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
@@ -3405,8 +3361,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		settings.run()
 		settings.destroy()
 
-	def _on_profile_settings(self, action, param):
-		settings=SettingsDialog(self, self._client, self._settings, "profiles")
+	def _on_connection_settings(self, action, param):
+		settings=SettingsDialog(self, self._client, self._settings, "connection")
 		settings.run()
 		settings.destroy()
 
@@ -3419,9 +3375,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_menu(self, action, param):
 		self._menu_button.emit("clicked")
-
-	def _on_profile(self, action, param, profile):
-		self._settings.set_int("active-profile", profile)
 
 	def _on_show_info(self, action, param):
 		widget=self.get_focus()
@@ -3546,7 +3499,6 @@ class mpdevil(Gtk.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.profile-1", ["<Control>1"]),("win.profile-2", ["<Control>2"]),("win.profile-3", ["<Control>3"]),
 			("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),("win.play", ["<Control>p"]),
 			("win.genre-filter", ["<Control>g"]),("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<Control>f"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),

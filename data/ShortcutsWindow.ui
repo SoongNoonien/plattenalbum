@@ -201,33 +201,6 @@
 	<child>
 		<object class="GtkShortcutsGroup">
 		<property name="visible">True</property>
-		<property name="title" translatable="yes">Profiles</property>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
-			<property name="title" translatable="yes">Profile 1</property>
-			<property name="accelerator">&lt;Control&gt;1</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
-			<property name="title" translatable="yes">Profile 2</property>
-			<property name="accelerator">&lt;Control&gt;2</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
-			<property name="title" translatable="yes">Profile 3</property>
-			<property name="accelerator">&lt;Control&gt;3</property>
-			</object>
-		</child>
-		</object>
-	</child>
-	<child>
-		<object class="GtkShortcutsGroup">
-		<property name="visible">True</property>
 		<property name="title" translatable="yes">Search, Album Dialog and Album List</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
