@@ -726,7 +726,7 @@ class Client(MPDClient):
 				else:
 					print("No permission to get music directory.")
 			else:
-				self.lib_path=self._settings.get_lib()
+				self.lib_path=self._settings.get_lib_path()
 			if "status" in self.commands():
 				self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
 				self.emitter.emit("connected")
@@ -976,7 +976,7 @@ class Settings(Gio.Settings):
 			socket=FALLBACK_SOCKET
 		return socket
 
-	def get_lib(self):
+	def get_lib_path(self):
 		lib_path=self.get_string("path")
 		if not lib_path:
 			lib_path=FALLBACK_LIB
