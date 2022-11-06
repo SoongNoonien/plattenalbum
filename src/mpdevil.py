@@ -49,7 +49,7 @@ Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "mpdevi
 FALLBACK_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 FALLBACK_COVER=Gtk.IconTheme.get_default().lookup_icon("media-optical", 128, Gtk.IconLookupFlags.FORCE_SVG).get_filename()
 FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
-FALLBACK_LIB=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
+FALLBACK_MUSIC_DIRECTORY=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 
 ############################
 # decorators and functions #
@@ -654,7 +654,7 @@ class Client(MPDClient):
 		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
 		self._start_idle_id=None
-		self.lib_path=None
+		self.music_directory=None
 		self.current_cover=None
 
 		# connect
@@ -725,11 +725,11 @@ class Client(MPDClient):
 			# connect successful
 			if self._settings.get_boolean("socket-connection"):
 				if "config" in self.commands():
-					self.lib_path=self.config()
+					self.music_directory=self.config()
 				else:
 					print("No permission to get music directory.")
 			else:
-				self.lib_path=self._settings.get_lib_path()
+				self.music_directory=self._settings.get_music_directory()
 			if "status" in self.commands():
 				self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
 				self.emitter.emit("connected")
@@ -823,7 +823,7 @@ class Client(MPDClient):
 	def get_cover_path(self, song):
 		path=None
 		song_file=song["file"]
-		if self.lib_path is not None:
+		if self.music_directory is not None:
 			regex_str=self._settings.get_string("regex")
 			if regex_str:
 				regex_str=regex_str.replace("%AlbumArtist%", re.escape(song["albumartist"][0]))
@@ -835,7 +835,7 @@ class Client(MPDClient):
 					return None
 			else:
 				regex=re.compile(FALLBACK_REGEX, flags=re.IGNORECASE)
-			song_dir=os.path.join(self.lib_path, os.path.dirname(song_file))
+			song_dir=os.path.join(self.music_directory, os.path.dirname(song_file))
 			if song_dir.lower().endswith(".cue"):
 				song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
 			if os.path.isdir(song_dir):
@@ -864,8 +864,8 @@ class Client(MPDClient):
 			return None
 
 	def get_absolute_path(self, uri):
-		if self.lib_path is not None:
-			path=re.sub(r"(.*\.cue)\/track\d+$", r"\1", os.path.join(self.lib_path, uri), flags=re.IGNORECASE)
+		if self.music_directory is not None:
+			path=re.sub(r"(.*\.cue)\/track\d+$", r"\1", os.path.join(self.music_directory, uri), flags=re.IGNORECASE)
 			if os.path.isfile(path):
 				return path
 			else:
@@ -957,7 +957,7 @@ class Client(MPDClient):
 			self.disconnect()
 			self.emitter.emit("connection_error")
 			self._main_timeout_id=None
-			self.lib_path=None
+			self.music_directory=None
 			self.current_cover=None
 			return False
 		return True
@@ -979,11 +979,11 @@ class Settings(Gio.Settings):
 			socket=FALLBACK_SOCKET
 		return socket
 
-	def get_lib_path(self):
-		lib_path=self.get_string("path")
-		if not lib_path:
-			lib_path=FALLBACK_LIB
-		return lib_path
+	def get_music_directory(self):
+		music_directory=self.get_string("music-directory")
+		if not music_directory:
+			music_directory=FALLBACK_MUSIC_DIRECTORY
+		return music_directory
 
 ###################
 # settings dialog #
@@ -1091,9 +1091,9 @@ class PasswordEntry(Gtk.Entry):
 			self.set_visibility(False)
 			self.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "view-conceal-symbolic")
 
-class LibPathEntry(Gtk.Entry):
+class MusicDirectoryEntry(Gtk.Entry):
 	def __init__(self, parent, **kwargs):
-		super().__init__(placeholder_text=FALLBACK_LIB, **kwargs)
+		super().__init__(placeholder_text=FALLBACK_MUSIC_DIRECTORY, **kwargs)
 		self.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "folder-open-symbolic")
 		self.connect("icon-release", self._on_icon_release, parent)
 
@@ -1127,9 +1127,9 @@ class ConnectionSettings(Gtk.Grid):
 		settings.bind("socket-connection", port_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		password_entry=PasswordEntry(hexpand=True)
 		settings.bind("password", password_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		path_entry=LibPathEntry(parent, hexpand=True, no_show_all=True)
-		settings.bind("path", path_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", path_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		music_directory_entry=MusicDirectoryEntry(parent, hexpand=True, no_show_all=True)
+		settings.bind("music-directory", music_directory_entry, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", music_directory_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		regex_entry=Gtk.Entry(hexpand=True, placeholder_text=FALLBACK_REGEX)
 		regex_entry.set_tooltip_text(
 			_("The first image in the same directory as the song file "\
@@ -1142,8 +1142,8 @@ class ConnectionSettings(Gtk.Grid):
 		host_label=Gtk.Label(label=_("Host:"), xalign=1, margin_end=6, no_show_all=True)
 		settings.bind("socket-connection", host_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		password_label=Gtk.Label(label=_("Password:"), xalign=1, margin_end=6)
-		path_label=Gtk.Label(label=_("Music lib:"), xalign=1, margin_end=6, no_show_all=True)
-		settings.bind("socket-connection", path_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		music_directory_label=Gtk.Label(label=_("Music lib:"), xalign=1, margin_end=6, no_show_all=True)
+		settings.bind("socket-connection", music_directory_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		regex_label=Gtk.Label(label=_("Cover regex:"), xalign=1, margin_end=6)
 
 		# connect button
@@ -1156,13 +1156,13 @@ class ConnectionSettings(Gtk.Grid):
 		self.attach(socket_label, 0, 1, 1, 1)
 		self.attach_next_to(host_label, socket_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(path_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(regex_label, path_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(music_directory_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
+		self.attach_next_to(regex_label, music_directory_label, Gtk.PositionType.BOTTOM, 1, 1)
 		self.attach_next_to(socket_entry, socket_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(port_entry, host_entry, Gtk.PositionType.RIGHT, 1, 1)
 		self.attach_next_to(password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(path_entry, path_label, Gtk.PositionType.RIGHT, 2, 1)
+		self.attach_next_to(music_directory_entry, music_directory_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach_next_to(regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach(connect_button, 0, 6, 3, 1)
 

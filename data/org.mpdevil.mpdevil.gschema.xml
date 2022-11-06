@@ -58,9 +58,9 @@
 			<default>""</default>
 			<summary>Password</summary>
 		</key>
-		<key type="s" name="path">
+		<key type="s" name="music-directory">
 			<default>""</default>
-			<summary>Music library path</summary>
+			<summary>Music library directory</summary>
 		</key>
 		<key type="s" name="regex">
 			<default>""</default>
