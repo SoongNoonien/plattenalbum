@@ -763,12 +763,7 @@ class Client(MPDClient):
 		except:
 			return False
 
-	def _to_playlist(self, append, mode="default"):  # modes: default, play, append, enqueue
-		if mode == "default":
-			if self._settings.get_boolean("force-mode"):
-				mode="play"
-			else:
-				mode="enqueue"
+	def _to_playlist(self, append, mode):  # modes: play, append, enqueue
 		if mode == "append":
 			append()
 		elif mode == "play":
@@ -793,13 +788,13 @@ class Client(MPDClient):
 					self.move(0, duplicates[1]["pos"])
 					self.delete(int(duplicates[1]["pos"])-1)
 
-	def files_to_playlist(self, files, mode="default"):
+	def files_to_playlist(self, files, mode):
 		def append():
 			for f in files:
 				self.add(f)
 		self._to_playlist(append, mode)
 
-	def filter_to_playlist(self, tag_filter, mode="default"):
+	def filter_to_playlist(self, tag_filter, mode):
 		def append():
 			if tag_filter:
 				self.findadd(*tag_filter)
@@ -807,7 +802,7 @@ class Client(MPDClient):
 				self.searchadd("any", "")
 		self._to_playlist(append, mode)
 
-	def album_to_playlist(self, albumartist, album, date, mode="default"):
+	def album_to_playlist(self, albumartist, album, date, mode):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
 
 	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
@@ -1069,7 +1064,6 @@ class BehaviorSettings(SettingsList):
 			(_("Support “MPRIS”"), "mpris", True),
 			(_("Sort albums by year"), "sort-albums-by-year", False),
 			(_("Send notification on title change"), "send-notify", False),
-			(_("Play selected albums and titles immediately"), "force-mode", False),
 			(_("Rewind via previous button"), "rewind-mode", False),
 			(_("Stop playback on quit"), "stop-on-quit", False),
 		)
@@ -1420,7 +1414,7 @@ class SongsList(TreeView):
 		self._store.insert_with_valuesv(-1, range(5), [track, title, duration, file, search_string])
 
 	def _on_row_activated(self, widget, path, view_column):
-		self._client.files_to_playlist([self._store[path][3]])
+		self._client.files_to_playlist([self._store[path][3]], "play")
 
 	def _on_button_press_event(self, widget, event):
 		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
@@ -1934,7 +1928,7 @@ class AlbumLoadingThread(threading.Thread):
 		idle_add(callback)
 
 class AlbumList(Gtk.IconView):
-	__gsignals__={"show_info": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
+	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client, settings, artist_list):
 		super().__init__(item_width=0,pixbuf_column=0,markup_column=1,activate_on_single_click=True,selection_mode=Gtk.SelectionMode.BROWSE)
 		self._settings=settings
@@ -1955,7 +1949,6 @@ class AlbumList(Gtk.IconView):
 
 		# connect
 		self.connect("item-activated", self._on_item_activated)
-		self.connect("button-press-event", self._on_button_press_event)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
@@ -2021,42 +2014,19 @@ class AlbumList(Gtk.IconView):
 		else:
 			callback()
 
-	def _path_to_playlist(self, path, mode="default"):
+	def _path_to_playlist(self, path, mode):
 		tags=self._store[path][3:6]
 		self._client.album_to_playlist(*tags, mode)
 
-	def _on_button_press_event(self, widget, event):
-		path=widget.get_path_at_pos(int(event.x), int(event.y))
-		if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-			if path is not None:
-				self._path_to_playlist(path, "play")
-		elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-			if path is not None:
-				self._path_to_playlist(path, "append")
-		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-			v=self.get_vadjustment().get_value()
-			h=self.get_hadjustment().get_value()
-			if path is not None:
-				tags=self._store[path][3:6]
-				self.emit("show-info", *tags)
-
 	def _on_item_activated(self, widget, path):
-		self._path_to_playlist(path)
+		tags=self._store[path][3:6]
+		self.emit("album-selected", *tags)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
 
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
-
-	def show_info(self):
-		if (path:=self.get_cursor()[1]) is not None:
-			tags=self._store[path][3:6]
-			self.emit("show-info", *tags)
-
-	def add_to_playlist(self, mode):
-		if (path:=self.get_cursor()[1]) is not None:
-			self._path_to_playlist(path, mode)
 
 	def _on_cover_size_changed(self, *args):
 		if self._client.connected():
@@ -2180,7 +2150,7 @@ class Browser(Gtk.Paned):
 		self._settings.connect("changed::genre-filter", self._on_genre_filter_changed)
 
 		# connect
-		self._album_list.connect("show-info", self._on_album_list_show_info)
+		self._album_list.connect("album-selected", self._on_album_list_show_info)
 		self._album_view.connect("close", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 		self._artist_list.connect("item-selected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 		self._artist_list.connect("item-reselected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
@@ -2299,6 +2269,12 @@ class PlaylistView(TreeView):
 			except IndexError:  # invalid path
 				pass
 
+	def _delete(self, path):
+		if path == self.get_property("selected-path"):
+			self._client.files_to_playlist([self._store[path][3]], "enqueue")
+		else:
+			self._store.remove(self._store.get_iter(path))
+
 	def _scroll_to_path(self, path):
 		self.save_scroll_to_cell(path, None, True, 0.25)
 
@@ -2319,7 +2295,7 @@ class PlaylistView(TreeView):
 		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
 			path=path_re[0]
 			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self._store.remove(self._store.get_iter(path))
+				self._delete(path)
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
 				self._song_popover.open(self._store[path][3], widget, *point)
@@ -2328,7 +2304,7 @@ class PlaylistView(TreeView):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
 			if (path:=self.get_cursor()[0]) is not None:
 				try:
-					self._store.remove(self._store.get_iter(path))
+					self._delete(path)
 				except:
 					pass
 
@@ -2586,7 +2562,7 @@ class CoverEventBox(Gtk.EventBox):
 				if (song:=self._client.currentsong()):
 					tags=(song["albumartist"][0], song["album"][0], song["date"][0])
 					if event.button == 1:
-						self._client.album_to_playlist(*tags)
+						self._client.album_to_playlist(*tags, "enqueue")
 		self._click_pos=()
 
 	def _on_motion_notify_event(self, widget, event):
