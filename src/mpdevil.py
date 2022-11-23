@@ -2578,10 +2578,9 @@ class CoverEventBox(Gtk.EventBox):
 				self._click_pos=()
 
 class MainCover(Gtk.DrawingArea):
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__()
 		self._client=client
-		self._settings=settings
 		self._fallback=True
 
 		# connect
@@ -2630,7 +2629,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 		self._settings=settings
 
 		# cover
-		main_cover=MainCover(self._client, self._settings)
+		main_cover=MainCover(self._client)
 		self._cover_event_box=CoverEventBox(self._client, self._settings)
 		self._cover_event_box.add(Gtk.AspectFrame(child=main_cover, shadow_type=Gtk.ShadowType.NONE))
 
