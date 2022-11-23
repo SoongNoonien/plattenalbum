@@ -1387,6 +1387,7 @@ class SongsList(TreeView):
 
 		# selection
 		self._selection=self.get_selection()
+		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
 
 		# buttons
 		self.buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
