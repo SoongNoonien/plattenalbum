@@ -3270,7 +3270,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("connection_error", self._on_connection_error)
 		# auto save window state and size
 		self.connect("size-allocate", self._on_size_allocate)
-		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)
 
 		# packing
 		self._on_playlist_pos_changed()  # set orientation
@@ -3317,6 +3316,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			Gtk.main_iteration_do(True)
 		if not self._settings.get_boolean("mini-player"):
 			self._bind_paned_settings()  # restore paned settings when window is visible (fixes a bug when window is maximized)
+		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)  # same problem as one line above
 		self._client.start()
 
 	def _clear_title(self):
