@@ -1667,7 +1667,7 @@ class SelectionList(TreeView):
 		return len(self._store)-1
 
 	def select_path(self, path):
-		self._selection.select_path(path)
+		self.set_cursor(path)
 
 	def select(self, item):
 		row_num=len(self._store)
@@ -1690,7 +1690,6 @@ class SelectionList(TreeView):
 		return self.get_item_at_path(self.get_path_selected())
 
 	def scroll_to_selected(self):
-		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)  # unset cursor
 		self.save_scroll_to_cell(self._selected_path, None, True, 0.25)
 
 	def _on_selection_changed(self, *args):
