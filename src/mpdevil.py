@@ -2059,7 +2059,6 @@ class AlbumView(Gtk.Box):
 
 		# close button
 		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON), halign=Gtk.Align.START)
-		close_button.set_focus_on_click(False)
 
 		# connect
 		self.connect("hide", lambda *args: print("test"))
