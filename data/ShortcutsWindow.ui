@@ -41,6 +41,13 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
+			<property name="title" translatable="yes">Clear playlist</property>
+			<property name="accelerator">&lt;Shift&gt;Delete</property>
+			</object>
+		</child>
+		<child>
+			<object class="GtkShortcutsShortcut">
+			<property name="visible">True</property>
 			<property name="title" translatable="yes">Quit</property>
 			<property name="accelerator">&lt;Control&gt;q</property>
 			</object>
@@ -167,39 +174,6 @@
 			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle consume mode</property>
 			<property name="accelerator">&lt;Control&gt;o</property>
-			</object>
-		</child>
-		</object>
-	</child>
-	<child>
-		<object class="GtkShortcutsGroup">
-		<property name="visible">True</property>
-		<property name="title" translatable="yes">Playlist</property>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
-			<property name="title" translatable="yes">Remove song</property>
-			<property name="accelerator">Delete</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
-			<property name="title" translatable="yes">Clear playlist</property>
-			<property name="accelerator">&lt;Shift&gt;Delete</property>
-			</object>
-		</child>
-		</object>
-	</child>
-	<child>
-		<object class="GtkShortcutsGroup">
-		<property name="visible">True</property>
-		<property name="title" translatable="yes">Search, Album Dialog and Album List</property>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
-			<property name="title" translatable="yes">Append</property>
-			<property name="accelerator">&lt;Control&gt;plus</property>
 			</object>
 		</child>
 		</object>
