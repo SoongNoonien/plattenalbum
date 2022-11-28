@@ -1281,41 +1281,6 @@ class AutoSizedIcon(Gtk.Image):
 		super().__init__(icon_name=icon_name)
 		settings.bind(settings_key, self, "pixel-size", Gio.SettingsBindFlags.GET)
 
-class SongsListMenu(Gtk.PopoverMenu):
-	def __init__(self, client):
-		super().__init__(position=Gtk.PositionType.BOTTOM)
-		self._client=client
-		self._rect=Gdk.Rectangle()
-		self._uri=None
-
-		# buttons
-		append_button=Gtk.ModelButton(text=_("Append"))
-		play_button=Gtk.ModelButton(text=_("Play"))
-		self._show_button=Gtk.ModelButton(text=_("Show in file manager"))
-
-		# connect
-		append_button.connect("clicked", lambda *args: self._client.files_to_playlist([self._uri], "append"))
-		play_button.connect("clicked", lambda *args: self._client.files_to_playlist([self._uri], "play"))
-		self._show_button.connect("clicked", lambda *args: self._client.show_in_file_manager(self._uri))
-
-		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin=10)
-		box.pack_start(append_button, False, False, 0)
-		box.pack_start(play_button, False, False, 0)
-		box.pack_start(Gtk.Separator(), False, False, 0)
-		box.pack_start(self._show_button, False, False, 0)
-		self.add(box)
-		box.show_all()
-
-	def open(self, uri, widget, x, y):
-		self._uri=uri
-		self._rect.x,self._rect.y=x,y
-		self.set_pointing_to(self._rect)
-		self.set_relative_to(widget)
-		abs_path=self._client.get_absolute_path(uri)
-		self._show_button.set_sensitive(abs_path is not None)  # show button when song is on the same computer
-		self.popup()
-
 class SongsList(TreeView):
 	def __init__(self, client):
 		super().__init__(activate_on_single_click=True, headers_visible=False, enable_search=False, search_column=4)
@@ -1359,7 +1324,24 @@ class SongsList(TreeView):
 			self.buttons.pack_start(button, True, True, 0)
 
 		# menu
-		self._menu=SongsListMenu(self._client)
+		action_group=Gio.SimpleActionGroup()
+		action=Gio.SimpleAction.new("append", None)
+		action.connect("activate", lambda *args: self._client.files_to_playlist([self._store[self.get_cursor()[0]][3]], "append"))
+		action_group.add_action(action)
+		action=Gio.SimpleAction.new("play", None)
+		action.connect("activate", lambda *args: self._client.files_to_playlist([self._store[self.get_cursor()[0]][3]], "play"))
+		action_group.add_action(action)
+		self._show_action=Gio.SimpleAction.new("show", None)
+		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._store[self.get_cursor()[0]][3]))
+		action_group.add_action(self._show_action)
+		self.insert_action_group("menu", action_group)
+		menu=Gio.Menu()
+		menu.append(_("Append"), "menu.append")
+		menu.append(_("Play"), "menu.play")
+		subsection=Gio.Menu()
+		subsection.append(_("Show in file manager"), "menu.show")
+		menu.append_section(None, subsection)
+		self._menu=Gtk.Popover.new_from_model(self, menu)
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
@@ -1372,6 +1354,13 @@ class SongsList(TreeView):
 
 	def append(self, track, title, duration, file, search_string=""):
 		self._store.insert_with_valuesv(-1, range(5), [track, title, duration, file, search_string])
+
+	def _open_menu(self, uri, x, y):
+		rect=Gdk.Rectangle()
+		rect.x,rect.y=x,y
+		self._menu.set_pointing_to(rect)
+		self._show_action.set_enabled(self._client.get_absolute_path(uri) is not None)
+		self._menu.popup()
 
 	def _on_row_activated(self, widget, path, view_column):
 		self._client.files_to_playlist([self._store[path][3]], "play")
@@ -1386,7 +1375,7 @@ class SongsList(TreeView):
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				uri=self._store[path][3]
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
-				self._menu.open(uri, widget, *point)
+				self._open_menu(uri, *point)
 
 	def _on_key_press_event(self, widget, event):
 		if event.state & Gdk.ModifierType.CONTROL_MASK and event.keyval == Gdk.keyval_from_name("plus"):
@@ -1394,7 +1383,7 @@ class SongsList(TreeView):
 				self._client.files_to_playlist([self._store[path][3]], "append")
 		elif event.keyval == Gdk.keyval_from_name("Menu"):
 			if (path:=self.get_cursor()[0]) is not None:
-				self._menu.open(self._store[path][3], self, *self.get_popover_point(path))
+				self._open_menu(self._store[path][3], *self.get_popover_point(path))
 
 	def _on_button_clicked(self, widget, mode):
 		self._client.files_to_playlist((row[3] for row in self._store), mode)
@@ -2150,42 +2139,6 @@ class Browser(Gtk.Paned):
 # playlist #
 ############
 
-class PlaylistViewMenu(Gtk.PopoverMenu):
-	__gsignals__={"delete": (GObject.SignalFlags.RUN_FIRST, None, ())}
-	def __init__(self, client):
-		super().__init__(position=Gtk.PositionType.BOTTOM)
-		self._client=client
-		self._rect=Gdk.Rectangle()
-		self._uri=None
-
-		# buttons
-		delete_button=Gtk.ModelButton(text=_("Remove song"), action_name="menu.remove")
-		clean_playlist_button=Gtk.ModelButton(text=_("Clean playlist"), action_name="mpd.clean")
-		clear_playlist_button=Gtk.ModelButton(text=_("Clear playlist"), action_name="mpd.clear")
-		self._show_button=Gtk.ModelButton(text=_("Show in file manager"))
-
-		# connect
-		self._show_button.connect("clicked", lambda *args: self._client.show_in_file_manager(self._uri))
-
-		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin=10)
-		box.pack_start(delete_button, False, False, 0)
-		box.pack_start(clean_playlist_button, False, False, 0)
-		box.pack_start(clear_playlist_button, False, False, 0)
-		box.pack_start(Gtk.Separator(), False, False, 0)
-		box.pack_start(self._show_button, False, False, 0)
-		self.add(box)
-		box.show_all()
-
-	def open(self, uri, widget, x, y):
-		self._uri=uri
-		self._rect.x,self._rect.y=x,y
-		self.set_pointing_to(self._rect)
-		self.set_relative_to(widget)
-		abs_path=self._client.get_absolute_path(uri)
-		self._show_button.set_sensitive(abs_path is not None)  # show button when song is on the same computer
-		self.popup()
-
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song
 	def __init__(self, client, settings):
@@ -2227,8 +2180,18 @@ class PlaylistView(TreeView):
 		action=Gio.SimpleAction.new("remove", None)
 		action.connect("activate", lambda *args: self._store.remove(self._store.get_iter(self.get_cursor()[0])))
 		action_group.add_action(action)
+		self._show_action=Gio.SimpleAction.new("show", None)
+		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._store[self.get_cursor()[0]][3]))
+		action_group.add_action(self._show_action)
 		self.insert_action_group("menu", action_group)
-		self._menu=PlaylistViewMenu(self._client)
+		menu=Gio.Menu()
+		menu.append(_("Remove song"), "menu.remove")
+		menu.append(_("Clean playlist"), "mpd.clean")
+		menu.append(_("Clear playlist"), "mpd.clear")
+		subsection=Gio.Menu()
+		subsection.append(_("Show in file manager"), "menu.show")
+		menu.append_section(None, subsection)
+		self._menu=Gtk.Popover.new_from_model(self, menu)
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
@@ -2241,6 +2204,13 @@ class PlaylistView(TreeView):
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
+
+	def _open_menu(self, uri, x, y):
+		rect=Gdk.Rectangle()
+		rect.x,rect.y=x,y
+		self._menu.set_pointing_to(rect)
+		self._show_action.set_enabled(self._client.get_absolute_path(uri) is not None)
+		self._menu.popup()
 
 	def _clear(self, *args):
 		self._menu.popdown()
@@ -2298,7 +2268,7 @@ class PlaylistView(TreeView):
 				self._delete(path)
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
-				self._menu.open(self._store[path][3], widget, *point)
+				self._open_menu(self._store[path][3], *point)
 
 	def _on_key_press_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
@@ -2306,7 +2276,7 @@ class PlaylistView(TreeView):
 				self._delete(path)
 		elif event.keyval == Gdk.keyval_from_name("Menu"):
 			if (path:=self.get_cursor()[0]) is not None:
-				self._menu.open(self._store[path][3], self, *self.get_popover_point(path))
+				self._open_menu(self._store[path][3], *self.get_popover_point(path))
 
 	def _on_row_deleted(self, model, path):  # sync treeview to mpd
 		try:
