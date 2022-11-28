@@ -3183,16 +3183,12 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# actions
 		simple_actions_data=(
-			"settings","connection-settings","stats","help","menu",
+			"settings","connection-settings","stats","help","menu","append",
 			"toggle-lyrics","back-to-current-album","toggle-search","show-info"
 		)
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
-			self.add_action(action)
-		for name in ("append","play"):
-			action=Gio.SimpleAction.new(name, None)
-			action.connect("activate", self._on_add_to_playlist, name)
 			self.add_action(action)
 		self.add_action(self._settings.create_action("mini-player"))
 		self.add_action(self._settings.create_action("genre-filter"))
@@ -3386,10 +3382,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		if hasattr(widget, "show_info") and callable(widget.show_info):
 			widget.show_info()
 
-	def _on_add_to_playlist(self, action, param, mode):
+	def _on_append(self, action, param):
 		widget=self.get_focus()
 		if hasattr(widget, "add_to_playlist") and callable(widget.add_to_playlist):
-			widget.add_to_playlist(mode)
+			widget.add_to_playlist("append")
 
 	def _on_search_button_toggled(self, button):
 		if button.get_active():
@@ -3504,7 +3500,7 @@ class mpdevil(Gtk.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.show-info", ["<Control>i","Menu"]),("win.append", ["<Control>plus"]),("win.play", ["<Control>p"]),
+			("win.show-info", ["Menu"]),("win.append", ["<Control>plus"]),
 			("win.genre-filter", ["<Control>g"]),("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<Control>f"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
 			("mpd.next", ["<Alt>Down"]),("mpd.prev", ["<Alt>Up"]),("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>n"]),
