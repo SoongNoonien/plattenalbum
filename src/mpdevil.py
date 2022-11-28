@@ -2199,11 +2199,14 @@ class PlaylistView(TreeView):
 		self.connect("key-press-event", self._on_key_press_event)
 		self._row_deleted=self._store.connect("row-deleted", self._on_row_deleted)
 		self._row_inserted=self._store.connect("row-inserted", self._on_row_inserted)
-
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
+
+	def scroll_to_selected_title(self):
+		if (path:=self.get_property("selected-path")) is not None:
+			self._scroll_to_path(path)
 
 	def _open_menu(self, uri, x, y):
 		rect=Gdk.Rectangle()
@@ -2246,10 +2249,6 @@ class PlaylistView(TreeView):
 
 	def _scroll_to_path(self, path):
 		self.save_scroll_to_cell(path, None, True, 0.25)
-
-	def scroll_to_selected_title(self):
-		if (path:=self.get_property("selected-path")) is not None:
-			self._scroll_to_path(path)
 
 	def _refresh_selection(self):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
 		if not self._menu.get_visible():
