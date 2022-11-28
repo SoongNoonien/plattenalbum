@@ -1342,6 +1342,7 @@ class SongsList(TreeView):
 		subsection.append(_("Show in file manager"), "menu.show")
 		menu.append_section(None, subsection)
 		self._menu=Gtk.Popover.new_from_model(self, menu)
+		self._menu.set_position(Gtk.PositionType.BOTTOM)
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
@@ -2192,6 +2193,7 @@ class PlaylistView(TreeView):
 		subsection.append(_("Show in file manager"), "menu.show")
 		menu.append_section(None, subsection)
 		self._menu=Gtk.Popover.new_from_model(self, menu)
+		self._menu.set_position(Gtk.PositionType.BOTTOM)
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
