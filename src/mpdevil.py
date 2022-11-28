@@ -868,6 +868,14 @@ class Client(MPDClient):
 		else:
 			return None
 
+	def show_in_file_manager(self, uri):
+		if (path:=self.get_absolute_path(uri)) is not None:
+			file=Gio.File.new_for_path(path)
+			bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
+			proxy=Gio.DBusProxy.new_sync(bus, Gio.DBusProxyFlags.NONE, None, "org.freedesktop.FileManager1",
+				"/org/freedesktop/FileManager1", "org.freedesktop.FileManager1", None)
+			proxy.call_sync("ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), Gio.DBusCallFlags.NONE, 500, None)
+
 	def toggle_play(self):
 		status=self.status()
 		if status["state"] == "play":
@@ -1273,90 +1281,40 @@ class AutoSizedIcon(Gtk.Image):
 		super().__init__(icon_name=icon_name)
 		settings.bind(settings_key, self, "pixel-size", Gio.SettingsBindFlags.GET)
 
-class SongPopover(Gtk.Popover):
-	def __init__(self, client, show_buttons=True):
+class SongsListMenu(Gtk.PopoverMenu):
+	def __init__(self, client):
 		super().__init__(position=Gtk.PositionType.BOTTOM)
 		self._client=client
 		self._rect=Gdk.Rectangle()
 		self._uri=None
 
 		# buttons
-		hbox=Gtk.Box(spacing=6)
-		self._open_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("folder-open-symbolic", Gtk.IconSize.BUTTON),
-			tooltip_text=_("Show in file manager"))
-		hbox.pack_end(self._open_button, False, False, 0)
-		if show_buttons:
-			button_box=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
-			data=((_("Append"), "list-add-symbolic", "append"), (_("Play"), "media-playback-start-symbolic", "play"))
-			for tooltip, icon, mode in data:
-				button=Gtk.Button(tooltip_text=tooltip, image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
-				button.connect("clicked", self._on_button_clicked, mode)
-				button_box.pack_start(button, True, True, 0)
-			hbox.pack_end(button_box, False, False, 0)
-
-		# treeview
-		# (tag, display-value, tooltip)
-		self._store=Gtk.ListStore(str, str, str)
-		self._treeview=Gtk.TreeView(model=self._store, headers_visible=False, search_column=-1, tooltip_column=2, can_focus=False)
-		self._treeview.get_selection().set_mode(Gtk.SelectionMode.NONE)
-
-		# columns
-		renderer_text=Gtk.CellRendererText(width_chars=50, ellipsize=Pango.EllipsizeMode.MIDDLE, ellipsize_set=True)
-		renderer_text_ralign=Gtk.CellRendererText(xalign=1.0, weight=Pango.Weight.BOLD)
-		column_tag=Gtk.TreeViewColumn(_("MPD-Tag"), renderer_text_ralign, text=0)
-		column_tag.set_property("resizable", False)
-		self._treeview.append_column(column_tag)
-		column_value=Gtk.TreeViewColumn(_("Value"), renderer_text, text=1)
-		column_value.set_property("resizable", False)
-		self._treeview.append_column(column_value)
-
-		# scroll
-		self._scroll=Gtk.ScrolledWindow(child=self._treeview, propagate_natural_height=True)
-		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		append_button=Gtk.ModelButton(text=_("Append"))
+		play_button=Gtk.ModelButton(text=_("Play"))
+		self._show_button=Gtk.ModelButton(text=_("Show in file manager"))
 
 		# connect
-		self._open_button.connect("clicked", self._on_open_button_clicked)
+		append_button.connect("clicked", lambda *args: self._client.files_to_playlist([self._uri], "append"))
+		play_button.connect("clicked", lambda *args: self._client.files_to_playlist([self._uri], "play"))
+		self._show_button.connect("clicked", lambda *args: self._client.show_in_file_manager(self._uri))
 
 		# packing
-		frame=Gtk.Frame(child=self._scroll)
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6, spacing=6)
-		vbox.pack_start(frame, True, True, 0)
-		vbox.pack_end(hbox, False, False, 0)
-		self.add(vbox)
-		vbox.show_all()
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin=10)
+		box.pack_start(append_button, False, False, 0)
+		box.pack_start(play_button, False, False, 0)
+		box.pack_start(Gtk.Separator(), False, False, 0)
+		box.pack_start(self._show_button, False, False, 0)
+		self.add(box)
+		box.show_all()
 
 	def open(self, uri, widget, x, y):
 		self._uri=uri
 		self._rect.x,self._rect.y=x,y
 		self.set_pointing_to(self._rect)
 		self.set_relative_to(widget)
-		window=self.get_toplevel()
-		self._scroll.set_max_content_height(window.get_size()[1]//2)
-		self._store.clear()
-		song=self._client.lsinfo(uri)[0]
-		for tag, value in song.items():
-			if tag == "duration":
-				self._store.append([tag+":", str(value), locale.str(value)])
-			elif tag in ("last-modified", "format"):
-				self._store.append([tag+":", str(value), value.raw()])
-			else:
-				self._store.append([tag+":", str(value), GLib.markup_escape_text(str(value))])
 		abs_path=self._client.get_absolute_path(uri)
-		self._open_button.set_sensitive(abs_path is not None)  # show open with button when song is on the same computer
+		self._show_button.set_sensitive(abs_path is not None)  # show button when song is on the same computer
 		self.popup()
-		self._treeview.columns_autosize()
-
-	def _on_open_button_clicked(self, *args):
-		self.popdown()
-		file=Gio.File.new_for_path(self._client.get_absolute_path(self._uri))
-		bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
-		proxy=Gio.DBusProxy.new_sync(bus, Gio.DBusProxyFlags.NONE, None, "org.freedesktop.FileManager1",
-			"/org/freedesktop/FileManager1", "org.freedesktop.FileManager1", None)
-		proxy.call_sync("ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), Gio.DBusCallFlags.NONE, 500, None)
-
-	def _on_button_clicked(self, widget, mode):
-		self._client.files_to_playlist([self._uri], mode)
-		self.popdown()
 
 class SongsList(TreeView):
 	def __init__(self, client):
@@ -1400,15 +1358,15 @@ class SongsList(TreeView):
 			button.connect("clicked", self._on_button_clicked, mode)
 			self.buttons.pack_start(button, True, True, 0)
 
-		# song popover
-		self._song_popover=SongPopover(self._client)
+		# menu
+		self._menu=SongsListMenu(self._client)
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
 		self.connect("button-press-event", self._on_button_press_event)
 
 	def clear(self):
-		self._song_popover.popdown()
+		self._menu.popdown()
 		self._store.clear()
 
 	def append(self, track, title, duration, file, search_string=""):
@@ -1427,14 +1385,14 @@ class SongsList(TreeView):
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				uri=self._store[path][3]
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
-				self._song_popover.open(uri, widget, *point)
+				self._menu.open(uri, widget, *point)
 
 	def _on_button_clicked(self, widget, mode):
 		self._client.files_to_playlist((row[3] for row in self._store), mode)
 
 	def show_info(self):
 		if (path:=self.get_cursor()[0]) is not None:
-			self._song_popover.open(self._store[path][3], self, *self.get_popover_point(path))
+			self._menu.open(self._store[path][3], self, *self.get_popover_point(path))
 
 	def add_to_playlist(self, mode):
 		if (path:=self.get_cursor()[0]) is not None:
@@ -2191,6 +2149,42 @@ class Browser(Gtk.Paned):
 # playlist #
 ############
 
+class PlaylistViewMenu(Gtk.PopoverMenu):
+	__gsignals__={"delete": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	def __init__(self, client):
+		super().__init__(position=Gtk.PositionType.BOTTOM)
+		self._client=client
+		self._rect=Gdk.Rectangle()
+		self._uri=None
+
+		# buttons
+		delete_button=Gtk.ModelButton(text=_("Remove song"), action_name="menu.remove")
+		clean_playlist_button=Gtk.ModelButton(text=_("Clean playlist"), action_name="mpd.clean")
+		clear_playlist_button=Gtk.ModelButton(text=_("Clear playlist"), action_name="mpd.clear")
+		self._show_button=Gtk.ModelButton(text=_("Show in file manager"))
+
+		# connect
+		self._show_button.connect("clicked", lambda *args: self._client.show_in_file_manager(self._uri))
+
+		# packing
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin=10)
+		box.pack_start(delete_button, False, False, 0)
+		box.pack_start(clean_playlist_button, False, False, 0)
+		box.pack_start(clear_playlist_button, False, False, 0)
+		box.pack_start(Gtk.Separator(), False, False, 0)
+		box.pack_start(self._show_button, False, False, 0)
+		self.add(box)
+		box.show_all()
+
+	def open(self, uri, widget, x, y):
+		self._uri=uri
+		self._rect.x,self._rect.y=x,y
+		self.set_pointing_to(self._rect)
+		self.set_relative_to(widget)
+		abs_path=self._client.get_absolute_path(uri)
+		self._show_button.set_sensitive(abs_path is not None)  # show button when song is on the same computer
+		self.popup()
+
 class PlaylistView(TreeView):
 	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song
 	def __init__(self, client, settings):
@@ -2227,8 +2221,13 @@ class PlaylistView(TreeView):
 		self._column_title=columns[1]
 		self._column_title.set_property("expand", True)
 
-		# song popover
-		self._song_popover=SongPopover(self._client, show_buttons=False)
+		# menu
+		action_group=Gio.SimpleActionGroup()
+		action=Gio.SimpleAction.new("remove", None)
+		action.connect("activate", lambda *args: self._store.remove(self._store.get_iter(self.get_cursor()[0])))
+		action_group.add_action(action)
+		self.insert_action_group("menu", action_group)
+		self._menu=PlaylistViewMenu(self._client)
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
@@ -2243,7 +2242,7 @@ class PlaylistView(TreeView):
 		self._client.emitter.connect("connected", self._on_connected)
 
 	def _clear(self, *args):
-		self._song_popover.popdown()
+		self._menu.popdown()
 		self._playlist_version=None
 		self.set_property("selected-path", None)
 		self._store.handler_block(self._row_inserted)
@@ -2282,7 +2281,8 @@ class PlaylistView(TreeView):
 			self._scroll_to_path(path)
 
 	def _refresh_selection(self):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
-		self.set_cursor(Gtk.TreePath(len(self._store)), None, False)
+		if not self._menu.get_visible():
+			self.set_cursor(Gtk.TreePath(len(self._store)), None, False)
 		song=self._client.status().get("song")
 		if song is None:
 			self._unselect()
@@ -2297,7 +2297,7 @@ class PlaylistView(TreeView):
 				self._delete(path)
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
-				self._song_popover.open(self._store[path][3], widget, *point)
+				self._menu.open(self._store[path][3], widget, *point)
 
 	def _on_key_release_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
@@ -2334,7 +2334,7 @@ class PlaylistView(TreeView):
 	def _on_playlist_changed(self, emitter, version):
 		self._store.handler_block(self._row_inserted)
 		self._store.handler_block(self._row_deleted)
-		self._song_popover.popdown()
+		self._menu.popdown()
 		self._unselect()
 		self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
 		songs=[]
@@ -2388,7 +2388,7 @@ class PlaylistView(TreeView):
 
 	def show_info(self):
 		if (path:=self.get_cursor()[0]) is not None:
-			self._song_popover.open(self._store[path][3], self, *self.get_popover_point(path))
+			self._menu.open(self._store[path][3], self, *self.get_popover_point(path))
 
 class PlaylistWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
@@ -3032,7 +3032,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client=client
 
 		# actions
-		self._disable_on_stop_data=("next","prev","seek-forward","seek-backward")
+		self._disable_on_stop_data=("next","prev","seek-forward","seek-backward", "clean")
 		self._enable_on_reconnect_data=("toggle-play","stop","clear","update","repeat","random","single","consume","single-oneshot")
 		self._data=self._disable_on_stop_data+self._enable_on_reconnect_data
 		for name in self._data:
@@ -3062,6 +3062,9 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 
 	def _on_seek_backward(self, action, param):
 		self._client.seekcur("-10")
+
+	def _on_clean(self, action, param):
+		self._client.files_to_playlist([self._client.currentsong()["file"]], "enqueue")
 
 	def _on_clear(self, action, param):
 		self._client.clear()
