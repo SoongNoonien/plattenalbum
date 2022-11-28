@@ -1364,6 +1364,7 @@ class SongsList(TreeView):
 		# connect
 		self.connect("row-activated", self._on_row_activated)
 		self.connect("button-press-event", self._on_button_press_event)
+		self.connect("key-press-event", self._on_key_press_event)
 
 	def clear(self):
 		self._menu.popdown()
@@ -1387,16 +1388,16 @@ class SongsList(TreeView):
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
 				self._menu.open(uri, widget, *point)
 
+	def _on_key_press_event(self, widget, event):
+		if event.state & Gdk.ModifierType.CONTROL_MASK and event.keyval == Gdk.keyval_from_name("plus"):
+			if (path:=self.get_cursor()[0]) is not None:
+				self._client.files_to_playlist([self._store[path][3]], "append")
+		elif event.keyval == Gdk.keyval_from_name("Menu"):
+			if (path:=self.get_cursor()[0]) is not None:
+				self._menu.open(self._store[path][3], self, *self.get_popover_point(path))
+
 	def _on_button_clicked(self, widget, mode):
 		self._client.files_to_playlist((row[3] for row in self._store), mode)
-
-	def show_info(self):
-		if (path:=self.get_cursor()[0]) is not None:
-			self._menu.open(self._store[path][3], self, *self.get_popover_point(path))
-
-	def add_to_playlist(self, mode):
-		if (path:=self.get_cursor()[0]) is not None:
-			self._client.files_to_playlist([self._store[path][3]], mode)
 
 ##########
 # search #
@@ -2232,7 +2233,7 @@ class PlaylistView(TreeView):
 		# connect
 		self.connect("row-activated", self._on_row_activated)
 		self.connect("button-press-event", self._on_button_press_event)
-		self.connect("key-release-event", self._on_key_release_event)
+		self.connect("key-press-event", self._on_key_press_event)
 		self._row_deleted=self._store.connect("row-deleted", self._on_row_deleted)
 		self._row_inserted=self._store.connect("row-inserted", self._on_row_inserted)
 
@@ -2299,13 +2300,13 @@ class PlaylistView(TreeView):
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
 				self._menu.open(self._store[path][3], widget, *point)
 
-	def _on_key_release_event(self, widget, event):
+	def _on_key_press_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
 			if (path:=self.get_cursor()[0]) is not None:
-				try:
-					self._delete(path)
-				except:
-					pass
+				self._delete(path)
+		elif event.keyval == Gdk.keyval_from_name("Menu"):
+			if (path:=self.get_cursor()[0]) is not None:
+				self._menu.open(self._store[path][3], self, *self.get_popover_point(path))
 
 	def _on_row_deleted(self, model, path):  # sync treeview to mpd
 		try:
@@ -2385,10 +2386,6 @@ class PlaylistView(TreeView):
 
 	def _select_function(self, selection, model, path, path_currently_selected):
 		return (path == self.get_property("selected-path")) == (not path_currently_selected)
-
-	def show_info(self):
-		if (path:=self.get_cursor()[0]) is not None:
-			self._menu.open(self._store[path][3], self, *self.get_popover_point(path))
 
 class PlaylistWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
@@ -3182,10 +3179,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._size=None  # needed for window size saving
 
 		# actions
-		simple_actions_data=(
-			"settings","connection-settings","stats","help","menu","append",
-			"toggle-lyrics","back-to-current-album","toggle-search","show-info"
-		)
+		simple_actions_data=("settings","connection-settings","stats","help","menu","toggle-lyrics","back-to-current-album","toggle-search")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -3377,16 +3371,6 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_menu(self, action, param):
 		self._menu_button.emit("clicked")
 
-	def _on_show_info(self, action, param):
-		widget=self.get_focus()
-		if hasattr(widget, "show_info") and callable(widget.show_info):
-			widget.show_info()
-
-	def _on_append(self, action, param):
-		widget=self.get_focus()
-		if hasattr(widget, "add_to_playlist") and callable(widget.add_to_playlist):
-			widget.add_to_playlist("append")
-
 	def _on_search_button_toggled(self, button):
 		if button.get_active():
 			self._stack.set_visible_child_name("search")
@@ -3500,7 +3484,6 @@ class mpdevil(Gtk.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.show-info", ["Menu"]),("win.append", ["<Control>plus"]),
 			("win.genre-filter", ["<Control>g"]),("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<Control>f"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
 			("mpd.next", ["<Alt>Down"]),("mpd.prev", ["<Alt>Up"]),("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>n"]),
