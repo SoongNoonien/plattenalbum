@@ -1266,7 +1266,7 @@ class TreeView(Gtk.TreeView):
 		return (rect.x+rect.width//2, max(min(cell.y+cell.height//2, rect.y+rect.height), rect.y))
 
 	def save_set_cursor(self, *args, **kwargs):
-		# The standard set_cursor function should scroll normally, but it dosen't work as it should when the treeview is not completely
+		# The standard set_cursor function should scroll normally, but it doesn't work as it should when the treeview is not completely
 		# initialized. This usually happens when the program is freshly started and the treeview isn't done with its internal tasks.
 		# See: https://lazka.github.io/pgi-docs/GLib-2.0/constants.html#GLib.PRIORITY_HIGH_IDLE
 		# Running set_cursor with a lower priority ensures that the treeview is done before it gets scrolled.
