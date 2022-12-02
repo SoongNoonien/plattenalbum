@@ -1338,9 +1338,7 @@ class SongsList(TreeView):
 		menu=Gio.Menu()
 		menu.append(_("Append"), "menu.append")
 		menu.append(_("Play"), "menu.play")
-		subsection=Gio.Menu()
-		subsection.append(_("Show in file manager"), "menu.show")
-		menu.append_section(None, subsection)
+		menu.append(_("Show"), "menu.show")
 		self._menu=Gtk.Popover.new_from_model(self, menu)
 		self._menu.set_position(Gtk.PositionType.BOTTOM)
 
@@ -2186,11 +2184,14 @@ class PlaylistView(TreeView):
 		action_group.add_action(self._show_action)
 		self.insert_action_group("menu", action_group)
 		menu=Gio.Menu()
-		menu.append(_("Remove song"), "menu.remove")
-		menu.append(_("Clean playlist"), "mpd.clean")
-		menu.append(_("Clear playlist"), "mpd.clear")
+		menu.append(_("Remove"), "menu.remove")
+		menu.append(_("Show"), "menu.show")
+		current_song_section=Gio.Menu()
+		current_song_section.append(_("Enqueue Album"), "mpd.enqueue")
+		current_song_section.append(_("Tidy"), "mpd.tidy")
 		subsection=Gio.Menu()
-		subsection.append(_("Show in file manager"), "menu.show")
+		subsection.append(_("Clear"), "mpd.clear")
+		menu.append_section(None, current_song_section)
 		menu.append_section(None, subsection)
 		self._menu=Gtk.Popover.new_from_model(self, menu)
 		self._menu.set_position(Gtk.PositionType.BOTTOM)
@@ -3000,7 +3001,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client=client
 
 		# actions
-		self._disable_on_stop_data=("next","prev","seek-forward","seek-backward", "clean")
+		self._disable_on_stop_data=("next","prev","seek-forward","seek-backward","tidy","enqueue")
 		self._enable_on_reconnect_data=("toggle-play","stop","clear","update","repeat","random","single","consume","single-oneshot")
 		self._data=self._disable_on_stop_data+self._enable_on_reconnect_data
 		for name in self._data:
@@ -3031,8 +3032,12 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 	def _on_seek_backward(self, action, param):
 		self._client.seekcur("-10")
 
-	def _on_clean(self, action, param):
+	def _on_tidy(self, action, param):
 		self._client.files_to_playlist([self._client.currentsong()["file"]], "enqueue")
+
+	def _on_enqueue(self, action, param):
+		song=self._client.currentsong()
+		self._client.album_to_playlist(song["albumartist"][0], song["album"][0], song["date"][0], "enqueue")
 
 	def _on_clear(self, action, param):
 		self._client.clear()
