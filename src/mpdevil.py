@@ -1314,8 +1314,8 @@ class SongsList(TreeView):
 
 		# buttons
 		self.buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
-		data=((_("Add all titles to playlist"), "list-add-symbolic", "append"),
-			(_("Directly play all titles"), "media-playback-start-symbolic", "play")
+		data=((_("Append"), "list-add-symbolic", "append"),
+			(_("Play"), "media-playback-start-symbolic", "play")
 		)
 		for tooltip, icon, mode in data:
 			button=Gtk.Button(image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
