@@ -86,13 +86,6 @@
 			<property name="accelerator">&lt;Control&gt;f</property>
 			</object>
 		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
-			<property name="title" translatable="yes">Back to current album</property>
-			<property name="accelerator">Escape</property>
-			</object>
-		</child>
 		</object>
 	</child>
 	<child>

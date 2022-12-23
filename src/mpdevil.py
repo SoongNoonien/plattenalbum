@@ -2004,23 +2004,23 @@ class AlbumView(Gtk.Box):
 		self._title.set_line_wrap(True)  # wrap=True is not working
 		self._duration=Gtk.Label(xalign=1, ellipsize=Pango.EllipsizeMode.END)
 
-		# close button
-		close_button=Gtk.Button(image=Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON), halign=Gtk.Align.START)
+		# event box
+		event_box=Gtk.EventBox()
 
 		# connect
 		self.connect("hide", lambda *args: print("test"))
-		close_button.connect("clicked", lambda *args: self.emit("close"))
+		event_box.connect("button-press-event", self._on_button_press_event)
 
 		# packing
+		event_box.add(self._cover)
 		hbox=Gtk.Box(spacing=12)
 		hbox.pack_end(self.songs_list.buttons, False, False, 0)
 		hbox.pack_end(self._duration, False, False, 0)
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6)
-		vbox.pack_start(close_button, False, False, 0)
 		vbox.set_center_widget(self._title)
 		vbox.pack_end(hbox, False, False, 0)
 		header=Gtk.Box()
-		header.pack_start(self._cover, False, False, 0)
+		header.pack_start(event_box, False, False, 0)
 		header.pack_start(Gtk.Separator(), False, False, 0)
 		header.pack_start(vbox, True, True, 0)
 		self.pack_start(header, False, False, 0)
@@ -2064,6 +2064,10 @@ class AlbumView(Gtk.Box):
 		else:
 			size=self._settings.get_int("album-cover")*1.5
 			self._cover.set_from_pixbuf(cover.get_pixbuf(size))
+
+	def _on_button_press_event(self, widget, event):
+		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+			self.emit("close")
 
 class Browser(Gtk.Paned):
 	def __init__(self, client, settings):
@@ -2110,9 +2114,14 @@ class Browser(Gtk.Paned):
 		self.pack1(genre_window, False, False)
 		self.pack2(self.paned1, True, False)
 
-	def back_to_current_album(self):
-		self._album_stack.set_visible_child_name("album_list")
-		song=self._client.currentsong()
+	def back(self):
+		if self._album_stack.get_visible_child_name() == "album_view":
+			self._album_stack.set_visible_child_name("album_list")
+		else:
+			if (song:=self._client.currentsong()):
+				self._to_album(song)
+
+	def _to_album(self, song):
 		artist,genre=self._artist_list.get_artist_selected()
 		if genre is None or song["genre"][0] == genre:
 			if artist is None or song["albumartist"][0] == artist:
@@ -3153,7 +3162,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._size=None  # needed for window size saving
 
 		# actions
-		simple_actions_data=("settings","connection-settings","stats","help","menu","toggle-lyrics","back-to-current-album","toggle-search")
+		simple_actions_data=("settings","connection-settings","stats","help","menu","toggle-lyrics","back","toggle-search")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -3189,8 +3198,8 @@ class MainWindow(Gtk.ApplicationWindow):
 			image=icon("system-search-symbolic"), tooltip_text=_("Search"), can_focus=False, no_show_all=True)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		back_button=Gtk.Button(
-			image=icon("go-previous-symbolic"), tooltip_text=_("Back to current album"),
-			action_name="win.back-to-current-album", can_focus=False, no_show_all=True)
+			image=icon("go-previous-symbolic"), tooltip_text=_("Back"),
+			action_name="win.back", can_focus=False, no_show_all=True)
 		self._settings.bind("mini-player", back_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# stack
@@ -3318,9 +3327,11 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_lyrics_window.lyrics_button.emit("clicked")
 
-	def _on_back_to_current_album(self, action, param):
-		self._search_button.set_active(False)
-		self._browser.back_to_current_album()
+	def _on_back(self, action, param):
+		if self._search_button.get_active():
+			self._search_button.set_active(False)
+		else:
+			self._browser.back()
 
 	def _on_toggle_search(self, action, param):
 		self._search_button.emit("clicked")
@@ -3354,7 +3365,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_song_changed(self, *args):
 		if (song:=self._client.currentsong()):
-			self.lookup_action("back-to-current-album").set_enabled(True)
 			album=song.get_album_with_date()
 			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
 			if self._use_csd:
@@ -3375,19 +3385,18 @@ class MainWindow(Gtk.ApplicationWindow):
 				else:
 					self.get_application().withdraw_notification("title-change")
 		else:
-			self.lookup_action("back-to-current-album").set_enabled(False)
 			self._clear_title()
 			self.get_application().withdraw_notification("title-change")
 
 	def _on_connected(self, *args):
 		self._clear_title()
-		for action in ("stats","toggle-lyrics","toggle-search"):
+		for action in ("stats","toggle-lyrics","back","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
-		for action in ("stats","toggle-lyrics","back-to-current-album","toggle-search"):
+		for action in ("stats","toggle-lyrics","back","toggle-search"):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
@@ -3458,7 +3467,7 @@ class mpdevil(Gtk.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.genre-filter", ["<Control>g"]),("win.back-to-current-album", ["Escape"]),("win.toggle-search", ["<Control>f"]),
+			("win.genre-filter", ["<Control>g"]),("win.back", ["Escape"]),("win.toggle-search", ["<Control>f"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
 			("mpd.next", ["<Alt>Down"]),("mpd.prev", ["<Alt>Up"]),("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>n"]),
 			("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),("mpd.single-oneshot", ["<Shift><Control>s"]),
