@@ -3469,9 +3469,10 @@ class mpdevil(Gtk.Application):
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
 			("win.genre-filter", ["<Control>g"]),("win.back", ["Escape"]),("win.toggle-search", ["<Control>f"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
-			("mpd.next", ["<Alt>Down"]),("mpd.prev", ["<Alt>Up"]),("mpd.repeat", ["<Control>r"]),("mpd.random", ["<Control>n"]),
-			("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),("mpd.single-oneshot", ["<Shift><Control>s"]),
-			("mpd.seek-forward", ["<Alt>Right"]),("mpd.seek-backward", ["<Alt>Left"])
+			("mpd.next", ["<Alt>Down", "KP_Add"]),("mpd.prev", ["<Alt>Up", "KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
+			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
+			("mpd.single-oneshot", ["<Shift><Control>s"]),
+			("mpd.seek-forward", ["<Alt>Right", "KP_Multiply"]),("mpd.seek-backward", ["<Alt>Left", "KP_Divide"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)
