@@ -2705,6 +2705,8 @@ class SeekBar(Gtk.Box):
 		super().__init__(hexpand=True, margin_start=6, margin_right=6)
 		self._client=client
 		self._update=True
+		self._first_mark=None
+		self._second_mark=None
 
 		# labels
 		attrs=Pango.AttrList()
@@ -2726,13 +2728,16 @@ class SeekBar(Gtk.Box):
 		elapsed_dict={1: Gtk.ScrollType.STEP_BACKWARD, 3: Gtk.ScrollType.STEP_FORWARD}
 		rest_dict={1: Gtk.ScrollType.STEP_FORWARD, 3: Gtk.ScrollType.STEP_BACKWARD}
 		elapsed_event_box.connect("button-release-event", self._on_label_button_release_event, elapsed_dict)
+		elapsed_event_box.connect("button-press-event", self._on_label_button_press_event)
 		rest_event_box.connect("button-release-event", self._on_label_button_release_event, rest_dict)
+		rest_event_box.connect("button-press-event", self._on_label_button_press_event)
 		self._scale.connect("change-value", self._on_change_value)
 		self._scale.connect("scroll-event", lambda *args: True)  # disable mouse wheel
 		self._scale.connect("button-press-event", self._on_scale_button_press_event)
 		self._scale.connect("button-release-event", self._on_scale_button_release_event)
 		self._adjustment.connect("notify::value", self._update_labels)
 		self._adjustment.connect("notify::upper", self._update_labels)
+		self._adjustment.connect("notify::upper", self._clear_marks)
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed", self._refresh)
@@ -2747,6 +2752,10 @@ class SeekBar(Gtk.Box):
 		if duration > 0:
 			self._adjustment.set_upper(duration)
 			if self._update:
+				if self._second_mark is not None:
+					if elapsed > self._second_mark:
+						self._client.seekcur(self._first_mark)
+						return
 				self._scale.set_value(elapsed)
 			self._scale.set_fill_level(elapsed)
 		else:
@@ -2771,6 +2780,12 @@ class SeekBar(Gtk.Box):
 		self.set_sensitive(False)
 		self._scale.set_fill_level(0)
 		self._scale.set_range(0, 0)
+		self._clear_marks()
+
+	def _clear_marks(self, *args):
+		self._first_mark=None
+		self._second_mark=None
+		self._scale.clear_marks()
 
 	def _on_scale_button_press_event(self, widget, event):
 		self._update=False
@@ -2785,6 +2800,22 @@ class SeekBar(Gtk.Box):
 
 	def _on_label_button_release_event(self, widget, event, scroll_type):
 		self._scale.emit("move-slider", scroll_type.get(event.button, Gtk.ScrollType.NONE))
+
+	def _on_label_button_press_event(self, widget, event):
+		if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+			value=self._scale.get_value()
+			if self._first_mark is None:
+				self._first_mark=value
+				self._scale.add_mark(value, Gtk.PositionType.BOTTOM, None)
+			elif self._second_mark is None:
+				if value < self._first_mark:
+					self._second_mark=self._first_mark
+					self._first_mark=value
+				else:
+					self._second_mark=value
+				self._scale.add_mark(value, Gtk.PositionType.BOTTOM, None)
+			else:
+				self._clear_marks()
 
 	def _on_state(self, emitter, state):
 		if state == "stop":
