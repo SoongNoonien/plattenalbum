@@ -2788,11 +2788,13 @@ class SeekBar(Gtk.Box):
 		self._scale.clear_marks()
 
 	def _on_scale_button_press_event(self, widget, event):
-		self._update=False
+		if (event.button == 1 or  event.button == 3) and event.type == Gdk.EventType.BUTTON_PRESS:
+			self._update=False
 
 	def _on_scale_button_release_event(self, widget, event):
-		self._update=True
-		self._client.seekcur(self._scale.get_value())
+		if event.button == 1 or  event.button == 3:
+			self._update=True
+			self._client.seekcur(self._scale.get_value())
 
 	def _on_change_value(self, scale, scroll, value):
 		if scroll in (Gtk.ScrollType.STEP_BACKWARD, Gtk.ScrollType.STEP_FORWARD , Gtk.ScrollType.PAGE_BACKWARD, Gtk.ScrollType.PAGE_FORWARD):
