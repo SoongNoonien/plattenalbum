@@ -1367,9 +1367,7 @@ class SongsList(TreeView):
 	def _on_button_press_event(self, widget, event):
 		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
 			path=path_re[0]
-			if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
-				self._client.files_to_playlist([self._store[path][3]], "play")
-			elif event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
 				self._client.files_to_playlist([self._store[path][3]], "append")
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				uri=self._store[path][3]
@@ -2009,7 +2007,7 @@ class AlbumView(Gtk.Box):
 
 		# connect
 		self.connect("hide", lambda *args: print("test"))
-		event_box.connect("button-press-event", self._on_button_press_event)
+		event_box.connect("button-release-event", self._on_button_release_event)
 
 		# packing
 		event_box.add(self._cover)
@@ -2065,8 +2063,8 @@ class AlbumView(Gtk.Box):
 			size=self._settings.get_int("album-cover")*1.5
 			self._cover.set_from_pixbuf(cover.get_pixbuf(size))
 
-	def _on_button_press_event(self, widget, event):
-		if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+	def _on_button_release_event(self, widget, event):
+		if event.button == 1:
 			self.emit("close")
 
 class Browser(Gtk.Paned):
