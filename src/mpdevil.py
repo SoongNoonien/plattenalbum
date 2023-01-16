@@ -2065,7 +2065,8 @@ class AlbumView(Gtk.Box):
 
 	def _on_button_release_event(self, widget, event):
 		if event.button == 1:
-			self.emit("close")
+			if 0 <= event.x <= widget.get_allocated_width() and 0 <= event.y <= widget.get_allocated_height():
+				self.emit("close")
 
 class Browser(Gtk.Paned):
 	def __init__(self, client, settings):
@@ -2799,7 +2800,8 @@ class SeekBar(Gtk.Box):
 			self._client.seekcur(value)
 
 	def _on_label_button_release_event(self, widget, event, scroll_type):
-		self._scale.emit("move-slider", scroll_type.get(event.button, Gtk.ScrollType.NONE))
+		if 0 <= event.x <= widget.get_allocated_width() and 0 <= event.y <= widget.get_allocated_height():
+			self._scale.emit("move-slider", scroll_type.get(event.button, Gtk.ScrollType.NONE))
 
 	def _on_label_button_press_event(self, widget, event):
 		if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
