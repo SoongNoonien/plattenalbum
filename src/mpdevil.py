@@ -1612,7 +1612,7 @@ class SelectionList(TreeView):
 		return len(self._store)-1
 
 	def select_path(self, path):
-		self.set_cursor(path)
+		self.set_cursor(path, None, False)
 
 	def select(self, item):
 		row_num=len(self._store)
@@ -2053,7 +2053,7 @@ class AlbumView(Gtk.Box):
 			else:
 				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b> • {GLib.markup_escape_text(artist)}"
 			self.songs_list.append(song["track"][0], title_artist, str(song["duration"]), song["file"], song["title"][0])
-		self.songs_list.save_set_cursor(Gtk.TreePath(0))
+		self.songs_list.save_set_cursor(Gtk.TreePath(0), None, False)
 		self.songs_list.columns_autosize()
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
 			size=self._settings.get_int("album-cover")*1.5
@@ -2259,11 +2259,10 @@ class PlaylistView(TreeView):
 			self._store.remove(self._store.get_iter(path))
 
 	def _scroll_to_path(self, path):
+		self.set_cursor(path, None, False)
 		self.save_scroll_to_cell(path, None, True, 0.25)
 
-	def _refresh_selection(self):  # Gtk.TreePath(len(self._store) is used to generate an invalid TreePath (needed to unset cursor)
-		if not self._menu.get_visible():
-			self.set_cursor(Gtk.TreePath(len(self._store)), None, False)
+	def _refresh_selection(self):
 		song=self._client.status().get("song")
 		if song is None:
 			self._unselect()
@@ -2410,9 +2409,6 @@ class PlaylistWindow(Gtk.Overlay):
 		GLib.idle_add(callback)  # workaround for the Gtk bug from above
 
 	def _on_back_to_current_song_button_clicked(self, *args):
-		self._treeview.set_cursor(Gtk.TreePath(len(self._treeview.get_model())), None, False)  # unset cursor
-		if self._treeview.get_property("selected-path") is not None:
-			self._treeview.get_selection().select_path(self._treeview.get_property("selected-path"))
 		self._treeview.scroll_to_selected_title()
 
 ####################
