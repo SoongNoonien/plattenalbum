@@ -2940,7 +2940,7 @@ class PlaybackOptions(Gtk.ButtonBox):
 
 		# css
 		self._provider=Gtk.CssProvider()
-		self._provider.load_from_data(b"""image {color: @error_color;}""")  # red icon
+		self._provider.load_from_data(b"image {color: @error_color;}")  # red icon
 
 		# connect
 		for name in ("repeat", "random", "consume"):
@@ -2968,7 +2968,8 @@ class PlaybackOptions(Gtk.ButtonBox):
 		self._buttons["single"][0].handler_block(self._buttons["single"][1])
 		self._buttons["single"][0].set_active((val in ("1", "oneshot")))
 		if val == "oneshot":
-			self._buttons["single"][0].get_image().get_style_context().add_provider(self._provider, 600)
+			self._buttons["single"][0].get_image().get_style_context().add_provider(
+				self._provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 		else:
 			self._buttons["single"][0].get_image().get_style_context().remove_provider(self._provider)
 		self._buttons["single"][0].handler_unblock(self._buttons["single"][1])
