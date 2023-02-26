@@ -656,6 +656,7 @@ class Client(MPDClient):
 		self._start_idle_id=None
 		self.music_directory=None
 		self.current_cover=None
+		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 
 		# connect
 		self._settings.connect("changed::socket-connection", lambda *args: self.reconnect())
@@ -868,13 +869,16 @@ class Client(MPDClient):
 		else:
 			return None
 
+	def can_show_in_file_manager(self, uri):
+		path=self.get_absolute_path(uri)
+		dbus_name_avail,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
+			GLib.Variant("(s)",("org.freedesktop.FileManager1",)), GLib.VariantType("(b)"), Gio.DBusCallFlags.NONE, 500, None)
+		return (path is not None) and dbus_name_avail
+
 	def show_in_file_manager(self, uri):
-		if (path:=self.get_absolute_path(uri)) is not None:
-			file=Gio.File.new_for_path(path)
-			bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
-			proxy=Gio.DBusProxy.new_sync(bus, Gio.DBusProxyFlags.NONE, None, "org.freedesktop.FileManager1",
-				"/org/freedesktop/FileManager1", "org.freedesktop.FileManager1", None)
-			proxy.call_sync("ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), Gio.DBusCallFlags.NONE, 500, None)
+		file=Gio.File.new_for_path(self.get_absolute_path(uri))
+		self._bus.call_sync("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1",
+			"ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), None, Gio.DBusCallFlags.NONE, 500, None)
 
 	def toggle_play(self):
 		status=self.status()
@@ -1358,7 +1362,7 @@ class SongsList(TreeView):
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self._menu.set_pointing_to(rect)
-		self._show_action.set_enabled(self._client.get_absolute_path(uri) is not None)
+		self._show_action.set_enabled(self._client.can_show_in_file_manager(uri))
 		self._menu.popup()
 
 	def _on_row_activated(self, widget, path, view_column):
@@ -2223,7 +2227,7 @@ class PlaylistView(TreeView):
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self._menu.set_pointing_to(rect)
-		self._show_action.set_enabled(self._client.get_absolute_path(uri) is not None)
+		self._show_action.set_enabled(self._client.can_show_in_file_manager(uri))
 		self._menu.popup()
 
 	def _clear(self, *args):
