@@ -185,8 +185,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				"HasTrackList": (GLib.Variant("b", False), None),
 				"Identity": (GLib.Variant("s", "mpdevil"), None),
 				"DesktopEntry": (GLib.Variant("s", "org.mpdevil.mpdevil"), None),
-				"SupportedUriSchemes": (GLib.Variant("s", "None"), None),
-				"SupportedMimeTypes": (GLib.Variant("s", "None"), None)},
+				"SupportedUriSchemes": (GLib.Variant("as", []), None),
+				"SupportedMimeTypes": (GLib.Variant("as", []), None)},
 			self._MPRIS_PLAYER_IFACE:
 				{"PlaybackStatus": (self._get_playback_status, None),
 				"LoopStatus": (self._get_loop_status, self._set_loop_status),
