@@ -872,7 +872,7 @@ class Client(MPDClient):
 	def can_show_in_file_manager(self, uri):
 		try:
 			self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "StartServiceByName",
-				GLib.Variant("(su)",("org.freedesktop.FileManager1",0)), GLib.VariantType("(u)"), Gio.DBusCallFlags.NONE, 500, None)
+				GLib.Variant("(su)",("org.freedesktop.FileManager1",0)), GLib.VariantType("(u)"), Gio.DBusCallFlags.NONE, -1, None)
 		except GLib.GError:
 			return False
 		return self.get_absolute_path(uri) is not None
@@ -880,7 +880,7 @@ class Client(MPDClient):
 	def show_in_file_manager(self, uri):
 		file=Gio.File.new_for_path(self.get_absolute_path(uri))
 		self._bus.call_sync("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1",
-			"ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), None, Gio.DBusCallFlags.NONE, 500, None)
+			"ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), None, Gio.DBusCallFlags.NONE, -1, None)
 
 	def toggle_play(self):
 		status=self.status()
