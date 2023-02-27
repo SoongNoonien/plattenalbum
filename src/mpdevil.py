@@ -870,10 +870,12 @@ class Client(MPDClient):
 			return None
 
 	def can_show_in_file_manager(self, uri):
-		path=self.get_absolute_path(uri)
-		dbus_name_avail,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
-			GLib.Variant("(s)",("org.freedesktop.FileManager1",)), GLib.VariantType("(b)"), Gio.DBusCallFlags.NONE, 500, None)
-		return (path is not None) and dbus_name_avail
+		try:
+			self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "StartServiceByName",
+				GLib.Variant("(su)",("org.freedesktop.FileManager1",0)), GLib.VariantType("(u)"), Gio.DBusCallFlags.NONE, 500, None)
+		except GLib.GError:
+			return False
+		return self.get_absolute_path(uri) is not None
 
 	def show_in_file_manager(self, uri):
 		file=Gio.File.new_for_path(self.get_absolute_path(uri))
