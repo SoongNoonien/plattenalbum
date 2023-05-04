@@ -661,37 +661,6 @@ class Client(MPDClient):
 		# connect
 		self._settings.connect("changed::socket-connection", lambda *args: self.reconnect())
 
-	# workaround for list group
-	# see: https://github.com/Mic92/python-mpd2/pull/187
-	def _parse_objects(self, lines, delimiters=[], lookup_delimiter=False):
-		obj = {}
-		for key, value in self._parse_pairs(lines):
-			key = key.lower()
-			if lookup_delimiter and key not in delimiters:
-				delimiters = delimiters + [key]
-			if obj:
-				if key in delimiters:
-					if lookup_delimiter:
-						if key in obj:
-							yield obj
-							obj = obj.copy()
-							while delimiters[-1] != key:
-								obj.pop(delimiters[-1], None)
-								delimiters.pop()
-					else:
-						yield obj
-						obj = {}
-				elif key in obj:
-					if not isinstance(obj[key], list):
-						obj[key] = [obj[key], value]
-					else:
-						obj[key].append(value)
-					continue
-			obj[key] = value
-		if obj:
-			yield obj
-	_parse_objects_direct = _parse_objects
-
 	# overloads to use Song class
 	def currentsong(self, *args):
 		return Song(super().currentsong(*args))
