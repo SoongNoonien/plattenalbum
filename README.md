@@ -63,7 +63,7 @@ Run:
 ```bash
 git clone https://github.com/SoongNoonien/mpdevil.git
 cd mpdevil
-meson builddir --prefix=/usr/local
+meson setup builddir --prefix=/usr/local
 sudo ninja -C builddir install
 sudo glib-compile-schemas /usr/local/share/glib-2.0/schemas
 sudo gtk-update-icon-cache
