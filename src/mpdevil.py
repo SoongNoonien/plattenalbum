@@ -1329,7 +1329,7 @@ class SongsList(TreeView):
 		menu.append(_("Append"), "menu.append")
 		menu.append(_("Play"), "menu.play")
 		menu.append(_("Show"), "menu.show")
-		menu.append(_("Insert Next"), "menu.insert_next")
+		menu.append(_("As Next"), "menu.insert_next")
 		self._menu=Gtk.Popover.new_from_model(self, menu)
 		self._menu.set_position(Gtk.PositionType.BOTTOM)
 
