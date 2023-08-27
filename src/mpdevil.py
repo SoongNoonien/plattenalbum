@@ -1302,6 +1302,7 @@ class SongsList(TreeView):
 		# buttons
 		self.buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
 		data=((_("Append"), "list-add-symbolic", "append"),
+			(_("As Next"), "list-insert_next-symbolic", "insert_next"),
 			(_("Play"), "media-playback-start-symbolic", "play")
 		)
 		for tooltip, icon, mode in data:
