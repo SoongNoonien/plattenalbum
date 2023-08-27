@@ -777,7 +777,17 @@ class Client(MPDClient):
 		self._to_playlist(append, mode)
 
 	def filter_to_playlist(self, tag_filter, mode):
-		def append():
+		def append(next=False):
+			if next:
+				status=self.status()
+				try:
+					if tag_filter:
+						self.findadd(*tag_filter) # should be self.find() then insert in reverse order
+					else:
+						self.searchadd("any", "") # should be self.search() then insert in reverse order
+					return
+				except KeyError: # status["song"] can fail on empty playlist. Drop through.
+					pass
 			if tag_filter:
 				self.findadd(*tag_filter)
 			else:
