@@ -765,7 +765,9 @@ class Client(MPDClient):
 			if next:
 				status=self.status()
 				try:
-					for f in files:
+					songs = [s for s in files]
+					songs.reverse()
+					for f in songs:
 						self.addid(f, int(status["song"])+1)
 					return
 				except KeyError: # status["song"] can fail on empty playlist. Drop through.
