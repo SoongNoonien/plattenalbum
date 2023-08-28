@@ -733,10 +733,10 @@ class Client(MPDClient):
 		except:
 			return False
 
-	def _to_playlist(self, append, mode):  # modes: play, append, enqueue
+	def _to_playlist(self, append, mode):  # modes: play, append, insert_next, enqueue
 		if mode == "append":
 			append()
-		if mode == "insert_next":
+		elif mode == "insert_next":
 			append(next=True)
 		elif mode == "play":
 			self.clear()
