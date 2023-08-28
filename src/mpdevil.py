@@ -764,14 +764,10 @@ class Client(MPDClient):
 		def append(next=False):
 			if next:
 				status=self.status()
-				try:
-					songs = [s for s in files]
-					songs.reverse()
-					for f in songs:
+				if status["state"] != "stop":
+					for f in reversed([s for s in files]):
 						self.addid(f, int(status["song"])+1)
 					return
-				except KeyError: # status["song"] can fail on empty playlist. Drop through.
-					pass
 			for f in files:
 				self.add(f)
 		self._to_playlist(append, mode)
@@ -780,14 +776,14 @@ class Client(MPDClient):
 		def append(next=False):
 			if next:
 				status=self.status()
-				try:
+				if status["state"] != "stop":
 					if tag_filter:
-						self.findadd(*tag_filter) # should be self.find() then insert in reverse order
+						files = self.find(*tag_filter)
 					else:
-						self.searchadd("any", "") # should be self.search() then insert in reverse order
+						files = self.search("any", "")
+					for f in reversed([s for s in files]):
+						self.addid(f, int(status["song"])+1)
 					return
-				except KeyError: # status["song"] can fail on empty playlist. Drop through.
-					pass
 			if tag_filter:
 				self.findadd(*tag_filter)
 			else:
