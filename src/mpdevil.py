@@ -632,11 +632,11 @@ class EventEmitter(GObject.Object):
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"current_song": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"current_song": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"volume": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
-		"playlist": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
+		"playlist": (GObject.SignalFlags.RUN_FIRST, None, (int,int,str)),
 		"repeat": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"single": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -910,13 +910,13 @@ class Client(MPDClient):
 						self.emitter.emit("bitrate", val)
 				elif key == "songid":
 					self.current_cover=self.get_cover(self.currentsong())
-					self.emitter.emit("current_song")
+					self.emitter.emit("current_song", status["song"], status["songid"], status["state"])
 				elif key in ("state", "single", "audio"):
 					self.emitter.emit(key, val)
 				elif key == "volume":
 					self.emitter.emit("volume", float(val))
 				elif key == "playlist":
-					self.emitter.emit("playlist", int(val))
+					self.emitter.emit("playlist", int(val), int(status["playlistlength"]), status.get("song"))
 				elif key in ("repeat", "random", "consume"):
 					if val == "1":
 						self.emitter.emit(key, True)
@@ -928,7 +928,7 @@ class Client(MPDClient):
 			for key in diff:
 				if "songid" == key:
 					self.current_cover=None
-					self.emitter.emit("current_song")
+					self.emitter.emit("current_song", None, None, status["state"])
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
 				elif "updating_db" == key:
@@ -2246,8 +2246,7 @@ class PlaylistView(TreeView):
 		self.set_cursor(path, None, False)
 		self.save_scroll_to_cell(path, None, True, 0.25)
 
-	def _refresh_selection(self):
-		song=self._client.status().get("song")
+	def _refresh_selection(self, song):
 		if song is None:
 			self._unselect()
 		else:
@@ -2298,7 +2297,7 @@ class PlaylistView(TreeView):
 	def _on_row_activated(self, widget, path, view_column):
 		self._client.play(path)
 
-	def _on_playlist_changed(self, emitter, version):
+	def _on_playlist_changed(self, emitter, version, length, song_pos):
 		self._store.handler_block(self._row_inserted)
 		self._store.handler_block(self._row_deleted)
 		self._menu.popdown()
@@ -2325,10 +2324,10 @@ class PlaylistView(TreeView):
 						0, song["track"][0], 1, title, 2, str(song["duration"]), 3, song["file"], 4, song["title"][0]
 					)
 			self.thaw_child_notify()
-		for i in reversed(range(int(self._client.status()["playlistlength"]), len(self._store))):
+		for i in reversed(range(length, len(self._store))):
 			treeiter=self._store.get_iter(i)
 			self._store.remove(treeiter)
-		self._refresh_selection()
+		self._refresh_selection(song_pos)
 		if (path:=self.get_property("selected-path")) is None:
 			if len(self._store) > 0:
 				self._scroll_to_path(Gtk.TreePath(0))
@@ -2338,9 +2337,9 @@ class PlaylistView(TreeView):
 		self._store.handler_unblock(self._row_inserted)
 		self._store.handler_unblock(self._row_deleted)
 
-	def _on_song_changed(self, *args):
-		self._refresh_selection()
-		if self._client.status()["state"] == "play":
+	def _on_song_changed(self, emitter, song, songid, state):
+		self._refresh_selection(song)
+		if state == "play":
 			self._scroll_to_path(self.get_property("selected-path"))
 
 	def _on_disconnected(self, *args):
@@ -3122,10 +3121,9 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		for action in self._disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state_dict[state])
 
-	def _on_song_changed(self, *args):
-		song=(self._client.status().get("song") is not None)
+	def _on_song_changed(self, emitter, song, songid, state):
 		for action in self._disable_no_song:
-			self.lookup_action(action).set_enabled(song)
+			self.lookup_action(action).set_enabled(song is not None)
 
 	def _on_disconnected(self, *args):
 		for action in self._data:
