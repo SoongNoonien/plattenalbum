@@ -740,31 +740,6 @@ class Client(MPDClient):
 		if int(status["playlistlength"]) > 1:
 			self.delete((1,))
 
-	def _to_playlist(self, append, mode):  # modes: play, append, enqueue
-		if mode == "append":
-			append()
-		elif mode == "play":
-			self.clear()
-			append()
-			self.play()
-		elif mode == "enqueue":
-			status=self.status()
-			if status["state"] == "stop":
-				self.clear()
-				append()
-			else:
-				self.moveid(status["songid"], 0)
-				current_song_file=self.currentsong()["file"]
-				try:
-					self.delete((1,))  # delete all songs, but the first. bad song index possible
-				except CommandError:
-					pass
-				append()
-				duplicates=self.playlistfind("file", current_song_file)
-				if len(duplicates) > 1:
-					self.move(0, duplicates[1]["pos"])
-					self.delete(int(duplicates[1]["pos"])-1)
-
 	def file_to_playlist(self, file, mode):  # modes: play, append
 		if mode == "append":
 			self.addid(file)
@@ -775,13 +750,30 @@ class Client(MPDClient):
 		else:
 			raise ValueError(f"Unknown mode: {mode}")
 
-	def filter_to_playlist(self, tag_filter, mode):
-		def append():
-			if tag_filter:
+	def filter_to_playlist(self, tag_filter, mode):  # modes: play, append, enqueue
+		if mode == "append":
+			self.findadd(*tag_filter)
+		elif mode == "play":
+			self.clear()
+			self.findadd(*tag_filter)
+			self.play()
+		elif mode == "enqueue":
+			status=self.status()
+			if status["state"] == "stop":
+				self.clear()
 				self.findadd(*tag_filter)
 			else:
-				self.searchadd("any", "")
-		self._to_playlist(append, mode)
+				self.moveid(status["songid"], 0)
+				current_song_file=self.currentsong()["file"]
+				try:
+					self.delete((1,))  # delete all songs, but the first. bad song index possible
+				except CommandError:
+					pass
+				self.findadd(*tag_filter)
+				duplicates=self.playlistfind("file", current_song_file)
+				if len(duplicates) > 1:
+					self.move(0, duplicates[1]["pos"])
+					self.delete(int(duplicates[1]["pos"])-1)
 
 	def album_to_playlist(self, albumartist, album, date, mode):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
