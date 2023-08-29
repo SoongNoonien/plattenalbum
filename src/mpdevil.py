@@ -782,16 +782,6 @@ class Client(MPDClient):
 	def album_to_playlist(self, albumartist, album, date, mode):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
 
-	def comp_list(self, *args):  # simulates listing behavior of python-mpd2 1.0
-		native_list=self.list(*args)
-		if len(native_list) > 0:
-			if isinstance(native_list[0], dict):
-				return ([l[args[0]] for l in native_list])
-			else:
-				return native_list
-		else:
-			return([])
-
 	def get_cover_path(self, song):
 		path=None
 		song_file=song["file"]
@@ -1625,7 +1615,7 @@ class GenreList(SelectionList):
 		self._client.emitter.connect("updated_db", self._refresh)
 
 	def _refresh(self, *args):
-		l=self._client.comp_list("genre")
+		l=[d["genre"] for d in self._client.list("genre")]
 		self.set_items(list(zip(l,l)))
 		self.select_all()
 
@@ -1745,7 +1735,7 @@ class AlbumLoadingThread(threading.Thread):
 		else:
 			self._genre_filter=("genre", self._genre)
 		if self._artist is None:
-			self._artists=self._client.comp_list("albumartist", *self._genre_filter)
+			self._artists=[d["albumartist"] for d in self._client.list("albumartist", *self._genre_filter)]
 		else:
 			self._artists=[self._artist]
 		super().start()
