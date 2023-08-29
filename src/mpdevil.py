@@ -733,6 +733,13 @@ class Client(MPDClient):
 		except:
 			return False
 
+	def tidy_playlist(self):  # this function assumes that a song is playing/stopped
+		status=self.status()
+		song_number=status["song"]
+		self.move(song_number, 0)
+		if int(status["playlistlength"]) > 1:
+			self.delete((1,))
+
 	def _to_playlist(self, append, mode):  # modes: play, append, enqueue
 		if mode == "append":
 			append()
@@ -758,11 +765,15 @@ class Client(MPDClient):
 					self.move(0, duplicates[1]["pos"])
 					self.delete(int(duplicates[1]["pos"])-1)
 
-	def files_to_playlist(self, files, mode):
-		def append():
-			for f in files:
-				self.add(f)
-		self._to_playlist(append, mode)
+	def file_to_playlist(self, file, mode):  # modes: play, append
+		if mode == "append":
+			self.addid(file)
+		elif mode == "play":
+			self.clear()
+			self.addid(file)
+			self.play()
+		else:
+			raise ValueError(f"Unknown mode: {mode}")
 
 	def filter_to_playlist(self, tag_filter, mode):
 		def append():
@@ -1290,10 +1301,10 @@ class SongsList(TreeView):
 		# menu
 		action_group=Gio.SimpleActionGroup()
 		action=Gio.SimpleAction.new("append", None)
-		action.connect("activate", lambda *args: self._client.files_to_playlist([self._store[self.get_cursor()[0]][3]], "append"))
+		action.connect("activate", lambda *args: self._client.file_to_playlist(self._store[self.get_cursor()[0]][3], "append"))
 		action_group.add_action(action)
 		action=Gio.SimpleAction.new("play", None)
-		action.connect("activate", lambda *args: self._client.files_to_playlist([self._store[self.get_cursor()[0]][3]], "play"))
+		action.connect("activate", lambda *args: self._client.file_to_playlist(self._store[self.get_cursor()[0]][3], "play"))
 		action_group.add_action(action)
 		self._show_action=Gio.SimpleAction.new("show", None)
 		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._store[self.get_cursor()[0]][3]))
@@ -1326,13 +1337,13 @@ class SongsList(TreeView):
 		self._menu.popup()
 
 	def _on_row_activated(self, widget, path, view_column):
-		self._client.files_to_playlist([self._store[path][3]], "play")
+		self._client.file_to_playlist(self._store[path][3], "play")
 
 	def _on_button_press_event(self, widget, event):
 		if (path_re:=widget.get_path_at_pos(int(event.x), int(event.y))) is not None:
 			path=path_re[0]
 			if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-				self._client.files_to_playlist([self._store[path][3]], "append")
+				self._client.file_to_playlist(self._store[path][3], "append")
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				uri=self._store[path][3]
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
@@ -1341,7 +1352,7 @@ class SongsList(TreeView):
 	def _on_key_press_event(self, widget, event):
 		if event.state & Gdk.ModifierType.CONTROL_MASK and event.keyval == Gdk.keyval_from_name("plus"):
 			if (path:=self.get_cursor()[0]) is not None:
-				self._client.files_to_playlist([self._store[path][3]], "append")
+				self._client.file_to_playlist(self._store[path][3], "append")
 		elif event.keyval == Gdk.keyval_from_name("Menu"):
 			if (path:=self.get_cursor()[0]) is not None:
 				self._open_menu(self._store[path][3], *self.get_popover_point(path))
@@ -2220,7 +2231,7 @@ class PlaylistView(TreeView):
 
 	def _delete(self, path):
 		if path == self.get_property("selected-path"):
-			self._client.files_to_playlist([self._store[path][3]], "enqueue")
+			self._client.tidy_playlist()
 		else:
 			self._store.remove(self._store.get_iter(path))
 
@@ -3067,7 +3078,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client.seekcur("-10")
 
 	def _on_tidy(self, action, param):
-		self._client.files_to_playlist([self._client.currentsong()["file"]], "enqueue")
+		self._client.tidy_playlist()
 
 	def _on_enqueue(self, action, param):
 		song=self._client.currentsong()
