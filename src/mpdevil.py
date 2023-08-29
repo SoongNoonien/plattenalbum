@@ -771,8 +771,8 @@ class Client(MPDClient):
 				self.findadd(*tag_filter)
 				duplicates=self.playlistfind("file", self.currentsong()["file"])
 				if len(duplicates) > 1:
-					self.delete(duplicates[1]["pos"])
-					self.move(0, duplicates[1]["pos"])
+					self.swap(0, duplicates[1]["pos"])
+					self.delete(0)
 		else:
 			raise ValueError(f"Unknown mode: {mode}")
 
