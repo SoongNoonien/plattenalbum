@@ -759,21 +759,20 @@ class Client(MPDClient):
 			self.play()
 		elif mode == "enqueue":
 			status=self.status()
-			if status["state"] == "stop":
+			if (songid:=status.get("songid")) is None:
 				self.clear()
 				self.findadd(*tag_filter)
 			else:
-				self.moveid(status["songid"], 0)
-				current_song_file=self.currentsong()["file"]
-				try:
-					self.delete((1,))  # delete all songs, but the first. bad song index possible
-				except CommandError:
-					pass
+				self.moveid(songid, 0)
+				if int(status["playlistlength"]) > 1:
+					self.delete((1,))
 				self.findadd(*tag_filter)
-				duplicates=self.playlistfind("file", current_song_file)
+				duplicates=self.playlistfind("file", self.currentsong()["file"])
 				if len(duplicates) > 1:
+					self.delete(duplicates[1]["pos"])
 					self.move(0, duplicates[1]["pos"])
-					self.delete(int(duplicates[1]["pos"])-1)
+		else:
+			raise ValueError(f"Unknown mode: {mode}")
 
 	def album_to_playlist(self, albumartist, album, date, mode):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
