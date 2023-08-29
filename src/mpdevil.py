@@ -1287,17 +1287,6 @@ class SongsList(TreeView):
 		self._selection=self.get_selection()
 		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
 
-		# buttons
-		self.buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND)
-		data=((_("Append"), "list-add-symbolic", "append"),
-			(_("Play"), "media-playback-start-symbolic", "play")
-		)
-		for tooltip, icon, mode in data:
-			button=Gtk.Button(image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
-			button.set_tooltip_text(tooltip)
-			button.connect("clicked", self._on_button_clicked, mode)
-			self.buttons.pack_start(button, True, True, 0)
-
 		# menu
 		action_group=Gio.SimpleActionGroup()
 		action=Gio.SimpleAction.new("append", None)
@@ -1357,9 +1346,6 @@ class SongsList(TreeView):
 			if (path:=self.get_cursor()[0]) is not None:
 				self._open_menu(self._store[path][3], *self.get_popover_point(path))
 
-	def _on_button_clicked(self, widget, mode):
-		self._client.files_to_playlist((row[3] for row in self._store), mode)
-
 ##########
 # search #
 ##########
@@ -1384,7 +1370,6 @@ class SearchThread(threading.Thread):
 	def start(self):
 		self._songs_list.clear()
 		self._hits_label.set_text("")
-		self._songs_list.buttons.set_sensitive(False)
 		self._search_text=self._search_entry.get_text()
 		if self._search_text:
 			super().start()
@@ -1406,8 +1391,6 @@ class SearchThread(threading.Thread):
 			stripe_end=stripe_start+stripe_size
 			songs=self._get_songs(stripe_start, stripe_end)
 			stripe_start=stripe_end
-		if hits > 0:
-			idle_add(self._songs_list.buttons.set_sensitive, True)
 		self._exit()
 
 	def _exit(self):
@@ -1468,7 +1451,6 @@ class SearchWindow(Gtk.Box):
 		hbox=Gtk.Box(spacing=6, border_width=6)
 		hbox.pack_start(self._tag_combo_box, False, False, 0)
 		hbox.set_center_widget(self.search_entry)
-		hbox.pack_end(self._songs_list.buttons, False, False, 0)
 		hbox.pack_end(self._hits_label, False, False, 6)
 		self.pack_start(hbox, False, False, 0)
 		self.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
@@ -1479,7 +1461,6 @@ class SearchWindow(Gtk.Box):
 
 	def _on_connected(self, *args):
 		def callback():
-			self._songs_list.buttons.set_sensitive(False)
 			self._songs_list.clear()
 			self._hits_label.set_text("")
 			self.search_entry.handler_block(self._search_entry_changed)
@@ -1958,13 +1939,24 @@ class AlbumView(Gtk.Box):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
 		self._settings=settings
+		self._tag_filter=()
 
 		# songs list
 		self.songs_list=SongsList(self._client)
 		self.songs_list.set_enable_search(True)
-		self.songs_list.buttons.set_halign(Gtk.Align.END)
 		scroll=Gtk.ScrolledWindow(child=self.songs_list)
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+		# buttons
+		self._buttons=Gtk.ButtonBox(layout_style=Gtk.ButtonBoxStyle.EXPAND, halign=Gtk.Align.END)
+		data=((_("Append"), "list-add-symbolic", "append"),
+			(_("Play"), "media-playback-start-symbolic", "play")
+		)
+		for tooltip, icon, mode in data:
+			button=Gtk.Button(image=Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.BUTTON))
+			button.set_tooltip_text(tooltip)
+			button.connect("clicked", self._on_button_clicked, mode)
+			self._buttons.pack_start(button, True, True, 0)
 
 		# cover
 		self._cover=Gtk.Image()
@@ -1987,7 +1979,7 @@ class AlbumView(Gtk.Box):
 		# packing
 		event_box.add(self._cover)
 		hbox=Gtk.Box(spacing=12)
-		hbox.pack_end(self.songs_list.buttons, False, False, 0)
+		hbox.pack_end(self._buttons, False, False, 0)
 		hbox.pack_end(self._duration, False, False, 0)
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, border_width=6)
 		vbox.set_center_widget(self._title)
@@ -2007,14 +1999,14 @@ class AlbumView(Gtk.Box):
 		else:
 			self._title.set_markup(f"<b>{GLib.markup_escape_text(album)}</b>\n{GLib.markup_escape_text(albumartist)}")
 		self.songs_list.clear()
-		tag_filter=("albumartist", albumartist, "album", album, "date", date)
-		count=self._client.count(*tag_filter)
+		self._tag_filter=("albumartist", albumartist, "album", album, "date", date)
+		count=self._client.count(*self._tag_filter)
 		duration=str(Duration(count["playtime"]))
 		length=int(count["songs"])
 		text=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(number=length, duration=duration)
 		self._duration.set_text(text)
 		self._client.restrict_tagtypes("track", "title", "artist")
-		songs=self._client.find(*tag_filter)
+		songs=self._client.find(*self._tag_filter)
 		self._client.tagtypes("all")
 		for song in songs:
 			# only show artists =/= albumartist
@@ -2042,6 +2034,9 @@ class AlbumView(Gtk.Box):
 		if event.button == 1:
 			if 0 <= event.x <= widget.get_allocated_width() and 0 <= event.y <= widget.get_allocated_height():
 				self.emit("close")
+
+	def _on_button_clicked(self, widget, mode):
+		self._client.filter_to_playlist(self._tag_filter, mode)
 
 class Browser(Gtk.Paned):
 	def __init__(self, client, settings):
