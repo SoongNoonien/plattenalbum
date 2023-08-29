@@ -2163,9 +2163,9 @@ class PlaylistView(TreeView):
 
 		# menu
 		action_group=Gio.SimpleActionGroup()
-		action=Gio.SimpleAction.new("remove", None)
-		action.connect("activate", lambda *args: self._store.remove(self._store.get_iter(self.get_cursor()[0])))
-		action_group.add_action(action)
+		self._remove_action=Gio.SimpleAction.new("remove", None)
+		self._remove_action.connect("activate", lambda *args: self._store.remove(self._store.get_iter(self.get_cursor()[0])))
+		action_group.add_action(self._remove_action)
 		self._show_action=Gio.SimpleAction.new("show", None)
 		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._store[self.get_cursor()[0]][3]))
 		action_group.add_action(self._show_action)
@@ -2202,7 +2202,12 @@ class PlaylistView(TreeView):
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self._menu.set_pointing_to(rect)
-		self._show_action.set_enabled(self._client.can_show_in_file_manager(uri))
+		if uri is None:
+			self._remove_action.set_enabled(False)
+			self._show_action.set_enabled(False)
+		else:
+			self._remove_action.set_enabled(True)
+			self._show_action.set_enabled(self._client.can_show_in_file_manager(uri))
 		self._menu.popup()
 
 	def _clear(self, *args):
@@ -2257,6 +2262,9 @@ class PlaylistView(TreeView):
 			elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
 				point=self.convert_bin_window_to_widget_coords(event.x,event.y)
 				self._open_menu(self._store[path][3], *point)
+		elif event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+			point=self.convert_bin_window_to_widget_coords(event.x,event.y)
+			self._open_menu(None, *point)
 
 	def _on_key_press_event(self, widget, event):
 		if event.keyval == Gdk.keyval_from_name("Delete"):
