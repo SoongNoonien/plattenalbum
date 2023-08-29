@@ -1915,10 +1915,6 @@ class AlbumList(Gtk.IconView):
 		else:
 			callback()
 
-	def _path_to_playlist(self, path, mode):
-		tags=self._store[path][3:6]
-		self._client.album_to_playlist(*tags, mode)
-
 	def _on_item_activated(self, widget, path):
 		tags=self._store[path][3:6]
 		self.emit("album-selected", *tags)
