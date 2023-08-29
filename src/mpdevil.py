@@ -733,12 +733,15 @@ class Client(MPDClient):
 		except:
 			return False
 
-	def tidy_playlist(self):  # this function assumes that a song is playing/stopped
+	def tidy_playlist(self):
 		status=self.status()
-		song_number=status["song"]
-		self.move(song_number, 0)
-		if int(status["playlistlength"]) > 1:
-			self.delete((1,))
+		song_number=status.get("song")
+		if song_number is None:
+			self.clear()
+		else:
+			self.move(song_number, 0)
+			if int(status["playlistlength"]) > 1:
+				self.delete((1,))
 
 	def file_to_playlist(self, file, mode):  # modes: play, append, as_next
 		if mode == "append":
