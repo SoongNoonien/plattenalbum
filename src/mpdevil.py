@@ -740,13 +740,15 @@ class Client(MPDClient):
 		if int(status["playlistlength"]) > 1:
 			self.delete((1,))
 
-	def file_to_playlist(self, file, mode):  # modes: play, append
+	def file_to_playlist(self, file, mode):  # modes: play, append, as_next
 		if mode == "append":
 			self.addid(file)
 		elif mode == "play":
 			self.clear()
 			self.addid(file)
 			self.play()
+		elif mode == "as_next":
+			self.addid(file, "+0")
 		else:
 			raise ValueError(f"Unknown mode: {mode}")
 
@@ -1294,6 +1296,9 @@ class SongsList(TreeView):
 		action=Gio.SimpleAction.new("append", None)
 		action.connect("activate", lambda *args: self._client.file_to_playlist(self._store[self.get_cursor()[0]][3], "append"))
 		action_group.add_action(action)
+		action=Gio.SimpleAction.new("as_next", None)
+		action.connect("activate", lambda *args: self._client.file_to_playlist(self._store[self.get_cursor()[0]][3], "as_next"))
+		action_group.add_action(action)
 		action=Gio.SimpleAction.new("play", None)
 		action.connect("activate", lambda *args: self._client.file_to_playlist(self._store[self.get_cursor()[0]][3], "play"))
 		action_group.add_action(action)
@@ -1303,8 +1308,11 @@ class SongsList(TreeView):
 		self.insert_action_group("menu", action_group)
 		menu=Gio.Menu()
 		menu.append(_("Append"), "menu.append")
+		menu.append(_("As Next"), "menu.as_next")
 		menu.append(_("Play"), "menu.play")
-		menu.append(_("Show"), "menu.show")
+		subsection=Gio.Menu()
+		subsection.append(_("Show"), "menu.show")
+		menu.append_section(None, subsection)
 		self._menu=Gtk.Popover.new_from_model(self, menu)
 		self._menu.set_position(Gtk.PositionType.BOTTOM)
 
