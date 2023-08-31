@@ -3197,7 +3197,7 @@ class ConnectionNotify(Gtk.Revealer):
 
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
-		super().__init__(title=("mpdevil"), icon_name="org.mpdevil.mpdevil", **kwargs)
+		super().__init__(title="mpdevil", icon_name="org.mpdevil.mpdevil", **kwargs)
 		self.set_default_icon_name("org.mpdevil.mpdevil")
 		self._client=client
 		self._settings=settings
@@ -3322,19 +3322,19 @@ class MainWindow(Gtk.ApplicationWindow):
 	def open(self):
 		# bring player in consistent state
 		self._client.emitter.emit("disconnected")
+		self._client.emitter.emit("connecting")
 		# set default window size
 		if self._settings.get_boolean("mini-player"):
 			self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
 		else:
 			self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
+			self._bind_paned_settings()
 			if self._settings.get_boolean("maximize"):
-				self.maximize()  # request maximize
+				self.maximize()
 		self.show_all()
 		while Gtk.events_pending():  # ensure window is visible
 			Gtk.main_iteration_do(True)
-		if not self._settings.get_boolean("mini-player"):
-			self._bind_paned_settings()  # restore paned settings when window is visible (fixes a bug when window is maximized)
-		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)  # same problem as one line above
+		self._settings.bind("maximize", self, "is-maximized", Gio.SettingsBindFlags.SET)
 		self._client.start()
 
 	def _clear_title(self):
@@ -3454,15 +3454,15 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._clear_title()
 
 	def _on_size_allocate(self, widget, rect):
-		if not self.is_maximized():
-			if (size:=self.get_size()) != self._size:  # prevent unneeded write operations
-				if self._settings.get_boolean("mini-player"):
+		if (size:=self.get_size()) != self._size:  # prevent unneeded write operations
+			if self._settings.get_boolean("mini-player"):
+				if not self.is_maximized():
 					self._settings.set_int("mini-player-width", size[0])
 					self._settings.set_int("mini-player-height", size[1])
-				else:
-					self._settings.set_int("width", size[0])
-					self._settings.set_int("height", size[1])
-				self._size=size
+			else:
+				self._settings.set_int("width", size[0])
+				self._settings.set_int("height", size[1])
+			self._size=size
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
