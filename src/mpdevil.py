@@ -2390,10 +2390,6 @@ class CoverEventBox(Gtk.EventBox):
 			self._click_pos=(event.x, event.y)
 
 	def _on_button_release_event(self, widget, event):
-		if event.button == 1 and not self._settings.get_boolean("mini-player") and self._client.connected():
-			if (song:=self._client.currentsong()):
-				tags=(song["albumartist"][0], song["album"][0], song["date"][0])
-				self._client.album_to_playlist(*tags, "enqueue")
 		self._click_pos=()
 
 	def _on_motion_notify_event(self, widget, event):
