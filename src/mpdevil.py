@@ -1508,19 +1508,19 @@ class SearchWindow(Gtk.Box):
 # browser #
 ###########
 
-class SelectionList(TreeView):
+class ArtistList(TreeView):
 	__gsignals__={"item-selected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"item-reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
-	def __init__(self, select_all_string):
+	def __init__(self, client, settings):
 		super().__init__(search_column=0, headers_visible=False, fixed_height_mode=True)
-		self.select_all_string=select_all_string
 		self._selected_path=None
+		self._client=client
+		self._settings=settings
 
 		# store
 		# item, initial-letter, weight-initials
 		self._store=Gtk.ListStore(str, str, Pango.Weight)
-		self._store.append([self.select_all_string, "", Pango.Weight.NORMAL])
 		self.set_model(self._store)
 		self._selection=self.get_selection()
 		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
@@ -1539,16 +1539,21 @@ class SelectionList(TreeView):
 
 		# connect
 		self._selection.connect("changed", self._on_selection_changed)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connected", self._on_connected)
+		self._client.emitter.connect("updated_db", self._on_updated_db)
 
-	def clear(self):
+	def get_selected_artist(self):
+		return self._store[self._selected_path][0]
+
+	def _clear(self):
 		self._selection.set_mode(Gtk.SelectionMode.NONE)
 		self._store.clear()
-		self._store.append([self.select_all_string, "", Pango.Weight.NORMAL])
 		self._selected_path=None
 		self.emit("clear")
 
-	def set_items(self, items):
-		self.clear()
+	def _set_items(self, items):
+		self._clear()
 		letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		items.extend(zip([None]*len(letters), letters))
 		items.sort(key=lambda item: locale.strxfrm(item[1]))
@@ -1561,40 +1566,14 @@ class SelectionList(TreeView):
 				char=""
 		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
 
-	def get_item_at_path(self, path):
-		if path == Gtk.TreePath(0):
-			return None
-		else:
-			return self._store[path][0]
-
-	def length(self):
-		return len(self._store)-1
-
-	def select_path(self, path):
-		self.set_cursor(path, None, False)
-
-	def select(self, item):
+	def _select(self, item):
 		row_num=len(self._store)
 		for i in range(0, row_num):
 			path=Gtk.TreePath(i)
 			if self._store[path][0] == item:
-				self.select_path(path)
-				break
-
-	def select_all(self):
-		self.select_path(Gtk.TreePath(0))
-
-	def get_path_selected(self):
-		if self._selected_path is None:
-			raise ValueError("None selected")
-		else:
-			return self._selected_path
-
-	def get_item_selected(self):
-		return self.get_item_at_path(self.get_path_selected())
-
-	def scroll_to_selected(self):
-		self.save_scroll_to_cell(self._selected_path, None, True, 0.25)
+				self.set_cursor(path, None, False)
+				return
+		self.set_cursor(Gtk.TreePath(0), None, False)
 
 	def _on_selection_changed(self, *args):
 		if (treeiter:=self._selection.get_selected()[1]) is not None:
@@ -1604,85 +1583,41 @@ class SelectionList(TreeView):
 				self._selected_path=path
 				self.emit("item-selected")
 
-class GenreList(SelectionList):
-	def __init__(self, client):
-		super().__init__(_("all genres"))
-		self._client=client
-
-		# connect
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect_after("connected", self._on_connected)
-		self._client.emitter.connect("updated_db", self._refresh)
-
 	def _refresh(self, *args):
-		l=[d["genre"] for d in self._client.list("genre")]
-		self.set_items(list(zip(l,l)))
-		self.select_all()
-
-	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
-		self.clear()
-
-	def _on_connected(self, *args):
-		self._refresh()
-		self.set_sensitive(True)
-
-class ArtistList(SelectionList):
-	def __init__(self, client, settings, genre_list):
-		super().__init__(_("all artists"))
-		self._client=client
-		self._settings=settings
-		self.genre_list=genre_list
-
-		# selection
-		self._selection=self.get_selection()
-
-		# connect
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
-		self.genre_list.connect_after("item-selected", self._refresh)
-
-	def _refresh(self, *args):
-		genre=self.genre_list.get_item_selected()
-		if genre is None:
-			artists=self._client.list("albumartistsort", "group", "albumartist")
-		else:
-			artists=self._client.list("albumartistsort", "genre", genre, "group", "albumartist")
+		artists=self._client.list("albumartistsort", "group", "albumartist")
 		filtered_artists=[]
 		for name, artist in itertools.groupby(((artist["albumartist"], artist["albumartistsort"]) for artist in artists), key=lambda x: x[0]):
 			filtered_artists.append(next(artist))
 			# ignore multiple albumartistsort values
 			if next(artist, None) is not None:
 				filtered_artists[-1]=(name, name)
-		self.set_items(filtered_artists)
-		if genre is not None:
-			self.select_all()
-		elif (song:=self._client.currentsong()):
-			artist=song["albumartist"][0]
-			self.select(artist)
-		elif self.length() > 0:
-			self.select_path(Gtk.TreePath(1))
-		else:
-			self.select_path(Gtk.TreePath(0))
-		self.scroll_to_selected()
-
-	def get_artist_at_path(self, path):
-		genre=self.genre_list.get_item_selected()
-		artist=self.get_item_at_path(path)
-		return (artist, genre)
-
-	def get_artist_selected(self):
-		return self.get_artist_at_path(self.get_path_selected())
+		self._set_items(filtered_artists)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
-		self.clear()
+		self._clear()
 
 	def _on_connected(self, *args):
+		self._refresh()
+		if (song:=self._client.currentsong()):
+			artist=song["albumartist"][0]
+			self._select(artist)
+			self.save_scroll_to_cell(self._selected_path, None, True, 0.25)
+		elif len(self._store) > 0:
+			self.set_cursor(Gtk.TreePath(0), None, False)
+			self.save_scroll_to_cell(self._selected_path, None, True, 0.25)
 		self.set_sensitive(True)
 
+	def _on_updated_db(self, *args):
+		if self._selected_path is None:
+			self._refresh()
+		else:
+			artist=self.get_selected_artist()
+			self._refresh()
+			self._select(artist)
+
 class AlbumLoadingThread(threading.Thread):
-	def __init__(self, client, settings, progress_bar, iconview, store, artist, genre):
+	def __init__(self, client, settings, progress_bar, iconview, store, artist):
 		super().__init__(daemon=True)
 		self._client=client
 		self._settings=settings
@@ -1690,7 +1625,6 @@ class AlbumLoadingThread(threading.Thread):
 		self._iconview=iconview
 		self._store=store
 		self._artist=artist
-		self._genre=genre
 
 	def _get_albums(self):
 		@main_thread_function
@@ -1699,18 +1633,17 @@ class AlbumLoadingThread(threading.Thread):
 				raise ValueError("Stop requested")
 			else:
 				return self._client.list(*args)
-		for albumartist in self._artists:
-			try:
-				albums=client_list("albumsort", "albumartist", albumartist, *self._genre_filter, "group", "date", "group", "album")
-			except ValueError:
-				break
-			for _, album in itertools.groupby(albums, key=lambda x: (x["album"], x["date"])):
-				tmp=next(album)
-				# ignore multiple albumsort values
-				if next(album, None) is None:
-					yield (albumartist, tmp["album"], tmp["date"], tmp["albumsort"])
-				else:
-					yield (albumartist, tmp["album"], tmp["date"], tmp["album"])
+		try:
+			albums=client_list("albumsort", "albumartist", self._artist, "group", "date", "group", "album")
+		except ValueError:
+			return
+		for _, album in itertools.groupby(albums, key=lambda x: (x["album"], x["date"])):
+			tmp=next(album)
+			# ignore multiple albumsort values
+			if next(album, None) is None:
+				yield (self._artist, tmp["album"], tmp["date"], tmp["albumsort"])
+			else:
+				yield (self._artist, tmp["album"], tmp["date"], tmp["album"])
 
 	def set_callback(self, callback):
 		self._callback=callback
@@ -1726,18 +1659,6 @@ class AlbumLoadingThread(threading.Thread):
 		self._iconview.set_model(None)
 		self._store.clear()
 		self._cover_size=self._settings.get_int("album-cover")
-		if self._artist is None:
-			self._iconview.set_markup_column(2)  # show artist names
-		else:
-			self._iconview.set_markup_column(1)  # hide artist names
-		if self._genre is None:
-			self._genre_filter=()
-		else:
-			self._genre_filter=("genre", self._genre)
-		if self._artist is None:
-			self._artists=[d["albumartist"] for d in self._client.list("albumartist", *self._genre_filter)]
-		else:
-			self._artists=[self._artist]
 		super().start()
 
 	def run(self):
@@ -1767,20 +1688,8 @@ class AlbumLoadingThread(threading.Thread):
 		else:
 			main_thread_function(self._store.set_sort_column_id)(6, Gtk.SortType.ASCENDING)
 		idle_add(self._iconview.set_model, self._store)
-		# select album
-		@main_thread_function
-		def get_current_album_path():
-			if self._stop_flag:
-				raise ValueError("Stop requested")
-			else:
-				return self._iconview.get_current_album_path()
-		try:
-			path=get_current_album_path()
-		except ValueError:
-			self._exit()
-			return
-		if path is None:
-			path=Gtk.TreePath(0)
+		# select first album
+		path=Gtk.TreePath(0)
 		idle_add(self._iconview.set_cursor, path, None, False)
 		idle_add(self._iconview.select_path, path)
 		idle_add(self._iconview.scroll_to_path, path, True, 0.25, 0)
@@ -1849,7 +1758,7 @@ class AlbumList(Gtk.IconView):
 		self.progress_bar.get_style_context().add_class("osd")
 
 		# cover thread
-		self._cover_thread=AlbumLoadingThread(self._client, self._settings, self.progress_bar, self, self._store, None, None)
+		self._cover_thread=AlbumLoadingThread(self._client, self._settings, self.progress_bar, self, self._store, None)
 
 		# connect
 		self.connect("item-activated", self._on_item_activated)
@@ -1875,29 +1784,6 @@ class AlbumList(Gtk.IconView):
 		else:
 			callback()
 
-	def get_current_album_path(self):
-		if (song:=self._client.currentsong()):
-			album=[song["albumartist"][0], song["album"][0], song["date"][0]]
-			row_num=len(self._store)
-			for i in range(0, row_num):
-				path=Gtk.TreePath(i)
-				if self._store[path][3:6] == album:
-					return path
-			return None
-		else:
-			return None
-
-	def scroll_to_current_album(self):
-		def callback():
-			if (path:=self.get_current_album_path()) is not None:
-				self.set_cursor(path, None, False)
-				self.select_path(path)
-				self.scroll_to_path(path, True, 0.25, 0)
-		if self._cover_thread.is_alive():
-			self._cover_thread.set_callback(callback)
-		else:
-			callback()
-
 	def _sort_settings(self, *args):
 		if not self._cover_thread.is_alive():
 			if self._settings.get_boolean("sort-albums-by-year"):
@@ -1909,8 +1795,8 @@ class AlbumList(Gtk.IconView):
 		def callback():
 			if self._cover_thread.is_alive():  # already started?
 				return False
-			artist,genre=self._artist_list.get_artist_selected()
-			self._cover_thread=AlbumLoadingThread(self._client,self._settings,self.progress_bar,self,self._store,artist,genre)
+			artist=self._artist_list.get_selected_artist()
+			self._cover_thread=AlbumLoadingThread(self._client,self._settings,self.progress_bar,self,self._store,artist)
 			self._cover_thread.start()
 		if self._cover_thread.is_alive():
 			self._cover_thread.set_callback(callback)
@@ -1972,7 +1858,6 @@ class AlbumView(Gtk.Box):
 		event_box=Gtk.EventBox()
 
 		# connect
-		self.connect("hide", lambda *args: print("test"))
 		event_box.connect("button-release-event", self._on_button_release_event)
 
 		# packing
@@ -2044,10 +1929,8 @@ class Browser(Gtk.Paned):
 		self._settings=settings
 
 		# widgets
-		self._genre_list=GenreList(self._client)
-		self._artist_list=ArtistList(self._client, self._settings, self._genre_list)
+		self._artist_list=ArtistList(self._client, self._settings)
 		self._album_list=AlbumList(self._client, self._settings, self._artist_list)
-		genre_window=Gtk.ScrolledWindow(child=self._genre_list)
 		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
 		album_window=Gtk.ScrolledWindow(child=self._album_list)
 		self._album_view=AlbumView(self._client, self._settings)
@@ -2061,12 +1944,6 @@ class Browser(Gtk.Paned):
 		self._album_stack.add_named(album_overlay, "album_list")
 		self._album_stack.add_named(self._album_view, "album_view")
 
-		# hide/show genre filter
-		self._genre_list.set_property("visible", True)
-		self._settings.bind("genre-filter", genre_window, "no-show-all", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		self._settings.bind("genre-filter", genre_window, "visible", Gio.SettingsBindFlags.GET)
-		self._settings.connect("changed::genre-filter", self._on_genre_filter_changed)
-
 		# connect
 		self._album_list.connect("album-selected", self._on_album_list_show_info)
 		self._album_view.connect("close", lambda *args: self._album_stack.set_visible_child_name("album_list"))
@@ -2076,35 +1953,12 @@ class Browser(Gtk.Paned):
 		self._settings.connect("changed::album-cover", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 
 		# packing
-		self.paned1=Gtk.Paned()
-		self.paned1.pack1(artist_window, False, False)
-		self.paned1.pack2(self._album_stack, True, False)
-		self.pack1(genre_window, False, False)
-		self.pack2(self.paned1, True, False)
+		self.pack1(artist_window, False, False)
+		self.pack2(self._album_stack, True, False)
 
 	def back(self):
 		if self._album_stack.get_visible_child_name() == "album_view":
 			self._album_stack.set_visible_child_name("album_list")
-		else:
-			if (song:=self._client.currentsong()):
-				self._to_album(song)
-
-	def _to_album(self, song):
-		artist,genre=self._artist_list.get_artist_selected()
-		if genre is None or song["genre"][0] == genre:
-			if artist is None or song["albumartist"][0] == artist:
-				self._album_list.scroll_to_current_album()
-			else:
-				self._artist_list.select(song["albumartist"][0])
-			self._artist_list.scroll_to_selected()
-		else:
-			self._genre_list.select_all()
-		self._genre_list.scroll_to_selected()
-
-	def _on_genre_filter_changed(self, settings, key):
-		if self._client.connected():
-			if not settings.get_boolean(key):
-				self._genre_list.select_all()
 
 	def _on_album_list_show_info(self, widget, *tags):
 		self._album_view.display(*tags)
@@ -3211,7 +3065,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
 		self.add_action(self._settings.create_action("mini-player"))
-		self.add_action(self._settings.create_action("genre-filter"))
 
 		# shortcuts
 		builder=Gtk.Builder()
@@ -3240,10 +3093,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button=Gtk.ToggleButton(
 			image=icon("system-search-symbolic"), tooltip_text=_("Search"), can_focus=False, no_show_all=True)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		back_button=Gtk.Button(
-			image=icon("go-previous-symbolic"), tooltip_text=_("Back"),
-			action_name="win.back", can_focus=False, no_show_all=True)
-		self._settings.bind("mini-player", back_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# stack
 		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
@@ -3263,7 +3112,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		mpd_subsection.append(_("Server Stats"), "win.stats")
 		menu=Gio.Menu()
 		menu.append(_("Mini Player"), "win.mini-player")
-		menu.append(_("Genre Filter"), "win.genre-filter")
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
@@ -3299,11 +3147,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(show_close_button=True)
 			self.set_titlebar(self._header_bar)
-			self._header_bar.pack_start(back_button)
 			self._header_bar.pack_end(self._menu_button)
 			self._header_bar.pack_end(self._search_button)
 		else:
-			action_bar.pack_start(back_button)
 			action_bar.pack_end(self._menu_button)
 			action_bar.pack_end(self._search_button)
 		action_bar.pack_start(playback_control)
@@ -3344,15 +3190,13 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _bind_paned_settings(self):
 		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
-		self._settings.bind("paned1", self._browser.paned1, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned1", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
 		self._settings.bind("paned2", self._paned2, "position", Gio.SettingsBindFlags.DEFAULT)
-		self._settings.bind("paned3", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
 
 	def _unbind_paned_settings(self):
 		self._settings.unbind(self._paned0, "position")
-		self._settings.unbind(self._browser.paned1, "position")
-		self._settings.unbind(self._paned2, "position")
 		self._settings.unbind(self._browser, "position")
+		self._settings.unbind(self._paned2, "position")
 
 	def _mini_player(self, *args):
 		if self.is_maximized():
@@ -3510,7 +3354,7 @@ class mpdevil(Gtk.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.genre-filter", ["<Control>g"]),("win.back", ["Escape"]),("win.toggle-search", ["<Control>f"]),
+			("win.back", ["Escape"]),("win.toggle-search", ["<Control>f"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
 			("mpd.next", ["<Alt>Down", "KP_Add"]),("mpd.prev", ["<Alt>Up", "KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),

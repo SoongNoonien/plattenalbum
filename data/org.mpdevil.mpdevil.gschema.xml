@@ -33,10 +33,6 @@
 			<default>718</default>
 			<summary>Default position of paned1/paned0 separator</summary>
 		</key>
-		<key type="i" name="paned3">
-			<default>177</default>
-			<summary>Default position of genre/artist separator</summary>
-		</key>
 		<key type="b" name="socket-connection">
 			<default>true</default>
 			<summary>Connect via Unix domain socket</summary>
@@ -65,10 +61,6 @@
 		<key type="s" name="regex">
 			<default>""</default>
 			<summary>Cover regex</summary>
-		</key>
-		<key type="b" name="genre-filter">
-			<default>false</default>
-			<summary>Show genre filter</summary>
 		</key>
 		<key type="b" name="mini-player">
 			<default>false</default>

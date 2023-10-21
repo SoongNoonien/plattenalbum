@@ -68,13 +68,6 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
-			<property name="title" translatable="yes">Toggle genre filter</property>
-			<property name="accelerator">&lt;Control&gt;g</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle lyrics</property>
 			<property name="accelerator">&lt;Control&gt;l</property>
 			</object>
