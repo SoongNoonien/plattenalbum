@@ -2408,11 +2408,14 @@ class MainCover(Gtk.DrawingArea):
 		super().__init__()
 		self._client=client
 		self._fallback=True
+		self._monitor=Gdk.Display.get_default().get_primary_monitor()
+		self._scale_factor=self._monitor.get_scale_factor()
 
 		# connect
 		self._client.emitter.connect("current_song", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
+		self._monitor.connect("notify::scale-factor", self._on_scale_factor_changed)
 
 	def _clear(self):
 		self._fallback=True
@@ -2434,6 +2437,10 @@ class MainCover(Gtk.DrawingArea):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
+	def _on_scale_factor_changed(self, *args):
+		self._scale_factor=self._monitor.get_scale_factor()
+		self._refresh()
+
 	def do_draw(self, context):
 		if self._fallback:
 			size=min(self.get_allocated_height(), self.get_allocated_width())
@@ -2442,7 +2449,7 @@ class MainCover(Gtk.DrawingArea):
 			scale_factor=1
 		else:
 			scale_factor=min(self.get_allocated_width()/self._pixbuf.get_width(), self.get_allocated_height()/self._pixbuf.get_height())
-		context.scale(scale_factor, scale_factor)
+		context.scale(self._scale_factor*scale_factor, self._scale_factor*scale_factor)
 		x=((self.get_allocated_width()/scale_factor)-self._pixbuf.get_width())/2
 		y=((self.get_allocated_height()/scale_factor)-self._pixbuf.get_height())/2
 		context.set_source_surface(self._surface, x, y)
