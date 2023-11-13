@@ -2408,14 +2408,12 @@ class MainCover(Gtk.DrawingArea):
 		super().__init__()
 		self._client=client
 		self._fallback=True
-		self._monitor=Gdk.Display.get_default().get_primary_monitor()
-		self._scale_factor=self._monitor.get_scale_factor()
 
 		# connect
 		self._client.emitter.connect("current_song", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
-		self._monitor.connect("notify::scale-factor", self._on_scale_factor_changed)
+		self.connect("notify::scale-factor", self._refresh)
 
 	def _clear(self):
 		self._fallback=True
@@ -2426,7 +2424,7 @@ class MainCover(Gtk.DrawingArea):
 			self._clear()
 		else:
 			self._pixbuf=self._client.current_cover.get_pixbuf()
-			self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
+			self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, self.get_scale_factor(), None)
 			self._fallback=False
 			self.queue_draw()
 
@@ -2437,21 +2435,17 @@ class MainCover(Gtk.DrawingArea):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-	def _on_scale_factor_changed(self, *args):
-		self._scale_factor=self._monitor.get_scale_factor()
-		self._refresh()
-
 	def do_draw(self, context):
 		if self._fallback:
 			size=min(self.get_allocated_height(), self.get_allocated_width())
 			self._pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
-			self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, 0, None)
+			self._surface=Gdk.cairo_surface_create_from_pixbuf(self._pixbuf, self.get_scale_factor(), None)
 			scale_factor=1
 		else:
 			scale_factor=min(self.get_allocated_width()/self._pixbuf.get_width(), self.get_allocated_height()/self._pixbuf.get_height())
-		context.scale(self._scale_factor*scale_factor, self._scale_factor*scale_factor)
-		x=((self.get_allocated_width()/scale_factor)-self._pixbuf.get_width())/2
-		y=((self.get_allocated_height()/scale_factor)-self._pixbuf.get_height())/2
+		context.scale(self.get_scale_factor()*scale_factor, self.get_scale_factor()*scale_factor)
+		x=((self.get_allocated_width()/scale_factor)-self._pixbuf.get_width())/(2*self.get_scale_factor())
+		y=((self.get_allocated_height()/scale_factor)-self._pixbuf.get_height())/(2*self.get_scale_factor())
 		context.set_source_surface(self._surface, x, y)
 		context.paint()
 
