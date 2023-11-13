@@ -49,6 +49,8 @@ Building
 
 Build dependencies:
 - meson
+- gettext
+- glib2 (Ubuntu/Debian: libglib2.0-dev-bin, libglib2.0-bin)
 
 Dependencies:
 - GTK3
