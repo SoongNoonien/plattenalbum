@@ -17,12 +17,12 @@
     </ul>
   </description>
   <releases>
-    <release version="1.10.3" date="2023-10-15"/>
+    <release version="1.11.0" date="2023-11-15"/>
   </releases>
   <launchable type="desktop-id">org.mpdevil.mpdevil.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image type="source" width="1121" height="790">https://raw.githubusercontent.com/SoongNoonien/mpdevil/v1.9.0/screenshots/mainwindow_1.9.0.png</image>
+      <image type="source" width="1121" height="790">https://raw.githubusercontent.com/SoongNoonien/mpdevil/v1.11.0/screenshots/mainwindow_1.11.0.png</image>
     </screenshot>
   </screenshots>
   <url type="homepage">https://github.com/SoongNoonien/mpdevil</url>
