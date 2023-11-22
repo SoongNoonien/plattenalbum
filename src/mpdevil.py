@@ -2548,8 +2548,8 @@ class SeekBar(Gtk.Box):  # TODO
 		self._popover.popdown()
 		self.set_sensitive(False)
 		self._scale.set_range(0, 0)
-		self._elapsed.set_text(str(Duration()))
-		self._rest.set_text(str(Duration()))
+		self._elapsed.set_text("")
+		self._rest.set_text("")
 
 	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
 		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
