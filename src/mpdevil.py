@@ -1393,7 +1393,8 @@ class SearchWindow(Gtk.Box):
 		self._client=client
 
 		# widgets
-		self._tag_combo_box=Gtk.ComboBoxText()
+		self._tag_list=Gtk.StringList()
+		self._tag_drop_down=Gtk.DropDown(model=self._tag_list)
 		self.search_entry=Gtk.SearchEntry(max_width_chars=20)  # TODO truncate_multiline=True
 		self._hits_label=Gtk.Label(xalign=1, ellipsize=Pango.EllipsizeMode.END)
 
@@ -1412,14 +1413,14 @@ class SearchWindow(Gtk.Box):
 		# connect
 		self.search_entry.connect("activate", self._search)
 		self._search_entry_changed=self.search_entry.connect("search-changed", self._search)
-		self._tag_combo_box_changed=self._tag_combo_box.connect("changed", self._search)
+		self._tag_drop_down_changed=self._tag_drop_down.connect("notify::selected", self._search)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("updated_db", self._search)
 
 		# packing
 		hbox=Gtk.CenterBox(margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
-		hbox.set_start_widget(self._tag_combo_box)
+		hbox.set_start_widget(self._tag_drop_down)
 		hbox.set_center_widget(self.search_entry)
 		hbox.set_end_widget(self._hits_label)
 		self.append(hbox)
@@ -1436,14 +1437,15 @@ class SearchWindow(Gtk.Box):
 			self.search_entry.handler_block(self._search_entry_changed)
 			self.search_entry.set_text("")
 			self.search_entry.handler_unblock(self._search_entry_changed)
-			self._tag_combo_box.handler_block(self._tag_combo_box_changed)
-			self._tag_combo_box.remove_all()
-			self._tag_combo_box.append_text(_("all tags"))
+			self._tag_drop_down.handler_block(self._tag_drop_down_changed)
+			for i in range(len(self._tag_list)):
+				self._tag_list.remove(0)
+			self._tag_list.append(_("all tags"))
 			for tag in self._client.tagtypes():
 				if not tag.startswith("MUSICBRAINZ"):
-					self._tag_combo_box.append_text(tag)
-			self._tag_combo_box.set_active(0)
-			self._tag_combo_box.handler_unblock(self._tag_combo_box_changed)
+					self._tag_list.append(tag)
+			self._tag_drop_down.set_selected(0)
+			self._tag_drop_down.handler_unblock(self._tag_drop_down_changed)
 		if self._search_thread.is_alive():
 			self._search_thread.set_callback(callback)
 			self._search_thread.stop()
@@ -1452,10 +1454,10 @@ class SearchWindow(Gtk.Box):
 
 	def _search(self, *args):
 		def callback():
-			if self._tag_combo_box.get_active() == 0:
+			if (selected:=self._tag_drop_down.get_selected()) == 0:
 				search_tag="any"
 			else:
-				search_tag=self._tag_combo_box.get_active_text()
+				search_tag=self._tag_list.get_string(selected)
 			self._search_thread=SearchThread(self._client, self.search_entry, self._songs_list, self._hits_label, search_tag)
 			self._search_thread.start()
 		if self._search_thread.is_alive():
