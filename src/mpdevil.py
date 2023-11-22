@@ -3036,7 +3036,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._paned2.set_end_child(self._paned0)
 		action_bar=Gtk.ActionBar()
 		if self._use_csd:
-			self._header_bar=Gtk.HeaderBar(title_widget=Title(), show_title_buttons=True)
+			self._header_bar=Gtk.HeaderBar(title_widget=Title())
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_end(self._menu_button)
 			self._header_bar.pack_end(self._search_button)
