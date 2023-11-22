@@ -1097,7 +1097,7 @@ class ConnectionSettings(Gtk.Grid):
 
 		# connect button
 		connect_button=Gtk.Button(label=_("Connect"), margin_start=18, margin_end=18, margin_top=18, halign=Gtk.Align.CENTER)
-		connect_button.get_style_context().add_class("suggested-action")
+		connect_button.add_css_class("suggested-action")
 		connect_button.connect("clicked", lambda *args: client.reconnect())
 
 		# packing
@@ -1620,7 +1620,7 @@ class AlbumLoadingThread(threading.Thread):
 
 	def start(self):
 		self._settings.set_property("cursor-watch", True)
-		self._progress_bar.show()
+		self._progress_bar.set_visible(True)
 		self._callback=None
 		self._stop_flag=False
 		self._iconview.set_model(None)
@@ -1700,7 +1700,7 @@ class AlbumLoadingThread(threading.Thread):
 	def _exit(self):
 		def callback():
 			self._settings.set_property("cursor-watch", False)
-			self._progress_bar.hide()
+			self._progress_bar.set_visible(False)
 			self._progress_bar.set_fraction(0)
 			if self._callback is not None:
 				self._callback()
@@ -2168,7 +2168,7 @@ class PlaylistWindow(Gtk.Overlay):
 		super().__init__()
 		self._back_button_icon=Gtk.Image.new_from_icon_name("go-down-symbolic")
 		self._back_to_current_song_button=Gtk.Button(child=self._back_button_icon, tooltip_text=_("Scroll to current song"), can_focus=False)
-		self._back_to_current_song_button.get_style_context().add_class("osd")
+		self._back_to_current_song_button.add_css_class("osd")
 		self._back_button_revealer=Gtk.Revealer(
 			child=self._back_to_current_song_button, transition_duration=0,
 			margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER, valign=Gtk.Align.END
@@ -2370,7 +2370,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(icon_name="org.mpdevil.mpdevil-lyrics-symbolic", tooltip_text=_("Lyrics"), can_focus=False)
-		self.lyrics_button.get_style_context().add_class("osd")
+		self.lyrics_button.add_css_class("osd")
 
 		# lyrics window
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
@@ -2868,7 +2868,7 @@ class UpdateNotify(Gtk.Revealer):
 
 		# packing
 		box=Gtk.Box(spacing=12)
-		box.get_style_context().add_class("app-notification")
+		box.add_css_class("app-notification")
 		box.append(self._spinner)
 		box.append(label)
 		self.set_child(box)
@@ -2899,7 +2899,7 @@ class ConnectionNotify(Gtk.Revealer):
 
 		# packing
 		box=Gtk.Box(spacing=12)
-		box.get_style_context().add_class("app-notification")
+		box.add_css_class("app-notification")
 		box.append(self._label)
 		box.append(settings_button)
 		box.append(connect_button)
@@ -3059,7 +3059,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._bind_paned_settings()
 			if self._settings.get_boolean("maximize"):
 				self.maximize()
-		self.show()
+		self.present()
 		# ensure window is visible
 		main=GLib.main_context_default()
 		while main.pending():
@@ -3097,7 +3097,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			while main.pending():
 				main.iteration()
 			self._bind_paned_settings()
-			self.show()  # show hidden gui elements
 
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_lyrics_window.lyrics_button.emit("clicked")
@@ -3113,15 +3112,15 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_settings(self, action, param):
 		settings=SettingsDialog(self, self._client, self._settings)
-		settings.show()
+		settings.present()
 
 	def _on_connection_settings(self, action, param):
 		settings=SettingsDialog(self, self._client, self._settings, "connection")
-		settings.show()
+		settings.present()
 
 	def _on_stats(self, action, param):
 		stats=ServerStats(self, self._client, self._settings)
-		stats.show()
+		stats.present()
 
 	def _on_help(self, action, param):
 		Gtk.show_uri_on_window(self, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
@@ -3265,7 +3264,7 @@ class mpdevil(Gtk.Application):
 		builder.add_from_resource("/org/mpdevil/mpdevil/AboutDialog.ui")
 		dialog=builder.get_object("about_dialog")
 		dialog.set_transient_for(self._window)
-		dialog.show()
+		dialog.present()
 
 	def _on_quit(self, *args):
 		self.quit()
