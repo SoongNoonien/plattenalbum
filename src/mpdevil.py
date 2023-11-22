@@ -3060,8 +3060,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connecting", self._on_connecting)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
-		# auto save window state and size
-#		self.connect("size-allocate", self._on_size_allocate)
 
 		# packing
 		self._on_playlist_pos_changed()  # set orientation
@@ -3097,7 +3095,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.emit("connecting")
 		# set default window size
 		if self._settings.get_boolean("mini-player"):
-			self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
+#			self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
+			self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
 		else:
 			self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
 			self._bind_paned_settings()
@@ -3108,6 +3107,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		main=GLib.main_context_default()
 		while main.pending():
 			main.iteration()
+		self._settings.bind("width", self, "default-width", Gio.SettingsBindFlags.SET)
+		self._settings.bind("height", self, "default-height", Gio.SettingsBindFlags.SET)
 		self._settings.bind("maximize", self, "maximized", Gio.SettingsBindFlags.SET)
 		self._client.start()
 
@@ -3128,8 +3129,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.unbind(self._paned2, "position")
 
 	def _mini_player(self, *args):
-		if self.is_maximized():
-			self.unmaximize()
+#		if self.is_maximized():
+#			self.unmaximize()
 		if self._settings.get_boolean("mini-player"):
 			self._unbind_paned_settings()
 #			self.resize(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
@@ -3225,17 +3226,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_connection_error(self, *args):
 		self._clear_title()
-
-	def _on_size_allocate(self, widget, rect):
-		if (size:=self.get_size()) != self._size:  # prevent unneeded write operations
-			if self._settings.get_boolean("mini-player"):
-				if not self.is_maximized():
-					self._settings.set_int("mini-player-width", size[0])
-					self._settings.set_int("mini-player-height", size[1])
-			else:
-				self._settings.set_int("width", size[0])
-				self._settings.set_int("height", size[1])
-			self._size=size
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
