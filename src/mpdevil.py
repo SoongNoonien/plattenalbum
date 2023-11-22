@@ -3123,7 +3123,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		stats.present()
 
 	def _on_help(self, action, param):
-		Gtk.show_uri_on_window(self, "https://github.com/SoongNoonien/mpdevil/wiki/Usage", Gdk.CURRENT_TIME)
+		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/mpdevil/wiki/Usage").launch(self, None, None, None)
 
 	def _on_menu(self, action, param):
 		self._menu_button.emit("clicked")
