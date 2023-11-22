@@ -967,13 +967,13 @@ class Settings(Gio.Settings):
 class ToggleRow(Gtk.ListBoxRow):
 	def __init__(self, label, settings, key, restart_required=False):
 		super().__init__()
-		label=Gtk.Label(label=label, xalign=0, valign=Gtk.Align.CENTER, hexpand=True, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
-		self._switch=Gtk.Switch(halign=Gtk.Align.END, valign=Gtk.Align.CENTER, margin_top=6, margin_bottom=6, margin_start=12, margin_end=12)
+		label=Gtk.Label(label=label, xalign=0, valign=Gtk.Align.CENTER, hexpand=True)
+		self._switch=Gtk.Switch(halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
 		settings.bind(key, self._switch, "active", Gio.SettingsBindFlags.DEFAULT)
 		box=Gtk.Box()
 		box.prepend(label)
 		if restart_required:
-			box.append(Gtk.Label(label=_("(restart required)"), margin_start=6, margin_end=6, margin_top=6, margin_bottom=6, sensitive=False))
+			box.append(Gtk.Label(label=_("(restart required)"), sensitive=False))
 		box.append(self._switch)
 		self.set_child(box)
 
@@ -983,34 +983,24 @@ class ToggleRow(Gtk.ListBoxRow):
 class IntRow(Gtk.ListBoxRow):
 	def __init__(self, label, vmin, vmax, step, settings, key):
 		super().__init__(activatable=False)
-		label=Gtk.Label(label=label, xalign=0, valign=Gtk.Align.CENTER, hexpand=True, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
+		label=Gtk.Label(label=label, xalign=0, valign=Gtk.Align.CENTER, hexpand=True)
 		spin_button=Gtk.SpinButton.new_with_range(vmin, vmax, step)
 		spin_button.set_valign(Gtk.Align.CENTER)
 		spin_button.set_halign(Gtk.Align.END)
-		spin_button.set_margin_end(12)
-		spin_button.set_margin_start(12)
-		spin_button.set_margin_top(6)
-		spin_button.set_margin_bottom(6)
 		settings.bind(key, spin_button, "value", Gio.SettingsBindFlags.DEFAULT)
 		box=Gtk.Box()
 		box.prepend(label)
 		box.append(spin_button)
 		self.set_child(box)
 
-class SettingsList(Gtk.Frame):
+class SettingsList(Gtk.ListBox):
 	def __init__(self):
-		super().__init__(margin_start=18, margin_end=18, margin_top=18, margin_bottom=18, valign=Gtk.Align.START)
-		self._list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
-		self._list_box.set_header_func(self._header_func)
-		self._list_box.connect("row-activated", self._on_row_activated)
-		self.set_child(self._list_box)
+		super().__init__(valign=Gtk.Align.START, selection_mode=Gtk.SelectionMode.NONE, css_classes=["rich-list","boxed-list"],
+			margin_start=18, margin_end=18, margin_top=18, margin_bottom=18)
+		self.connect("row-activated", self._on_row_activated)
 
 	def append(self, row):
-		self._list_box.insert(row, -1)
-
-	def _header_func(self, row, before, *args):
-		if before is not None:
-			row.set_header(Gtk.Separator())
+		self.insert(row, -1)
 
 	def _on_row_activated(self, list_box, row):
 		if isinstance(row, ToggleRow):
