@@ -1125,13 +1125,9 @@ class ConnectionSettings(Gtk.Grid):
 		self.attach_next_to(regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
 		self.attach(connect_button, 0, 6, 3, 1)
 
-class SettingsDialog(Gtk.Dialog):
+class SettingsDialog(Gtk.Window):
 	def __init__(self, parent, client, settings, tab="view"):
-		use_csd=settings.get_boolean("use-csd")
-		if use_csd:
-			super().__init__(title=_("Preferences"), transient_for=parent, use_header_bar=True)
-		else:
-			super().__init__(title=_("Preferences"), transient_for=parent)
+		super().__init__(title=_("Preferences"), transient_for=parent)
 
 		# widgets
 		view=ViewSettings(settings)
@@ -1139,37 +1135,33 @@ class SettingsDialog(Gtk.Dialog):
 		connection=ConnectionSettings(parent, client, settings)
 
 		# packing
-		vbox=self.get_content_area()
-		if use_csd:
+		if settings.get_boolean("use-csd"):
 			stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
 			stack.add_titled(view, "view", _("View"))
 			stack.add_titled(behavior, "behavior", _("Behavior"))
 			stack.add_titled(connection, "connection", _("Connection"))
+			stack.set_visible_child_name(tab)
 			stack_switcher=Gtk.StackSwitcher(stack=stack)
-			vbox.append(stack)
-			header_bar=self.get_header_bar()
-			header_bar.set_title_widget(stack_switcher)
+			self.set_child(stack)
+			header_bar=Gtk.HeaderBar(title_widget=stack_switcher)
+			self.set_titlebar(header_bar)
 		else:
 			tabs=Gtk.Notebook()
 			tabs.append_page(view, Gtk.Label(label=_("View")))
 			tabs.append_page(behavior, Gtk.Label(label=_("Behavior")))
 			tabs.append_page(connection, Gtk.Label(label=_("Connection")))
-			vbox.set_property("spacing", 6)
-			vbox.append(tabs)
-		self.show()
-		if use_csd:
-			stack.set_visible_child_name(tab)
-		else:
 			tabs.set_current_page({"view": 0, "behavior": 1, "connection": 2}[tab])
+			self.set_child(tabs)
 
 #################
 # other dialogs #
 #################
 
-class ServerStats(Gtk.Dialog):
+class ServerStats(Gtk.Window):
 	def __init__(self, parent, client, settings):
-		use_csd=settings.get_boolean("use-csd")
-		super().__init__(title=_("Stats"), transient_for=parent, use_header_bar=use_csd, resizable=False)
+		super().__init__(title=_("Stats"), transient_for=parent, resizable=False)
+		if settings.get_boolean("use-csd"):
+			self.set_titlebar(Gtk.HeaderBar())
 
 		# grid
 		grid=Gtk.Grid(row_spacing=6, column_spacing=12, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
@@ -1190,15 +1182,12 @@ class ServerStats(Gtk.Dialog):
 		for key in ("uptime","playtime","db_playtime"):
 			stats[key]=str(Duration(stats[key]))
 		stats["db_update"]=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%a %d %B %Y, %H∶%M")
-
 		for i, key in enumerate(("protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs")):
 			grid.attach(Gtk.Label(label=display_str[key], use_markup=True, xalign=1), 0, i, 1, 1)
 			grid.attach(Gtk.Label(label=stats[key], xalign=0), 1, i, 1, 1)
 
 		# packing
-		vbox=self.get_content_area()
-#		vbox.set_property("border-width", 6)
-		vbox.append(grid)
+		self.set_child(grid)
 
 ###########################
 # general purpose widgets #
