@@ -53,13 +53,12 @@ Build dependencies:
 - glib2 (Ubuntu/Debian: libglib2.0-dev-bin, libglib2.0-bin)
 
 Dependencies:
-- GTK3
+- GTK4
 - Python3
 
 Python modules:
 - mpd (python-mpd2 >=1.1)
 - gi (Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib)
-- cairo (pycairo)
 
 Run:
 ```bash

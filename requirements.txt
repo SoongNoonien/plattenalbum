@@ -1,3 +1,2 @@
 python-mpd2 >=3.1
 PyGObject
-pycairo
