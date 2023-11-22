@@ -2739,29 +2739,18 @@ class PlaybackOptions(Gtk.Box):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-class VolumeButton(Gtk.VolumeButton):  # TODO
+class VolumeButton(Gtk.VolumeButton):
 	def __init__(self, client, settings):
-		super().__init__(orientation=Gtk.Orientation.HORIZONTAL, use_symbolic=True, can_focus=False)
+		super().__init__(use_symbolic=True, can_focus=False)
 		self._client=client
 		self._adj=self.get_adjustment()
 		self._adj.set_step_increment(5)
 		self._adj.set_page_increment(10)
 		self._adj.set_upper(0)  # do not allow volume change by user when MPD has not yet reported volume (no output enabled/avail)
+		self.get_popup().set_position(Gtk.PositionType.TOP)
 		settings.bind("icon-size", self.get_first_child().get_child(), "pixel-size", Gio.SettingsBindFlags.GET)
 
-		# output plugins
-		self._output_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_start=4, margin_end=4, margin_bottom=4)
-
-		# popover
-		popover=self.get_popup()
-		scale_box=popover.get_child()
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		popover.set_child(box)
-		box.append(scale_box)
-		box.append(self._output_box)
-
 		# connect
-		popover.connect("show", self._on_show)
 		self._changed=self.connect("value-changed", self._set_volume)
 		self._client.emitter.connect("volume", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -2779,17 +2768,6 @@ class VolumeButton(Gtk.VolumeButton):  # TODO
 			self._adj.set_upper(100)
 			self.set_value(volume)
 		self.handler_unblock(self._changed)
-
-	def _on_show(self, *args):
-		while (button:=self._output_box.get_first_child()) is not None:
-			self._output_box.remove(button)
-		for output in self._client.outputs():
-			button=Gtk.ToggleButton(label=f"{output['outputname']} ({output['plugin']})", has_frame=False)
-			button.get_child().set_property("xalign", 0)
-			if output["outputenabled"] == "1":
-				button.set_property("active", True)
-			button.connect("toggled", self._on_button_toggled, output["outputid"])
-			self._output_box.append(button)
 
 	def _on_button_toggled(self, button, out_id):
 		if button.get_property("active"):
