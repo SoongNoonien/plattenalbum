@@ -1477,80 +1477,67 @@ class SearchWindow(Gtk.Box):
 # browser #
 ###########
 
-class ArtistList(TreeView):
+class ArtistList(Gtk.ListView):  # TODO
 	__gsignals__={"item-selected": (GObject.SignalFlags.RUN_FIRST, None, ()),
-			"item-reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+			"item-reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),  # TODO
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client, settings):
-		super().__init__(search_column=0, headers_visible=False, fixed_height_mode=True)
-		self._selected_path=None
+		super().__init__(css_classes=["rich-list"])
 		self._client=client
 		self._settings=settings
 
-		# store
-		# item, initial-letter, weight-initials
-		self._store=Gtk.ListStore(str, str, Pango.Weight)
-		self.set_model(self._store)
-		self._selection=self.get_selection()
-		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
+		# factory
+		def setup(factory, item):
+			label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, valign=Gtk.Align.FILL, vexpand=True)
+			item.set_child(label)
+		def bind(factory, item):
+			label=item.get_child()
+			label.set_label(item.get_item().get_string())
+		factory=Gtk.SignalListItemFactory()
+		factory.connect("setup", setup)
+		factory.connect("bind", bind)
+		self.set_factory(factory)
 
-		# columns
-		renderer_text_malign=Gtk.CellRendererText(xalign=0.5)
-		self._column_initial=Gtk.TreeViewColumn("", renderer_text_malign, text=1, weight=2)
-		self._column_initial.set_property("sizing", Gtk.TreeViewColumnSizing.FIXED)
-		self._column_initial.set_property("min-width", 30)
-		self.append_column(self._column_initial)
-		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True, ypad=6)
-		self._column_item=Gtk.TreeViewColumn("", renderer_text, text=0)
-		self._column_item.set_property("sizing", Gtk.TreeViewColumnSizing.FIXED)
-		self._column_item.set_property("expand", True)
-		self.append_column(self._column_item)
+		# list model
+		self._list=Gtk.StringList()
+		self._selection=Gtk.SingleSelection(model=self._list)
+		self.set_model(self._selection)
 
 		# connect
-		self._selection.connect("changed", self._on_selection_changed)
+		self._selection.connect("notify::selected", self._on_selected_changed)
+		self.connect("activate", lambda *args: print(args))
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("updated_db", self._on_updated_db)
 
 	def get_selected_artist(self):
-		return self._store[self._selected_path][0]
+		return self._selection.get_selected_item().get_string()
 
 	def _clear(self):
-		self._selection.set_mode(Gtk.SelectionMode.NONE)
-		self._store.clear()
-		self._selected_path=None
+		for i in range(len(self._list)):
+			self._list.remove(0)
 		self.emit("clear")
 
 	def _set_items(self, items):
 		self._clear()
-		letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # TODO
 		items.extend(zip([None]*len(letters), letters))
 		items.sort(key=lambda item: locale.strxfrm(item[1]))
 		char=""
 		for item in items:
-			if item[0] is None:
-				char=item[1]
-			else:
-				self._store.insert_with_valuesv(-1, range(3), [item[0], char, Pango.Weight.BOLD])
-				char=""
-		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
+			if item[0] is not None:
+				self._list.append(item[0])
 
 	def _select(self, item):
-		row_num=len(self._store)
+		row_num=len(self._list)
 		for i in range(0, row_num):
-			path=Gtk.TreePath(i)
-			if self._store[path][0] == item:
-				self.set_cursor(path, None, False)
+			if self._list[i].get_string() == item:
+				self.scroll_to(i, Gtk.ListScrollFlags.SELECT, None)
 				return
-		self.set_cursor(Gtk.TreePath(0), None, False)
 
-	def _on_selection_changed(self, *args):
-		if (treeiter:=self._selection.get_selected()[1]) is not None:
-			if (path:=self._store.get_path(treeiter)) == self._selected_path:
-				self.emit("item-reselected")
-			else:
-				self._selected_path=path
-				self.emit("item-selected")
+	def _on_selected_changed(self, *args):
+		if self._selection.get_selected() != Gtk.INVALID_LIST_POSITION:
+			self.emit("item-selected")
 
 	def _refresh(self, *args):
 		artists=self._client.list("albumartistsort", "group", "albumartist")
@@ -1571,14 +1558,10 @@ class ArtistList(TreeView):
 		if (song:=self._client.currentsong()):
 			artist=song["albumartist"][0]
 			self._select(artist)
-			self.save_scroll_to_cell(self._selected_path, None, True, 0.25)
-		elif len(self._store) > 0:
-			self.set_cursor(Gtk.TreePath(0), None, False)
-			self.save_scroll_to_cell(self._selected_path, None, True, 0.25)
 		self.set_sensitive(True)
 
 	def _on_updated_db(self, *args):
-		if self._selected_path is None:
+		if self._selection.get_selected_item() is None:
 			self._refresh()
 		else:
 			artist=self.get_selected_artist()
