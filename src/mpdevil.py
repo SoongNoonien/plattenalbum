@@ -1482,7 +1482,7 @@ class ArtistList(Gtk.ListView):  # TODO
 			"item-reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),  # TODO
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client, settings):
-		super().__init__(css_classes=["rich-list"])
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
 		self._client=client
 		self._settings=settings
 
@@ -1505,7 +1505,6 @@ class ArtistList(Gtk.ListView):  # TODO
 
 		# connect
 		self._selection.connect("notify::selected", self._on_selected_changed)
-		self.connect("activate", lambda *args: print(args))
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("updated_db", self._on_updated_db)
