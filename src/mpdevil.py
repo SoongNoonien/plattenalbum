@@ -2216,7 +2216,7 @@ class LetrasParser(HTMLParser):
 		if self._found_text and data:
 			self.text+=data+"\n"
 
-class LyricsWindow(Gtk.ScrolledWindow):  # TODO zoom with mouse
+class LyricsWindow(Gtk.ScrolledWindow):  # TODO zoom
 	def __init__(self, client, settings):
 		super().__init__()
 		self._settings=settings
@@ -2232,16 +2232,6 @@ class LyricsWindow(Gtk.ScrolledWindow):  # TODO zoom with mouse
 
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
-
-		# css zoom
-		self._scale=100
-		self._provider=Gtk.CssProvider()
-		self._text_view.get_style_context().add_provider(self._provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-
-		# event controller
-		key_controller=Gtk.EventControllerKey()
-		self._text_view.add_controller(key_controller)
-		key_controller.connect("key-pressed", self._on_key_pressed)
 
 		# connect
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -2263,11 +2253,6 @@ class LyricsWindow(Gtk.ScrolledWindow):  # TODO zoom with mouse
 
 	def disable(self, *args):
 		self._client.emitter.handler_block(self._song_changed)
-
-	def _zoom(self, scale):
-		if 30 <= scale <= 500:
-			self._provider.load_from_data(bytes(f"textview{{font-size: {scale}%;}}", "utf-8"))
-			self._scale=scale
 
 	def _get_lyrics(self, title, artist):
 		title=urllib.parse.quote_plus(title)
@@ -2302,15 +2287,6 @@ class LyricsWindow(Gtk.ScrolledWindow):  # TODO zoom with mouse
 		else:
 			self._displayed_song_file=None
 			self._text_buffer.set_text("", -1)
-
-	def _on_key_pressed(self, controller, keyval, keycode, state):
-		if state & Gdk.ModifierType.CONTROL_MASK:
-			if keyval == Gdk.keyval_from_name("plus"):
-				self._zoom(self._scale+10)
-			elif keyval == Gdk.keyval_from_name("minus"):
-				self._zoom(self._scale-10)
-			elif keyval == Gdk.keyval_from_name("0"):
-				self._zoom(100)
 
 	def _on_disconnected(self, *args):
 		self._displayed_song_file=None
@@ -2627,7 +2603,7 @@ class AudioFormat(Gtk.Box):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-class PlaybackOptions(Gtk.Box):
+class PlaybackOptions(Gtk.Box):  # TODO oneshot indicator
 	def __init__(self, client, settings):
 		super().__init__(css_classes=["linked"], homogeneous=False)
 		self._client=client
@@ -2646,10 +2622,6 @@ class PlaybackOptions(Gtk.Box):
 			handler=button.connect("toggled", self._set_option, name)
 			self.append(button)
 			self._buttons[name]=(button, handler)
-
-		# css
-		self._provider=Gtk.CssProvider()
-		self._provider.load_from_data(b"image {color: @error_color;}")  # red icon
 
 		# event controller
 		button3_controller=Gtk.GestureClick(button=3)
@@ -2679,11 +2651,6 @@ class PlaybackOptions(Gtk.Box):
 	def _single_refresh(self, emitter, val):
 		self._buttons["single"][0].handler_block(self._buttons["single"][1])
 		self._buttons["single"][0].set_active((val in ("1", "oneshot")))
-		if val == "oneshot":
-			self._buttons["single"][0].get_child().get_style_context().add_provider(
-				self._provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-		else:
-			self._buttons["single"][0].get_child().get_style_context().remove_provider(self._provider)
 		self._buttons["single"][0].handler_unblock(self._buttons["single"][1])
 
 	def _on_button3_pressed(self, controller, n_press, x, y):
