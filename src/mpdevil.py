@@ -1106,6 +1106,7 @@ class ConnectionSettings(Gtk.Grid):
 		# connect button
 		connect_button=Gtk.Button(label=_("Connect"), margin_start=18, margin_end=18, margin_top=18, halign=Gtk.Align.CENTER)
 		connect_button.add_css_class("suggested-action")
+		connect_button.add_css_class("pill")
 		connect_button.connect("clicked", lambda *args: client.reconnect())
 
 		# packing
