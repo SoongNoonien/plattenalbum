@@ -2914,20 +2914,6 @@ class ConnectionNotify(Gtk.Revealer):
 	def _on_connect_button_clicked(self, *args):
 		self._client.reconnect()
 
-class Title(Gtk.Box):  # TODO
-	def __init__(self):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, homogeneous=True)
-		self._title=Gtk.Label()
-		self._subtitle=Gtk.Label()
-		self.append(self._title)
-		self.append(self._subtitle)
-
-	def set_title(self, text):
-		self._title.set_markup("<b>"+text.replace("&", "&amp;")+"</b>")
-
-	def set_subtitle(self, text):
-		self._subtitle.set_markup("<sub>"+text.replace("&", "&amp;")+"</sub>")
-
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
 		super().__init__(title="mpdevil", icon_name="org.mpdevil.mpdevil", **kwargs)
