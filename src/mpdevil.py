@@ -3054,7 +3054,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.set_title("mpdevil")
 		if self._use_csd:
 			self._header_bar.get_title_widget().set_title("mpdevil")
-			self._header_bar.get_title_widget().set_subtitle("")
+			self._header_bar.get_title_widget().set_subtitle(" ")
 
 	def _bind_paned_settings(self):
 		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
