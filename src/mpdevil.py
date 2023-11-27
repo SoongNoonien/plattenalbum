@@ -1749,7 +1749,8 @@ class AlbumList(Gtk.IconView):
 		self.set_model(self._store)
 
 		# progress bar
-		self.progress_bar=Gtk.ProgressBar(valign=Gtk.Align.END)
+		self.progress_bar=Gtk.ProgressBar(valign=Gtk.Align.START)
+		self.progress_bar.add_css_class("osd")
 
 		# cover thread
 		self._cover_thread=AlbumLoadingThread(self._client, self._settings, self.progress_bar, self, self._store, None)
