@@ -19,7 +19,8 @@
 
 import gi
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
+gi.require_version("Adw", "1")
+from gi.repository import Gtk, Adw, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
 from mpd import MPDClient, CommandError, ConnectionError
 from html.parser import HTMLParser
 import urllib.request
@@ -2372,6 +2373,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(icon_name="org.mpdevil.mpdevil-lyrics-symbolic", tooltip_text=_("Lyrics"), can_focus=False)
 		self.lyrics_button.add_css_class("osd")
+		self.lyrics_button.add_css_class("circular")
 
 		# lyrics window
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
@@ -2962,12 +2964,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		volume_button=VolumeButton(self._client, self._settings)
 		update_notify=UpdateNotify(self._client)
 		connection_notify=ConnectionNotify(self._client, self._settings)
-		def icon(name):
-			if self._use_csd:
-				return Gtk.Image.new_from_icon_name(name)
-			else:
-				return AutoSizedIcon(name, "icon-size", self._settings)
-		self._search_button=Gtk.ToggleButton(child=icon("system-search-symbolic"), tooltip_text=_("Search"), can_focus=False)
+		if self._use_csd:
+			self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"), can_focus=False)
+		else:
+			search_icon=AutoSizedIcon("system-search-symbolic", "icon-size", self._settings)
+			self._search_button=Gtk.ToggleButton(child=search_icon, tooltip_text=_("Search"), can_focus=False)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# stack
@@ -2992,10 +2993,10 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# menu button / popover
 		if self._use_csd:
-			menu_icon=Gtk.Image.new_from_icon_name("open-menu-symbolic")
+			self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Menu"), can_focus=False)
 		else:
 			menu_icon=AutoSizedIcon("open-menu-symbolic", "icon-size", self._settings)
-		self._menu_button=Gtk.MenuButton(child=menu_icon, tooltip_text=_("Menu"), can_focus=False)
+			self._menu_button=Gtk.MenuButton(child=menu_icon, tooltip_text=_("Menu"), can_focus=False)
 		menu_popover=Gtk.PopoverMenu.new_from_model(menu)
 		self._menu_button.set_popover(menu_popover)
 
@@ -3018,7 +3019,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._paned2.set_end_child(self._paned0)
 		action_bar=Gtk.ActionBar()
 		if self._use_csd:
-			self._header_bar=Gtk.HeaderBar(title_widget=Title())
+			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_end(self._menu_button)
 			self._header_bar.pack_end(self._search_button)
@@ -3193,13 +3194,13 @@ class MainWindow(Gtk.ApplicationWindow):
 # Gtk application #
 ###################
 
-class mpdevil(Gtk.Application):
+class mpdevil(Adw.Application):
 	def __init__(self):
 		super().__init__(application_id="org.mpdevil.mpdevil", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
 		self.add_main_option("debug", ord("d"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _("Debug mode"), None)
 
 	def do_startup(self):
-		Gtk.Application.do_startup(self)
+		Adw.Application.do_startup(self)
 		self._settings=Settings()
 		self._client=Client(self._settings)
 		self._window=MainWindow(self._client, self._settings, application=self)
@@ -3237,7 +3238,7 @@ class mpdevil(Gtk.Application):
 			self.quit()
 
 	def do_shutdown(self):
-		Gtk.Application.do_shutdown(self)
+		Adw.Application.do_shutdown(self)
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
 			self._client.stop()
 		self.withdraw_notification("title-change")
