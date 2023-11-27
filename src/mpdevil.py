@@ -546,7 +546,11 @@ class MultiTag(list):
 	def __str__(self):
 		return ", ".join(self)
 
-class Song(collections.UserDict):
+class SongMetaclass(type(GObject.Object), type(collections.UserDict)): pass
+class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
+	def __init__(self, data):
+		collections.UserDict.__init__(self, data)
+		GObject.Object.__init__(self)
 	def __setitem__(self, key, value):
 		if key == "time":  # time is deprecated https://mpd.readthedocs.io/en/latest/protocol.html#other-metadata
 			pass
@@ -594,7 +598,10 @@ class Song(collections.UserDict):
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b> • {GLib.markup_escape_text(str(self['artist']))}"
 		else:
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b>"
-		return f"{title}\n<small>{GLib.markup_escape_text(self.get_album_with_date())}</small>"
+		if "album" in self:
+			return f"{title}\n<small>{GLib.markup_escape_text(self.get_album_with_date())}</small>"
+		else:
+			return f"{title}"
 
 class BinaryCover(bytes):
 	def get_pixbuf(self, size=-1):
@@ -1210,52 +1217,29 @@ class AutoSizedIcon(Gtk.Image):
 		super().__init__(icon_name=icon_name)
 		settings.bind(settings_key, self, "pixel-size", Gio.SettingsBindFlags.GET)
 
-class SongsList(TreeView):
+class SongMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
-		super().__init__(activate_on_single_click=True, headers_visible=False, enable_search=False, search_column=4)
+		super().__init__()
 		self._client=client
+		self._file=None
 
-		# store
-		# (track, title, duration, file, search string)
-		self._store=Gtk.ListStore(str, str, str, str, str)
-		self.set_model(self._store)
-
-		# columns
-		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		attrs=Pango.AttrList()
-		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1, attributes=attrs, ypad=6)
-		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
-		columns=(
-			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0),
-			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1),
-			Gtk.TreeViewColumn(_("Length"), renderer_text_ralign_tnum, text=2)
-		)
-		for column in columns:
-			column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
-			column.set_property("resizable", False)
-			self.append_column(column)
-		columns[1].set_property("expand", True)
-
-		# selection
-		self._selection=self.get_selection()
-		self._selection.set_mode(Gtk.SelectionMode.BROWSE)
-
-		# menu
+		# action group
 		action_group=Gio.SimpleActionGroup()
 		action=Gio.SimpleAction.new("append", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._store[self.get_cursor()[0]][3], "append"))
+		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "append"))
 		action_group.add_action(action)
 		action=Gio.SimpleAction.new("as_next", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._store[self.get_cursor()[0]][3], "as_next"))
+		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "as_next"))
 		action_group.add_action(action)
 		action=Gio.SimpleAction.new("play", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._store[self.get_cursor()[0]][3], "play"))
+		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "play"))
 		action_group.add_action(action)
 		self._show_action=Gio.SimpleAction.new("show", None)
-		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._store[self.get_cursor()[0]][3]))
+		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._file))
 		action_group.add_action(self._show_action)
 		self.insert_action_group("menu", action_group)
+
+		# menu model
 		menu=Gio.Menu()
 		menu.append(_("Append"), "menu.append")
 		menu.append(_("As Next"), "menu.as_next")
@@ -1263,56 +1247,124 @@ class SongsList(TreeView):
 		subsection=Gio.Menu()
 		subsection.append(_("Show"), "menu.show")
 		menu.append_section(None, subsection)
-		self._menu=Gtk.PopoverMenu.new_from_model(menu)
-		self._menu.set_parent(self)  # TODO Gtk-CRITICAL https://gitlab.gnome.org/GNOME/gtk/-/issues/4884
+		self.set_menu_model(menu)
+
+	def open(self, file, parent, x, y):
+		self._file=file
+		self.unparent()
+		self.set_parent(parent)
+		rect=Gdk.Rectangle()
+		rect.x,rect.y=x,y
+		self.set_pointing_to(rect)
+		self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
+		self.popup()
+
+class ListModel(GObject.Object, Gio.ListModel):
+	def __init__(self, item_type):
+		super().__init__()
+		self._data=[]
+		self._item_type=item_type
+
+	def clear(self):
+		n=self.get_n_items()
+		self._data=[]
+		self.emit("items-changed", 0, n, 0)
+
+	def append(self, data):
+		self._data.extend(data)
+		self.emit("items-changed", self.get_n_items(), 0, len(data))
+
+	def do_get_item(self, position):
+		try:
+			return self._data[position]
+		except IndexError:
+			return None
+
+	def do_get_item_type(self):
+		return self._item_type
+
+	def do_get_n_items(self):
+		return len(self._data)
+
+class SongsListRow(Gtk.Box):
+	def __init__(self):
+		super().__init__()
+		self.handler_ids=[]
+		attrs=Pango.AttrList()
+		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
+		self._track=Gtk.Label(xalign=0.5, width_chars=2, attributes=attrs)
+		self._title=Gtk.Label(use_markup=True, xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
+		self._length=Gtk.Label(xalign=1, attributes=attrs)
 
 		# event controller
-		button2_controller=Gtk.GestureClick(button=2)
-		self.add_controller(button2_controller)
-		button2_controller.connect("pressed", self._on_button_pressed)
-		button3_controller=Gtk.GestureClick(button=3)
-		self.add_controller(button3_controller)
-		button3_controller.connect("pressed", self._on_button_pressed)
-		key_controller=Gtk.EventControllerKey()
-		self.add_controller(key_controller)
-		key_controller.connect("key-pressed", self._on_key_pressed)
+		self.button_controller=Gtk.GestureClick(button=0)
+		self.add_controller(self.button_controller)
+
+		# packing
+		self.append(self._track)
+		self.append(self._title)
+		self.append(self._length)
+
+	def set_song(self, song):
+		self._track.set_label(song["track"][0])
+		self._title.set_label(song.get_markup())
+		self._length.set_label(str(song["duration"]))
+
+	def unset_song(self):
+		self._track.set_label("")
+		self._title.set_label("")
+		self._length.set_label("")
+
+class SongsList(Gtk.ListView):
+	def __init__(self, client):
+		super().__init__(single_click_activate=True, tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
+		self._client=client
+
+		# factory
+		def setup(factory, item):
+			item.set_child(SongsListRow())
+		def bind(factory, item):
+			row=item.get_child()
+			song=item.get_item()
+			row.set_song(song)
+			row.handler_ids.append(row.button_controller.connect("pressed", self._on_button_pressed, song["file"]))
+		def unbind(factory, item):
+			row=item.get_child()
+			row.unset_song()
+			for handler_id in row.handler_ids:
+				row.button_controller.disconnect(handler_id)
+			row.handler_ids=[]
+		factory=Gtk.SignalListItemFactory()
+		factory.connect("setup", setup)
+		factory.connect("bind", bind)
+		factory.connect("unbind", unbind)
+		self.set_factory(factory)
+
+		# list model
+		self._model=ListModel(Song)
+		self.set_model(Gtk.NoSelection(model=self._model))
+
+		# menu
+		self._menu=SongMenu(client)
 
 		# connect
-		self.connect("row-activated", self._on_row_activated)
+		self.connect("activate", self._on_activate)
 
 	def clear(self):
 		self._menu.popdown()
-		self._store.clear()
+		self._model.clear()
 
-	def append(self, track, title, duration, file, search_string=""):
-		self._store.insert_with_valuesv(-1, range(5), [track, title, duration, file, search_string])
+	def append(self, data):
+		self._model.append(data)
 
-	def _open_menu(self, uri, x, y):
-		rect=Gdk.Rectangle()
-		rect.x,rect.y=x,y
-		self._menu.set_pointing_to(rect)
-		self._show_action.set_enabled(self._client.can_show_in_file_manager(uri))
-		self._menu.popup()
+	def _on_activate(self, listview, pos):
+		self._client.file_to_playlist(self._model.get_item(pos)["file"], "play")
 
-	def _on_row_activated(self, widget, path, view_column):
-		self._client.file_to_playlist(self._store[path][3], "play")
-
-	def _on_button_pressed(self, controller, n_press, x, y):
-		if (path_re:=self.get_path_at_pos(*self.convert_widget_to_bin_window_coords(x,y))) is not None:
-			path=path_re[0]
-			if controller.get_property("button") == 2 and n_press == 1:
-				self._client.file_to_playlist(self._store[path][3], "append")
-			elif controller.get_property("button") == 3 and n_press == 1:
-				uri=self._store[path][3]
-				self._open_menu(uri, x, y)
-
-	def _on_key_pressed(self, controller, keyval, keycode, state):
-		if state & Gdk.ModifierType.CONTROL_MASK and keyval == Gdk.keyval_from_name("plus"):
-			if (path:=self.get_cursor()[0]) is not None:
-				self._client.file_to_playlist(self._store[path][3], "append")
-		elif keyval == Gdk.keyval_from_name("Menu"):
-			if (path:=self.get_cursor()[0]) is not None:
-				self._open_menu(self._store[path][3], *self.get_popover_point(path))
+	def _on_button_pressed(self, controller, n_press, x, y, file):
+		if controller.get_current_button() == 2 and n_press == 1:
+			self._client.file_to_playlist(file, "append")
+		elif controller.get_current_button() == 3 and n_press == 1:
+			self._menu.open(file, controller.get_widget(), x, y)
 
 ##########
 # search #
@@ -1350,10 +1402,11 @@ class SearchThread(threading.Thread):  # TODO progress indicator
 		songs=self._get_songs(0, stripe_size)
 		stripe_start=stripe_size
 		while songs:
-			hits+=len(songs)
-			if not self._append_songs(songs):
+			if self._stop_flag:
 				self._exit()
 				return
+			hits+=len(songs)
+			idle_add(self._songs_list.append, songs)
 			idle_add(self._hits_label.set_text, ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
 			stripe_end=stripe_start+stripe_size
 			songs=self._get_songs(stripe_start, stripe_end)
@@ -1362,7 +1415,6 @@ class SearchThread(threading.Thread):  # TODO progress indicator
 
 	def _exit(self):
 		def callback():
-			self._songs_list.columns_autosize()
 			if self._callback is not None:
 				self._callback()
 			return False
@@ -1377,15 +1429,6 @@ class SearchThread(threading.Thread):  # TODO progress indicator
 			songs=self._client.search(self._search_tag, self._search_text, "window", f"{start}:{end}")
 			self._client.tagtypes("all")
 			return songs
-
-	@main_thread_function
-	def _append_songs(self, songs):
-		for song in songs:
-			if self._stop_flag:
-				return False
-			self._songs_list.append(song["track"][0], song.get_markup(), str(song["duration"]), song["file"])
-		self._songs_list.columns_autosize()
-		return True
 
 class SearchWindow(Gtk.Box):
 	def __init__(self, client):
@@ -1498,7 +1541,7 @@ class ArtistList(Gtk.ListView):  # TODO
 		factory.connect("bind", bind)
 		self.set_factory(factory)
 
-		# list model
+		# model
 		self._list=Gtk.StringList()
 		self._selection=Gtk.SingleSelection(model=self._list)
 		self.set_model(self._selection)
@@ -1768,7 +1811,7 @@ class AlbumList(Gtk.IconView):
 		if self._client.connected():
 			self._refresh()
 
-class AlbumView(Gtk.Box):
+class AlbumView(Gtk.Box):  # TODO hide artist
 	__gsignals__={"close": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client, settings):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
@@ -1778,7 +1821,6 @@ class AlbumView(Gtk.Box):
 
 		# songs list
 		self.songs_list=SongsList(self._client)
-		self.songs_list.set_enable_search(True)
 		scroll=Gtk.ScrolledWindow(child=self.songs_list, vexpand=True)
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
@@ -1839,20 +1881,19 @@ class AlbumView(Gtk.Box):
 		self._client.restrict_tagtypes("track", "title", "artist")
 		songs=self._client.find(*self._tag_filter)
 		self._client.tagtypes("all")
-		for song in songs:
-			# only show artists =/= albumartist
-			try:
-				song["artist"].remove(albumartist)
-			except ValueError:
-				pass
-			artist=str(song['artist'])
-			if artist == albumartist or not artist:
-				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b>"
-			else:
-				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b> • {GLib.markup_escape_text(artist)}"
-			self.songs_list.append(song["track"][0], title_artist, str(song["duration"]), song["file"], song["title"][0])
-		self.songs_list.save_set_cursor(Gtk.TreePath(0), None, False)
-		self.songs_list.columns_autosize()
+#		for song in songs:
+#			# only show artists =/= albumartist
+#			try:
+#				song["artist"].remove(albumartist)
+#			except ValueError:
+#				pass
+#			artist=str(song['artist'])
+#			if artist == albumartist or not artist:
+#				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b>"
+#			else:
+#				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b> • {GLib.markup_escape_text(artist)}"
+#			self.songs_list.append(song["track"][0], title_artist, str(song["duration"]), song["file"], song["title"][0])
+		self.songs_list.append(songs)
 		size=self._settings.get_int("album-cover")*1.5
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
 			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
