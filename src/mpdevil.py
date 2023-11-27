@@ -1292,7 +1292,7 @@ class SongsListRow(Gtk.Box):
 		self.handler_ids=[]
 		attrs=Pango.AttrList()
 		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		self._track=Gtk.Label(xalign=0.5, width_chars=2, attributes=attrs)
+		self._track=Gtk.Label(xalign=1, width_chars=3, attributes=attrs)
 		self._title=Gtk.Label(use_markup=True, xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
 		self._length=Gtk.Label(xalign=1, attributes=attrs)
 
