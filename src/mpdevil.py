@@ -1346,7 +1346,7 @@ class SongsList(Gtk.ListView):
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
-		button_controller.connect("pressed", self._on_button_pressed)
+		button_controller.connect("released", self._on_button_released)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -1361,7 +1361,7 @@ class SongsList(Gtk.ListView):
 	def _on_activate(self, listview, pos):
 		self._client.file_to_playlist(self._model.get_item(pos)["file"], "play")
 
-	def _on_button_pressed(self, controller, n_press, x, y):
+	def _on_button_released(self, controller, n_press, x, y):
 		if self.pick(x,y,Gtk.PickFlags.DEFAULT) is not self and (song:=self._selection.get_selected_item()) is not None:
 			if controller.get_current_button() == 2 and n_press == 1:
 				self._client.file_to_playlist(song["file"], "append")
