@@ -1290,16 +1290,13 @@ class ListModel(GObject.Object, Gio.ListModel):
 class SongsListRow(Gtk.Box):
 	def __init__(self):
 		super().__init__()
-		self.handler_ids=[]
+
+		# labels
 		attrs=Pango.AttrList()
 		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
 		self._track=Gtk.Label(xalign=1, width_chars=3, attributes=attrs)
 		self._title=Gtk.Label(use_markup=True, xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
 		self._length=Gtk.Label(xalign=1, attributes=attrs)
-
-		# event controller
-		self.button_controller=Gtk.GestureClick(button=0)
-		self.add_controller(self.button_controller)
 
 		# packing
 		self.append(self._track)
@@ -1328,13 +1325,9 @@ class SongsList(Gtk.ListView):
 			row=item.get_child()
 			song=item.get_item()
 			row.set_song(song)
-			row.handler_ids.append(row.button_controller.connect("pressed", self._on_button_pressed, song["file"]))
 		def unbind(factory, item):
 			row=item.get_child()
 			row.unset_song()
-			for handler_id in row.handler_ids:
-				row.button_controller.disconnect(handler_id)
-			row.handler_ids=[]
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
@@ -1343,10 +1336,16 @@ class SongsList(Gtk.ListView):
 
 		# list model
 		self._model=ListModel(Song)
-		self.set_model(Gtk.NoSelection(model=self._model))
+		self._selection=Gtk.SingleSelection(model=self._model)
+		self.set_model(self._selection)
 
 		# menu
 		self._menu=SongMenu(client)
+
+		# event controller
+		button_controller=Gtk.GestureClick(button=0)
+		self.add_controller(button_controller)
+		button_controller.connect("pressed", self._on_button_pressed)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -1361,11 +1360,12 @@ class SongsList(Gtk.ListView):
 	def _on_activate(self, listview, pos):
 		self._client.file_to_playlist(self._model.get_item(pos)["file"], "play")
 
-	def _on_button_pressed(self, controller, n_press, x, y, file):
-		if controller.get_current_button() == 2 and n_press == 1:
-			self._client.file_to_playlist(file, "append")
-		elif controller.get_current_button() == 3 and n_press == 1:
-			self._menu.open(file, controller.get_widget(), x, y)
+	def _on_button_pressed(self, controller, n_press, x, y):
+		if self.pick(x,y,Gtk.PickFlags.DEFAULT) is not self and (song:=self._selection.get_selected_item()) is not None:
+			if controller.get_current_button() == 2 and n_press == 1:
+				self._client.file_to_playlist(song["file"], "append")
+			elif controller.get_current_button() == 3 and n_press == 1:
+				self._menu.open(song["file"], controller.get_widget(), x, y)
 
 ##########
 # search #
