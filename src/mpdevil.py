@@ -2657,7 +2657,7 @@ class AudioFormat(Gtk.Box):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-class PlaybackOptions(Gtk.Box):  # TODO oneshot indicator
+class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings):
 		super().__init__(css_classes=["linked"], homogeneous=False)
 		self._client=client
@@ -2705,6 +2705,10 @@ class PlaybackOptions(Gtk.Box):  # TODO oneshot indicator
 	def _single_refresh(self, emitter, val):
 		self._buttons["single"][0].handler_block(self._buttons["single"][1])
 		self._buttons["single"][0].set_active((val in ("1", "oneshot")))
+		if val == "oneshot":
+			self._buttons["single"][0].add_css_class("suggested-action")
+		else:
+			self._buttons["single"][0].remove_css_class("suggested-action")
 		self._buttons["single"][0].handler_unblock(self._buttons["single"][1])
 
 	def _on_button3_pressed(self, controller, n_press, x, y):
