@@ -1251,10 +1251,8 @@ class SongMenu(Gtk.PopoverMenu):
 		menu.append_section(None, subsection)
 		self.set_menu_model(menu)
 
-	def open(self, file, parent, x, y):
+	def open(self, file, x, y):
 		self._file=file
-		self.unparent()
-		self.set_parent(parent)
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self.set_pointing_to(rect)
@@ -1342,6 +1340,7 @@ class SongsList(Gtk.ListView):
 
 		# menu
 		self._menu=SongMenu(client)
+		self._menu.set_parent(self)
 
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
@@ -1366,7 +1365,7 @@ class SongsList(Gtk.ListView):
 			if controller.get_current_button() == 2 and n_press == 1:
 				self._client.file_to_playlist(song["file"], "append")
 			elif controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(song["file"], controller.get_widget(), x, y)
+				self._menu.open(song["file"], x, y)
 
 ##########
 # search #
