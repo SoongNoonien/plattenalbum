@@ -3033,20 +3033,17 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.emit("connecting")
 		# set default window size
 		if self._settings.get_boolean("mini-player"):
-#			self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
-			self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
+			self._bind_mini_player_dimension_settings()
 		else:
-			self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
+			self._bind_default_dimension_settings()
 			self._bind_paned_settings()
-			if self._settings.get_boolean("maximize"):
-				self.maximize()
+		if self._settings.get_boolean("maximize"):
+			self.maximize()
 		self.present()
 		# ensure window is visible
 		main=GLib.main_context_default()
 		while main.pending():
 			main.iteration()
-		self._settings.bind("width", self, "default-width", Gio.SettingsBindFlags.SET)
-		self._settings.bind("height", self, "default-height", Gio.SettingsBindFlags.SET)
 		self._settings.bind("maximize", self, "maximized", Gio.SettingsBindFlags.SET)
 		self._client.start()
 
@@ -3055,6 +3052,20 @@ class MainWindow(Gtk.ApplicationWindow):
 		if self._use_csd:
 			self._header_bar.get_title_widget().set_title("mpdevil")
 			self._header_bar.get_title_widget().set_subtitle(" ")
+
+	def _bind_mini_player_dimension_settings(self):
+		self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
+		self._settings.bind("mini-player-width", self, "default-width", Gio.SettingsBindFlags.SET)
+		self._settings.bind("mini-player-height", self, "default-height", Gio.SettingsBindFlags.SET)
+
+	def _bind_default_dimension_settings(self):
+		self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
+		self._settings.bind("width", self, "default-width", Gio.SettingsBindFlags.SET)
+		self._settings.bind("height", self, "default-height", Gio.SettingsBindFlags.SET)
+
+	def _unbind_dimension_settings(self):
+		self._settings.unbind(self, "default-width")
+		self._settings.unbind(self, "default-height")
 
 	def _bind_paned_settings(self):
 		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
@@ -3067,16 +3078,13 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.unbind(self._paned2, "position")
 
 	def _mini_player(self, *args):
-#		if self.is_maximized():
-#			self.unmaximize()
 		if self._settings.get_boolean("mini-player"):
 			self._unbind_paned_settings()
-#			self.resize(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
+			self._unbind_dimension_settings()
+			self._bind_mini_player_dimension_settings()
 		else:
-#			self.resize(self._settings.get_int("width"), self._settings.get_int("height"))
-			main=GLib.main_context_default()
-			while main.pending():
-				main.iteration()
+			self._unbind_dimension_settings()
+			self._bind_default_dimension_settings()
 			self._bind_paned_settings()
 
 	def _on_toggle_lyrics(self, action, param):
