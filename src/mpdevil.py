@@ -624,6 +624,13 @@ class BinaryCover(bytes):
 					pixbuf=raw_pixbuf.scale_simple(size*ratio,size,GdkPixbuf.InterpType.BILINEAR)
 		return pixbuf
 
+	def get_paintable(self):
+		try:
+			paintable=Gdk.Texture.new_from_bytes(self)
+		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
+			paintable=Gdk.Texture.new_from_filename(FALLBACK_COVER)
+		return paintable
+
 class FileCover(str):
 	def get_pixbuf(self, size=-1):
 		try:
@@ -631,6 +638,13 @@ class FileCover(str):
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
 			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
 		return pixbuf
+
+	def get_paintable(self):
+		try:
+			paintable=Gdk.Texture.new_from_filename(self)
+		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
+			paintable=Gdk.Texture.new_from_filename(FALLBACK_COVER)
+		return paintable
 
 class EventEmitter(GObject.Object):
 	__gsignals__={
@@ -1839,9 +1853,6 @@ class AlbumView(Gtk.Box):  # TODO hide artist
 
 		# cover
 		self._cover=Gtk.Image()
-		size=self._settings.get_int("album-cover")*1.5
-		pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
-		self._cover.set_from_pixbuf(pixbuf)
 
 		# labels
 		self._title=Gtk.Label(margin_start=12, margin_end=12, xalign=0, wrap=True, vexpand=True)
@@ -1898,10 +1909,9 @@ class AlbumView(Gtk.Box):  # TODO hide artist
 		self.songs_list.append(songs)
 		size=self._settings.get_int("album-cover")*1.5
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
-			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
-			self._cover.set_from_pixbuf(pixbuf)
+			self._cover.set_from_paintable(Gdk.Texture.new_from_filename(FALLBACK_COVER))
 		else:
-			self._cover.set_from_pixbuf(cover.get_pixbuf(size))
+			self._cover.set_from_paintable(cover.get_paintable())
 		self._cover.set_size_request(size, size)
 
 	def _on_button1_released(self, controller, n_press, x, y):
@@ -2335,7 +2345,7 @@ class LyricsWindow(Gtk.ScrolledWindow):  # TODO zoom
 		self._displayed_song_file=None
 		self._text_buffer.set_text("", -1)
 
-class MainCover(Gtk.Image):
+class MainCover(Gtk.Picture):
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
@@ -2346,13 +2356,13 @@ class MainCover(Gtk.Image):
 		self._client.emitter.connect("connected", self._on_connected)
 
 	def _clear(self):
-		self.set_from_file(FALLBACK_COVER)
+		self.set_paintable(Gdk.Texture.new_from_filename(FALLBACK_COVER))
 
 	def _refresh(self, *args):
 		if self._client.current_cover is None:
 			self._clear()
 		else:
-			self.set_from_pixbuf(self._client.current_cover.get_pixbuf())
+			self.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
