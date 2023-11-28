@@ -2925,7 +2925,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._size=None  # needed for window size saving
 
 		# actions
-		simple_actions_data=("settings","connection-settings","stats","help","menu","toggle-lyrics","back","toggle-search")
+		simple_actions_data=("settings","connection-settings","stats","help","toggle-lyrics","back","toggle-search")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2980,12 +2980,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# menu button / popover
 		if self._use_csd:
-			self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Menu"), can_focus=False)
+			self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Menu"), menu_model=menu, primary=True)
 		else:
 			menu_icon=AutoSizedIcon("open-menu-symbolic", "icon-size", self._settings)
-			self._menu_button=Gtk.MenuButton(child=menu_icon, tooltip_text=_("Menu"), can_focus=False)
-		menu_popover=Gtk.PopoverMenu.new_from_model(menu)
-		self._menu_button.set_popover(menu_popover)
+			self._menu_button=Gtk.MenuButton(child=menu_icon, tooltip_text=_("Menu"), menu_model=menu, primary=True)
+			self._menu_button.set_direction(Gtk.ArrowType.UP)
 
 		# connect
 		self._search_button.connect("toggled", self._on_search_button_toggled)
@@ -3113,9 +3112,6 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_help(self, action, param):
 		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/mpdevil/wiki/Usage").launch(self, None, None, None)
 
-	def _on_menu(self, action, param):
-		self._menu_button.emit("clicked")
-
 	def _on_search_button_toggled(self, button):
 		if button.get_active():
 			self._stack.set_visible_child_name("search")
@@ -3214,7 +3210,7 @@ class mpdevil(Adw.Application):
 		self.add_action(action)
 		# accelerators
 		action_accels=(
-			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.menu", ["F10"]),
+			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
 			("win.back", ["Escape"]),("win.toggle-search", ["<Control>f"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
