@@ -2715,7 +2715,7 @@ class PlaybackOptions(Gtk.Box):  # TODO oneshot indicator
 
 class VolumeButton(Gtk.VolumeButton):
 	def __init__(self, client, settings):
-		super().__init__(use_symbolic=True, can_focus=False)
+		super().__init__(use_symbolic=True)
 		self._client=client
 		self._adj=self.get_adjustment()
 		self._adj.set_step_increment(5)
