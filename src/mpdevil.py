@@ -1235,7 +1235,7 @@ class AutoSizedIcon(Gtk.Image):
 
 class SongMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
-		super().__init__()
+		super().__init__(has_arrow=False, halign=Gtk.Align.START)
 		self._client=client
 		self._file=None
 
