@@ -2966,6 +2966,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			search_icon=AutoSizedIcon("system-search-symbolic", "icon-size", self._settings)
 			self._search_button=Gtk.ToggleButton(child=search_icon, tooltip_text=_("Search"), can_focus=False)
+			self._search_button.add_css_class("flat")
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# stack
@@ -2995,6 +2996,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			menu_icon=AutoSizedIcon("open-menu-symbolic", "icon-size", self._settings)
 			self._menu_button=Gtk.MenuButton(child=menu_icon, tooltip_text=_("Menu"), menu_model=menu, primary=True)
 			self._menu_button.set_direction(Gtk.ArrowType.UP)
+			self._menu_button.add_css_class("flat")
 
 		# connect
 		self._search_button.connect("toggled", self._on_search_button_toggled)
