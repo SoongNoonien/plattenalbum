@@ -626,7 +626,7 @@ class BinaryCover(bytes):
 
 	def get_paintable(self):
 		try:
-			paintable=Gdk.Texture.new_from_bytes(self)
+			paintable=Gdk.Texture.new_from_bytes(GLib.Bytes.new(self))
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
 			paintable=Gdk.Texture.new_from_filename(FALLBACK_COVER)
 		return paintable
