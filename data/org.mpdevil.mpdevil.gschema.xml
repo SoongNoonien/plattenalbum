@@ -21,17 +21,13 @@
 			<default>447</default>
 			<summary>Default height of mini player</summary>
 		</key>
-		<key type="i" name="paned0">
-			<default>350</default>
-			<summary>Default position of cover/playlist separator</summary>
-		</key>
 		<key type="i" name="paned1">
 			<default>177</default>
 			<summary>Default position of artist/albums separator</summary>
 		</key>
 		<key type="i" name="paned2">
 			<default>718</default>
-			<summary>Default position of paned1/paned0 separator</summary>
+			<summary>Default position of browser/playlist separator</summary>
 		</key>
 		<key type="b" name="socket-connection">
 			<default>true</default>

@@ -2202,7 +2202,7 @@ class PlaylistView(TreeView):
 
 class PlaylistWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
-		super().__init__()
+		super().__init__(hexpand=True, vexpand=True)
 		self._back_button_icon=Gtk.Image.new_from_icon_name("go-down-symbolic")
 		self._back_to_current_song_button=Gtk.Button(child=self._back_button_icon, tooltip_text=_("Scroll to current song"), can_focus=False)
 		self._back_to_current_song_button.add_css_class("osd")
@@ -2952,7 +2952,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
-		self._paned0=Gtk.Paned(resize_start_child=False, shrink_start_child=False, resize_end_child=True, shrink_end_child=False)
+		self._cover_playlist_box=Gtk.Box()
 		self._paned2=Gtk.Paned(resize_start_child=True,shrink_start_child=False,resize_end_child=False,shrink_end_child=False,vexpand=True)
 		self._browser=Browser(self._client, self._settings)
 		self._search_window=SearchWindow(self._client)
@@ -3015,10 +3015,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# packing
 		self._on_playlist_pos_changed()  # set orientation
-		self._paned0.set_start_child(self._cover_lyrics_window)
-		self._paned0.set_end_child(playlist_window)
+		self._cover_playlist_box.append(self._cover_lyrics_window)
+		self._cover_playlist_box.append(Gtk.Separator())
+		self._cover_playlist_box.append(playlist_window)
 		self._paned2.set_start_child(self._stack)
-		self._paned2.set_end_child(self._paned0)
+		self._paned2.set_end_child(self._cover_playlist_box)
 		action_bar=Gtk.ActionBar()
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
@@ -3082,12 +3083,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.unbind(self, "default-height")
 
 	def _bind_paned_settings(self):
-		self._settings.bind("paned0", self._paned0, "position", Gio.SettingsBindFlags.DEFAULT)
 		self._settings.bind("paned1", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
 		self._settings.bind("paned2", self._paned2, "position", Gio.SettingsBindFlags.DEFAULT)
 
 	def _unbind_paned_settings(self):
-		self._settings.unbind(self._paned0, "position")
 		self._settings.unbind(self._browser, "position")
 		self._settings.unbind(self._paned2, "position")
 
@@ -3191,10 +3190,10 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_playlist_pos_changed(self, *args):
 		if self._settings.get_boolean("playlist-right"):
-			self._paned0.set_orientation(Gtk.Orientation.VERTICAL)
+			self._cover_playlist_box.set_orientation(Gtk.Orientation.VERTICAL)
 			self._paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
 		else:
-			self._paned0.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self._cover_playlist_box.set_orientation(Gtk.Orientation.HORIZONTAL)
 			self._paned2.set_orientation(Gtk.Orientation.VERTICAL)
 
 ###################
