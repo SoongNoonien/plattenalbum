@@ -1961,6 +1961,8 @@ class PlaylistView(TreeView):
 		menu.append_section(None, current_song_section)
 		menu.append_section(None, subsection)
 		self._menu=Gtk.PopoverMenu.new_from_model(menu)
+		self._menu.set_has_arrow(False)
+		self._menu.set_halign(Gtk.Align.START)
 		self._menu.set_parent(self)  # TODO Gtk-CRITICAL https://gitlab.gnome.org/GNOME/gtk/-/issues/4884
 
 		# event controller
