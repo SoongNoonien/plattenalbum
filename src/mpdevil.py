@@ -680,9 +680,6 @@ class Client(MPDClient):
 		self.current_cover=None
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 
-		# connect
-		self._settings.connect("changed::socket-connection", lambda *args: self.reconnect())
-
 	# overloads to use Song class
 	def currentsong(self, *args):
 		return Song(super().currentsong(*args))
@@ -986,185 +983,125 @@ class Settings(Gio.Settings):
 # settings dialog #
 ###################
 
-class ToggleRow(Gtk.ListBoxRow):
-	def __init__(self, label, settings, key, restart_required=False):
-		super().__init__()
-		label=Gtk.Label(label=label, xalign=0, valign=Gtk.Align.CENTER, hexpand=True)
-		self._switch=Gtk.Switch(halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
-		settings.bind(key, self._switch, "active", Gio.SettingsBindFlags.DEFAULT)
-		box=Gtk.Box()
-		box.prepend(label)
-		if restart_required:
-			box.append(Gtk.Label(label=_("(restart required)"), sensitive=False))
-		box.append(self._switch)
-		self.set_child(box)
-
-	def toggle(self):
-		self._switch.set_active(not self._switch.get_active())
-
-class IntRow(Gtk.ListBoxRow):
-	def __init__(self, label, vmin, vmax, step, settings, key):
-		super().__init__(activatable=False)
-		label=Gtk.Label(label=label, xalign=0, valign=Gtk.Align.CENTER, hexpand=True)
-		spin_button=Gtk.SpinButton.new_with_range(vmin, vmax, step)
-		spin_button.set_valign(Gtk.Align.CENTER)
-		spin_button.set_halign(Gtk.Align.END)
-		settings.bind(key, spin_button, "value", Gio.SettingsBindFlags.DEFAULT)
-		box=Gtk.Box()
-		box.prepend(label)
-		box.append(spin_button)
-		self.set_child(box)
-
-class SettingsList(Gtk.ListBox):
-	def __init__(self):
-		super().__init__(valign=Gtk.Align.START, selection_mode=Gtk.SelectionMode.NONE, css_classes=["rich-list","boxed-list"],
-			margin_start=18, margin_end=18, margin_top=18, margin_bottom=18)
-		self.connect("row-activated", self._on_row_activated)
-
-	def append(self, row):
-		self.insert(row, -1)
-
-	def _on_row_activated(self, list_box, row):
-		if isinstance(row, ToggleRow):
-			row.toggle()
-
-class ViewSettings(SettingsList):
+class ViewSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
-		super().__init__()
+		super().__init__(title=_("View"))
 		toggle_data=(
-			(_("Use Client-side decoration"), "use-csd", True),
-			(_("Show stop button"), "show-stop", False),
-			(_("Show audio format"), "show-audio-format", False),
-			(_("Show lyrics button"), "show-lyrics-button", False),
-			(_("Place playlist at the side"), "playlist-right", False),
+			(_("Use Client-side decoration"), "use-csd", _("restart required")),
+			(_("Show stop button"), "show-stop", ""),
+			(_("Show audio format"), "show-audio-format", ""),
+			(_("Show lyrics button"), "show-lyrics-button", ""),
+			(_("Place playlist at the side"), "playlist-right", ""),
 		)
-		for label, key, restart_required in toggle_data:
-			row=ToggleRow(label, settings, key, restart_required)
-			self.append(row)
+		for title, key, subtitle in toggle_data:
+			row=Adw.SwitchRow(title=title, subtitle=subtitle)
+			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
+			self.add(row)
 		int_data=(
 			(_("Album view cover size"), (50, 600, 10), "album-cover"),
 			(_("Action bar icon size"), (16, 64, 2), "icon-size"),
 		)
-		for label, (vmin, vmax, step), key in int_data:
-			row=IntRow(label, vmin, vmax, step, settings, key)
-			self.append(row)
+		for title, (vmin, vmax, step), key in int_data:
+			row=Adw.SpinRow.new_with_range(vmin, vmax, step)
+			row.set_title(title)
+			settings.bind(key, row, "value", Gio.SettingsBindFlags.DEFAULT)
+			self.add(row)
 
-class BehaviorSettings(SettingsList):
+class BehaviorSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
-		super().__init__()
+		super().__init__(title=_("Behavior"))
 		toggle_data=(
-			(_("Support “MPRIS”"), "mpris", True),
-			(_("Sort albums by year"), "sort-albums-by-year", False),
-			(_("Send notification on title change"), "send-notify", False),
-			(_("Rewind via previous button"), "rewind-mode", False),
-			(_("Stop playback on quit"), "stop-on-quit", False),
+			(_("Support “MPRIS”"), "mpris", _("restart required")),
+			(_("Sort albums by year"), "sort-albums-by-year", ""),
+			(_("Send notification on title change"), "send-notify", ""),
+			(_("Rewind via previous button"), "rewind-mode", ""),
+			(_("Stop playback on quit"), "stop-on-quit", ""),
 		)
-		for label, key, restart_required in toggle_data:
-			row=ToggleRow(label, settings, key, restart_required)
-			self.append(row)
+		for title, key, subtitle in toggle_data:
+			row=Adw.SwitchRow(title=title, subtitle=subtitle)
+			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
+			self.add(row)
 
-class MusicDirectoryEntry(Gtk.Entry):
+class SocketExpanderRow(Adw.ExpanderRow):
+	def __init__(self, settings):
+		super().__init__(title=_("Connect via Unix domain socket"))
+		row=Adw.EntryRow(title=_("Path"), show_apply_button=True)
+		settings.bind("socket", row, "text", Gio.SettingsBindFlags.DEFAULT)
+		self.add_row(row)
+
+class MusicDirectoryEntryRow(Adw.EntryRow):  # TODO
 	def __init__(self, parent, **kwargs):
-		super().__init__(placeholder_text=FALLBACK_MUSIC_DIRECTORY, **kwargs)
-		self.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "folder-open-symbolic")
-		self.connect("icon-release", self._on_icon_release, parent)
+		super().__init__(title=_("Music Library"), text=FALLBACK_MUSIC_DIRECTORY, **kwargs)
+		button=Gtk.Button(icon_name="folder-open-symbolic", tooltip_text=_("Choose directory"), has_frame=False, valign=Gtk.Align.CENTER)
+#		button.connect("clicked", self._on_button_clicked, parent)
+		self.add_suffix(button)
 
-	def _on_icon_release(self, widget, icon_pos, event, parent):
-		dialog=Gtk.FileChooserNative(title=_("Choose directory"), transient_for=parent, action=Gtk.FileChooserAction.SELECT_FOLDER)
+	def _on_button_clicked(self, widget, parent):
+		dialog=Gtk.FileDialog(title=_("Choose directory"))#, action=Gtk.FileChooserAction.SELECT_FOLDER)
 		folder=self.get_text()
 		if not folder:
-			folder=self.get_placeholder_text()
-		dialog.set_current_folder(folder)
-		response=dialog.run()
-		if response == Gtk.ResponseType.ACCEPT:
-			self.set_text(dialog.get_filename())
-		dialog.destroy()
+			folder=FALLBACK_MUSIC_DIRECTORY
+		dialog.set_initial_folder(Gio.File.new_for_path(folder))
+		def callback(*args):
+			print(dialog.select_folder_finish())
+			print(args)
+		dialog.select_folder(parent, None, None)
 
-class ConnectionSettings(Gtk.Grid):
-	def __init__(self, parent, client, settings):
-		super().__init__(row_spacing=6, column_spacing=6, margin_start=18, margin_end=18, margin_top=18, margin_bottom=18)
+class NetworkExpanderRow(Adw.ExpanderRow):
+	def __init__(self, settings, parent):
+		super().__init__(title=_("Connect via network"))
+		port_row=Adw.SpinRow.new_with_range(0, 65535, 1)
+		port_row.set_title(_("Port"))
+		settings.bind("port", port_row, "value", Gio.SettingsBindFlags.DEFAULT)
+		self.add_row(port_row)
 
-		# labels and entries
-		socket_button=Gtk.CheckButton(label=_("Connect via Unix domain socket"))
-		settings.bind("socket-connection", socket_button, "active", Gio.SettingsBindFlags.DEFAULT)
-		socket_entry=Gtk.Entry(placeholder_text=FALLBACK_SOCKET, hexpand=True)
-		settings.bind("socket", socket_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", socket_entry, "visible", Gio.SettingsBindFlags.GET)
-		host_entry=Gtk.Entry(hexpand=True)
-		settings.bind("host", host_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", host_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		port_entry=Gtk.SpinButton.new_with_range(0, 65535, 1)
-		settings.bind("port", port_entry, "value", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", port_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		password_entry=Gtk.PasswordEntry(show_peek_icon=True, hexpand=True)
-		settings.bind("password", password_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		music_directory_entry=MusicDirectoryEntry(parent, hexpand=True)
-		settings.bind("music-directory", music_directory_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", music_directory_entry, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		regex_entry=Gtk.Entry(hexpand=True, placeholder_text=FALLBACK_REGEX)
-		regex_entry.set_tooltip_text(
+		hostname_row=Adw.EntryRow(title=_("Hostname"))
+		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		self.add_row(hostname_row)
+
+		music_directory_row=MusicDirectoryEntryRow(parent)
+		settings.bind("music-directory", music_directory_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		self.add_row(music_directory_row)
+
+class ConnectionSettings(Adw.PreferencesGroup):
+	def __init__(self, client, settings, parent):
+		super().__init__(title=_("Connection"))
+
+		socket_expander=SocketExpanderRow(settings)
+		settings.bind("socket-connection", socket_expander, "expanded", Gio.SettingsBindFlags.DEFAULT)
+		self.add(socket_expander)
+		network_expander=NetworkExpanderRow(settings, parent)
+		settings.bind("socket-connection", network_expander, "expanded", Gio.SettingsBindFlags.DEFAULT|Gio.SettingsBindFlags.INVERT_BOOLEAN)
+		self.add(network_expander)
+
+		regex_row=Adw.EntryRow(title=_("Regex"))
+		regex_row.set_tooltip_text(
 			_("The first image in the same directory as the song file "\
 			"matching this regex will be displayed. %AlbumArtist% and "\
 			"%Album% will be replaced by the corresponding tags of the song.")
 		)
-		settings.bind("regex", regex_entry, "text", Gio.SettingsBindFlags.DEFAULT)
-		socket_label=Gtk.Label(label=_("Socket:"), xalign=1, margin_end=6)
-		settings.bind("socket-connection", socket_label, "visible", Gio.SettingsBindFlags.GET)
-		host_label=Gtk.Label(label=_("Host:"), xalign=1, margin_end=6)
-		settings.bind("socket-connection", host_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		password_label=Gtk.Label(label=_("Password:"), xalign=1, margin_end=6)
-		music_directory_label=Gtk.Label(label=_("Music lib:"), xalign=1, margin_end=6)
-		settings.bind("socket-connection", music_directory_label, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-		regex_label=Gtk.Label(label=_("Cover regex:"), xalign=1, margin_end=6)
+		settings.bind("regex", regex_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		self.add(regex_row)
+
+		password_row=Adw.PasswordEntryRow(title=_("Password"))
+		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		self.add(password_row)
 
 		# connect button
-		connect_button=Gtk.Button(label=_("Connect"), margin_start=18, margin_end=18, margin_top=18, halign=Gtk.Align.CENTER)
+		connect_button=Gtk.Button(label=_("Connect"))
 		connect_button.add_css_class("suggested-action")
 		connect_button.add_css_class("pill")
 		connect_button.connect("clicked", lambda *args: client.reconnect())
+		self.set_header_suffix(connect_button)
 
-		# packing
-		self.attach(socket_button, 0, 0, 3, 1)
-		self.attach(socket_label, 0, 1, 1, 1)
-		self.attach_next_to(host_label, socket_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(password_label, host_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(music_directory_label, password_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(regex_label, music_directory_label, Gtk.PositionType.BOTTOM, 1, 1)
-		self.attach_next_to(socket_entry, socket_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(host_entry, host_label, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(port_entry, host_entry, Gtk.PositionType.RIGHT, 1, 1)
-		self.attach_next_to(password_entry, password_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(music_directory_entry, music_directory_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach_next_to(regex_entry, regex_label, Gtk.PositionType.RIGHT, 2, 1)
-		self.attach(connect_button, 0, 6, 3, 1)
-
-class SettingsDialog(Gtk.Window):
+class SettingsDialog(Adw.PreferencesWindow):  # TODO open at specific setting
 	def __init__(self, parent, client, settings, tab="view"):
-		super().__init__(title=_("Preferences"), transient_for=parent)
-
-		# widgets
-		view=ViewSettings(settings)
-		behavior=BehaviorSettings(settings)
-		connection=ConnectionSettings(parent, client, settings)
-
-		# packing
-		if settings.get_boolean("use-csd"):
-			stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
-			stack.add_titled(view, "view", _("View"))
-			stack.add_titled(behavior, "behavior", _("Behavior"))
-			stack.add_titled(connection, "connection", _("Connection"))
-			stack.set_visible_child_name(tab)
-			stack_switcher=Gtk.StackSwitcher(stack=stack)
-			self.set_child(stack)
-			header_bar=Gtk.HeaderBar(title_widget=stack_switcher)
-			self.set_titlebar(header_bar)
-		else:
-			tabs=Gtk.Notebook()
-			tabs.append_page(view, Gtk.Label(label=_("View")))
-			tabs.append_page(behavior, Gtk.Label(label=_("Behavior")))
-			tabs.append_page(connection, Gtk.Label(label=_("Connection")))
-			tabs.set_current_page({"view": 0, "behavior": 1, "connection": 2}[tab])
-			self.set_child(tabs)
+		super().__init__(transient_for=parent)
+		page=Adw.PreferencesPage(title="Test")
+		page.add(ViewSettings(settings))
+		page.add(BehaviorSettings(settings))
+		page.add(ConnectionSettings(client, settings, parent))
+		self.add(page)
 
 #################
 # other dialogs #
