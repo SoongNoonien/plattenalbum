@@ -2203,9 +2203,9 @@ class PlaylistView(TreeView):
 class PlaylistWindow(Gtk.Overlay):
 	def __init__(self, client, settings):
 		super().__init__(hexpand=True, vexpand=True)
-		self._back_button_icon=Gtk.Image.new_from_icon_name("go-down-symbolic")
-		self._back_to_current_song_button=Gtk.Button(child=self._back_button_icon, tooltip_text=_("Scroll to current song"), can_focus=False)
+		self._back_to_current_song_button=Gtk.Button(tooltip_text=_("Scroll to current song"), can_focus=False)
 		self._back_to_current_song_button.add_css_class("osd")
+		self._back_to_current_song_button.add_css_class("circular")
 		self._back_button_revealer=Gtk.Revealer(
 			child=self._back_to_current_song_button, transition_duration=0,
 			margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER, valign=Gtk.Align.END
@@ -2230,11 +2230,11 @@ class PlaylistWindow(Gtk.Overlay):
 				self._back_button_revealer.set_reveal_child(False)
 			else:
 				if visible_range[0] > self._treeview.get_property("selected-path"):  # current song is above upper edge
-					self._back_button_icon.set_property("icon-name", "go-up-symbolic")
+					self._back_to_current_song_button.set_icon_name("go-up-symbolic")
 					self._back_button_revealer.set_valign(Gtk.Align.START)
 					self._back_button_revealer.set_reveal_child(True)
 				elif self._treeview.get_property("selected-path") > visible_range[1]:  # current song is below lower edge
-					self._back_button_icon.set_property("icon-name", "go-down-symbolic")
+					self._back_to_current_song_button.set_icon_name("go-down-symbolic")
 					self._back_button_revealer.set_valign(Gtk.Align.END)
 					self._back_button_revealer.set_reveal_child(True)
 				else:  # current song is visible
