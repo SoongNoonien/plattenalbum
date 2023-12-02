@@ -1193,15 +1193,16 @@ class ListModel(GObject.Object, Gio.ListModel):
 	def clear(self):
 		n=self.get_n_items()
 		self._data=[]
-		self.emit("items-changed", 0, n, 0)
+		self.items_changed(0, n, 0)
 
 	def append(self, data):
+		n=self.get_n_items()
 		self._data.extend(data)
-		self.emit("items-changed", self.get_n_items(), 0, len(data))  # TODO
+		self.items_changed(n, 0, len(data))
 
 	def sort(self, **kwargs):
 		self._data.sort(**kwargs)
-		self.emit("items-changed", 0, self.get_n_items(), self.get_n_items())
+		self.items_changed(0, self.get_n_items(), self.get_n_items())
 
 	def do_get_item(self, position):
 		try:
