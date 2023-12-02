@@ -1451,10 +1451,113 @@ class SearchWindow(Gtk.Box):
 # browser #
 ###########
 
-class ArtistList(Gtk.ListView):  # TODO
-	__gsignals__={"item-selected": (GObject.SignalFlags.RUN_FIRST, None, ()),
-			"item-reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),  # TODO
+class Artist(GObject.Object):
+	def __init__(self, name, section_name, section_start):
+		GObject.Object.__init__(self)
+		self.name=name
+		self.section_name=section_name
+		self.section_start=section_start
+
+class ArtistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel, Gtk.SectionModel):
+	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	def __init__(self):
+		super().__init__()
+		self._data=[]
+		self._selected=None
+
+	def clear(self):
+		n=len(self._data)
+		self._data=[]
+		self._selected=None
+		self.items_changed(0, n, 0)
+		self.emit("clear")
+
+	def set_artists(self, artists):
+		self.clear()
+		letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		artists.extend(zip([""]*len(letters), letters))
+		artists.sort(key=lambda item: locale.strxfrm(item[1]))
+		char="#"
+		section_start=0
+		section_length=0
+		for item in artists:
+			if item[0]:
+				self._data.append(Artist(item[0], char, section_start))
+				section_length+=1
+			else:
+				char=item[1]
+				section_start+=section_length
+				section_length=0
+		self.items_changed(0, 0, len(self._data))
+
+	def get_selected(self):
+		return self._selected
+
+	def get_selected_artist(self):
+		if self._selected is None:
+			return None
+		return self._data[self._selected].name
+
+	def select_artist(self, name):
+		row_num=self.get_n_items()
+		for i in range(0, row_num):
+			if self._data[i].name == name:
+				self.select_item(i, True)
+				return
+
+	def do_select_all(self): return False
+	def do_select_range(self, position, n_items, unselect_rest): return False
+	def do_set_selection(self, selected, mask): return False
+	def do_unselect_all(self): return False
+	def do_unselect_item(self, position): return False
+	def do_unselect_range(self, position, n_items): return False
+
+	def do_get_item(self, position):
+		try:
+			return self._data[position]
+		except IndexError:
+			return None
+
+	def do_get_item_type(self):
+		return Artist
+
+	def do_get_n_items(self):
+		return len(self._data)
+
+	def do_get_selection_in_range(self, position, n_items):
+		return Gtk.Bitset.new_range(0, n_items)
+
+	def do_is_selected(self, position):
+		return position == self._selected
+
+	def do_select_item(self, position, unselect_rest):
+		if position < self.get_n_items():
+			if position == self._selected:
+				self.emit("reselected")
+			else:
+				old_selected=self._selected
+				self._selected=position
+				if old_selected is not None:
+					self.selection_changed(old_selected, 1)
+				self.selection_changed(position, 1)
+				self.emit("selected")
+			return True
+		else:
+			return False
+
+	def do_get_section(self, position):
+		if position < self.get_n_items():
+			section_start=self._data[position].section_start
+			for artist in self._data[position+1:]:
+				if artist.section_start > section_start:
+					return (section_start, artist.section_start)
+			return (section_start, self.get_n_items())
+		else:
+			return (self.get_n_items(), GObject.G_MAXUINT)
+
+class ArtistList(Gtk.ListView):
 	def __init__(self, client, settings):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
 		self._client=client
@@ -1466,55 +1569,38 @@ class ArtistList(Gtk.ListView):  # TODO
 			item.set_child(label)
 		def bind(factory, item):
 			label=item.get_child()
-			label.set_label(item.get_item().get_string())
+			label.set_label(item.get_item().name)
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
 		self.set_factory(factory)
 
+		# header factory
+		def header_setup(factory, item):
+			label=Gtk.Label(xalign=0)
+			item.set_child(label)
+		def header_bind(factory, item):
+			label=item.get_child()
+			label.set_label(item.get_item().section_name)
+		header_factory=Gtk.SignalListItemFactory()
+		header_factory.connect("setup", header_setup)
+		header_factory.connect("bind", header_bind)
+		self.set_header_factory(header_factory)
+
 		# model
-		self._list=Gtk.StringList()
-		self._selection=Gtk.SingleSelection(model=self._list, autoselect=False)
-		self.set_model(self._selection)
+		self.artist_selection_model=ArtistSelectionModel()
+		self.set_model(self.artist_selection_model)
 
 		# connect
-		self._selection_changed=self._selection.connect("notify::selected", self._on_selected_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("updated_db", self._on_updated_db)
 
-	def get_selected_artist(self):
-		return self._selection.get_selected_item().get_string()
+	def _select(self, name):
+		self.artist_selection_model.select_artist(name)
+		self.scroll_to(self.artist_selection_model.get_selected(), Gtk.ListScrollFlags.NONE, None)
 
-	def _clear(self):
-		self._selection.handler_block(self._selection_changed)
-		for i in range(len(self._list)):
-			self._list.remove(0)
-		self._selection.handler_unblock(self._selection_changed)
-		self.emit("clear")
-
-	def _set_items(self, items):
-		self._clear()
-		letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # TODO
-		items.extend(zip([None]*len(letters), letters))
-		items.sort(key=lambda item: locale.strxfrm(item[1]))
-		char=""
-		for item in items:
-			if item[0] is not None:
-				self._list.append(item[0])
-
-	def _select(self, item):
-		row_num=len(self._list)
-		for i in range(0, row_num):
-			if self._list[i].get_string() == item:
-				self.scroll_to(i, Gtk.ListScrollFlags.SELECT, None)
-				return
-
-	def _on_selected_changed(self, *args):
-		if self._selection.get_selected() != Gtk.INVALID_LIST_POSITION:
-			self.emit("item-selected")
-
-	def _refresh(self, *args):
+	def _refresh(self):
 		artists=self._client.list("albumartistsort", "group", "albumartist")
 		filtered_artists=[]
 		for name, artist in itertools.groupby(((artist["albumartist"], artist["albumartistsort"]) for artist in artists), key=lambda x: x[0]):
@@ -1522,11 +1608,11 @@ class ArtistList(Gtk.ListView):  # TODO
 			# ignore multiple albumartistsort values
 			if next(artist, None) is not None:
 				filtered_artists[-1]=(name, name)
-		self._set_items(filtered_artists)
+		self.artist_selection_model.set_artists(filtered_artists)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
-		self._clear()
+		self.artist_selection_model.clear()
 
 	def _on_connected(self, *args):
 		self._refresh()
@@ -1536,10 +1622,10 @@ class ArtistList(Gtk.ListView):  # TODO
 		self.set_sensitive(True)
 
 	def _on_updated_db(self, *args):
-		if self._selection.get_selected_item() is None:
+		if self.artist_selection_model.get_selected_artist() is None:
 			self._refresh()
 		else:
-			artist=self.get_selected_artist()
+			artist=self.artist_selection_model.get_selected_artist()
 			self._refresh()
 			self._select(artist)
 
@@ -1576,11 +1662,11 @@ class AlbumListRow(Gtk.Box):
 
 class AlbumList(Gtk.GridView):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
-	def __init__(self, client, settings, artist_list):
+	def __init__(self, client, settings, artist_selection_model):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True)
 		self._settings=settings
 		self._client=client
-		self._artist_list=artist_list
+		self._artist_selection_model=artist_selection_model
 
 		# factory
 		def setup(factory, item):
@@ -1609,9 +1695,8 @@ class AlbumList(Gtk.GridView):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
-		self._settings.connect("changed::album-cover", self._on_cover_size_changed)
-		self._artist_list.connect("item-selected", self._refresh)
-		self._artist_list.connect("clear", self._clear)
+		self._artist_selection_model.connect("selected", self._refresh)
+		self._artist_selection_model.connect("clear", self._clear)
 
 	def _clear(self, *args):
 		self._model.clear()
@@ -1639,7 +1724,7 @@ class AlbumList(Gtk.GridView):
 		main=GLib.main_context_default()
 		while main.pending():
 			main.iteration()
-		artist=self._artist_list.get_selected_artist()
+		artist=self._artist_selection_model.get_selected_artist()
 		if self._settings.get_boolean("sort-albums-by-year"):
 			self._model.append(sorted(self._get_albums(artist), key=lambda item: item["date"]))
 		else:
@@ -1655,10 +1740,6 @@ class AlbumList(Gtk.GridView):
 
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
-
-	def _on_cover_size_changed(self, *args):
-		if self._client.connected():
-			self._refresh()
 
 class AlbumView(Gtk.Box):  # TODO hide artist
 	__gsignals__={"close": (GObject.SignalFlags.RUN_FIRST, None, ())}
@@ -1762,7 +1843,7 @@ class Browser(Gtk.Paned):
 
 		# widgets
 		self._artist_list=ArtistList(self._client, self._settings)
-		self._album_list=AlbumList(self._client, self._settings, self._artist_list)
+		self._album_list=AlbumList(self._client, self._settings, self._artist_list.artist_selection_model)
 		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
 		album_window=Gtk.ScrolledWindow(child=self._album_list)
 		self._album_view=AlbumView(self._client, self._settings)
@@ -1775,8 +1856,8 @@ class Browser(Gtk.Paned):
 		# connect
 		self._album_list.connect("album-selected", self._on_album_list_show_info)
 		self._album_view.connect("close", lambda *args: self._album_stack.set_visible_child_name("album_list"))
-		self._artist_list.connect("item-selected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
-		self._artist_list.connect("item-reselected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
+		self._artist_list.artist_selection_model.connect("selected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
+		self._artist_list.artist_selection_model.connect("reselected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 		self._client.emitter.connect("disconnected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 		self._settings.connect("changed::album-cover", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 
