@@ -1499,7 +1499,7 @@ class ArtistList(Gtk.ListView):  # TODO
 		self.set_model(self._selection)
 
 		# connect
-		self._selection.connect("notify::selected", self._on_selected_changed)
+		self._selection_changed=self._selection.connect("notify::selected", self._on_selected_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("updated_db", self._on_updated_db)
@@ -1508,8 +1508,10 @@ class ArtistList(Gtk.ListView):  # TODO
 		return self._selection.get_selected_item().get_string()
 
 	def _clear(self):
+		self._selection.handler_block(self._selection_changed)
 		for i in range(len(self._list)):
 			self._list.remove(0)
+		self._selection.handler_unblock(self._selection_changed)
 		self.emit("clear")
 
 	def _set_items(self, items):
