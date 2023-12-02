@@ -694,8 +694,8 @@ class Client(MPDClient):
 			else:
 				self.music_directory=self._settings.get_music_directory()
 			if "status" in self.commands():
-				self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
 				self.emitter.emit("connected")
+				self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
 			else:
 				self.disconnect()
 				self.emitter.emit("connection_error")
