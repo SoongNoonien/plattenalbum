@@ -20,7 +20,7 @@
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib
+from gi.repository import Gtk, Adw, Gio, Gdk, Pango, GObject, GLib
 from mpd import MPDClient, CommandError, ConnectionError
 from html.parser import HTMLParser
 import urllib.request
@@ -605,25 +605,6 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 			return f"{title}"
 
 class BinaryCover(bytes):
-	def get_pixbuf(self, size=-1):
-		loader=GdkPixbuf.PixbufLoader()
-		try:
-			loader.write(self)
-		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
-		else:
-			loader.close()
-			if size == -1:
-				pixbuf=loader.get_pixbuf()
-			else:
-				raw_pixbuf=loader.get_pixbuf()
-				ratio=raw_pixbuf.get_width()/raw_pixbuf.get_height()
-				if ratio > 1:
-					pixbuf=raw_pixbuf.scale_simple(size,size/ratio,GdkPixbuf.InterpType.BILINEAR)
-				else:
-					pixbuf=raw_pixbuf.scale_simple(size*ratio,size,GdkPixbuf.InterpType.BILINEAR)
-		return pixbuf
-
 	def get_paintable(self):
 		try:
 			paintable=Gdk.Texture.new_from_bytes(GLib.Bytes.new(self))
@@ -632,13 +613,6 @@ class BinaryCover(bytes):
 		return paintable
 
 class FileCover(str):
-	def get_pixbuf(self, size=-1):
-		try:
-			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(self, size, size)
-		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			pixbuf=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, size, size)
-		return pixbuf
-
 	def get_paintable(self):
 		try:
 			paintable=Gdk.Texture.new_from_filename(self)
