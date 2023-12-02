@@ -1472,7 +1472,7 @@ class SearchWindow(Gtk.Box):
 # browser #
 ###########
 
-class ArtistList(Gtk.ListView):  # TODO don't emit "item-selected" on first artist when not needed
+class ArtistList(Gtk.ListView):  # TODO
 	__gsignals__={"item-selected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"item-reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),  # TODO
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
@@ -1495,7 +1495,7 @@ class ArtistList(Gtk.ListView):  # TODO don't emit "item-selected" on first arti
 
 		# model
 		self._list=Gtk.StringList()
-		self._selection=Gtk.SingleSelection(model=self._list)
+		self._selection=Gtk.SingleSelection(model=self._list, autoselect=False)
 		self.set_model(self._selection)
 
 		# connect
