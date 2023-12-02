@@ -1472,7 +1472,7 @@ class SearchWindow(Gtk.Box):
 # browser #
 ###########
 
-class ArtistList(Gtk.ListView):  # TODO
+class ArtistList(Gtk.ListView):  # TODO don't emit "item-selected" on first artist when not needed
 	__gsignals__={"item-selected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"item-reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),  # TODO
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
@@ -1562,152 +1562,69 @@ class ArtistList(Gtk.ListView):  # TODO
 			self._refresh()
 			self._select(artist)
 
-class AlbumLoadingThread(threading.Thread):
-	def __init__(self, client, settings, progress_bar, iconview, store, artist):
-		super().__init__(daemon=True)
+class AlbumMetaclass(type(GObject.Object), type(collections.UserDict)): pass
+class Album(collections.UserDict, GObject.Object, metaclass=AlbumMetaclass):
+	def __init__(self, data, *args, **kwargs):
+		collections.UserDict.__init__(self, data)
+		GObject.Object.__init__(self, *args, **kwargs)
+
+class AlbumListRow(Gtk.Box):  # TODO styling
+	def __init__(self, client):
+		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
-		self._settings=settings
-		self._progress_bar=progress_bar
-		self._iconview=iconview
-		self._store=store
-		self._artist=artist
+		self._cover=Gtk.Image(hexpand=True)
+		self._label=Gtk.Label(use_markup=True, justify=Gtk.Justification.CENTER, wrap=True)
+		self.append(self._cover)
+		self.append(self._label)
 
-	def _get_albums(self):
-		@main_thread_function
-		def client_list(*args):
-			if self._stop_flag:
-				raise ValueError("Stop requested")
-			else:
-				return self._client.list(*args)
-		try:
-			albums=client_list("albumsort", "albumartist", self._artist, "group", "date", "group", "album")
-		except ValueError:
-			return
-		for _, album in itertools.groupby(albums, key=lambda x: (x["album"], x["date"])):
-			tmp=next(album)
-			# ignore multiple albumsort values
-			if next(album, None) is None:
-				yield (self._artist, tmp["album"], tmp["date"], tmp["albumsort"])
-			else:
-				yield (self._artist, tmp["album"], tmp["date"], tmp["album"])
-
-	def set_callback(self, callback):
-		self._callback=callback
-
-	def stop(self):
-		self._stop_flag=True
-
-	def start(self):
-		self._settings.set_property("cursor-watch", True)
-		self._progress_bar.set_visible(True)
-		self._callback=None
-		self._stop_flag=False
-		self._iconview.set_model(None)
-		self._store.clear()
-		self._cover_size=self._settings.get_int("album-cover")
-		super().start()
-
-	def run(self):
-		# temporarily display all albums with fallback cover
-		fallback_cover=GdkPixbuf.Pixbuf.new_from_file_at_size(FALLBACK_COVER, self._cover_size, self._cover_size)
-		add=main_thread_function(self._store.append)
-		for i, (albumartist, album, date, albumsort) in enumerate(self._get_albums()):
-			# album label
-			if date:
-				display_label=f"<b>{GLib.markup_escape_text(album)}</b> ({GLib.markup_escape_text(date)})"
-			else:
-				display_label=f"<b>{GLib.markup_escape_text(album)}</b>"
-			display_label_artist=f"{display_label}\n{GLib.markup_escape_text(albumartist)}"
-			# add album
-			add([fallback_cover, display_label, display_label_artist, albumartist, album, date, albumsort])
-			if i%10 == 0:
-				if self._stop_flag:
-					self._exit()
-					return
-				idle_add(self._progress_bar.pulse)
-		if self._stop_flag:
-			self._exit()
-			return
-		# sort model
-		if main_thread_function(self._settings.get_boolean)("sort-albums-by-year"):
-			main_thread_function(self._store.set_sort_column_id)(5, Gtk.SortType.ASCENDING)
+	def set_album(self, album):
+		if album["date"]:
+			display_label=f"<b>{GLib.markup_escape_text(album['name'])}</b> ({GLib.markup_escape_text(album['date'])})"
 		else:
-			main_thread_function(self._store.set_sort_column_id)(6, Gtk.SortType.ASCENDING)
-		idle_add(self._iconview.set_model, self._store)
-		# select first album
-		path=Gtk.TreePath(0)
-		idle_add(self._iconview.set_cursor, path, None, False)
-		idle_add(self._iconview.select_path, path)
-		idle_add(self._iconview.scroll_to_path, path, True, 0.25, 0)
-		# load covers
-		total=2*len(self._store)
-		@main_thread_function
-		def get_cover(row):
-			if self._stop_flag:
-				raise ValueError("Stop requested")
+			display_label=f"<b>{GLib.markup_escape_text(album['name'])}</b>"
+		self._label.set_label(display_label)
+		if "cover" not in album:
+			self._client.restrict_tagtypes("albumartist", "album")
+			song=self._client.find("albumartist", album["artist"], "album", album["name"], "date", album["date"], "window", "0:1")[0]
+			self._client.tagtypes("all")
+			if (cover:=self._client.get_cover(song)) is None:
+				album["cover"]=Gdk.Texture.new_from_filename(FALLBACK_COVER)
 			else:
-				self._client.restrict_tagtypes("albumartist", "album")
-				song=self._client.find("albumartist", row[3], "album", row[4], "date", row[5], "window", "0:1")[0]
-				self._client.tagtypes("all")
-				return self._client.get_cover(song)
-		covers=[]
-		for i, row in enumerate(self._store):
-			try:
-				cover=get_cover(row)
-			except ValueError:
-				self._exit()
-				return
-			covers.append(cover)
-			idle_add(self._progress_bar.set_fraction, (i+1)/total)
-		treeiter=self._store.get_iter_first()
-		i=0
-		def set_cover(treeiter, cover):
-			if self._store.iter_is_valid(treeiter):
-				self._store.set_value(treeiter, 0, cover)
-		while treeiter is not None:
-			if self._stop_flag:
-				self._exit()
-				return
-			if covers[i] is not None:
-				cover=covers[i].get_pixbuf(self._cover_size)
-				idle_add(set_cover, treeiter, cover)
-			idle_add(self._progress_bar.set_fraction, 0.5+(i+1)/total)
-			i+=1
-			treeiter=self._store.iter_next(treeiter)
-		self._exit()
+				album["cover"]=cover.get_paintable()
+		self._cover.set_from_paintable(album["cover"])
 
-	def _exit(self):
-		def callback():
-			self._settings.set_property("cursor-watch", False)
-			self._progress_bar.set_visible(False)
-			self._progress_bar.set_fraction(0)
-			if self._callback is not None:
-				self._callback()
-			return False
-		idle_add(callback)
-
-class AlbumList(Gtk.IconView):
+class AlbumList(Gtk.GridView):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client, settings, artist_list):
-		super().__init__(item_width=0,pixbuf_column=0,markup_column=1,activate_on_single_click=True,selection_mode=Gtk.SelectionMode.BROWSE)
+		super().__init__(single_click_activate=True, vexpand=True)
 		self._settings=settings
 		self._client=client
 		self._artist_list=artist_list
 
-		# cover, display_label, display_label_artist, albumartist, album, date, albumsort
-		self._store=Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, str, str)
-		self._store.set_default_sort_func(lambda *args: 0)
-		self.set_model(self._store)
+		# factory
+		def setup(factory, item):
+			item.set_child(AlbumListRow(self._client))
+		def bind(factory, item):
+			row=item.get_child()
+			row.set_album(item.get_item())
+			settings.bind("album-cover", row._cover, "height-request", Gio.SettingsBindFlags.GET)
+			settings.bind("album-cover", row._cover, "width-request", Gio.SettingsBindFlags.GET)
+		def unbind(factory, item):
+			row=item.get_child()
+			settings.unbind(row._cover, "height-request")
+			settings.unbind(row._cover, "width-request")
+		factory=Gtk.SignalListItemFactory()
+		factory.connect("setup", setup)
+		factory.connect("bind", bind)  # TODO emmitted to often!
+		factory.connect("unbind", unbind)  # TODO
+		self.set_factory(factory)
 
-		# progress bar
-		self.progress_bar=Gtk.ProgressBar(valign=Gtk.Align.START)
-		self.progress_bar.add_css_class("osd")
-
-		# cover thread
-		self._cover_thread=AlbumLoadingThread(self._client, self._settings, self.progress_bar, self, self._store, None)
+		# list model
+		self._model=ListModel(Album)
+		self.set_model(Gtk.NoSelection(model=self._model))
 
 		# connect
-		self.connect("item-activated", self._on_item_activated)
+		self.connect("activate", self._on_activate)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
@@ -1715,44 +1632,39 @@ class AlbumList(Gtk.IconView):
 		self._artist_list.connect("item-selected", self._refresh)
 		self._artist_list.connect("clear", self._clear)
 
-	def _workaround_clear(self):
-		self._store.clear()
-		# workaround (scrollbar still visible after clear)
-		self.set_model(None)
-		self.set_model(self._store)
-
 	def _clear(self, *args):
-		def callback():
-			self._workaround_clear()
-		if self._cover_thread.is_alive():
-			self._cover_thread.set_callback(callback)
-			self._cover_thread.stop()
-		else:
-			callback()
+		self._model.clear()
 
-	def _sort_settings(self, *args):
-		if not self._cover_thread.is_alive():
-			if self._settings.get_boolean("sort-albums-by-year"):
-				self._store.set_sort_column_id(5, Gtk.SortType.ASCENDING)
+	def _get_albums(self, artist):  # TODO move to client?
+		albums=self._client.list("albumsort", "albumartist", artist, "group", "date", "group", "album")
+		for _, album in itertools.groupby(albums, key=lambda x: (x["album"], x["date"])):
+			tmp=next(album)
+			# ignore multiple albumsort values
+			if next(album, None) is None:
+				yield Album({"artist": artist, "name": tmp["album"], "date": tmp["date"], "sortname": tmp["albumsort"]})
 			else:
-				self._store.set_sort_column_id(6, Gtk.SortType.ASCENDING)
+				yield Album({"artist": artist, "name": tmp["album"], "date": tmp["date"], "sortname": tmp["album"]})
+
+	def _sort_settings(self, *args):  # TODO don't reload all albums
+		self._refresh()
 
 	def _refresh(self, *args):
-		def callback():
-			if self._cover_thread.is_alive():  # already started?
-				return False
-			artist=self._artist_list.get_selected_artist()
-			self._cover_thread=AlbumLoadingThread(self._client,self._settings,self.progress_bar,self,self._store,artist)
-			self._cover_thread.start()
-		if self._cover_thread.is_alive():
-			self._cover_thread.set_callback(callback)
-			self._cover_thread.stop()
+		self._settings.set_property("cursor-watch", True)
+		self._model.clear()
+		# ensure list is empty
+		main=GLib.main_context_default()
+		while main.pending():
+			main.iteration()
+		artist=self._artist_list.get_selected_artist()
+		if self._settings.get_boolean("sort-albums-by-year"):
+			self._model.append(sorted(self._get_albums(artist), key=lambda item: item["date"]))
 		else:
-			callback()
+			self._model.append(sorted(self._get_albums(artist), key=lambda item: locale.strxfrm(item["sortname"])))
+		self._settings.set_property("cursor-watch", False)
 
-	def _on_item_activated(self, widget, path):
-		tags=self._store[path][3:6]
-		self.emit("album-selected", *tags)
+
+	def _on_activate(self, widget, pos):
+		self.emit("album-selected", *(self._model.get_item(pos)[key] for key in ("artist", "name", "date")))
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
@@ -1871,13 +1783,9 @@ class Browser(Gtk.Paned):
 		album_window=Gtk.ScrolledWindow(child=self._album_list)
 		self._album_view=AlbumView(self._client, self._settings)
 
-		# album overlay
-		album_overlay=Gtk.Overlay(child=album_window)
-		album_overlay.add_overlay(self._album_list.progress_bar)
-
 		# album stack
 		self._album_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT, hhomogeneous=False, vhomogeneous=False)
-		self._album_stack.add_named(album_overlay, "album_list")
+		self._album_stack.add_named(album_window, "album_list")
 		self._album_stack.add_named(self._album_view, "album_view")
 
 		# connect
