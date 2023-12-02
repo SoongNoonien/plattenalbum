@@ -1549,9 +1549,9 @@ class Album(collections.UserDict, GObject.Object, metaclass=AlbumMetaclass):  # 
 		collections.UserDict.__init__(self, data)
 		GObject.Object.__init__(self, *args, **kwargs)
 
-class AlbumListRow(Gtk.Box):  # TODO styling
+class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
 		self._client=client
 		self._cover=Gtk.Image(hexpand=True)
 		self._label=Gtk.Label(use_markup=True, justify=Gtk.Justification.CENTER, wrap=True)
@@ -1577,7 +1577,7 @@ class AlbumListRow(Gtk.Box):  # TODO styling
 class AlbumList(Gtk.GridView):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client, settings, artist_list):
-		super().__init__(single_click_activate=True, vexpand=True)
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True)
 		self._settings=settings
 		self._client=client
 		self._artist_list=artist_list
