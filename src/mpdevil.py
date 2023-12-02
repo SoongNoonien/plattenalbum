@@ -1629,11 +1629,14 @@ class ArtistList(Gtk.ListView):
 			self._refresh()
 			self._select(artist)
 
-class AlbumMetaclass(type(GObject.Object), type(collections.UserDict)): pass
-class Album(collections.UserDict, GObject.Object, metaclass=AlbumMetaclass):  # TODO don't use dict here all fields are known
-	def __init__(self, data, *args, **kwargs):
-		collections.UserDict.__init__(self, data)
-		GObject.Object.__init__(self, *args, **kwargs)
+class Album(GObject.Object):
+	def __init__(self, artist, name, sortname, date):
+		GObject.Object.__init__(self)
+		self.artist=artist
+		self.name=name
+		self.sortname=sortname
+		self.date=date
+		self.cover=None
 
 class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
@@ -1645,20 +1648,20 @@ class AlbumListRow(Gtk.Box):
 		self.append(self._label)
 
 	def set_album(self, album):
-		if album["date"]:
-			display_label=f"<b>{GLib.markup_escape_text(album['name'])}</b> ({GLib.markup_escape_text(album['date'])})"
+		if album.date:
+			display_label=f"<b>{GLib.markup_escape_text(album.name)}</b> ({GLib.markup_escape_text(album.date)})"
 		else:
-			display_label=f"<b>{GLib.markup_escape_text(album['name'])}</b>"
+			display_label=f"<b>{GLib.markup_escape_text(album.name)}</b>"
 		self._label.set_label(display_label)
-		if "cover" not in album:
+		if album.cover is None:
 			self._client.restrict_tagtypes("albumartist", "album")
-			song=self._client.find("albumartist", album["artist"], "album", album["name"], "date", album["date"], "window", "0:1")[0]
+			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
 			self._client.tagtypes("all")
 			if (cover:=self._client.get_cover(song)) is None:
-				album["cover"]=Gdk.Texture.new_from_filename(FALLBACK_COVER)
+				album.cover=Gdk.Texture.new_from_filename(FALLBACK_COVER)
 			else:
-				album["cover"]=cover.get_paintable()
-		self._cover.set_from_paintable(album["cover"])
+				album.cover=cover.get_paintable()
+		self._cover.set_from_paintable(album.cover)
 
 class AlbumList(Gtk.GridView):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
@@ -1707,15 +1710,15 @@ class AlbumList(Gtk.GridView):
 			tmp=next(album)
 			# ignore multiple albumsort values
 			if next(album, None) is None:
-				yield Album({"artist": artist, "name": tmp["album"], "date": tmp["date"], "sortname": tmp["albumsort"]})
+				yield Album(artist, tmp["album"], tmp["albumsort"], tmp["date"])
 			else:
-				yield Album({"artist": artist, "name": tmp["album"], "date": tmp["date"], "sortname": tmp["album"]})
+				yield Album(artist, tmp["album"], tmp["album"], tmp["date"])
 
 	def _sort_settings(self, *args):
 		if self._settings.get_boolean("sort-albums-by-year"):
-			self._model.sort(key=lambda item: item["date"])
+			self._model.sort(key=lambda item: item.date)
 		else:
-			self._model.sort(key=lambda item: locale.strxfrm(item["sortname"]))
+			self._model.sort(key=lambda item: locale.strxfrm(item.sortname))
 
 	def _refresh(self, *args):
 		self._settings.set_property("cursor-watch", True)
@@ -1726,14 +1729,14 @@ class AlbumList(Gtk.GridView):
 			main.iteration()
 		artist=self._artist_selection_model.get_selected_artist()
 		if self._settings.get_boolean("sort-albums-by-year"):
-			self._model.append(sorted(self._get_albums(artist), key=lambda item: item["date"]))
+			self._model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
 		else:
-			self._model.append(sorted(self._get_albums(artist), key=lambda item: locale.strxfrm(item["sortname"])))
+			self._model.append(sorted(self._get_albums(artist), key=lambda item: locale.strxfrm(item.sortname)))
 		self._settings.set_property("cursor-watch", False)
 
-
 	def _on_activate(self, widget, pos):
-		self.emit("album-selected", *(self._model.get_item(pos)[key] for key in ("artist", "name", "date")))
+		album=self._model.get_item(pos)
+		self.emit("album-selected", album.artist, album.name, album.date)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
