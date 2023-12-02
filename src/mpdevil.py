@@ -1197,7 +1197,11 @@ class ListModel(GObject.Object, Gio.ListModel):
 
 	def append(self, data):
 		self._data.extend(data)
-		self.emit("items-changed", self.get_n_items(), 0, len(data))
+		self.emit("items-changed", self.get_n_items(), 0, len(data))  # TODO
+
+	def sort(self, **kwargs):
+		self._data.sort(**kwargs)
+		self.emit("items-changed", 0, self.get_n_items(), self.get_n_items())
 
 	def do_get_item(self, position):
 		try:
@@ -1621,8 +1625,11 @@ class AlbumList(Gtk.GridView):
 			else:
 				yield Album({"artist": artist, "name": tmp["album"], "date": tmp["date"], "sortname": tmp["album"]})
 
-	def _sort_settings(self, *args):  # TODO don't reload all albums
-		self._refresh()
+	def _sort_settings(self, *args):
+		if self._settings.get_boolean("sort-albums-by-year"):
+			self._model.sort(key=lambda item: item["date"])
+		else:
+			self._model.sort(key=lambda item: locale.strxfrm(item["sortname"]))
 
 	def _refresh(self, *args):
 		self._settings.set_property("cursor-watch", True)
