@@ -1459,7 +1459,7 @@ class Artist(GObject.Object):
 		self.section_start=section_start
 
 class ArtistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel, Gtk.SectionModel):
-	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self):
@@ -1542,7 +1542,7 @@ class ArtistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel, Gt
 				if old_selected is not None:
 					self.selection_changed(old_selected, 1)
 				self.selection_changed(position, 1)
-				self.emit("selected")
+				self.emit("selected", self._data[position].name)
 			return True
 		else:
 			return False
@@ -1665,11 +1665,10 @@ class AlbumListRow(Gtk.Box):
 
 class AlbumList(Gtk.GridView):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
-	def __init__(self, client, settings, artist_selection_model):
+	def __init__(self, client, settings):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True)
 		self._settings=settings
 		self._client=client
-		self._artist_selection_model=artist_selection_model
 
 		# factory
 		def setup(factory, item):
@@ -1698,10 +1697,8 @@ class AlbumList(Gtk.GridView):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
-		self._artist_selection_model.connect("selected", self._refresh)
-		self._artist_selection_model.connect("clear", self._clear)
 
-	def _clear(self, *args):
+	def clear(self, *args):
 		self._model.clear()
 
 	def _get_albums(self, artist):
@@ -1720,14 +1717,13 @@ class AlbumList(Gtk.GridView):
 		else:
 			self._model.sort(key=lambda item: locale.strxfrm(item.sortname))
 
-	def _refresh(self, *args):
+	def display(self, artist):
 		self._settings.set_property("cursor-watch", True)
 		self._model.clear()
 		# ensure list is empty
 		main=GLib.main_context_default()
 		while main.pending():
 			main.iteration()
-		artist=self._artist_selection_model.get_selected_artist()
 		if self._settings.get_boolean("sort-albums-by-year"):
 			self._model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
 		else:
@@ -1846,7 +1842,7 @@ class Browser(Gtk.Paned):
 
 		# widgets
 		self._artist_list=ArtistList(self._client, self._settings)
-		self._album_list=AlbumList(self._client, self._settings, self._artist_list.artist_selection_model)
+		self._album_list=AlbumList(self._client, self._settings)
 		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
 		album_window=Gtk.ScrolledWindow(child=self._album_list)
 		self._album_view=AlbumView(self._client, self._settings)
@@ -1857,10 +1853,11 @@ class Browser(Gtk.Paned):
 		self._album_stack.add_named(self._album_view, "album_view")
 
 		# connect
-		self._album_list.connect("album-selected", self._on_album_list_show_info)
+		self._album_list.connect("album-selected", self._on_album_selected)
 		self._album_view.connect("close", lambda *args: self._album_stack.set_visible_child_name("album_list"))
-		self._artist_list.artist_selection_model.connect("selected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
+		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
 		self._artist_list.artist_selection_model.connect("reselected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
+		self._artist_list.artist_selection_model.connect("clear", self._album_list.clear)
 		self._client.emitter.connect("disconnected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 		self._settings.connect("changed::album-cover", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 
@@ -1872,7 +1869,11 @@ class Browser(Gtk.Paned):
 		if self._album_stack.get_visible_child_name() == "album_view":
 			self._album_stack.set_visible_child_name("album_list")
 
-	def _on_album_list_show_info(self, widget, *tags):
+	def _on_artist_selected(self, obj, artist):
+		self._album_stack.set_visible_child_name("album_list")
+		self._album_list.display(artist)
+
+	def _on_album_selected(self, widget, *tags):
 		self._album_view.display(*tags)
 		self._album_stack.set_visible_child_name("album_view")
 		self._album_view.songs_list.grab_focus()
