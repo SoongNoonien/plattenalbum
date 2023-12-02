@@ -1544,7 +1544,7 @@ class ArtistList(Gtk.ListView):  # TODO
 			self._select(artist)
 
 class AlbumMetaclass(type(GObject.Object), type(collections.UserDict)): pass
-class Album(collections.UserDict, GObject.Object, metaclass=AlbumMetaclass):
+class Album(collections.UserDict, GObject.Object, metaclass=AlbumMetaclass):  # TODO don't use dict here all fields are known
 	def __init__(self, data, *args, **kwargs):
 		collections.UserDict.__init__(self, data)
 		GObject.Object.__init__(self, *args, **kwargs)
@@ -1596,8 +1596,8 @@ class AlbumList(Gtk.GridView):
 			settings.unbind(row._cover, "width-request")
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
-		factory.connect("bind", bind)  # TODO emmitted to often!
-		factory.connect("unbind", unbind)  # TODO
+		factory.connect("bind", bind)
+		factory.connect("unbind", unbind)
 		self.set_factory(factory)
 
 		# list model
@@ -1616,7 +1616,7 @@ class AlbumList(Gtk.GridView):
 	def _clear(self, *args):
 		self._model.clear()
 
-	def _get_albums(self, artist):  # TODO move to client?
+	def _get_albums(self, artist):
 		albums=self._client.list("albumsort", "albumartist", artist, "group", "date", "group", "album")
 		for _, album in itertools.groupby(albums, key=lambda x: (x["album"], x["date"])):
 			tmp=next(album)
