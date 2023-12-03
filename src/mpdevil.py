@@ -1619,6 +1619,8 @@ class ArtistList(Gtk.ListView):
 		if (song:=self._client.currentsong()):
 			artist=song["albumartist"][0]
 			self._select(artist)
+		else:
+			self.artist_selection_model.select_item(0, True)
 		self.set_sensitive(True)
 
 	def _on_updated_db(self, *args):
