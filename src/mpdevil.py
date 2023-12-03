@@ -966,7 +966,6 @@ class ViewSettings(Adw.PreferencesGroup):
 			(_("Show stop button"), "show-stop", ""),
 			(_("Show audio format"), "show-audio-format", ""),
 			(_("Show lyrics button"), "show-lyrics-button", ""),
-			(_("Place playlist at the side"), "playlist-right", ""),
 		)
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle)
@@ -2889,7 +2888,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
-		self._cover_playlist_box=Gtk.Box()
+		self._cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._paned2=Gtk.Paned(resize_start_child=True,shrink_start_child=False,resize_end_child=False,shrink_end_child=False,vexpand=True)
 		self._browser=Browser(self._client, self._settings)
 		self._search_window=SearchWindow(self._client)
@@ -2943,7 +2942,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button.connect("toggled", self._on_search_button_toggled)
 		self._settings.connect_after("changed::mini-player", self._mini_player)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
-		self._settings.connect("changed::playlist-right", self._on_playlist_pos_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -2951,7 +2949,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("connection_error", self._on_connection_error)
 
 		# packing
-		self._on_playlist_pos_changed()  # set orientation
 		self._cover_playlist_box.append(self._cover_lyrics_window)
 		self._cover_playlist_box.append(Gtk.Separator())
 		self._cover_playlist_box.append(playlist_window)
@@ -3124,14 +3121,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_cursor_from_name("progress")
 		else:
 			self.set_cursor_from_name(None)
-
-	def _on_playlist_pos_changed(self, *args):
-		if self._settings.get_boolean("playlist-right"):
-			self._cover_playlist_box.set_orientation(Gtk.Orientation.VERTICAL)
-			self._paned2.set_orientation(Gtk.Orientation.HORIZONTAL)
-		else:
-			self._cover_playlist_box.set_orientation(Gtk.Orientation.HORIZONTAL)
-			self._paned2.set_orientation(Gtk.Orientation.VERTICAL)
 
 ###################
 # Gtk application #

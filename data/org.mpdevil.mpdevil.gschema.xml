@@ -106,10 +106,6 @@
 			<default>false</default>
 			<summary>Classic previous button behavior</summary>
 		</key>
-		<key type="b" name="playlist-right">
-			<default>true</default>
-			<summary>Move playlist to the right</summary>
-		</key>
 		<key type="i" name="refresh-interval">
 			<default>100</default>
 			<summary>Main refresh interval</summary>
