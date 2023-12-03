@@ -1598,7 +1598,7 @@ class ArtistList(Gtk.ListView):
 
 	def _select(self, name):
 		self.artist_selection_model.select_artist(name)
-		self.scroll_to(self.artist_selection_model.get_selected(), Gtk.ListScrollFlags.NONE, None)
+		self.scroll_to(self.artist_selection_model.get_selected(), Gtk.ListScrollFlags.FOCUS, None)
 
 	def _refresh(self):
 		artists=self._client.list("albumartistsort", "group", "albumartist")
@@ -1620,7 +1620,7 @@ class ArtistList(Gtk.ListView):
 			artist=song["albumartist"][0]
 			self._select(artist)
 		else:
-			self.artist_selection_model.select_item(0, True)
+			self.scroll_to(0, Gtk.ListScrollFlags.SELECT|Gtk.ListScrollFlags.FOCUS, None)
 		self.set_sensitive(True)
 
 	def _on_updated_db(self, *args):
