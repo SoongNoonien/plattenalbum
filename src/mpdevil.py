@@ -549,6 +549,7 @@ class MultiTag(list):
 
 class SongMetaclass(type(GObject.Object), type(collections.UserDict)): pass
 class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
+	widget=GObject.Property(type=Gtk.Widget, default=None)  # current widget representing the song in the UI
 	def __init__(self, data):
 		collections.UserDict.__init__(self, data)
 		GObject.Object.__init__(self)
@@ -1254,9 +1255,12 @@ class SongsList(Gtk.ListView):
 			row=item.get_child()
 			song=item.get_item()
 			row.set_song(song)
+			song.set_property("widget", row)
 		def unbind(factory, item):
 			row=item.get_child()
+			song=item.get_item()
 			row.unset_song()
+			song.set_property("widget", None)
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
@@ -1271,6 +1275,17 @@ class SongsList(Gtk.ListView):
 		# menu
 		self._menu=SongMenu(client)
 		self._menu.set_parent(self)
+
+		# action group
+		action_group=Gio.SimpleActionGroup()
+		action=Gio.SimpleAction.new("menu", None)
+		action.connect("activate", self._on_menu)
+		action_group.add_action(action)
+		self.insert_action_group("view", action_group)
+
+		# shortcuts
+		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Menu, 0), Gtk.NamedAction.new("view.menu")))
+		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_F10, Gdk.ModifierType.SHIFT_MASK), Gtk.NamedAction.new("view.menu")))
 
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
@@ -1296,6 +1311,11 @@ class SongsList(Gtk.ListView):
 				self._client.file_to_playlist(song["file"], "append")
 			elif controller.get_current_button() == 3 and n_press == 1:
 				self._menu.open(song["file"], x, y)
+
+	def _on_menu(self, action, state):
+		song=self._selection.get_selected_item()
+		row=song.get_property("widget")
+		self._menu.open(song["file"], *row.translate_coordinates(self, 0, 0))
 
 ##########
 # search #
