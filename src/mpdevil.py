@@ -2317,7 +2317,7 @@ class CoverLyricsWindow(Gtk.Overlay):
 
 		# cover
 		main_cover=MainCover(self._client)
-		self._window_handle=Gtk.WindowHandle(child=Gtk.AspectFrame(child=main_cover))
+		self._window_handle=Gtk.WindowHandle(child=main_cover)
 
 		# lyrics button
 		self.lyrics_button=Gtk.ToggleButton(icon_name="org.mpdevil.mpdevil-lyrics-symbolic", tooltip_text=_("Lyrics"), can_focus=False)
