@@ -1117,28 +1117,6 @@ class ServerStats(Gtk.Window):
 # general purpose widgets #
 ###########################
 
-class TreeView(Gtk.TreeView):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-
-	def get_popover_point(self, path):
-		cell=self.get_cell_area(path, None)
-		cell.x,cell.y=self.convert_bin_window_to_widget_coords(cell.x,cell.y)
-		rect=self.get_visible_rect()
-		rect.x,rect.y=self.convert_tree_to_widget_coords(rect.x,rect.y)
-		return (rect.x+rect.width//2, max(min(cell.y+cell.height//2, rect.y+rect.height), rect.y))
-
-	def save_set_cursor(self, *args, **kwargs):
-		# The standard set_cursor function should scroll normally, but it doesn't work as it should when the treeview is not completely
-		# initialized. This usually happens when the program is freshly started and the treeview isn't done with its internal tasks.
-		# See: https://lazka.github.io/pgi-docs/GLib-2.0/constants.html#GLib.PRIORITY_HIGH_IDLE
-		# Running set_cursor with a lower priority ensures that the treeview is done before it gets scrolled.
-		GLib.idle_add(self.set_cursor, *args, **kwargs)
-
-	def save_scroll_to_cell(self, *args, **kwargs):
-		# Similar problem as above.
-		GLib.idle_add(self.scroll_to_cell, *args, **kwargs)
-
 class AutoSizedIcon(Gtk.Image):
 	def __init__(self, icon_name, settings_key, settings):
 		super().__init__(icon_name=icon_name)
@@ -1217,8 +1195,9 @@ class ListModel(GObject.Object, Gio.ListModel):
 		return len(self._data)
 
 class SongsListRow(Gtk.Box):
+	position=GObject.Property(type=int, default=-1)  # current list position represented (may not be set)
 	def __init__(self):
-		super().__init__()
+		super().__init__(can_target=False)  # can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
 
 		# labels
 		attrs=Pango.AttrList()
@@ -1903,51 +1882,24 @@ class Browser(Gtk.Paned):
 # playlist #
 ############
 
-class PlaylistView(TreeView):
-	selected_path=GObject.Property(type=Gtk.TreePath, default=None)  # currently marked song
-	def __init__(self, client, settings):
-		super().__init__(activate_on_single_click=True, reorderable=True, search_column=4, headers_visible=False)
+class PlaylistMenu(Gtk.PopoverMenu):  # TODO
+	def __init__(self, client):
+		super().__init__(has_arrow=False, halign=Gtk.Align.START)
 		self._client=client
-		self._settings=settings
-		self._playlist_version=None
-		self._inserted_path=None  # needed for drag and drop
+		self._file=None
+		self._position=None
 
-		# selection
-		self._selection=self.get_selection()
-		self._selection.set_select_function(self._select_function)
-
-		# store
-		# (track, title, duration, file, search)
-		self._store=Gtk.ListStore(str, str, str, str, str)
-		self.set_model(self._store)
-
-		# columns
-		renderer_text=Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END, ellipsize_set=True)
-		attrs=Pango.AttrList()
-		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		renderer_text_ralign_tnum=Gtk.CellRendererText(xalign=1, attributes=attrs)
-		renderer_text_centered_tnum=Gtk.CellRendererText(xalign=0.5, attributes=attrs)
-		columns=(
-			Gtk.TreeViewColumn(_("No"), renderer_text_centered_tnum, text=0),
-			Gtk.TreeViewColumn(_("Title"), renderer_text, markup=1),
-			Gtk.TreeViewColumn(_("Length"), renderer_text_ralign_tnum, text=2)
-		)
-		for column in columns:
-			column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-			column.set_property("resizable", False)
-			self.append_column(column)
-		self._column_title=columns[1]
-		self._column_title.set_property("expand", True)
-
-		# menu
+		# action group
 		action_group=Gio.SimpleActionGroup()
 		self._remove_action=Gio.SimpleAction.new("remove", None)
-		self._remove_action.connect("activate", lambda *args: self._store.remove(self._store.get_iter(self.get_cursor()[0])))
+		self._remove_action.connect("activate", lambda *args: self._client.delete(self._position))
 		action_group.add_action(self._remove_action)
 		self._show_action=Gio.SimpleAction.new("show", None)
-		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._store[self.get_cursor()[0]][3]))
+		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._file))
 		action_group.add_action(self._show_action)
 		self.insert_action_group("menu", action_group)
+
+		# menu model
 		menu=Gio.Menu()
 		menu.append(_("Remove"), "menu.remove")
 		menu.append(_("Show"), "menu.show")
@@ -1958,78 +1910,166 @@ class PlaylistView(TreeView):
 		subsection.append(_("Clear"), "mpd.clear")
 		menu.append_section(None, current_song_section)
 		menu.append_section(None, subsection)
-		self._menu=Gtk.PopoverMenu.new_from_model(menu)
-		self._menu.set_has_arrow(False)
-		self._menu.set_halign(Gtk.Align.START)
-		self._menu.set_parent(self)  # TODO Gtk-CRITICAL https://gitlab.gnome.org/GNOME/gtk/-/issues/4884
+		self.set_menu_model(menu)
+
+	def open(self, file, position, x, y):
+		self._file=file
+		self._position=position
+		rect=Gdk.Rectangle()
+		rect.x,rect.y=x,y
+		self.set_pointing_to(rect)
+		if file is None or position is None:
+			self._remove_action.set_enabled(False)
+			self._show_action.set_enabled(False)
+		else:
+			self._remove_action.set_enabled(True)
+			self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
+		self.popup()
+
+class PlaylistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
+	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	def __init__(self):
+		super().__init__()
+		self._data=[]
+		self._selected=None
+
+	def clear(self, position=0):
+		n=len(self._data)-position
+		self._data=self._data[:position]
+		if self._selected is not None:
+			if self._selected >= len(self._data):
+				self._selected=None
+		self.items_changed(position, n, 0)
+
+	def get_selected(self):
+		return self._selected
+
+	def get_selected_song(self):
+		return self._data[self._selected]
+
+	def set(self, position, song):  # TODO set multiple items at once
+		if position < len(self._data):
+			self._data[position]=song
+			self.items_changed(position, 1, 1)
+		else:
+			self._data.append(song)
+			self.items_changed(position, 0, 1)
+
+	def select(self, position):
+		old_selected=self._selected
+		self._selected=position
+		if old_selected is not None:
+			self.selection_changed(old_selected, 1)
+		self.selection_changed(position, 1)
+
+	def unselect(self):  # TODO unify with select
+		old_selected=self._selected
+		self._selected=None
+		if old_selected is not None:
+			self.selection_changed(old_selected, 1)
+
+	def do_select_all(self): return False
+	def do_select_range(self, position, n_items, unselect_rest): return False
+	def do_set_selection(self, selected, mask): return False
+	def do_unselect_all(self): return False
+	def do_unselect_item(self, position): return False
+	def do_unselect_range(self, position, n_items): return False
+
+	def do_get_item(self, position):
+		try:
+			return self._data[position]
+		except IndexError:
+			return None
+
+	def do_get_item_type(self):
+		return Song
+
+	def do_get_n_items(self):
+		return len(self._data)
+
+	def do_get_selection_in_range(self, position, n_items):
+		return Gtk.Bitset.new_range(0, n_items)
+
+	def do_is_selected(self, position):
+		return position == self._selected
+
+	def do_select_item(self, position, unselect_rest):
+		return False
+
+class PlaylistView(Gtk.ListView):  # TODO D'n'D
+	def __init__(self, client, settings):
+		super().__init__(single_click_activate=True, tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
+		self._client=client
+		self._settings=settings
+		self._playlist_version=None
+
+		# factory  # TODO unify with SongsList?
+		def setup(factory, item):
+			item.set_child(SongsListRow())
+		def bind(factory, item):
+			row=item.get_child()
+			song=item.get_item()
+			row.set_song(song)
+			song.set_property("widget", row)
+			row.set_property("position", int(song["pos"]))
+		def unbind(factory, item):
+			row=item.get_child()
+			song=item.get_item()
+			row.unset_song()
+			song.set_property("widget", None)
+			row.set_property("position", -1)
+		factory=Gtk.SignalListItemFactory()
+		factory.connect("setup", setup)
+		factory.connect("bind", bind)
+		factory.connect("unbind", unbind)
+		self.set_factory(factory)
+
+		# model
+		self._playlist_selection_model=PlaylistSelectionModel()
+		self.set_model(self._playlist_selection_model)
+
+		# menu
+		self._menu=PlaylistMenu(client)
+		self._menu.set_parent(self)
+
+		# action group
+		action_group=Gio.SimpleActionGroup()
+		action=Gio.SimpleAction.new("menu", None)
+		action.connect("activate", self._on_menu)
+		action_group.add_action(action)
+		action=Gio.SimpleAction.new("delete", None)
+		action.connect("activate", self._on_delete)
+		action_group.add_action(action)
+		self.insert_action_group("view", action_group)
+
+		# shortcuts
+		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Menu, 0), Gtk.NamedAction.new("view.menu")))
+		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_F10, Gdk.ModifierType.SHIFT_MASK), Gtk.NamedAction.new("view.menu")))
+		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Delete, 0), Gtk.NamedAction.new("view.delete")))
 
 		# event controller
-		button2_controller=Gtk.GestureClick(button=2)
-		self.add_controller(button2_controller)
-		button2_controller.connect("pressed", self._on_button_pressed)
-		button3_controller=Gtk.GestureClick(button=3)
-		self.add_controller(button3_controller)
-		button3_controller.connect("pressed", self._on_button_pressed)
-		key_controller=Gtk.EventControllerKey()
-		self.add_controller(key_controller)
-		key_controller.connect("key-pressed", self._on_key_pressed)
+		button_controller=Gtk.GestureClick(button=0)
+		self.add_controller(button_controller)
+		button_controller.connect("pressed", self._on_button_pressed)
 
 		# connect
-		self.connect("row-activated", self._on_row_activated)
-		self._row_deleted=self._store.connect("row-deleted", self._on_row_deleted)
-		self._row_inserted=self._store.connect("row-inserted", self._on_row_inserted)
+		self.connect("activate", self._on_activate)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 
-	def scroll_to_selected_title(self):
-		if (path:=self.get_property("selected-path")) is not None:
-			self._scroll_to_path(path)
-
-	def _open_menu(self, uri, x, y):
-		rect=Gdk.Rectangle()
-		rect.x,rect.y=x,y
-		self._menu.set_pointing_to(rect)
-		if uri is None:
-			self._remove_action.set_enabled(False)
-			self._show_action.set_enabled(False)
-		else:
-			self._remove_action.set_enabled(True)
-			self._show_action.set_enabled(self._client.can_show_in_file_manager(uri))
-		self._menu.popup()
-
 	def _clear(self, *args):
 		self._menu.popdown()
 		self._playlist_version=None
-		self.set_property("selected-path", None)
-		self._store.handler_block(self._row_inserted)
-		self._store.handler_block(self._row_deleted)
-		self._store.clear()
-		self._store.handler_unblock(self._row_inserted)
-		self._store.handler_unblock(self._row_deleted)
+		self._playlist_selection_model.clear()
 
-	def _select(self, path):
-		self._unselect()
-		try:
-			self.set_property("selected-path", path)
-			self._selection.select_path(path)
-		except IndexError:  # invalid path
-			pass
-
-	def _unselect(self):
-		if (path:=self.get_property("selected-path")) is not None:
-			self.set_property("selected-path", None)
-			try:
-				self._selection.unselect_path(path)
-			except IndexError:  # invalid path
-				pass
-
-	def _delete(self, path):
-		if path == self.get_property("selected-path"):
+	def _delete(self, position):
+		if position == self._playlist_selection_model.get_selected():
 			self._client.tidy_playlist()
 		else:
-			self._store.remove(self._store.get_iter(path))
+			self._client.delete(position)
 
 	def _scroll_to_path(self, path):
 		self.set_cursor(path, None, False)
@@ -2037,20 +2077,21 @@ class PlaylistView(TreeView):
 
 	def _refresh_selection(self, song):
 		if song is None:
-			self._unselect()
+			self._playlist_selection_model.unselect()
 		else:
-			path=Gtk.TreePath(int(song))
-			self._select(path)
+			self._playlist_selection_model.select(int(song))
 
 	def _on_button_pressed(self, controller, n_press, x, y):
-		if (path_re:=self.get_path_at_pos(*self.convert_widget_to_bin_window_coords(x,y))) is not None:
-			path=path_re[0]
-			if controller.get_property("button") == 2 and n_press == 1:
-				self._delete(path)
-			elif controller.get_property("button") == 3 and n_press == 1:
-				self._open_menu(self._store[path][3], x, y)
-		elif controller.get_property("button") == 3 and n_press == 1:
-			self._open_menu(None, x, y)
+		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if item is self:
+			self._menu.open(None, None, x, y)
+		else:
+			row=item.get_first_child()
+			position=row.get_property("position")
+			if controller.get_current_button() == 2 and n_press == 1:
+				self._delete(position)
+			elif controller.get_current_button() == 3 and n_press == 1:
+				self._menu.open(self._playlist_selection_model.get_selected_song()["file"], position, x, y)
 
 	def _on_key_pressed(self, controller, keyval, keycode, state):
 		if keyval == Gdk.keyval_from_name("Delete"):
@@ -2060,35 +2101,11 @@ class PlaylistView(TreeView):
 			if (path:=self.get_cursor()[0]) is not None:
 				self._open_menu(self._store[path][3], *self.get_popover_point(path))
 
-	def _on_row_deleted(self, model, path):  # sync treeview to mpd
-		try:
-			if self._inserted_path is not None:  # move
-				path=int(path.to_string())
-				if path > self._inserted_path:
-					path=path-1
-				if path < self._inserted_path:
-					self._inserted_path=self._inserted_path-1
-				self._client.move(path, self._inserted_path)
-				self._inserted_path=None
-			else:  # delete
-				self._client.delete(path)  # bad song index possible
-			self._playlist_version=int(self._client.status()["playlist"])
-		except CommandError as e:
-			self._playlist_version=None
-			self._client.emitter.emit("playlist", int(self._client.status()["playlist"]))
-			raise e  # propagate exception
-
-	def _on_row_inserted(self, model, path, treeiter):
-		self._inserted_path=int(path.to_string())
-
-	def _on_row_activated(self, widget, path, view_column):
-		self._client.play(path)
+	def _on_activate(self, listview, pos):
+		self._client.play(pos)
 
 	def _on_playlist_changed(self, emitter, version, length, song_pos):
-		self._store.handler_block(self._row_inserted)
-		self._store.handler_block(self._row_deleted)
 		self._menu.popdown()
-		self._unselect()
 		self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
 		songs=[]
 		if self._playlist_version is not None:
@@ -2098,34 +2115,33 @@ class PlaylistView(TreeView):
 		self._client.tagtypes("all")
 		if songs:
 			for song in songs:
-				title=song.get_markup()
-				try:
-					treeiter=self._store.get_iter(song["pos"])
-				except ValueError:
-					self._store.insert_with_valuesv(-1, range(5),
-						[song["track"][0], title, str(song["duration"]), song["file"], song["title"][0]]
-					)
-				else:
-					self._store.set(treeiter,
-						0, song["track"][0], 1, title, 2, str(song["duration"]), 3, song["file"], 4, song["title"][0]
-					)
-		for i in reversed(range(length, len(self._store))):
-			treeiter=self._store.get_iter(i)
-			self._store.remove(treeiter)
+				self._playlist_selection_model.set(int(song["pos"]), song)
+		self._playlist_selection_model.clear(length)
 		self._refresh_selection(song_pos)
-		if (path:=self.get_property("selected-path")) is None:
-			if len(self._store) > 0:
-				self._scroll_to_path(Gtk.TreePath(0))
+		if (selected:=self._playlist_selection_model.get_selected()) is None:
+			if self._playlist_selection_model.get_n_items() > 0:
+				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
 		else:
-			self._scroll_to_path(path)
+			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 		self._playlist_version=version
-		self._store.handler_unblock(self._row_inserted)
-		self._store.handler_unblock(self._row_deleted)
 
-	def _on_song_changed(self, emitter, song, songid, state):
-		self._refresh_selection(song)
-		if state == "play":
-			self._scroll_to_path(self.get_property("selected-path"))
+	def _on_song_changed(self, emitter, song, songid, state):  # TODO possibly emitted before playlist is filled
+		if self._playlist_version is not None:
+			self._refresh_selection(song)
+			if state == "play":
+				self.scroll_to(self._playlist_selection_model.get_selected(), Gtk.ListScrollFlags.FOCUS, None)
+
+	def _on_menu(self, action, state):
+		item=self.get_focus_child()
+		row=item.get_first_child()
+		position=row.get_property("position")
+		self._menu.open(self._playlist_selection_model.get_item(position)["file"], position, *row.translate_coordinates(self, 0, 0))
+
+	def _on_delete(self, action, state):  # TODO merge with _on_menu
+		item=self.get_focus_child()
+		row=item.get_first_child()
+		position=row.get_property("position")
+		self._delete(position)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
@@ -2134,51 +2150,10 @@ class PlaylistView(TreeView):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-	def _select_function(self, selection, model, path, path_currently_selected):
-		return (path == self.get_property("selected-path")) == (not path_currently_selected)
-
-class PlaylistWindow(Gtk.Overlay):
+class PlaylistWindow(Gtk.ScrolledWindow):  # TODO scroll to song
 	def __init__(self, client, settings):
 		super().__init__(hexpand=True, vexpand=True)
-		self._back_to_current_song_button=Gtk.Button(tooltip_text=_("Scroll to current song"), can_focus=False)
-		self._back_to_current_song_button.add_css_class("osd")
-		self._back_to_current_song_button.add_css_class("circular")
-		self._back_button_revealer=Gtk.Revealer(
-			child=self._back_to_current_song_button, transition_duration=0,
-			margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER, valign=Gtk.Align.END
-		)
-		self._treeview=PlaylistView(client, settings)
-		scroll=Gtk.ScrolledWindow(child=self._treeview)
-
-		# connect
-		self._back_to_current_song_button.connect("clicked", self._on_back_to_current_song_button_clicked)
-		scroll.get_vadjustment().connect("value-changed", self._on_show_hide_back_button)
-		self._treeview.connect("notify::selected-path", self._on_show_hide_back_button)
-
-		# packing
-		self.set_child(scroll)
-		self.add_overlay(self._back_button_revealer)
-
-	def _on_show_hide_back_button(self, *args):
-		def callback():
-			visible_range=self._treeview.get_visible_range()  # not always accurate possibly due to a bug in Gtk
-			if visible_range is None or self._treeview.get_property("selected-path") is None:
-				self._back_button_revealer.set_reveal_child(False)
-			else:
-				if visible_range[0] > self._treeview.get_property("selected-path"):  # current song is above upper edge
-					self._back_to_current_song_button.set_icon_name("go-up-symbolic")
-					self._back_button_revealer.set_valign(Gtk.Align.START)
-					self._back_button_revealer.set_reveal_child(True)
-				elif self._treeview.get_property("selected-path") > visible_range[1]:  # current song is below lower edge
-					self._back_to_current_song_button.set_icon_name("go-down-symbolic")
-					self._back_button_revealer.set_valign(Gtk.Align.END)
-					self._back_button_revealer.set_reveal_child(True)
-				else:  # current song is visible
-					self._back_button_revealer.set_reveal_child(False)
-		GLib.idle_add(callback)  # workaround for the Gtk bug from above
-
-	def _on_back_to_current_song_button_clicked(self, *args):
-		self._treeview.scroll_to_selected_title()
+		self.set_child(PlaylistView(client, settings))
 
 ####################
 # cover and lyrics #
