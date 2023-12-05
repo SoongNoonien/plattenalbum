@@ -2093,14 +2093,6 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 			elif controller.get_current_button() == 3 and n_press == 1:
 				self._menu.open(self._playlist_selection_model.get_selected_song()["file"], position, x, y)
 
-	def _on_key_pressed(self, controller, keyval, keycode, state):
-		if keyval == Gdk.keyval_from_name("Delete"):
-			if (path:=self.get_cursor()[0]) is not None:
-				self._delete(path)
-		elif keyval == Gdk.keyval_from_name("Menu"):
-			if (path:=self.get_cursor()[0]) is not None:
-				self._open_menu(self._store[path][3], *self.get_popover_point(path))
-
 	def _on_activate(self, listview, pos):
 		self._client.play(pos)
 
