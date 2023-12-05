@@ -1195,7 +1195,7 @@ class ListModel(GObject.Object, Gio.ListModel):
 		return len(self._data)
 
 class SongsListRow(Gtk.Box):
-	position=GObject.Property(type=int, default=-1)  # current list position represented (may not be set)
+	position=GObject.Property(type=int, default=-1)
 	def __init__(self):
 		super().__init__(can_target=False)  # can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
 
@@ -1234,11 +1234,13 @@ class SongsList(Gtk.ListView):
 			song=item.get_item()
 			row.set_song(song)
 			song.set_property("widget", row)
+			row.set_property("position", item.get_position())
 		def unbind(factory, item):
 			row=item.get_child()
 			song=item.get_item()
 			row.unset_song()
 			song.set_property("widget", None)
+			row.set_property("position", -1)
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
@@ -1247,8 +1249,7 @@ class SongsList(Gtk.ListView):
 
 		# list model
 		self._model=ListModel(Song)
-		self._selection=Gtk.SingleSelection(model=self._model)
-		self.set_model(self._selection)
+		self.set_model(Gtk.NoSelection(model=self._model))
 
 		# menu
 		self._menu=SongMenu(client)
@@ -1284,16 +1285,20 @@ class SongsList(Gtk.ListView):
 		self._client.file_to_playlist(self._model.get_item(pos)["file"], "play")
 
 	def _on_button_released(self, controller, n_press, x, y):
-		if self.pick(x,y,Gtk.PickFlags.DEFAULT) is not self and (song:=self._selection.get_selected_item()) is not None:
+		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if item is not self:
+			row=item.get_first_child()
+			song=self._model.get_item(row.get_property("position"))
 			if controller.get_current_button() == 2 and n_press == 1:
 				self._client.file_to_playlist(song["file"], "append")
 			elif controller.get_current_button() == 3 and n_press == 1:
 				self._menu.open(song["file"], x, y)
 
 	def _on_menu(self, action, state):
-		song=self._selection.get_selected_item()
-		row=song.get_property("widget")
-		self._menu.open(song["file"], *row.translate_coordinates(self, 0, 0))
+		item=self.get_focus_child()
+		row=item.get_first_child()
+		position=row.get_property("position")
+		self._menu.open(self._model.get_item(position)["file"], *row.translate_coordinates(self, 0, 0))
 
 ##########
 # search #
@@ -2012,7 +2017,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 			song=item.get_item()
 			row.set_song(song)
 			song.set_property("widget", row)
-			row.set_property("position", int(song["pos"]))
+			row.set_property("position", item.get_position())
 		def unbind(factory, item):
 			row=item.get_child()
 			song=item.get_item()
