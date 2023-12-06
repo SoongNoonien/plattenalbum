@@ -2146,7 +2146,8 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 	def _on_button_pressed(self, controller, n_press, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if item is self:
-			self._menu.open(None, None, x, y)
+			if controller.get_current_button() == 3 and n_press == 1:
+				self._menu.open(None, None, x, y)
 		else:
 			row=item.get_first_child()
 			position=row.get_property("position")
