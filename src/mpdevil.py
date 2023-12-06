@@ -2073,13 +2073,18 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 				if item is not self:
 					row=item.get_first_child()
 					position=row.get_property("position")
+					if value == position:
+						return False
 					if value < position:
 						position-=1
 					if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
 						position+=1
 				else:
 					position=self._playlist_selection_model.get_n_items()-1
+				if value == position:
+					return False
 				self._client.move(value, position)
+				return True
 			elif isinstance(value, str):
 				if item is not self:
 					row=item.get_first_child()
@@ -2089,6 +2094,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 				else:
 					position=self._playlist_selection_model.get_n_items()
 				self._client.addid(value, position)
+				return True
 		drop_target.connect("drop", drop)
 
 		# menu
