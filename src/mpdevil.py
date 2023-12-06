@@ -1221,7 +1221,7 @@ class SongsListRow(Gtk.Box):
 		self._title.set_label("")
 		self._length.set_label("")
 
-class SongsList(Gtk.ListView):
+class SongsList(Gtk.ListView):  # TODO D'n'D
 	def __init__(self, client):
 		super().__init__(single_click_activate=True, tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
 		self._client=client
@@ -1250,6 +1250,21 @@ class SongsList(Gtk.ListView):
 		# list model
 		self._model=ListModel(Song)
 		self.set_model(Gtk.NoSelection(model=self._model))
+
+		# drag and drop
+		drag_source=Gtk.DragSource()
+		self.add_controller(drag_source)
+		def prepare(drag_source, x, y):
+			item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+			if item is not self:
+				row=item.get_first_child()
+				position=row.get_property("position")
+				song=self._model.get_item(position)
+				drag_source.set_icon(Gtk.WidgetPaintable.new(item), 0, 0)
+				return Gdk.ContentProvider.new_for_value(song["file"])
+			else:
+				return None
+		drag_source.connect("prepare", prepare)
 
 		# menu
 		self._menu=SongMenu(client)
@@ -2033,6 +2048,48 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 		# model
 		self._playlist_selection_model=PlaylistSelectionModel()
 		self.set_model(self._playlist_selection_model)
+
+		# drag and drop
+		drag_source=Gtk.DragSource()
+		self.add_controller(drag_source)
+		def prepare(drag_source, x, y):
+			item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+			if item is not self:
+				row=item.get_first_child()
+				position=row.get_property("position")
+				drag_source.set_icon(Gtk.WidgetPaintable.new(item), 0, 0)
+				return Gdk.ContentProvider.new_for_value(position)
+			else:
+				return None
+		drag_source.connect("prepare", prepare)
+
+		drop_target=Gtk.DropTarget()
+		drop_target.set_actions(Gdk.DragAction.COPY)
+		drop_target.set_gtypes((int,str,))
+		self.add_controller(drop_target)
+		def drop(drop_target, value, x, y):  # TODO
+			item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+			if isinstance(value, int):
+				if item is not self:
+					row=item.get_first_child()
+					position=row.get_property("position")
+					if value < position:
+						position-=1
+					if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
+						position+=1
+				else:
+					position=self._playlist_selection_model.get_n_items()-1
+				self._client.move(value, position)
+			elif isinstance(value, str):
+				if item is not self:
+					row=item.get_first_child()
+					position=row.get_property("position")
+					if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
+						position+=1
+				else:
+					position=self._playlist_selection_model.get_n_items()
+				self._client.addid(value, position)
+		drop_target.connect("drop", drop)
 
 		# menu
 		self._menu=PlaylistMenu(client)
