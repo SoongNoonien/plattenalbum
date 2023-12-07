@@ -877,7 +877,7 @@ class Client(MPDClient):
 			self.tagtypes("enable", tag)
 		self.command_list_end()
 
-	def _main_loop(self, *args):
+	def _main_loop(self, *args):  # TODO fix order of signals
 		try:
 			status=self.status()
 			diff=set(status.items())-set(self._last_status.items())
@@ -892,9 +892,6 @@ class Client(MPDClient):
 						self.emitter.emit("bitrate", None)
 					else:
 						self.emitter.emit("bitrate", val)
-				elif key == "songid":
-					self.current_cover=self.get_cover(self.currentsong())
-					self.emitter.emit("current_song", status["song"], status["songid"], status["state"])
 				elif key in ("state", "single", "audio"):
 					self.emitter.emit(key, val)
 				elif key == "volume":
@@ -908,6 +905,9 @@ class Client(MPDClient):
 						self.emitter.emit(key, False)
 				elif key == "updating_db":
 					self.emitter.emit("updating_db")
+			if "songid" in dict(diff):
+				self.current_cover=self.get_cover(self.currentsong())
+				self.emitter.emit("current_song", status["song"], status["songid"], status["state"])
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
@@ -2176,23 +2176,16 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 		else:
 			songs=self._client.playlistinfo()
 		self._client.tagtypes("all")
-		if songs:
-			for song in songs:
-				self._playlist_selection_model.set(int(song["pos"]), song)
+		for song in songs:
+			self._playlist_selection_model.set(int(song["pos"]), song)
 		self._playlist_selection_model.clear(length)
 		self._refresh_selection(song_pos)
-		if (selected:=self._playlist_selection_model.get_selected()) is None:
-			if self._playlist_selection_model.get_n_items() > 0:
-				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
-		else:
-			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 		self._playlist_version=version
 
-	def _on_song_changed(self, emitter, song, songid, state):  # TODO possibly emitted before playlist is filled
-		if self._playlist_version is not None:
-			self._refresh_selection(song)
-			if state == "play":
-				self.scroll_to(self._playlist_selection_model.get_selected(), Gtk.ListScrollFlags.FOCUS, None)
+	def _on_song_changed(self, emitter, song, songid, state):
+		self._refresh_selection(song)
+		if state == "play" and (selected:=self._playlist_selection_model.get_selected()) is not None:
+			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _on_menu(self, action, state):
 		item=self.get_focus_child()
