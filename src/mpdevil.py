@@ -2051,6 +2051,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 
 		# drag and drop
 		drag_source=Gtk.DragSource()
+		drag_source.set_actions(Gdk.DragAction.MOVE)
 		self.add_controller(drag_source)
 		def prepare(drag_source, x, y):
 			item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
@@ -2064,7 +2065,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 		drag_source.connect("prepare", prepare)
 
 		drop_target=Gtk.DropTarget()
-		drop_target.set_actions(Gdk.DragAction.COPY)
+		drop_target.set_actions(Gdk.DragAction.COPY|Gdk.DragAction.MOVE)
 		drop_target.set_gtypes((int,str,))
 		self.add_controller(drop_target)
 		def drop(drop_target, value, x, y):  # TODO
