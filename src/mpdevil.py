@@ -1261,7 +1261,7 @@ class SongsList(Gtk.ListView):  # TODO D'n'D
 				position=row.get_property("position")
 				song=self._model.get_item(position)
 				drag_source.set_icon(Gtk.WidgetPaintable.new(item), 0, 0)
-				return Gdk.ContentProvider.new_for_value(song["file"])
+				return Gdk.ContentProvider.new_for_value(song)
 			else:
 				return None
 		drag_source.connect("prepare", prepare)
@@ -2066,7 +2066,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 
 		drop_target=Gtk.DropTarget()
 		drop_target.set_actions(Gdk.DragAction.COPY|Gdk.DragAction.MOVE)
-		drop_target.set_gtypes((int,str,))
+		drop_target.set_gtypes((int,Song,))
 		self.add_controller(drop_target)
 		def drop(drop_target, value, x, y):  # TODO
 			item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
@@ -2086,7 +2086,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 					return False
 				self._client.move(value, position)
 				return True
-			elif isinstance(value, str):
+			elif isinstance(value, Song):
 				if item is not self:
 					row=item.get_first_child()
 					position=row.get_property("position")
@@ -2094,7 +2094,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 						position+=1
 				else:
 					position=self._playlist_selection_model.get_n_items()
-				self._client.addid(value, position)
+				self._client.addid(value["file"], position)
 				return True
 		drop_target.connect("drop", drop)
 
