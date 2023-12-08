@@ -48,7 +48,7 @@ textdomain("mpdevil")
 Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "mpdevil.gresource")))
 
 FALLBACK_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
-FALLBACK_COVER=Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).lookup_icon("media-optical", None, 128, 1, Gtk.TextDirection.NONE, Gtk.IconLookupFlags.FORCE_REGULAR).get_file().get_path()  # TODO
+FALLBACK_COVER="media-optical"
 FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
 FALLBACK_MUSIC_DIRECTORY=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 
@@ -59,7 +59,7 @@ FALLBACK_MUSIC_DIRECTORY=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_
 def idle_add(*args, **kwargs):
 	GLib.idle_add(*args, priority=GLib.PRIORITY_DEFAULT, **kwargs)
 
-def lookup_icon(icon_name, size, scale):  # TODO use for FALLBACK_COVER
+def lookup_icon(icon_name, size, scale=1):
 	return Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).lookup_icon(
 			icon_name, None, size, scale, Gtk.TextDirection.NONE, Gtk.IconLookupFlags.FORCE_REGULAR)
 
@@ -614,7 +614,7 @@ class BinaryCover(bytes):
 		try:
 			paintable=Gdk.Texture.new_from_bytes(GLib.Bytes.new(self))
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			paintable=Gdk.Texture.new_from_filename(FALLBACK_COVER)
+			paintable=lookup_icon(FALLBACK_COVER, 1024)
 		return paintable
 
 class FileCover(str):
@@ -622,7 +622,7 @@ class FileCover(str):
 		try:
 			paintable=Gdk.Texture.new_from_filename(self)
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			paintable=Gdk.Texture.new_from_filename(FALLBACK_COVER)
+			paintable=lookup_icon(FALLBACK_COVER, 1024)
 		return paintable
 
 class EventEmitter(GObject.Object):
@@ -1682,7 +1682,7 @@ class AlbumListRow(Gtk.Box):
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
 			self._client.tagtypes("all")
 			if (cover:=self._client.get_cover(song)) is None:
-				album.cover=Gdk.Texture.new_from_filename(FALLBACK_COVER)
+				album.cover=lookup_icon(FALLBACK_COVER, 1024)
 			else:
 				album.cover=cover.get_paintable()
 		self._cover.set_from_paintable(album.cover)
@@ -1846,7 +1846,7 @@ class AlbumView(Gtk.Box):  # TODO hide artist
 		self.songs_list.append(songs)
 		size=self._settings.get_int("album-cover")*1.5
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
-			self._cover.set_from_paintable(Gdk.Texture.new_from_filename(FALLBACK_COVER))
+			self._cover.set_from_paintable(lookup_icon(FALLBACK_COVER, 1024))
 		else:
 			self._cover.set_from_paintable(cover.get_paintable())
 		self._cover.set_size_request(size, size)
@@ -2327,7 +2327,7 @@ class MainCover(Gtk.Picture):
 		self._client.emitter.connect("connected", self._on_connected)
 
 	def _clear(self):
-		self.set_paintable(Gdk.Texture.new_from_filename(FALLBACK_COVER))
+		self.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
 
 	def _refresh(self, *args):
 		if self._client.current_cover is None:
