@@ -59,6 +59,10 @@ FALLBACK_MUSIC_DIRECTORY=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_
 def idle_add(*args, **kwargs):
 	GLib.idle_add(*args, priority=GLib.PRIORITY_DEFAULT, **kwargs)
 
+def lookup_icon(icon_name, size, scale):  # TODO use for FALLBACK_COVER
+	return Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).lookup_icon(
+			icon_name, None, size, scale, Gtk.TextDirection.NONE, Gtk.IconLookupFlags.FORCE_REGULAR)
+
 def main_thread_function(func):
 	@functools.wraps(func)
 	def wrapper_decorator(*args, **kwargs):
@@ -1260,7 +1264,7 @@ class SongsList(Gtk.ListView):  # TODO D'n'D
 				row=item.get_first_child()
 				position=row.get_property("position")
 				song=self._model.get_item(position)
-				drag_source.set_icon(Gtk.WidgetPaintable.new(item), 0, 0)
+				drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
 				return Gdk.ContentProvider.new_for_value(song)
 			else:
 				return None
@@ -2058,7 +2062,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 			if item is not self:
 				row=item.get_first_child()
 				position=row.get_property("position")
-				drag_source.set_icon(Gtk.WidgetPaintable.new(item), 0, 0)
+				drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
 				return Gdk.ContentProvider.new_for_value(position)
 			else:
 				return None
