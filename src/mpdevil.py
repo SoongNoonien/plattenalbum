@@ -1000,24 +1000,6 @@ class BehaviorSettings(Adw.PreferencesGroup):
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
-class MusicDirectoryEntryRow(Adw.EntryRow):  # TODO
-	def __init__(self, parent, **kwargs):
-		super().__init__(title=_("Music Library"), text=FALLBACK_MUSIC_DIRECTORY, **kwargs)
-		button=Gtk.Button(icon_name="folder-open-symbolic", tooltip_text=_("Choose directory"), has_frame=False, valign=Gtk.Align.CENTER)
-#		button.connect("clicked", self._on_button_clicked, parent)
-		self.add_suffix(button)
-
-	def _on_button_clicked(self, widget, parent):
-		dialog=Gtk.FileDialog(title=_("Choose directory"))#, action=Gtk.FileChooserAction.SELECT_FOLDER)
-		folder=self.get_text()
-		if not folder:
-			folder=FALLBACK_MUSIC_DIRECTORY
-		dialog.set_initial_folder(Gio.File.new_for_path(folder))
-		def callback(*args):
-			print(dialog.select_folder_finish())
-			print(args)
-		dialog.select_folder(parent, None, None)
-
 class ConnectionSettings(Adw.PreferencesGroup):
 	def __init__(self, client, settings, parent):
 		super().__init__(title=_("Connection"))
@@ -1042,7 +1024,7 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		settings.bind("socket-connection", hostname_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
 		self.add(hostname_row)
 
-		music_directory_row=MusicDirectoryEntryRow(parent)
+		music_directory_row=Adw.EntryRow(title=_("Music Library"))
 		settings.bind("music-directory", music_directory_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("socket-connection", music_directory_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
 		self.add(music_directory_row)
