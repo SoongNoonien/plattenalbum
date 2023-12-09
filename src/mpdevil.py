@@ -2420,10 +2420,12 @@ class PlaybackControl(Gtk.Box):
 			self._play_button_icon.set_property("icon-name", "media-playback-start-symbolic")
 			self._play_button.set_tooltip_text(_("Play"))
 
-class SeekBar(Gtk.Box):  # TODO
+class SeekBar(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(hexpand=True, margin_start=6, margin_end=6)
 		self._client=client
+		self._first_mark=None
+		self._second_mark=None
 
 		# labels
 		attrs=Pango.AttrList()
@@ -2438,10 +2440,9 @@ class SeekBar(Gtk.Box):  # TODO
 
 		# popover
 		self._popover=Gtk.Popover(autohide=False, has_arrow=False)
-		self._rect=Gdk.Rectangle()
 		self._time_label=Gtk.Label(attributes=attrs)
 		self._popover.set_child(self._time_label)
-		self._popover.set_parent(self)
+		self._popover.set_parent(self._scale)
 		self._popover.set_position(Gtk.PositionType.TOP)
 
 		# event controllers
@@ -2460,12 +2461,19 @@ class SeekBar(Gtk.Box):  # TODO
 		self._scale.add_controller(controller_motion)
 		controller_motion.connect("motion", self._on_pointer_motion)
 		controller_motion.connect("leave", self._on_pointer_leave)
+		button2_controller=Gtk.GestureClick(button=2)
+		self._elapsed.add_controller(button2_controller)
+		button2_controller.connect("pressed", self._on_label_button_pressed)
+		button2_controller=Gtk.GestureClick(button=2)
+		self._rest.add_controller(button2_controller)
+		button2_controller.connect("pressed", self._on_label_button_pressed)
 
 		# connect
 		self._scale.connect("change-value", self._on_change_value)
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed", self._refresh)
+		self._client.emitter.connect("current_song", self._clear_marks)
 
 		# packing
 		self.append(self._elapsed)
@@ -2481,6 +2489,9 @@ class SeekBar(Gtk.Box):  # TODO
 			self._scale.set_value(elapsed)
 			self._elapsed.set_text(str(Duration(elapsed)))
 			self._rest.set_text(str(Duration(duration-elapsed)))
+			if self._second_mark is not None:
+				if elapsed > self._second_mark:
+					self._client.seekcur(self._first_mark)
 		else:
 			self._disable()
 			self._elapsed.set_text(str(Duration(elapsed)))
@@ -2491,6 +2502,12 @@ class SeekBar(Gtk.Box):  # TODO
 		self._scale.set_range(0, 0)
 		self._elapsed.set_text("")
 		self._rest.set_text("")
+		self._clear_marks()
+
+	def _clear_marks(self, *args):
+		self._first_mark=None
+		self._second_mark=None
+		self._scale.clear_marks()
 
 	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
 		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
@@ -2516,23 +2533,40 @@ class SeekBar(Gtk.Box):  # TODO
 					pass
 
 	def _on_pointer_motion(self, controller, x, y):
-		rect=self._scale.get_range_rect()
+		range_rect=self._scale.get_range_rect()
 		duration=self._adjustment.get_upper()
 		if self._scale.get_direction() == Gtk.TextDirection.RTL:
-			elapsed=int(((rect.width-x)/rect.width*self._adjustment.get_upper()))
+			elapsed=int(((range_rect.width-x)/range_rect.width*duration))
 		else:
-			elapsed=int((x/rect.width*self._adjustment.get_upper()))
+			elapsed=int((x/range_rect.width*duration))
 		if elapsed > duration:  # fix display error
 			elapsed=int(duration)
 		elif elapsed < 0:
 			elapsed=0
-		self._rect.x=self._scale.translate_coordinates(self, x, y)[0] # fix position error
 		self._time_label.set_text(str(Duration(elapsed)))
-		self._popover.set_pointing_to(self._rect)
+		rect=Gdk.Rectangle()
+		rect.x,rect.y=x,0
+		self._popover.set_pointing_to(rect)
 		self._popover.popup()
 
 	def _on_pointer_leave(self, *args):
 		self._popover.popdown()
+
+	def _on_label_button_pressed(self, controller, n_press, x, y):
+		if n_press == 1:
+			value=self._scale.get_value()
+			if self._first_mark is None:
+				self._first_mark=value
+				self._scale.add_mark(value, Gtk.PositionType.BOTTOM, None)
+			elif self._second_mark is None:
+				if value < self._first_mark:
+					self._second_mark=self._first_mark
+					self._first_mark=value
+				else:
+					self._second_mark=value
+				self._scale.add_mark(value, Gtk.PositionType.BOTTOM, None)
+			else:
+				self._clear_marks()
 
 	def _on_state(self, emitter, state):
 		if state == "stop":
