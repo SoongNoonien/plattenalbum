@@ -1000,13 +1000,6 @@ class BehaviorSettings(Adw.PreferencesGroup):
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
-class SocketExpanderRow(Adw.ExpanderRow):
-	def __init__(self, settings):
-		super().__init__(title=_("Connect via Unix domain socket"))
-		row=Adw.EntryRow(title=_("Path"), show_apply_button=True)
-		settings.bind("socket", row, "text", Gio.SettingsBindFlags.DEFAULT)
-		self.add_row(row)
-
 class MusicDirectoryEntryRow(Adw.EntryRow):  # TODO
 	def __init__(self, parent, **kwargs):
 		super().__init__(title=_("Music Library"), text=FALLBACK_MUSIC_DIRECTORY, **kwargs)
@@ -1025,32 +1018,34 @@ class MusicDirectoryEntryRow(Adw.EntryRow):  # TODO
 			print(args)
 		dialog.select_folder(parent, None, None)
 
-class NetworkExpanderRow(Adw.ExpanderRow):
-	def __init__(self, settings, parent):
-		super().__init__(title=_("Connect via network"))
-		port_row=Adw.SpinRow.new_with_range(0, 65535, 1)
-		port_row.set_title(_("Port"))
-		settings.bind("port", port_row, "value", Gio.SettingsBindFlags.DEFAULT)
-		self.add_row(port_row)
-
-		hostname_row=Adw.EntryRow(title=_("Hostname"))
-		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		self.add_row(hostname_row)
-
-		music_directory_row=MusicDirectoryEntryRow(parent)
-		settings.bind("music-directory", music_directory_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		self.add_row(music_directory_row)
-
 class ConnectionSettings(Adw.PreferencesGroup):
 	def __init__(self, client, settings, parent):
 		super().__init__(title=_("Connection"))
 
-		socket_expander=SocketExpanderRow(settings)
-		settings.bind("socket-connection", socket_expander, "expanded", Gio.SettingsBindFlags.DEFAULT)
-		self.add(socket_expander)
-		network_expander=NetworkExpanderRow(settings, parent)
-		settings.bind("socket-connection", network_expander, "expanded", Gio.SettingsBindFlags.DEFAULT|Gio.SettingsBindFlags.INVERT_BOOLEAN)
-		self.add(network_expander)
+		socket_connect_row=Adw.SwitchRow(title=_("Connect via Unix domain socket"))
+		settings.bind("socket-connection", socket_connect_row, "active", Gio.SettingsBindFlags.DEFAULT)
+		self.add(socket_connect_row)
+
+		socket_row=Adw.EntryRow(title=_("Socket Path"), show_apply_button=True)
+		settings.bind("socket", socket_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", socket_row, "visible", Gio.SettingsBindFlags.GET)
+		self.add(socket_row)
+
+		port_row=Adw.SpinRow.new_with_range(0, 65535, 1)
+		port_row.set_title(_("Port"))
+		settings.bind("port", port_row, "value", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", port_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
+		self.add(port_row)
+
+		hostname_row=Adw.EntryRow(title=_("Hostname"))
+		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", hostname_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
+		self.add(hostname_row)
+
+		music_directory_row=MusicDirectoryEntryRow(parent)
+		settings.bind("music-directory", music_directory_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("socket-connection", music_directory_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
+		self.add(music_directory_row)
 
 		regex_row=Adw.EntryRow(title=_("Regex"))
 		regex_row.set_tooltip_text(
@@ -1075,7 +1070,7 @@ class ConnectionSettings(Adw.PreferencesGroup):
 class SettingsDialog(Adw.PreferencesWindow):  # TODO open at specific setting
 	def __init__(self, parent, client, settings, tab="view"):
 		super().__init__(transient_for=parent)
-		page=Adw.PreferencesPage(title="Test")
+		page=Adw.PreferencesPage()
 		page.add(ViewSettings(settings))
 		page.add(BehaviorSettings(settings))
 		page.add(ConnectionSettings(client, settings, parent))
