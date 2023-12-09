@@ -1741,7 +1741,7 @@ class AlbumList(Gtk.GridView):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-class AlbumView(Gtk.Box):  # TODO hide artist
+class AlbumView(Gtk.Box):
 	__gsignals__={"close": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client, settings):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
@@ -1808,18 +1808,6 @@ class AlbumView(Gtk.Box):  # TODO hide artist
 		self._client.restrict_tagtypes("track", "title", "artist")
 		songs=self._client.find(*self._tag_filter)
 		self._client.tagtypes("all")
-#		for song in songs:
-#			# only show artists =/= albumartist
-#			try:
-#				song["artist"].remove(albumartist)
-#			except ValueError:
-#				pass
-#			artist=str(song['artist'])
-#			if artist == albumartist or not artist:
-#				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b>"
-#			else:
-#				title_artist=f"<b>{GLib.markup_escape_text(song['title'][0])}</b> • {GLib.markup_escape_text(artist)}"
-#			self.songs_list.append(song["track"][0], title_artist, str(song["duration"]), song["file"], song["title"][0])
 		self.songs_list.append(songs)
 		size=self._settings.get_int("album-cover")*1.5
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
