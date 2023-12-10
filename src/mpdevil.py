@@ -2461,7 +2461,7 @@ class SeekBar(Gtk.Box):
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed", self._refresh)
-		self._client.emitter.connect("current_song", self._clear_marks)
+		self._client.emitter.connect("current_song", self._on_song_changed)
 
 		# packing
 		self.append(self._elapsed)
@@ -2559,6 +2559,10 @@ class SeekBar(Gtk.Box):
 	def _on_state(self, emitter, state):
 		if state == "stop":
 			self._disable()
+
+	def _on_song_changed(self, *args):
+		self._clear_marks()
+		self._popover.popdown()
 
 class AudioFormat(Gtk.Box):
 	def __init__(self, client, settings):
