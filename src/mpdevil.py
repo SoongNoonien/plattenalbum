@@ -2153,7 +2153,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		self._refresh_selection(song)
-		if state == "play" and (selected:=self._playlist_selection_model.get_selected()) is not None:
+		if (selected:=self._playlist_selection_model.get_selected()) is not None:
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _on_menu(self, action, state):
