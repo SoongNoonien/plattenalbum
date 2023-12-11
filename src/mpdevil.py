@@ -1103,6 +1103,88 @@ class AutoSizedIcon(Gtk.Image):
 		super().__init__(icon_name=icon_name)
 		settings.bind(settings_key, self, "pixel-size", Gio.SettingsBindFlags.GET)
 
+class ListModel(GObject.Object, Gio.ListModel):
+	def __init__(self, item_type):
+		super().__init__()
+		self.data=[]
+		self._item_type=item_type
+
+	def do_get_item(self, position):
+		try:
+			return self.data[position]
+		except IndexError:
+			return None
+
+	def do_get_item_type(self):
+		return self._item_type
+
+	def do_get_n_items(self):
+		return len(self.data)
+
+class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
+	def __init__(self, item_type):
+		super().__init__(item_type)
+		self._selected=None
+
+	def clear(self, position=0):
+		n=self.get_n_items()-position
+		self.data=self.data[:position]
+		if self._selected is not None:
+			if self._selected >= self.get_n_items():
+				self._selected=None
+		self.items_changed(position, n, 0)
+
+	def append(self, data):
+		n=self.get_n_items()
+		self.data.extend(data)
+		self.items_changed(n, 0, self.get_n_items())
+
+	def sort(self, **kwargs):
+		self.unselect()
+		self.data.sort(**kwargs)
+		self.items_changed(0, self.get_n_items(), self.get_n_items())
+
+	def get_selected(self):
+		return self._selected
+
+	def get_selected_song(self):
+		return self.get_item(self.get_selected())
+
+	def set(self, position, song):
+		if position < len(self.data):
+			self.data[position]=song
+			self.items_changed(position, 1, 1)
+		else:
+			self.data.append(song)
+			self.items_changed(position, 0, 1)
+
+	def select(self, position):
+		self.unselect()
+		self._selected=position
+		self.selection_changed(position, 1)
+
+	def unselect(self):
+		old_selected=self._selected
+		self._selected=None
+		if old_selected is not None:
+			self.selection_changed(old_selected, 1)
+
+	def do_select_all(self): return False
+	def do_select_range(self, position, n_items, unselect_rest): return False
+	def do_set_selection(self, selected, mask): return False
+	def do_unselect_all(self): return False
+	def do_unselect_item(self, position): return False
+	def do_unselect_range(self, position, n_items): return False
+
+	def do_get_selection_in_range(self, position, n_items):  # TODO
+		return Gtk.Bitset.new_range(0, n_items)
+
+	def do_is_selected(self, position):
+		return position == self._selected
+
+	def do_select_item(self, position, unselect_rest):
+		return False
+
 class SongMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
 		super().__init__(has_arrow=False, halign=Gtk.Align.START)
@@ -1142,38 +1224,6 @@ class SongMenu(Gtk.PopoverMenu):
 		self.set_pointing_to(rect)
 		self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
 		self.popup()
-
-class ListModel(GObject.Object, Gio.ListModel):
-	def __init__(self, item_type):
-		super().__init__()
-		self._data=[]
-		self._item_type=item_type
-
-	def clear(self):
-		n=self.get_n_items()
-		self._data=[]
-		self.items_changed(0, n, 0)
-
-	def append(self, data):
-		n=self.get_n_items()
-		self._data.extend(data)
-		self.items_changed(n, 0, len(data))
-
-	def sort(self, **kwargs):
-		self._data.sort(**kwargs)
-		self.items_changed(0, self.get_n_items(), self.get_n_items())
-
-	def do_get_item(self, position):
-		try:
-			return self._data[position]
-		except IndexError:
-			return None
-
-	def do_get_item_type(self):
-		return self._item_type
-
-	def do_get_n_items(self):
-		return len(self._data)
 
 class SongsListRow(Gtk.Box):
 	position=GObject.Property(type=int, default=-1)
@@ -1229,8 +1279,8 @@ class SongsList(Gtk.ListView):  # TODO D'n'D
 		self.set_factory(factory)
 
 		# list model
-		self._model=ListModel(Song)
-		self.set_model(Gtk.NoSelection(model=self._model))
+		self._model=SelectionModel(Song)
+		self.set_model(self._model)
 
 		# drag and drop
 		drag_source=Gtk.DragSource()
@@ -1457,18 +1507,17 @@ class Artist(GObject.Object):
 		self.section_name=section_name
 		self.section_start=section_start
 
-class ArtistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel, Gtk.SectionModel):
+class ArtistSelectionModel(ListModel, Gtk.SelectionModel, Gtk.SectionModel):
 	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self):
-		super().__init__()
-		self._data=[]
+		super().__init__(Artist)
 		self._selected=None
 
 	def clear(self):
-		n=len(self._data)
-		self._data=[]
+		n=self.get_n_items()
+		self.data=[]
 		self._selected=None
 		self.items_changed(0, n, 0)
 		self.emit("clear")
@@ -1483,13 +1532,13 @@ class ArtistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel, Gt
 		section_length=0
 		for item in artists:
 			if item[0]:
-				self._data.append(Artist(item[0], char, section_start))
+				self.data.append(Artist(item[0], char, section_start))
 				section_length+=1
 			else:
 				char=item[1]
 				section_start+=section_length
 				section_length=0
-		self.items_changed(0, 0, len(self._data))
+		self.items_changed(0, 0, self.get_n_items())
 
 	def get_selected(self):
 		return self._selected
@@ -1497,12 +1546,12 @@ class ArtistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel, Gt
 	def get_selected_artist(self):
 		if self._selected is None:
 			return None
-		return self._data[self._selected].name
+		return self.data[self._selected].name
 
 	def select_artist(self, name):
 		row_num=self.get_n_items()
 		for i in range(0, row_num):
-			if self._data[i].name == name:
+			if self.data[i].name == name:
 				self.select_item(i, True)
 				return
 
@@ -1513,19 +1562,7 @@ class ArtistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel, Gt
 	def do_unselect_item(self, position): return False
 	def do_unselect_range(self, position, n_items): return False
 
-	def do_get_item(self, position):
-		try:
-			return self._data[position]
-		except IndexError:
-			return None
-
-	def do_get_item_type(self):
-		return Artist
-
-	def do_get_n_items(self):
-		return len(self._data)
-
-	def do_get_selection_in_range(self, position, n_items):
+	def do_get_selection_in_range(self, position, n_items):  # TODO
 		return Gtk.Bitset.new_range(0, n_items)
 
 	def do_is_selected(self, position):
@@ -1541,15 +1578,15 @@ class ArtistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel, Gt
 				if old_selected is not None:
 					self.selection_changed(old_selected, 1)
 				self.selection_changed(position, 1)
-				self.emit("selected", self._data[position].name)
+				self.emit("selected", self.data[position].name)
 			return True
 		else:
 			return False
 
 	def do_get_section(self, position):
 		if position < self.get_n_items():
-			section_start=self._data[position].section_start
-			for artist in self._data[position+1:]:
+			section_start=self.data[position].section_start
+			for artist in self.data[position+1:]:
 				if artist.section_start > section_start:
 					return (section_start, artist.section_start)
 			return (section_start, self.get_n_items())
@@ -1690,8 +1727,8 @@ class AlbumList(Gtk.GridView):
 		self.set_factory(factory)
 
 		# list model
-		self._model=ListModel(Album)
-		self.set_model(Gtk.NoSelection(model=self._model))
+		self._model=SelectionModel(Album)
+		self.set_model(self._model)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -1915,77 +1952,6 @@ class PlaylistMenu(Gtk.PopoverMenu):  # TODO
 			self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
 		self.popup()
 
-class PlaylistSelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
-	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ())}
-	def __init__(self):
-		super().__init__()
-		self._data=[]
-		self._selected=None
-
-	def clear(self, position=0):
-		n=len(self._data)-position
-		self._data=self._data[:position]
-		if self._selected is not None:
-			if self._selected >= len(self._data):
-				self._selected=None
-		self.items_changed(position, n, 0)
-
-	def get_selected(self):
-		return self._selected
-
-	def get_selected_song(self):
-		return self._data[self._selected]
-
-	def set(self, position, song):  # TODO set multiple items at once
-		if position < len(self._data):
-			self._data[position]=song
-			self.items_changed(position, 1, 1)
-		else:
-			self._data.append(song)
-			self.items_changed(position, 0, 1)
-
-	def select(self, position):
-		old_selected=self._selected
-		self._selected=position
-		if old_selected is not None:
-			self.selection_changed(old_selected, 1)
-		self.selection_changed(position, 1)
-
-	def unselect(self):  # TODO unify with select
-		old_selected=self._selected
-		self._selected=None
-		if old_selected is not None:
-			self.selection_changed(old_selected, 1)
-
-	def do_select_all(self): return False
-	def do_select_range(self, position, n_items, unselect_rest): return False
-	def do_set_selection(self, selected, mask): return False
-	def do_unselect_all(self): return False
-	def do_unselect_item(self, position): return False
-	def do_unselect_range(self, position, n_items): return False
-
-	def do_get_item(self, position):
-		try:
-			return self._data[position]
-		except IndexError:
-			return None
-
-	def do_get_item_type(self):
-		return Song
-
-	def do_get_n_items(self):
-		return len(self._data)
-
-	def do_get_selection_in_range(self, position, n_items):
-		return Gtk.Bitset.new_range(0, n_items)
-
-	def do_is_selected(self, position):
-		return position == self._selected
-
-	def do_select_item(self, position, unselect_rest):
-		return False
-
 class PlaylistView(Gtk.ListView):  # TODO D'n'D
 	def __init__(self, client, settings):
 		super().__init__(single_click_activate=True, tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
@@ -2015,7 +1981,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 		self.set_factory(factory)
 
 		# model
-		self._playlist_selection_model=PlaylistSelectionModel()
+		self._playlist_selection_model=SelectionModel(Song)
 		self.set_model(self._playlist_selection_model)
 
 		# drag and drop
