@@ -1278,9 +1278,9 @@ class SongsList(Gtk.ListView):  # TODO D'n'D
 		factory.connect("unbind", unbind)
 		self.set_factory(factory)
 
-		# list model
-		self._model=SelectionModel(Song)
-		self.set_model(self._model)
+		# model
+		self._selection_model=SelectionModel(Song)
+		self.set_model(self._selection_model)
 
 		# drag and drop
 		drag_source=Gtk.DragSource()
@@ -1290,7 +1290,7 @@ class SongsList(Gtk.ListView):  # TODO D'n'D
 			if item is not self:
 				row=item.get_first_child()
 				position=row.get_property("position")
-				song=self._model.get_item(position)
+				song=self._selection_model.get_item(position)
 				drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
 				return Gdk.ContentProvider.new_for_value(song)
 			else:
@@ -1322,19 +1322,19 @@ class SongsList(Gtk.ListView):  # TODO D'n'D
 
 	def clear(self):
 		self._menu.popdown()
-		self._model.clear()
+		self._selection_model.clear()
 
 	def append(self, data):
-		self._model.append(data)
+		self._selection_model.append(data)
 
 	def _on_activate(self, listview, pos):
-		self._client.file_to_playlist(self._model.get_item(pos)["file"], "play")
+		self._client.file_to_playlist(self._selection_model.get_item(pos)["file"], "play")
 
 	def _on_button_released(self, controller, n_press, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if item is not self:
 			row=item.get_first_child()
-			song=self._model.get_item(row.get_property("position"))
+			song=self._selection_model.get_item(row.get_property("position"))
 			if controller.get_current_button() == 2 and n_press == 1:
 				self._client.file_to_playlist(song["file"], "append")
 			elif controller.get_current_button() == 3 and n_press == 1:
@@ -1344,7 +1344,7 @@ class SongsList(Gtk.ListView):  # TODO D'n'D
 		item=self.get_focus_child()
 		row=item.get_first_child()
 		position=row.get_property("position")
-		self._menu.open(self._model.get_item(position)["file"], *row.translate_coordinates(self, 0, 0))
+		self._menu.open(self._selection_model.get_item(position)["file"], *row.translate_coordinates(self, 0, 0))
 
 ##########
 # search #
@@ -1726,9 +1726,9 @@ class AlbumList(Gtk.GridView):
 		factory.connect("unbind", unbind)
 		self.set_factory(factory)
 
-		# list model
-		self._model=SelectionModel(Album)
-		self.set_model(self._model)
+		# model
+		self._selection_model=SelectionModel(Album)
+		self.set_model(self._selection_model)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -1737,7 +1737,7 @@ class AlbumList(Gtk.GridView):
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 
 	def clear(self, *args):
-		self._model.clear()
+		self._selection_model.clear()
 
 	def _get_albums(self, artist):
 		albums=self._client.list("albumsort", "albumartist", artist, "group", "date", "group", "album")
@@ -1751,25 +1751,25 @@ class AlbumList(Gtk.GridView):
 
 	def _sort_settings(self, *args):
 		if self._settings.get_boolean("sort-albums-by-year"):
-			self._model.sort(key=lambda item: item.date)
+			self._selection_model.sort(key=lambda item: item.date)
 		else:
-			self._model.sort(key=lambda item: locale.strxfrm(item.sortname))
+			self._selection_model.sort(key=lambda item: locale.strxfrm(item.sortname))
 
 	def display(self, artist):
 		self._settings.set_property("cursor-watch", True)
-		self._model.clear()
+		self._selection_model.clear()
 		# ensure list is empty
 		main=GLib.main_context_default()
 		while main.pending():
 			main.iteration()
 		if self._settings.get_boolean("sort-albums-by-year"):
-			self._model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
+			self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
 		else:
-			self._model.append(sorted(self._get_albums(artist), key=lambda item: locale.strxfrm(item.sortname)))
+			self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: locale.strxfrm(item.sortname)))
 		self._settings.set_property("cursor-watch", False)
 
 	def _on_activate(self, widget, pos):
-		album=self._model.get_item(pos)
+		album=self._selection_model.get_item(pos)
 		self.emit("album-selected", album.artist, album.name, album.date)
 
 	def _on_disconnected(self, *args):
@@ -1981,8 +1981,8 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 		self.set_factory(factory)
 
 		# model
-		self._playlist_selection_model=SelectionModel(Song)
-		self.set_model(self._playlist_selection_model)
+		self._selection_model=SelectionModel(Song)
+		self.set_model(self._selection_model)
 
 		# drag and drop
 		drag_source=Gtk.DragSource()
@@ -2016,7 +2016,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 					if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
 						position+=1
 				else:
-					position=self._playlist_selection_model.get_n_items()-1
+					position=self._selection_model.get_n_items()-1
 				if value == position:
 					return False
 				self._client.move(value, position)
@@ -2028,7 +2028,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 					if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
 						position+=1
 				else:
-					position=self._playlist_selection_model.get_n_items()
+					position=self._selection_model.get_n_items()
 				self._client.addid(value["file"], position)
 				return True
 		drop_target.connect("drop", drop)
@@ -2067,10 +2067,10 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 	def _clear(self, *args):
 		self._menu.popdown()
 		self._playlist_version=None
-		self._playlist_selection_model.clear()
+		self._selection_model.clear()
 
 	def _delete(self, position):
-		if position == self._playlist_selection_model.get_selected():
+		if position == self._selection_model.get_selected():
 			self._client.tidy_playlist()
 		else:
 			self._client.delete(position)
@@ -2081,9 +2081,9 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 
 	def _refresh_selection(self, song):
 		if song is None:
-			self._playlist_selection_model.unselect()
+			self._selection_model.unselect()
 		else:
-			self._playlist_selection_model.select(int(song))
+			self._selection_model.select(int(song))
 
 	def _on_button_pressed(self, controller, n_press, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
@@ -2093,7 +2093,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 		else:
 			row=item.get_first_child()
 			position=row.get_property("position")
-			song=self._playlist_selection_model.get_item(position)
+			song=self._selection_model.get_item(position)
 			if controller.get_current_button() == 2 and n_press == 1:
 				self._delete(position)
 			elif controller.get_current_button() == 3 and n_press == 1:
@@ -2112,21 +2112,21 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 			songs=self._client.playlistinfo()
 		self._client.tagtypes("all")
 		for song in songs:
-			self._playlist_selection_model.set(int(song["pos"]), song)
-		self._playlist_selection_model.clear(length)
+			self._selection_model.set(int(song["pos"]), song)
+		self._selection_model.clear(length)
 		self._refresh_selection(song_pos)
 		self._playlist_version=version
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		self._refresh_selection(song)
-		if (selected:=self._playlist_selection_model.get_selected()) is not None:
+		if (selected:=self._selection_model.get_selected()) is not None:
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _on_menu(self, action, state):
 		item=self.get_focus_child()
 		row=item.get_first_child()
 		position=row.get_property("position")
-		self._menu.open(self._playlist_selection_model.get_item(position)["file"], position, *row.translate_coordinates(self, 0, 0))
+		self._menu.open(self._selection_model.get_item(position)["file"], position, *row.translate_coordinates(self, 0, 0))
 
 	def _on_delete(self, action, state):  # TODO merge with _on_menu
 		item=self.get_focus_child()
