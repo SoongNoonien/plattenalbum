@@ -1319,14 +1319,14 @@ class BrowserSongList(SongList):
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
-		button_controller.connect("released", self._on_button_released)
 		drag_source=Gtk.DragSource()
 		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
 		self.add_controller(drag_source)
-		drag_source.connect("prepare", self._on_drag_prepare)
 
 		# connect
 		self.connect("activate", self._on_activate)
+		button_controller.connect("released", self._on_button_released)
+		drag_source.connect("prepare", self._on_drag_prepare)
 
 	def clear(self):
 		self._menu.popdown()
@@ -1439,13 +1439,13 @@ class SearchWindow(Gtk.Box):
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
 		self.search_entry.add_controller(controller_focus)
-		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
-		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 
 		# connect
 		self.search_entry.connect("activate", self._search)
 		self._search_entry_changed=self.search_entry.connect("search-changed", self._search)
 		self._tag_drop_down_changed=self._tag_drop_down.connect("notify::selected", self._search)
+		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
+		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("updated_db", self._search)
@@ -1821,6 +1821,8 @@ class AlbumView(Gtk.Box):
 		# event controller
 		button1_controller=Gtk.GestureClick(button=1)
 		self._cover.add_controller(button1_controller)
+
+		# connect
 		button1_controller.connect("released", self._on_button1_released)
 
 		# packing
@@ -1990,20 +1992,20 @@ class PlaylistView(SongList):
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
-		button_controller.connect("pressed", self._on_button_pressed)
 		drag_source=Gtk.DragSource()
 		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
 		drag_source.set_actions(Gdk.DragAction.MOVE)
 		self.add_controller(drag_source)
-		drag_source.connect("prepare", self._on_drag_prepare)
 		drop_target=Gtk.DropTarget()
 		drop_target.set_actions(Gdk.DragAction.COPY|Gdk.DragAction.MOVE)
 		drop_target.set_gtypes((int,Song,))
 		self.add_controller(drop_target)
-		drop_target.connect("drop", self._on_drop)
 
 		# connect
 		self.connect("activate", self._on_activate)
+		button_controller.connect("pressed", self._on_button_pressed)
+		drag_source.connect("prepare", self._on_drag_prepare)
+		drop_target.connect("drop", self._on_drop)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("current_song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -2590,9 +2592,9 @@ class PlaybackOptions(Gtk.Box):
 		# event controller
 		button3_controller=Gtk.GestureClick(button=3)
 		self._buttons["single"][0].add_controller(button3_controller)
-		button3_controller.connect("pressed", self._on_button3_pressed)
 
 		# connect
+		button3_controller.connect("pressed", self._on_button3_pressed)
 		for name in ("repeat", "random", "consume"):
 			self._client.emitter.connect(name, self._button_refresh, name)
 		self._client.emitter.connect("single", self._single_refresh)
