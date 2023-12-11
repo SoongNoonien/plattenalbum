@@ -2372,30 +2372,19 @@ class SeekBar(Gtk.Box):
 		self._popover.set_position(Gtk.PositionType.TOP)
 
 		# event controllers
-		for label, sign1, sign3 in ((self._elapsed, "-", "+"), (self._rest, "+", "-")):
-			con1=Gtk.GestureClick(button=1)
-			con3=Gtk.GestureClick(button=3)
-			label.add_controller(con1)
-			label.add_controller(con3)
-			con1.connect("released",
-				lambda con, n, x, y, sign: self._client.seekcur(sign+str(self._adjustment.get_property("step-increment"))), sign1
-			)
-			con3.connect("released",
-				lambda con, n, x, y, sign: self._client.seekcur(sign+str(self._adjustment.get_property("step-increment"))), sign3
-			)
 		controller_motion=Gtk.EventControllerMotion()
 		self._scale.add_controller(controller_motion)
-		controller_motion.connect("motion", self._on_pointer_motion)
-		controller_motion.connect("leave", self._on_pointer_leave)
-		button2_controller=Gtk.GestureClick(button=2)
-		self._elapsed.add_controller(button2_controller)
-		button2_controller.connect("pressed", self._on_label_button_pressed)
-		button2_controller=Gtk.GestureClick(button=2)
-		self._rest.add_controller(button2_controller)
-		button2_controller.connect("pressed", self._on_label_button_pressed)
+		elapsed_button1_controller=Gtk.GestureClick(button=1)
+		self._elapsed.add_controller(elapsed_button1_controller)
+		rest_button1_controller=Gtk.GestureClick(button=1)
+		self._rest.add_controller(rest_button1_controller)
 
 		# connect
 		self._scale.connect("change-value", self._on_change_value)
+		controller_motion.connect("motion", self._on_pointer_motion)
+		controller_motion.connect("leave", self._on_pointer_leave)
+		elapsed_button1_controller.connect("released", self._on_label_button_released)
+		rest_button1_controller.connect("released", self._on_label_button_released)
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed", self._refresh)
@@ -2478,7 +2467,7 @@ class SeekBar(Gtk.Box):
 	def _on_pointer_leave(self, *args):
 		self._popover.popdown()
 
-	def _on_label_button_pressed(self, controller, n_press, x, y):
+	def _on_label_button_released(self, controller, n_press, x, y):
 		if n_press == 1:
 			value=self._scale.get_value()
 			if self._first_mark is None:
