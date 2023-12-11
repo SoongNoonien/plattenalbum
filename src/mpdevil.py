@@ -1296,19 +1296,10 @@ class SongList(Gtk.ListView):
 			return None
 		return item.get_first_child().get_property("position")
 
-class BrowserSongList(SongList):  # TODO D'n'D
+class BrowserSongList(SongList):
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
-
-		# drag and drop
-		drag_source=Gtk.DragSource()
-		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
-		self.add_controller(drag_source)
-		def prepare(drag_source, x, y):
-			if (position:=self.get_position_at(x,y)) is not None:
-				return Gdk.ContentProvider.new_for_value(self.get_model().get_item(position))
-		drag_source.connect("prepare", prepare)
 
 		# menu
 		self._menu=SongMenu(client)
@@ -1329,6 +1320,10 @@ class BrowserSongList(SongList):  # TODO D'n'D
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
 		button_controller.connect("released", self._on_button_released)
+		drag_source=Gtk.DragSource()
+		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
+		self.add_controller(drag_source)
+		drag_source.connect("prepare", self._on_drag_prepare)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -1355,6 +1350,10 @@ class BrowserSongList(SongList):  # TODO D'n'D
 
 	def _on_menu(self, action, state):
 		self._menu.open(self.get_focus_song()["file"], *self.get_focus_popup_point())
+
+	def _on_drag_prepare(self, drag_source, x, y):
+		if (position:=self.get_position_at(x,y)) is not None:
+			return Gdk.ContentProvider.new_for_value(self.get_model().get_item(position))
 
 ##########
 # search #
@@ -1962,57 +1961,12 @@ class PlaylistMenu(Gtk.PopoverMenu):  # TODO
 			self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
 		self.popup()
 
-class PlaylistView(SongList):  # TODO D'n'D
+class PlaylistView(SongList):
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
 		self._settings=settings
 		self._playlist_version=None
-
-		# drag and drop
-		drag_source=Gtk.DragSource()
-		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
-		drag_source.set_actions(Gdk.DragAction.MOVE)
-		self.add_controller(drag_source)
-		def prepare(drag_source, x, y):
-			if (position:=self.get_position_at(x,y)) is not None:
-				return Gdk.ContentProvider.new_for_value(position)
-		drag_source.connect("prepare", prepare)
-
-		drop_target=Gtk.DropTarget()
-		drop_target.set_actions(Gdk.DragAction.COPY|Gdk.DragAction.MOVE)
-		drop_target.set_gtypes((int,Song,))
-		self.add_controller(drop_target)
-		def drop(drop_target, value, x, y):  # TODO
-			item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-			if isinstance(value, int):
-				if item is not self:
-					row=item.get_first_child()
-					position=row.get_property("position")
-					if value == position:
-						return False
-					if value < position:
-						position-=1
-					if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
-						position+=1
-				else:
-					position=self.get_model().get_n_items()-1
-				if value == position:
-					return False
-				self._client.move(value, position)
-				return True
-			elif isinstance(value, Song):
-				if item is not self:
-					row=item.get_first_child()
-					position=row.get_property("position")
-					if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
-						position+=1
-				else:
-					position=self.get_model().get_n_items()
-				self._client.addid(value["file"], position)
-				return True
-			return False
-		drop_target.connect("drop", drop)
 
 		# menu
 		self._menu=PlaylistMenu(client)
@@ -2037,6 +1991,16 @@ class PlaylistView(SongList):  # TODO D'n'D
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
 		button_controller.connect("pressed", self._on_button_pressed)
+		drag_source=Gtk.DragSource()
+		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
+		drag_source.set_actions(Gdk.DragAction.MOVE)
+		self.add_controller(drag_source)
+		drag_source.connect("prepare", self._on_drag_prepare)
+		drop_target=Gtk.DropTarget()
+		drop_target.set_actions(Gdk.DragAction.COPY|Gdk.DragAction.MOVE)
+		drop_target.set_gtypes((int,Song,))
+		self.add_controller(drop_target)
+		drop_target.connect("drop", self._on_drop)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -2105,6 +2069,40 @@ class PlaylistView(SongList):  # TODO D'n'D
 
 	def _on_delete(self, action, state):
 		self._delete(self.get_focus_position())
+
+	def _on_drag_prepare(self, drag_source, x, y):
+		if (position:=self.get_position_at(x,y)) is not None:
+			return Gdk.ContentProvider.new_for_value(position)
+
+	def _on_drop(self, drop_target, value, x, y):  # TODO
+		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if isinstance(value, int):
+			if item is not self:
+				row=item.get_first_child()
+				position=row.get_property("position")
+				if value == position:
+					return False
+				if value < position:
+					position-=1
+				if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
+					position+=1
+			else:
+				position=self.get_model().get_n_items()-1
+			if value == position:
+				return False
+			self._client.move(value, position)
+			return True
+		elif isinstance(value, Song):
+			if item is not self:
+				row=item.get_first_child()
+				position=row.get_property("position")
+				if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
+					position+=1
+			else:
+				position=self.get_model().get_n_items()
+			self._client.addid(value["file"], position)
+			return True
+		return False
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
