@@ -2093,7 +2093,7 @@ class PlaylistView(Gtk.ListView):  # TODO D'n'D
 		else:
 			row=item.get_first_child()
 			position=row.get_property("position")
-			song=self._playlist_selection_model.get_item(row.get_property("position"))
+			song=self._playlist_selection_model.get_item(position)
 			if controller.get_current_button() == 2 and n_press == 1:
 				self._delete(position)
 			elif controller.get_current_button() == 3 and n_press == 1:
