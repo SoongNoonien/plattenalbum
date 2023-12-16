@@ -2020,10 +2020,6 @@ class PlaylistView(SongList):
 		else:
 			self._client.delete(position)
 
-	def _scroll_to_path(self, path):
-		self.set_cursor(path, None, False)
-		self.save_scroll_to_cell(path, None, True, 0.25)
-
 	def _refresh_selection(self, song):
 		if song is None:
 			self.get_model().unselect()
