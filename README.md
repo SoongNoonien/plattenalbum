@@ -53,12 +53,13 @@ Build dependencies:
 - glib2 (Ubuntu/Debian: libglib2.0-dev-bin, libglib2.0-bin)
 
 Dependencies:
-- GTK4
+- GTK4 >=4.12.0
+- libadwaita >=1.4.0
 - Python3
 
 Python modules:
 - mpd (python-mpd2 >=1.1)
-- gi (Gtk, Gio, Gdk, GdkPixbuf, Pango, GObject, GLib)
+- gi (Gtk, Adw, Gio, Gdk, Pango, GObject, GLib)
 
 Run:
 ```bash
