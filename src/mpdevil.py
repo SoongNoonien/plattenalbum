@@ -1425,7 +1425,7 @@ class SearchWindow(Gtk.Box):
 		# widgets
 		self._tag_list=Gtk.StringList()
 		self._tag_drop_down=Gtk.DropDown(model=self._tag_list)
-		self.search_entry=Gtk.SearchEntry(max_width_chars=20)  # TODO truncate_multiline=True
+		self.search_entry=Gtk.SearchEntry(max_width_chars=20)
 		self._hits_label=Gtk.Label(xalign=1, ellipsize=Pango.EllipsizeMode.END)
 
 		# songs list
@@ -2137,7 +2137,7 @@ class LetrasParser(HTMLParser):
 		if self._found_text and data:
 			self.text+=data+"\n"
 
-class LyricsWindow(Gtk.ScrolledWindow):  # TODO zoom
+class LyricsWindow(Gtk.ScrolledWindow):
 	def __init__(self, client, settings):
 		super().__init__()
 		self._settings=settings
