@@ -1810,7 +1810,7 @@ class AlbumView(Gtk.Box):
 			self._buttons.append(button)
 
 		# cover
-		self._cover=Gtk.Image()
+		self._cover=Gtk.Picture()
 
 		# labels
 		self._title=Gtk.Label(margin_start=12, margin_end=12, xalign=0, wrap=True, vexpand=True)
@@ -1857,10 +1857,10 @@ class AlbumView(Gtk.Box):
 		self.songs_list.append(songs)
 		size=self._settings.get_int("album-cover")*1.5
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
-			self._cover.set_from_paintable(lookup_icon(FALLBACK_COVER, 1024))
+			self._cover.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
 		else:
-			self._cover.set_from_paintable(cover.get_paintable())
-		self._cover.set_size_request(size, size)
+			self._cover.set_paintable(cover.get_paintable())
+		self._cover.set_size_request(-1, size)
 
 	def _on_button1_released(self, controller, n_press, x, y):
 		if self._cover.contains(x, y):
