@@ -1687,9 +1687,9 @@ class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
 		self._client=client
-		self._cover=Gtk.Image(hexpand=True)
+		self.cover=Gtk.Picture()
 		self._label=Gtk.Label(use_markup=True, justify=Gtk.Justification.CENTER, wrap=True)
-		self.append(self._cover)
+		self.append(self.cover)
 		self.append(self._label)
 
 	def set_album(self, album):
@@ -1706,7 +1706,7 @@ class AlbumListRow(Gtk.Box):
 				album.cover=lookup_icon(FALLBACK_COVER, 1024)
 			else:
 				album.cover=cover.get_paintable()
-		self._cover.set_from_paintable(album.cover)
+		self.cover.set_paintable(album.cover)
 
 class AlbumList(Gtk.GridView):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
@@ -1721,12 +1721,12 @@ class AlbumList(Gtk.GridView):
 		def bind(factory, item):
 			row=item.get_child()
 			row.set_album(item.get_item())
-			settings.bind("album-cover", row._cover, "height-request", Gio.SettingsBindFlags.GET)
-			settings.bind("album-cover", row._cover, "width-request", Gio.SettingsBindFlags.GET)
+			settings.bind("album-cover", row.cover, "height-request", Gio.SettingsBindFlags.GET)
+			settings.bind("album-cover", row.cover, "width-request", Gio.SettingsBindFlags.GET)
 		def unbind(factory, item):
 			row=item.get_child()
-			settings.unbind(row._cover, "height-request")
-			settings.unbind(row._cover, "width-request")
+			settings.unbind(row.cover, "height-request")
+			settings.unbind(row.cover, "width-request")
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
