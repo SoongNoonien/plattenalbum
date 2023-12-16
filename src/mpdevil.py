@@ -881,37 +881,35 @@ class Client(MPDClient):
 			self.tagtypes("enable", tag)
 		self.command_list_end()
 
-	def _main_loop(self, *args):  # TODO fix order of signals
+	def _main_loop(self, *args):
 		try:
 			status=self.status()
-			diff=set(status.items())-set(self._last_status.items())
-			for key, val in diff:
-				if key == "elapsed":
-					if "duration" in status:
-						self.emitter.emit("elapsed", float(val), float(status["duration"]))
-					else:
-						self.emitter.emit("elapsed", float(val), 0.0)
-				elif key == "bitrate":
-					if val == "0":
-						self.emitter.emit("bitrate", None)
-					else:
-						self.emitter.emit("bitrate", val)
-				elif key in ("state", "single", "audio"):
-					self.emitter.emit(key, val)
-				elif key == "volume":
-					self.emitter.emit("volume", float(val))
-				elif key == "playlist":
-					self.emitter.emit("playlist", int(val), int(status["playlistlength"]), status.get("song"))
-				elif key in ("repeat", "random", "consume"):
-					if val == "1":
+			diff=dict(set(status.items())-set(self._last_status.items()))
+			if "updating_db" in diff:
+				self.emitter.emit("updating_db")
+			if "playlist" in diff:
+				self.emitter.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
+			if "songid" in diff:
+				self.current_cover=self.get_cover(self.currentsong())
+				self.emitter.emit("current_song", status["song"], status["songid"], status["state"])
+			if "elapsed" in diff:
+				self.emitter.emit("elapsed", float(diff["elapsed"]), float(status.get("duration", 0.0)))
+			if "bitrate" in diff:
+				if diff["bitrate"] == "0":
+					self.emitter.emit("bitrate", None)
+				else:
+					self.emitter.emit("bitrate", diff["bitrate"])
+			if "volume" in diff:
+				self.emitter.emit("volume", float(diff["volume"]))
+			for key in ("state", "single", "audio"):
+				if key in diff:
+					self.emitter.emit(key, diff[key])
+			for key in ("repeat", "random", "consume"):
+				if key in diff:
+					if diff[key] == "1":
 						self.emitter.emit(key, True)
 					else:
 						self.emitter.emit(key, False)
-				elif key == "updating_db":
-					self.emitter.emit("updating_db")
-			if "songid" in dict(diff):
-				self.current_cover=self.get_cover(self.currentsong())
-				self.emitter.emit("current_song", status["song"], status["songid"], status["state"])
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
