@@ -2755,75 +2755,6 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 ###############
 # main window #
 ###############
-
-class UpdateNotify(Gtk.Revealer):
-	def __init__(self, client):
-		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.CENTER)
-		self._client=client
-
-		# widgets
-		self._spinner=Gtk.Spinner()
-		label=Gtk.Label(label=_("Updating Database…"))
-
-		# connect
-		self._client.emitter.connect("updating_db", self._show)
-		self._client.emitter.connect("updated_db", self._hide)
-		self._client.emitter.connect("disconnected", self._hide)
-
-		# packing
-		box=Gtk.Box(spacing=12)
-		box.add_css_class("app-notification")
-		box.append(self._spinner)
-		box.append(label)
-		self.set_child(box)
-
-	def _show(self, *args):
-		self._spinner.start()
-		self.set_reveal_child(True)
-
-	def _hide(self, *args):
-		self._spinner.stop()
-		self.set_reveal_child(False)
-
-class ConnectionNotify(Gtk.Revealer):
-	def __init__(self, client, settings):
-		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.CENTER)
-		self._client=client
-		self._settings=settings
-
-		# widgets
-		self._label=Gtk.Label(wrap=True)
-		connect_button=Gtk.Button(label=_("Connect"))
-		settings_button=Gtk.Button(label=_("Preferences"), action_name="win.connection-settings")
-
-		# connect
-		connect_button.connect("clicked", self._on_connect_button_clicked)
-		self._client.emitter.connect("connection_error", self._on_connection_error)
-		self._client.emitter.connect("connected", self._on_connected)
-
-		# packing
-		box=Gtk.Box(spacing=12)
-		box.add_css_class("app-notification")
-		box.append(self._label)
-		box.append(settings_button)
-		box.append(connect_button)
-		self.set_child(box)
-
-	def _on_connection_error(self, *args):
-		if self._settings.get_boolean("socket-connection"):
-			text=_("Connection to “{socket}” failed").format(socket=self._settings.get_socket())
-		else:
-			text=_("Connection to “{host}:{port}” failed").format(
-				host=self._settings.get_string("host"), port=self._settings.get_int("port"))
-		self._label.set_text(text)
-		self.set_reveal_child(True)
-
-	def _on_connected(self, *args):
-		self.set_reveal_child(False)
-
-	def _on_connect_button_clicked(self, *args):
-		self._client.reconnect()
-
 class MainWindow(Gtk.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
 		super().__init__(title="mpdevil", icon_name="org.mpdevil.mpdevil", **kwargs)
@@ -2858,8 +2789,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		audio=AudioFormat(self._client, self._settings)
 		playback_options=PlaybackOptions(self._client, self._settings)
 		volume_button=VolumeButton(self._client, self._settings)
-		update_notify=UpdateNotify(self._client)
-		connection_notify=ConnectionNotify(self._client, self._settings)
+		self._update_toast=Adw.Toast(title=_("Database updated"))
+		self._connection_toast=Adw.Toast(
+			title=_("Connection failed"), priority=Adw.ToastPriority.HIGH, button_label=_("Preferences"), action_name="win.settings")
 		if self._use_csd:
 			self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"), can_focus=False)
 		else:
@@ -2906,6 +2838,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connecting", self._on_connecting)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
+		self._client.emitter.connect("updated_db", self._on_updated_db)
 
 		# packing
 		self._cover_playlist_box.append(self._cover_lyrics_window)
@@ -2930,10 +2863,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		vbox.append(self._paned2)
 		vbox.append(action_bar)
-		overlay=Gtk.Overlay(child=vbox)
-		overlay.add_overlay(update_notify)
-		overlay.add_overlay(connection_notify)
-		self.set_child(overlay)
+		self._toast_overlay=Adw.ToastOverlay(child=vbox)
+		self.set_child(self._toast_overlay)
 
 	def open(self):
 		# bring player in consistent state
@@ -3070,10 +3001,17 @@ class MainWindow(Gtk.ApplicationWindow):
 		if self._use_csd:
 			self._header_bar.get_title_widget().set_subtitle(_("connecting…"))
 		else:
-			self.set_title("mpdevil "+_("connecting…"))
+			self.set_title("mpdevil • "+_("connecting…"))
 
 	def _on_connection_error(self, *args):
-		self._clear_title()
+		if self._use_csd:
+			self._header_bar.get_title_widget().set_subtitle(_("Not Connected"))
+		else:
+			self.set_title("mpdevil • "+_("Not Connected"))
+		self._toast_overlay.add_toast(self._connection_toast)
+
+	def _on_updated_db(self, *args):
+		self._toast_overlay.add_toast(self._update_toast)
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
