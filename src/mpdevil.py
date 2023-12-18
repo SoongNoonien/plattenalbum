@@ -1686,6 +1686,7 @@ class Album(GObject.Object):
 class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
+		self.set_halign(Gtk.Align.CENTER)
 		self._client=client
 		self.cover=Gtk.Picture()
 		self._label=Gtk.Label(use_markup=True, justify=Gtk.Justification.CENTER, wrap=True)
