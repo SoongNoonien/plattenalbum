@@ -1047,8 +1047,8 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		connect_button.connect("clicked", lambda *args: client.reconnect())
 		self.set_header_suffix(connect_button)
 
-class SettingsDialog(Adw.PreferencesWindow):  # TODO open at specific setting
-	def __init__(self, parent, client, settings, tab="view"):
+class SettingsDialog(Adw.PreferencesWindow):
+	def __init__(self, parent, client, settings):
 		super().__init__(transient_for=parent)
 		page=Adw.PreferencesPage()
 		page.add(ViewSettings(settings))
@@ -2766,7 +2766,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._size=None  # needed for window size saving
 
 		# actions
-		simple_actions_data=("settings","connection-settings","stats","help","toggle-lyrics","back","toggle-search")
+		simple_actions_data=("settings","stats","help","toggle-lyrics","back","toggle-search")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2939,10 +2939,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_settings(self, action, param):
 		settings=SettingsDialog(self, self._client, self._settings)
-		settings.present()
-
-	def _on_connection_settings(self, action, param):
-		settings=SettingsDialog(self, self._client, self._settings, "connection")
 		settings.present()
 
 	def _on_stats(self, action, param):
