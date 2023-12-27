@@ -20,7 +20,7 @@
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio, Gdk, Pango, GObject, GLib
+from gi.repository import Gtk, Adw, Gio, Gdk, Pango, GObject, GLib, Graphene
 from mpd import MPDClient, CommandError, ConnectionError
 from html.parser import HTMLParser
 import urllib.request
@@ -2365,7 +2365,7 @@ class SeekBar(Gtk.Box):
 		self._popover=Gtk.Popover(autohide=False, has_arrow=False)
 		self._time_label=Gtk.Label(attributes=attrs)
 		self._popover.set_child(self._time_label)
-		self._popover.set_parent(self._scale)
+		self._popover.set_parent(self)
 		self._popover.set_position(Gtk.PositionType.TOP)
 
 		# event controllers
@@ -2456,10 +2456,14 @@ class SeekBar(Gtk.Box):
 		elif elapsed < 0:
 			elapsed=0
 		self._time_label.set_text(str(Duration(elapsed)))
-		rect=Gdk.Rectangle()
-		rect.x,rect.y=x,0
-		self._popover.set_pointing_to(rect)
-		self._popover.popup()
+		point=Graphene.Point.zero()
+		point.x=x
+		computed_point,point=self._scale.compute_point(self, point)
+		if computed_point:
+			rect=Gdk.Rectangle()
+			rect.x,rect.y=point.x,0
+			self._popover.set_pointing_to(rect)
+			self._popover.popup()
 
 	def _on_pointer_leave(self, *args):
 		self._popover.popdown()
