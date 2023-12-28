@@ -975,7 +975,6 @@ class ViewSettings(Adw.PreferencesGroup):
 			self.add(row)
 		int_data=(
 			(_("Album view cover size"), (50, 600, 10), "album-cover"),
-			(_("Action bar icon size"), (16, 64, 2), "icon-size"),
 		)
 		for title, (vmin, vmax, step), key in int_data:
 			row=Adw.SpinRow.new_with_range(vmin, vmax, step)
@@ -1095,11 +1094,6 @@ class ServerStats(Gtk.Window):
 ###########################
 # general purpose widgets #
 ###########################
-
-class AutoSizedIcon(Gtk.Image):
-	def __init__(self, icon_name, settings_key, settings):
-		super().__init__(icon_name=icon_name)
-		settings.bind(settings_key, self, "pixel-size", Gio.SettingsBindFlags.GET)
 
 class ListModel(GObject.Object, Gio.ListModel):
 	def __init__(self, item_type):
@@ -1800,13 +1794,13 @@ class AlbumView(Gtk.Box):
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
 		# buttons
-		self._buttons=Gtk.Box(css_classes=["linked"], halign=Gtk.Align.END)
+		self._buttons=Gtk.Box(spacing=6, halign=Gtk.Align.END)
 		data=((_("Append"), "list-add-symbolic", "append"),
 			(_("Play"), "media-playback-start-symbolic", "play")
 		)
 		for tooltip, icon_name, mode in data:
-			button=Gtk.Button(icon_name=icon_name)
-			button.set_tooltip_text(tooltip)
+			button=Gtk.Button(icon_name=icon_name, tooltip_text=tooltip)
+			button.add_css_class("circular")
 			button.connect("clicked", self._on_button_clicked, mode)
 			self._buttons.append(button)
 
@@ -2301,23 +2295,19 @@ class CoverLyricsWindow(Gtk.Overlay):
 
 class PlaybackControl(Gtk.Box):
 	def __init__(self, client, settings):
-		super().__init__(css_classes=["linked"])
+		super().__init__(spacing=6)
 		self._client=client
 		self._settings=settings
 
 		# widgets
-		self._play_button_icon=AutoSizedIcon("media-playback-start-symbolic", "icon-size", self._settings)
 		self._play_button=Gtk.Button(
-			child=self._play_button_icon, action_name="mpd.toggle-play", tooltip_text=_("Play"), can_focus=False)
+			icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"), can_focus=False)
 		self._stop_button=Gtk.Button(
-			child=AutoSizedIcon("media-playback-stop-symbolic", "icon-size", self._settings), tooltip_text=_("Stop"),
-			action_name="mpd.stop", can_focus=False)
+			icon_name="media-playback-stop-symbolic", tooltip_text=_("Stop"), action_name="mpd.stop", can_focus=False)
 		self._prev_button=Gtk.Button(
-			child=AutoSizedIcon("media-skip-backward-symbolic", "icon-size", self._settings),
-			tooltip_text=_("Previous title"), action_name="mpd.prev", can_focus=False)
+			icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous title"), action_name="mpd.prev", can_focus=False)
 		self._next_button=Gtk.Button(
-			child=AutoSizedIcon("media-skip-forward-symbolic", "icon-size", self._settings),
-			tooltip_text=_("Next title"), action_name="mpd.next", can_focus=False)
+			icon_name="media-skip-forward-symbolic", tooltip_text=_("Next title"), action_name="mpd.next", can_focus=False)
 
 		# connect
 		self._settings.connect("changed::mini-player", self._mini_player)
@@ -2337,10 +2327,10 @@ class PlaybackControl(Gtk.Box):
 
 	def _on_state(self, emitter, state):
 		if state == "play":
-			self._play_button_icon.set_property("icon-name", "media-playback-pause-symbolic")
+			self._play_button.set_property("icon-name", "media-playback-pause-symbolic")
 			self._play_button.set_tooltip_text(_("Pause"))
 		else:
-			self._play_button_icon.set_property("icon-name", "media-playback-start-symbolic")
+			self._play_button.set_property("icon-name", "media-playback-start-symbolic")
 			self._play_button.set_tooltip_text(_("Play"))
 
 class SeekBar(Gtk.Box):
@@ -2561,7 +2551,7 @@ class AudioFormat(Gtk.Box):
 
 class PlaybackOptions(Gtk.Box):
 	def __init__(self, client, settings):
-		super().__init__(css_classes=["linked"], homogeneous=False)
+		super().__init__(spacing=6)
 		self._client=client
 		self._settings=settings
 
@@ -2574,7 +2564,7 @@ class PlaybackOptions(Gtk.Box):
 			("consume", "org.mpdevil.mpdevil-consume-symbolic", _("Consume mode")),
 		)
 		for name, icon, tooltip in data:
-			button=Gtk.ToggleButton(child=AutoSizedIcon(icon, "icon-size", self._settings), tooltip_text=tooltip, can_focus=False)
+			button=Gtk.ToggleButton(icon_name=icon, tooltip_text=tooltip, can_focus=False)
 			handler=button.connect("toggled", self._set_option, name)
 			self.append(button)
 			self._buttons[name]=(button, handler)
@@ -2638,7 +2628,6 @@ class VolumeButton(Gtk.VolumeButton):
 		self._adj.set_page_increment(10)
 		self._adj.set_upper(0)  # do not allow volume change by user when MPD has not yet reported volume (no output enabled/avail)
 		self.get_popup().set_position(Gtk.PositionType.TOP)
-		settings.bind("icon-size", self.get_first_child().get_child(), "pixel-size", Gio.SettingsBindFlags.GET)
 
 		# connect
 		self._changed=self.connect("value-changed", self._set_volume)
@@ -2799,12 +2788,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._update_toast=Adw.Toast(title=_("Database updated"))
 		self._connection_toast=Adw.Toast(
 			title=_("Connection failed"), priority=Adw.ToastPriority.HIGH, button_label=_("Preferences"), action_name="win.settings")
-		if self._use_csd:
-			self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"), can_focus=False)
-		else:
-			search_icon=AutoSizedIcon("system-search-symbolic", "icon-size", self._settings)
-			self._search_button=Gtk.ToggleButton(child=search_icon, tooltip_text=_("Search"), can_focus=False)
-			self._search_button.add_css_class("flat")
+		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"), can_focus=False)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# stack
@@ -2828,13 +2812,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append_section(None, subsection)
 
 		# menu button / popover
-		if self._use_csd:
-			self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Menu"), menu_model=menu, primary=True)
-		else:
-			menu_icon=AutoSizedIcon("open-menu-symbolic", "icon-size", self._settings)
-			self._menu_button=Gtk.MenuButton(child=menu_icon, tooltip_text=_("Menu"), menu_model=menu, primary=True)
+		self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Menu"), menu_model=menu, primary=True)
+		if not self._use_csd:
 			self._menu_button.set_direction(Gtk.ArrowType.UP)
-			self._menu_button.add_css_class("flat")
 
 		# connect
 		self._search_button.connect("toggled", self._on_search_button_toggled)

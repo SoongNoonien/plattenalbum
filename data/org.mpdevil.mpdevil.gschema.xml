@@ -66,10 +66,6 @@
 			<default>160</default>
 			<summary>Size of covers in album view</summary>
 		</key>
-		<key type="i" name="icon-size">
-			<default>24</default>
-			<summary>Size of icons in main control bar</summary>
-		</key>
 		<key type="b" name="use-csd">
 			<default>true</default>
 			<summary>Use Client-side decoration</summary>
