@@ -1352,13 +1352,12 @@ class BrowserSongList(SongList):
 ##########
 
 class SearchThread(threading.Thread):  # TODO progress indicator
-	def __init__(self, client, search_entry, songs_list, hits_label, search_tag):
+	def __init__(self, client, search_expression, songs_list, hits_label):
 		super().__init__(daemon=True)
 		self._client=client
-		self._search_entry=search_entry
+		self._search_expression=search_expression
 		self._songs_list=songs_list
 		self._hits_label=hits_label
-		self._search_tag=search_tag
 		self._stop_flag=False
 		self._callback=None
 
@@ -1367,15 +1366,6 @@ class SearchThread(threading.Thread):  # TODO progress indicator
 
 	def stop(self):
 		self._stop_flag=True
-
-	def start(self):
-		self._songs_list.clear()
-		self._hits_label.set_text("")
-		self._search_text=self._search_entry.get_text()
-		if self._search_text:
-			super().start()
-		else:
-			self._exit()
 
 	def run(self):
 		hits=0
@@ -1407,7 +1397,7 @@ class SearchThread(threading.Thread):  # TODO progress indicator
 			return []
 		else:
 			self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
-			songs=self._client.search(self._search_tag, self._search_text, "window", f"{start}:{end}")
+			songs=self._client.search(self._search_expression, "window", f"{start}:{end}")
 			self._client.tagtypes("all")
 			return songs
 
@@ -1417,8 +1407,6 @@ class SearchWindow(Gtk.Box):
 		self._client=client
 
 		# widgets
-		self._tag_list=Gtk.StringList()
-		self._tag_drop_down=Gtk.DropDown(model=self._tag_list)
 		self.search_entry=Gtk.SearchEntry(max_width_chars=20)
 		self._hits_label=Gtk.Label(xalign=1, ellipsize=Pango.EllipsizeMode.END)
 
@@ -1426,7 +1414,7 @@ class SearchWindow(Gtk.Box):
 		self._songs_list=BrowserSongList(self._client)
 
 		# search thread
-		self._search_thread=SearchThread(self._client, self.search_entry, self._songs_list, self._hits_label, "any")
+		self._search_thread=SearchThread(self._client, "", self._songs_list, self._hits_label)
 
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
@@ -1435,7 +1423,6 @@ class SearchWindow(Gtk.Box):
 		# connect
 		self.search_entry.connect("activate", self._search)
 		self._search_entry_changed=self.search_entry.connect("search-changed", self._search)
-		self._tag_drop_down_changed=self._tag_drop_down.connect("notify::selected", self._search)
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._client.emitter.connect("connected", self._on_connected)
@@ -1444,7 +1431,6 @@ class SearchWindow(Gtk.Box):
 
 		# packing
 		hbox=Gtk.CenterBox(margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
-		hbox.set_start_widget(self._tag_drop_down)
 		hbox.set_center_widget(self.search_entry)
 		hbox.set_end_widget(self._hits_label)
 		self.append(hbox)
@@ -1461,15 +1447,6 @@ class SearchWindow(Gtk.Box):
 			self.search_entry.handler_block(self._search_entry_changed)
 			self.search_entry.set_text("")
 			self.search_entry.handler_unblock(self._search_entry_changed)
-			self._tag_drop_down.handler_block(self._tag_drop_down_changed)
-			for i in range(len(self._tag_list)):
-				self._tag_list.remove(0)
-			self._tag_list.append(_("all tags"))
-			for tag in self._client.tagtypes():
-				if not tag.startswith("MUSICBRAINZ"):
-					self._tag_list.append(tag)
-			self._tag_drop_down.set_selected(0)
-			self._tag_drop_down.handler_unblock(self._tag_drop_down_changed)
 		if self._search_thread.is_alive():
 			self._search_thread.set_callback(callback)
 			self._search_thread.stop()
@@ -1478,12 +1455,12 @@ class SearchWindow(Gtk.Box):
 
 	def _search(self, *args):
 		def callback():
-			if (selected:=self._tag_drop_down.get_selected()) == 0:
-				search_tag="any"
-			else:
-				search_tag=self._tag_list.get_string(selected)
-			self._search_thread=SearchThread(self._client, self.search_entry, self._songs_list, self._hits_label, search_tag)
-			self._search_thread.start()
+			self._songs_list.clear()
+			self._hits_label.set_text("")
+			expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in filter(None, self.search_entry.get_text().split(" "))))
+			if expressions:
+				self._search_thread=SearchThread(self._client, f"({expressions})", self._songs_list, self._hits_label)
+				self._search_thread.start()
 		if self._search_thread.is_alive():
 			self._search_thread.set_callback(callback)
 			self._search_thread.stop()
