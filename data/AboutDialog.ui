@@ -3,7 +3,7 @@
 <object class="AdwAboutWindow" id="about_dialog">
 <property name="application-icon">org.mpdevil.mpdevil</property>
 <property name="application-name">mpdevil</property>
-<property name="copyright">Copyright © 2020-2023 Martin Wagner</property>
+<property name="copyright">Copyright © 2020-2024 Martin Wagner</property>
 <property name="developer-name">Martin Wagner</property>
 <property name="developers">Martin Wagner &lt;martin.wagner.dev@gmail.com&gt;</property>
 <property name="issue-url">https://github.com/SoongNoonien/mpdevil/issues</property>
