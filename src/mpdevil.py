@@ -1347,136 +1347,41 @@ class BrowserSongList(SongList):
 		if (position:=self.get_position_at(x,y)) is not None:
 			return Gdk.ContentProvider.new_for_value(self.get_model().get_item(position))
 
-##########
-# search #
-##########
-
-class SearchThread(threading.Thread):  # TODO progress indicator
-	def __init__(self, client, search_expression, songs_list, hits_label):
-		super().__init__(daemon=True)
-		self._client=client
-		self._search_expression=search_expression
-		self._songs_list=songs_list
-		self._hits_label=hits_label
-		self._stop_flag=False
-		self._callback=None
-
-	def set_callback(self, callback):
-		self._callback=callback
-
-	def stop(self):
-		self._stop_flag=True
-
-	def run(self):
-		hits=0
-		stripe_size=1000
-		songs=self._get_songs(0, stripe_size)
-		stripe_start=stripe_size
-		while songs:
-			if self._stop_flag:
-				self._exit()
-				return
-			hits+=len(songs)
-			idle_add(self._songs_list.append, songs)
-			idle_add(self._hits_label.set_text, ngettext("{hits} hit", "{hits} hits", hits).format(hits=hits))
-			stripe_end=stripe_start+stripe_size
-			songs=self._get_songs(stripe_start, stripe_end)
-			stripe_start=stripe_end
-		self._exit()
-
-	def _exit(self):
-		def callback():
-			if self._callback is not None:
-				self._callback()
-			return False
-		idle_add(callback)
-
-	@main_thread_function
-	def _get_songs(self, start, end):
-		if self._stop_flag:
-			return []
-		else:
-			self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
-			songs=self._client.search(self._search_expression, "window", f"{start}:{end}")
-			self._client.tagtypes("all")
-			return songs
-
-class SearchWindow(Gtk.Box):
-	def __init__(self, client):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL)
-		self._client=client
-
-		# widgets
-		self.search_entry=Gtk.SearchEntry(max_width_chars=20)
-		self._hits_label=Gtk.Label(xalign=1, ellipsize=Pango.EllipsizeMode.END)
-
-		# songs list
-		self._songs_list=BrowserSongList(self._client)
-
-		# search thread
-		self._search_thread=SearchThread(self._client, "", self._songs_list, self._hits_label)
-
-		# event controller
-		controller_focus=Gtk.EventControllerFocus()
-		self.search_entry.add_controller(controller_focus)
-
-		# connect
-		self.search_entry.connect("activate", self._search)
-		self._search_entry_changed=self.search_entry.connect("search-changed", self._search)
-		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
-		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
-		self._client.emitter.connect("connected", self._on_connected)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("updated_db", self._search)
-
-		# packing
-		hbox=Gtk.CenterBox(margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
-		hbox.set_center_widget(self.search_entry)
-		hbox.set_end_widget(self._hits_label)
-		self.append(hbox)
-		self.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
-		self.append(Gtk.ScrolledWindow(child=self._songs_list, vexpand=True))
-
-	def _on_disconnected(self, *args):
-		self._search_thread.stop()
-
-	def _on_connected(self, *args):
-		def callback():
-			self._songs_list.clear()
-			self._hits_label.set_text("")
-			self.search_entry.handler_block(self._search_entry_changed)
-			self.search_entry.set_text("")
-			self.search_entry.handler_unblock(self._search_entry_changed)
-		if self._search_thread.is_alive():
-			self._search_thread.set_callback(callback)
-			self._search_thread.stop()
-		else:
-			callback()
-
-	def _search(self, *args):
-		def callback():
-			self._songs_list.clear()
-			self._hits_label.set_text("")
-			expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in filter(None, self.search_entry.get_text().split(" "))))
-			if expressions:
-				self._search_thread=SearchThread(self._client, f"({expressions})", self._songs_list, self._hits_label)
-				self._search_thread.start()
-		if self._search_thread.is_alive():
-			self._search_thread.set_callback(callback)
-			self._search_thread.stop()
-		else:
-			callback()
-
-	def _on_search_entry_focus_event(self, controller, focus):
-		app=self.get_root().get_application()
-		if focus:
-			app.set_accels_for_action("mpd.toggle-play", [])
-		else:
-			app.set_accels_for_action("mpd.toggle-play", ["space"])
-
 ###########
 # browser #
 ###########
+
+class SearchView(Gtk.ScrolledWindow):
+	__gsignals__={"song-selected": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
+			"search-started": (GObject.SignalFlags.RUN_FIRST, None, ()),
+			"search-stopped": (GObject.SignalFlags.RUN_FIRST, None, ())}
+	def __init__(self, client):
+		super().__init__(vexpand=True)
+		self._client=client
+
+		# song list
+		self._songs_list=SongList()
+
+		# connect
+		self._songs_list.connect("activate", self._on_activate)
+
+		# packing
+		self.set_child(self._songs_list)
+
+	def search(self, keywords):
+		self._songs_list.get_model().clear()
+		expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in filter(None, keywords.split(" "))))
+		if expressions:
+			self.emit("search-started")
+			self._client.restrict_tagtypes("track", "title", "artist", "albumartist", "album", "date")
+			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
+			self._client.tagtypes("all")
+			self._songs_list.get_model().append(songs)
+		else:
+			self.emit("search-stopped")
+
+	def _on_activate(self, listview, pos):
+		self.emit("song-selected", self._songs_list.get_model().get_item(pos))
 
 class Artist(GObject.Object):
 	def __init__(self, name, section_name, section_start):
@@ -1610,7 +1515,7 @@ class ArtistList(Gtk.ListView):
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("updated_db", self._on_updated_db)
 
-	def _select(self, name):
+	def select(self, name):
 		self.artist_selection_model.select_artist(name)
 		self.scroll_to(self.artist_selection_model.get_selected(), Gtk.ListScrollFlags.FOCUS, None)
 
@@ -1632,7 +1537,7 @@ class ArtistList(Gtk.ListView):
 		self._refresh()
 		if (song:=self._client.currentsong()):
 			artist=song["albumartist"][0]
-			self._select(artist)
+			self.select(artist)
 		else:
 			self.scroll_to(0, Gtk.ListScrollFlags.SELECT|Gtk.ListScrollFlags.FOCUS, None)
 		self.set_sensitive(True)
@@ -1643,7 +1548,7 @@ class ArtistList(Gtk.ListView):
 		else:
 			artist=self.artist_selection_model.get_selected_artist()
 			self._refresh()
-			self._select(artist)
+			self.select(artist)
 
 class Album(GObject.Object):
 	def __init__(self, artist, name, sortname, date):
@@ -1747,6 +1652,13 @@ class AlbumList(Gtk.GridView):
 			self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: locale.strxfrm(item.sortname)))
 		self._settings.set_property("cursor-watch", False)
 
+	def select(self, name, date):
+		for i, album in enumerate(self._selection_model):
+			if album.name == name and album.date == date:
+				self.scroll_to(i, Gtk.ListScrollFlags.FOCUS, None)
+				self.emit("album-selected", album.artist, album.name, album.date)
+				return
+
 	def _on_activate(self, widget, pos):
 		album=self._selection_model.get_item(pos)
 		self.emit("album-selected", album.artist, album.name, album.date)
@@ -1834,6 +1746,11 @@ class AlbumView(Gtk.Box):
 			self._cover.set_paintable(cover.get_paintable())
 		self._cover.set_size_request(-1, size)
 
+	def select(self, file):
+		for i, song in enumerate(self.songs_list.get_model()):
+			if song["file"] == file:
+				self.songs_list.scroll_to(i, Gtk.ListScrollFlags.FOCUS, None)
+
 	def _on_button1_released(self, controller, n_press, x, y):
 		if self._cover.contains(x, y):
 			self.emit("close")
@@ -1841,9 +1758,9 @@ class AlbumView(Gtk.Box):
 	def _on_button_clicked(self, widget, mode):
 		self._client.filter_to_playlist(self._tag_filter, mode)
 
-class Browser(Gtk.Paned):
+class Browser(Gtk.Box):
 	def __init__(self, client, settings):
-		super().__init__(resize_start_child=False, shrink_start_child=False, resize_end_child=True, shrink_end_child=False)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
 		self._settings=settings
 
@@ -1853,11 +1770,30 @@ class Browser(Gtk.Paned):
 		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
 		album_window=Gtk.ScrolledWindow(child=self._album_list)
 		self._album_view=AlbumView(self._client, self._settings)
+		self._search_window=SearchView(self._client)
+
+		# search bar
+		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search Songs"))  # TODO text
+		self.search_bar=Gtk.SearchBar()
+		self.search_bar.set_child(self._search_entry)
+		self.search_bar.connect_entry(self._search_entry)
 
 		# album stack
 		self._album_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT, hhomogeneous=False, vhomogeneous=False)
 		self._album_stack.add_named(album_window, "album_list")
 		self._album_stack.add_named(self._album_view, "album_view")
+
+		# main stack
+		self.paned1=Gtk.Paned(resize_start_child=False, shrink_start_child=False, resize_end_child=True, shrink_end_child=False)
+		self.paned1.set_start_child(artist_window)
+		self.paned1.set_end_child(self._album_stack)
+		self._main_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._main_stack.add_named(self.paned1, "browser")  # TODO name
+		self._main_stack.add_named(self._search_window, "search")
+
+		# event controller
+		controller_focus=Gtk.EventControllerFocus()
+		self._search_entry.add_controller(controller_focus)
 
 		# connect
 		self._album_list.connect("album-selected", self._on_album_selected)
@@ -1865,18 +1801,31 @@ class Browser(Gtk.Paned):
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
 		self._artist_list.artist_selection_model.connect("reselected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 		self._artist_list.artist_selection_model.connect("clear", self._album_list.clear)
+		self._search_window.connect("song-selected", self._on_song_selected)
+		self._search_window.connect("search-started", lambda *args: self._main_stack.set_visible_child_name("search"))
+		self._search_window.connect("search-stopped", lambda *args: self._main_stack.set_visible_child_name("browser"))
+		self.search_bar.connect("notify::search-mode-enabled", self._on_search_bar_toggled)
+		self._search_entry.connect("activate", self._search)
+		self._search_entry.connect("search-changed", self._search)
+		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
+		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._client.emitter.connect("disconnected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 		self._settings.connect("changed::album-cover", lambda *args: self._album_stack.set_visible_child_name("album_list"))
 
 		# packing
-		self.set_start_child(artist_window)
-		self.set_end_child(self._album_stack)
+		self.append(self.search_bar)
+		self.append(self._main_stack)
 
 	def back(self):
 		if self._album_stack.get_visible_child_name() == "album_view":
 			self._album_stack.set_visible_child_name("album_list")
 
+	def _search(self, *args):
+		self._search_window.search(self._search_entry.get_text())
+
 	def _on_artist_selected(self, obj, artist):
+		self.search_bar.set_search_mode(False)
+		self._main_stack.set_visible_child_name("browser")
 		self._album_stack.set_visible_child_name("album_list")
 		self._album_list.display(artist)
 
@@ -1884,6 +1833,26 @@ class Browser(Gtk.Paned):
 		self._album_view.display(*tags)
 		self._album_stack.set_visible_child_name("album_view")
 		self._album_view.songs_list.grab_focus()
+
+	def _on_song_selected(self, widget, song):
+		self._artist_list.select(song["albumartist"][0])
+		self._album_list.select(song["album"][0], song["date"][0])
+		self._album_view.select(song["file"])
+		self.search_bar.set_search_mode(False)
+		self._main_stack.set_visible_child_name("browser")
+		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
+		self.get_root().set_focus_visible(True)
+
+	def _on_search_bar_toggled(self, *args):
+		if not self.search_bar.get_search_mode():
+			self._main_stack.set_visible_child_name("browser")
+
+	def _on_search_entry_focus_event(self, controller, focus):
+		app=self.get_root().get_application()
+		if focus:
+			app.set_accels_for_action("mpd.toggle-play", [])
+		else:
+			app.set_accels_for_action("mpd.toggle-play", ["space"])
 
 ############
 # playlist #
@@ -2754,7 +2723,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._paned2=Gtk.Paned(resize_start_child=True,shrink_start_child=False,resize_end_child=False,shrink_end_child=False,vexpand=True)
 		self._browser=Browser(self._client, self._settings)
-		self._search_window=SearchWindow(self._client)
+		self._settings.bind("mini-player", self._browser, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		self._cover_lyrics_window=CoverLyricsWindow(self._client, self._settings)
 		playlist_window=PlaylistWindow(self._client, self._settings)
 		playback_control=PlaybackControl(self._client, self._settings)
@@ -2766,13 +2735,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._connection_toast=Adw.Toast(
 			title=_("Connection failed"), priority=Adw.ToastPriority.HIGH, button_label=_("Preferences"), action_name="win.settings")
 		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"), can_focus=False)
+		self._search_button.bind_property("active", self._browser.search_bar, "search-mode-enabled",  GObject.BindingFlags.BIDIRECTIONAL)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
-		# stack
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-		self._stack.add_named(self._browser, "browser")
-		self._stack.add_named(self._search_window, "search")
-		self._settings.bind("mini-player", self._stack, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+		# type to search in browser
+		self._browser.search_bar.set_key_capture_widget(self)
 
 		# menu
 		subsection=Gio.Menu()
@@ -2794,7 +2761,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._menu_button.set_direction(Gtk.ArrowType.UP)
 
 		# connect
-		self._search_button.connect("toggled", self._on_search_button_toggled)
 		self._settings.connect_after("changed::mini-player", self._mini_player)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.emitter.connect("current_song", self._on_song_changed)
@@ -2808,7 +2774,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._cover_playlist_box.append(self._cover_lyrics_window)
 		self._cover_playlist_box.append(Gtk.Separator())
 		self._cover_playlist_box.append(playlist_window)
-		self._paned2.set_start_child(self._stack)
+		self._paned2.set_start_child(self._browser)
 		self._paned2.set_end_child(self._cover_playlist_box)
 		action_bar=Gtk.ActionBar()
 		if self._use_csd:
@@ -2871,11 +2837,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.unbind(self, "default-height")
 
 	def _bind_paned_settings(self):
-		self._settings.bind("paned1", self._browser, "position", Gio.SettingsBindFlags.DEFAULT)
+		self._settings.bind("paned1", self._browser.paned1, "position", Gio.SettingsBindFlags.DEFAULT)
 		self._settings.bind("paned2", self._paned2, "position", Gio.SettingsBindFlags.DEFAULT)
 
 	def _unbind_paned_settings(self):
-		self._settings.unbind(self._browser, "position")
+		self._settings.unbind(self._browser.paned1, "position")
 		self._settings.unbind(self._paned2, "position")
 
 	def _mini_player(self, *args):
@@ -2910,13 +2876,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_help(self, action, param):
 		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/mpdevil/wiki/Usage").launch(self, None, None, None)
-
-	def _on_search_button_toggled(self, button):
-		if button.get_active():
-			self._stack.set_visible_child_name("search")
-			self._search_window.search_entry.grab_focus()
-		else:
-			self._stack.set_visible_child_name("browser")
 
 	def _on_song_changed(self, *args):
 		if (song:=self._client.currentsong()):
