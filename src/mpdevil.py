@@ -2704,7 +2704,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client=client
 		self._settings=settings
 		self._use_csd=self._settings.get_boolean("use-csd")
-		self._size=None  # needed for window size saving
 
 		# actions
 		simple_actions_data=("settings","stats","help","toggle-lyrics","back","toggle-search")
