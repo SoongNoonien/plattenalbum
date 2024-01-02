@@ -1826,8 +1826,6 @@ class Browser(Gtk.Box):
 		self._search_window.search(self._search_entry.get_text())
 
 	def _on_artist_selected(self, obj, artist):
-		self.search_bar.set_search_mode(False)
-		self._main_stack.set_visible_child_name("browser")
 		self._album_stack.set_visible_child_name("album_list")
 		self._album_list.display(artist)
 
