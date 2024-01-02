@@ -1349,25 +1349,28 @@ class BrowserSongList(SongList):
 # browser #
 ###########
 
-class SearchView(Gtk.ScrolledWindow):
+class SearchView(Gtk.Stack):
 	__gsignals__={"song-selected": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
 			"search-started": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"search-stopped": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client):
-		super().__init__(vexpand=True)
+		super().__init__()
 		self._client=client
 
-		# song list
+		# widgets
 		self._song_list=SongList()
+		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results Found"), description=_("Try a different search."))
 
 		# connect
 		self._song_list.connect("activate", self._on_activate)
 
 		# packing
-		self.set_child(self._song_list)
+		self.add_named(Gtk.ScrolledWindow(child=self._song_list, vexpand=True), "results")
+		self.add_named(status_page, "no-results")
 
 	def search(self, keywords):
 		self._song_list.get_model().clear()
+		self.set_visible_child_name("results")
 		expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in filter(None, keywords.split(" "))))
 		if expressions:
 			self.emit("search-started")
@@ -1375,6 +1378,8 @@ class SearchView(Gtk.ScrolledWindow):
 			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
 			self._client.tagtypes("all")
 			self._song_list.get_model().append(songs)
+			if not songs:
+				self.set_visible_child_name("no-results")
 		else:
 			self.emit("search-stopped")
 
