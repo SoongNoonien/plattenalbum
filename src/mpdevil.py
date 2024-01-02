@@ -1005,7 +1005,7 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		settings.bind("socket-connection", socket_connect_row, "active", Gio.SettingsBindFlags.DEFAULT)
 		self.add(socket_connect_row)
 
-		socket_row=Adw.EntryRow(title=_("Socket Path"), show_apply_button=True)
+		socket_row=Adw.EntryRow(title=_("Socket Path"))
 		settings.bind("socket", socket_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("socket-connection", socket_row, "visible", Gio.SettingsBindFlags.GET)
 		self.add(socket_row)
