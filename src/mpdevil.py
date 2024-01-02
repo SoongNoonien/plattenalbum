@@ -1040,11 +1040,9 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		self.add(password_row)
 
 		# connect button
-		connect_button=Gtk.Button(label=_("Connect"))
-		connect_button.add_css_class("suggested-action")
-		connect_button.add_css_class("pill")
-		connect_button.connect("clicked", lambda *args: client.reconnect())
-		self.set_header_suffix(connect_button)
+		reconnect_button=Gtk.Button(child=Adw.ButtonContent(icon_name="view-refresh-symbolic", label=_("Reconnect")), has_frame=False)
+		reconnect_button.connect("clicked", lambda *args: client.reconnect())
+		self.set_header_suffix(reconnect_button)
 
 class SettingsDialog(Adw.PreferencesWindow):
 	def __init__(self, parent, client, settings):
