@@ -1432,9 +1432,8 @@ class ArtistSelectionModel(ListModel, Gtk.SelectionModel, Gtk.SectionModel):
 		return self.data[self._selected].name
 
 	def select_artist(self, name):
-		row_num=self.get_n_items()
-		for i in range(0, row_num):
-			if self.data[i].name == name:
+		for i, artist in enumerate(self.data):
+			if artist.name == name:
 				self.select_item(i, True)
 				return
 
