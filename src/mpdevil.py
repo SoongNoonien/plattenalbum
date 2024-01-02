@@ -1005,7 +1005,7 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		settings.bind("socket-connection", socket_connect_row, "active", Gio.SettingsBindFlags.DEFAULT)
 		self.add(socket_connect_row)
 
-		socket_row=Adw.EntryRow(title=_("Socket Path"))
+		socket_row=Adw.EntryRow(title=_("Socket path"))
 		settings.bind("socket", socket_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("socket-connection", socket_row, "visible", Gio.SettingsBindFlags.GET)
 		self.add(socket_row)
@@ -1021,7 +1021,7 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		settings.bind("socket-connection", hostname_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
 		self.add(hostname_row)
 
-		music_directory_row=Adw.EntryRow(title=_("Music Library"))
+		music_directory_row=Adw.EntryRow(title=_("Music library"))
 		settings.bind("music-directory", music_directory_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("socket-connection", music_directory_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
 		self.add(music_directory_row)
@@ -1359,7 +1359,7 @@ class SearchView(Gtk.Stack):
 
 		# widgets
 		self._song_list=SongList()
-		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results Found"), description=_("Try a different search."))
+		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results Found"), description=_("Try a different search"))
 
 		# connect
 		self._song_list.connect("activate", self._on_activate)
@@ -1775,7 +1775,7 @@ class Browser(Gtk.Box):
 		self._search_window=SearchView(self._client)
 
 		# search bar
-		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search Songs"))  # TODO text
+		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search songs"))
 		self.search_bar=Gtk.SearchBar()
 		self.search_bar.set_child(self._search_entry)
 		self.search_bar.connect_entry(self._search_entry)
