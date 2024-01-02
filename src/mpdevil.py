@@ -1360,28 +1360,28 @@ class SearchView(Gtk.ScrolledWindow):
 		self._client=client
 
 		# song list
-		self._songs_list=SongList()
+		self._song_list=SongList()
 
 		# connect
-		self._songs_list.connect("activate", self._on_activate)
+		self._song_list.connect("activate", self._on_activate)
 
 		# packing
-		self.set_child(self._songs_list)
+		self.set_child(self._song_list)
 
 	def search(self, keywords):
-		self._songs_list.get_model().clear()
+		self._song_list.get_model().clear()
 		expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in filter(None, keywords.split(" "))))
 		if expressions:
 			self.emit("search-started")
 			self._client.restrict_tagtypes("track", "title", "artist", "albumartist", "album", "date")
 			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
 			self._client.tagtypes("all")
-			self._songs_list.get_model().append(songs)
+			self._song_list.get_model().append(songs)
 		else:
 			self.emit("search-stopped")
 
 	def _on_activate(self, listview, pos):
-		self.emit("song-selected", self._songs_list.get_model().get_item(pos))
+		self.emit("song-selected", self._song_list.get_model().get_item(pos))
 
 class Artist(GObject.Object):
 	def __init__(self, name, section_name, section_start):
