@@ -1097,37 +1097,56 @@ class SettingsDialog(Adw.PreferencesWindow):
 # other dialogs #
 #################
 
-class ServerStats(Gtk.Window):
-	def __init__(self, parent, client, settings):
-		super().__init__(title=_("Stats"), transient_for=parent, resizable=False)
-		if settings.get_boolean("use-csd"):
-			self.set_titlebar(Gtk.HeaderBar())
+class NumericPropertyRow(Adw.ActionRow):  # TODO this is a hack inspired by nautilus-properties-window.ui
+	def __init__(self, key, value):
+		super().__init__(activatable=False, selectable=False)
+		key_label=Gtk.Label(label=key, ellipsize=Pango.EllipsizeMode.END, halign=Gtk.Align.START, hexpand=True)
+		key_label.add_css_class("caption")
+		key_label.add_css_class("dim-label")
+		value_label=Gtk.Label(label=value, selectable=True, ellipsize=Pango.EllipsizeMode.END, halign=Gtk.Align.START, hexpand=True)
+		value_label.add_css_class("numeric")
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3, halign=Gtk.Align.START, valign=Gtk.Align.CENTER)
+		box.append(key_label)
+		box.append(value_label)
+		self.add_prefix(box)
 
-		# grid
-		grid=Gtk.Grid(row_spacing=6, column_spacing=12, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
+class ServerStats(Adw.Window):
+	def __init__(self, parent, client, settings):
+		super().__init__(title=_("Server Stats"), modal=True, transient_for=parent, destroy_with_parent=True,
+			default_width=360, width_request=360, height_request=294)
+
+		# list box
+		list_box=Gtk.ListBox(valign=Gtk.Align.START)
+		list_box.add_css_class("boxed-list")
 
 		# populate
 		display_str={
-			"protocol": _("<b>Protocol:</b>"),
-			"uptime": _("<b>Uptime:</b>"),
-			"playtime": _("<b>Playtime:</b>"),
-			"artists": _("<b>Artists:</b>"),
-			"albums": _("<b>Albums:</b>"),
-			"songs": _("<b>Songs:</b>"),
-			"db_playtime": _("<b>Total Playtime:</b>"),
-			"db_update": _("<b>Database Update:</b>")
+			"protocol": _("Protocol"),
+			"uptime": _("Uptime"),
+			"playtime": _("Playtime"),
+			"artists": _("Artists"),
+			"albums": _("Albums"),
+			"songs": _("Songs"),
+			"db_playtime": _("Total Playtime"),
+			"db_update": _("Database Update")
 		}
 		stats=client.stats()
 		stats["protocol"]=str(client.mpd_version)
 		for key in ("uptime","playtime","db_playtime"):
 			stats[key]=str(Duration(stats[key]))
 		stats["db_update"]=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%a %d %B %Y, %H∶%M")
-		for i, key in enumerate(("protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs")):
-			grid.attach(Gtk.Label(label=display_str[key], use_markup=True, xalign=1), 0, i, 1, 1)
-			grid.attach(Gtk.Label(label=stats[key], xalign=0), 1, i, 1, 1)
+		for key in ("protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs"):
+			list_box.append(NumericPropertyRow(display_str[key], stats[key]))
+
+		# shortcuts
+		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Escape, 0), Gtk.NamedAction.new("window.close")))
 
 		# packing
-		self.set_child(grid)
+		clamp=Adw.Clamp(child=list_box, margin_top=18, margin_bottom=18, margin_start=18, margin_end=18)
+		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+		toolbar_view=Adw.ToolbarView(content=scroll)
+		toolbar_view.add_top_bar(Adw.HeaderBar())
+		self.set_content(toolbar_view)
 
 ###########################
 # general purpose widgets #
