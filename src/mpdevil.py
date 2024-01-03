@@ -2746,7 +2746,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._use_csd=self._settings.get_boolean("use-csd")
 
 		# actions
-		simple_actions_data=("settings","stats","help","toggle-lyrics","back","toggle-search")
+		simple_actions_data=("settings","reconnect","stats","help","toggle-lyrics","back","toggle-search")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2787,6 +2787,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		subsection.append(_("Help"), "win.help")
 		subsection.append(_("About mpdevil"), "app.about")
 		mpd_subsection=Gio.Menu()
+		mpd_subsection.append(_("Reconnect"), "win.reconnect")
 		mpd_subsection.append(_("Update Database"), "mpd.update")
 		mpd_subsection.append(_("Server Stats"), "win.stats")
 		menu=Gio.Menu()
@@ -2909,6 +2910,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		settings=SettingsDialog(self, self._client, self._settings)
 		settings.present()
 
+	def _on_reconnect(self, action, param):
+		self._client.reconnect()
+
 	def _on_stats(self, action, param):
 		stats=ServerStats(self, self._client, self._settings)
 		stats.present()
@@ -3008,7 +3012,7 @@ class mpdevil(Adw.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.back", ["Escape"]),("win.toggle-search", ["<Control>f"]),
+			("win.back", ["Escape"]),("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
 			("mpd.next", ["<Alt>Down", "KP_Add"]),("mpd.prev", ["<Alt>Up", "KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),

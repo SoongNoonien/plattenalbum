@@ -34,6 +34,13 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="visible">True</property>
+			<property name="title" translatable="yes">Reconnect</property>
+			<property name="accelerator">&lt;Shift&gt;F5</property>
+			</object>
+		</child>
+		<child>
+			<object class="GtkShortcutsShortcut">
+			<property name="visible">True</property>
 			<property name="title" translatable="yes">Update database</property>
 			<property name="accelerator">F5</property>
 			</object>
