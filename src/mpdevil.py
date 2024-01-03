@@ -997,6 +997,46 @@ class BehaviorSettings(Adw.PreferencesGroup):
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
+class SocketRow(Adw.EntryRow):
+	def __init__(self, parent):
+		super().__init__(title=_("Socket path"))
+		button=Gtk.Button(icon_name="document-open-symbolic", tooltip_text=_("Pick a File"), has_frame=False, valign=Gtk.Align.CENTER)
+		button.connect("clicked", self._on_button_clicked, parent)
+		self.add_suffix(button)
+
+	def _on_button_clicked(self, widget, parent):
+		dialog=Gtk.FileDialog()
+		file=self.get_text()
+		if not file:
+			file=FALLBACK_SOCKET
+		dialog.set_initial_file(Gio.File.new_for_path(file))
+		def callback(source_object, result):
+			try:
+				self.set_text(dialog.open_finish(result).get_path())
+			except GLib.GError:
+				pass
+		dialog.open(parent, None, callback)
+
+class MusicDirectoryRow(Adw.EntryRow):
+	def __init__(self, parent):
+		super().__init__(title=_("Music library"))
+		button=Gtk.Button(icon_name="folder-open-symbolic", tooltip_text=_("Select a Folder"), has_frame=False, valign=Gtk.Align.CENTER)
+		button.connect("clicked", self._on_button_clicked, parent)
+		self.add_suffix(button)
+
+	def _on_button_clicked(self, widget, parent):
+		dialog=Gtk.FileDialog()
+		folder=self.get_text()
+		if not folder:
+			folder=FALLBACK_MUSIC_DIRECTORY
+		dialog.set_initial_folder(Gio.File.new_for_path(folder))
+		def callback(source_object, result):
+			try:
+				self.set_text(dialog.select_folder_finish(result).get_path())
+			except GLib.GError:
+				pass
+		dialog.select_folder(parent, None, callback)
+
 class ConnectionSettings(Adw.PreferencesGroup):
 	def __init__(self, client, settings, parent):
 		super().__init__(title=_("Connection"))
@@ -1005,7 +1045,7 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		settings.bind("socket-connection", socket_connect_row, "active", Gio.SettingsBindFlags.DEFAULT)
 		self.add(socket_connect_row)
 
-		socket_row=Adw.EntryRow(title=_("Socket path"))
+		socket_row=SocketRow(parent)
 		settings.bind("socket", socket_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("socket-connection", socket_row, "visible", Gio.SettingsBindFlags.GET)
 		self.add(socket_row)
@@ -1021,7 +1061,7 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		settings.bind("socket-connection", hostname_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
 		self.add(hostname_row)
 
-		music_directory_row=Adw.EntryRow(title=_("Music library"))
+		music_directory_row=MusicDirectoryRow(parent)
 		settings.bind("music-directory", music_directory_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("socket-connection", music_directory_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
 		self.add(music_directory_row)
