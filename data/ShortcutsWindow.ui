@@ -4,57 +4,48 @@
 <property name="modal">False</property>
 <child>
 	<object class="GtkShortcutsSection">
-	<property name="visible">True</property>
 	<property name="section-name">shortcuts</property>
 	<child>
 		<object class="GtkShortcutsGroup">
-		<property name="visible">True</property>
 		<property name="title" translatable="yes">General</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Open online help</property>
 			<property name="accelerator">F1</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Open shortcuts window</property>
 			<property name="accelerator">&lt;Control&gt;question</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Open menu</property>
 			<property name="accelerator">F10</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Reconnect</property>
 			<property name="accelerator">&lt;Shift&gt;F5</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Update database</property>
 			<property name="accelerator">F5</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Clear playlist</property>
 			<property name="accelerator">&lt;Shift&gt;Delete</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Quit</property>
 			<property name="accelerator">&lt;Control&gt;q</property>
 			</object>
@@ -63,25 +54,21 @@
 	</child>
 	<child>
 		<object class="GtkShortcutsGroup">
-		<property name="visible">True</property>
 		<property name="title" translatable="yes">Window</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle mini player</property>
 			<property name="accelerator">&lt;Control&gt;m</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle lyrics</property>
 			<property name="accelerator">&lt;Control&gt;l</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle search</property>
 			<property name="accelerator">&lt;Control&gt;f</property>
 			</object>
@@ -90,81 +77,69 @@
 	</child>
 	<child>
 		<object class="GtkShortcutsGroup">
-		<property name="visible">True</property>
 		<property name="title" translatable="yes">Playback</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Play/Pause</property>
 			<property name="accelerator">space</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Stop</property>
 			<property name="accelerator">&lt;Shift&gt;space</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Stop after current title</property>
 			<property name="accelerator">&lt;Shift&gt;&lt;Control&gt;s</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Next title</property>
 			<property name="accelerator">&lt;Alt&gt;Down KP_Add</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Previous title</property>
 			<property name="accelerator">&lt;Alt&gt;Up KP_Subtract</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Seek forward</property>
 			<property name="accelerator">&lt;Alt&gt;Right KP_Multiply</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Seek backward</property>
 			<property name="accelerator">&lt;Alt&gt;Left KP_Divide</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle repeat mode</property>
 			<property name="accelerator">&lt;Control&gt;r</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle random mode</property>
 			<property name="accelerator">&lt;Control&gt;n</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle single mode</property>
 			<property name="accelerator">&lt;Control&gt;s</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="visible">True</property>
 			<property name="title" translatable="yes">Toggle consume mode</property>
 			<property name="accelerator">&lt;Control&gt;o</property>
 			</object>
