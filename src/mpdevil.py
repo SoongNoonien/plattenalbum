@@ -2778,7 +2778,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
-		self._cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._paned2=Gtk.Paned(resize_start_child=True,shrink_start_child=False,resize_end_child=False,shrink_end_child=False,vexpand=True)
 		self._browser=Browser(self._client, self._settings)
 		self._settings.bind("mini-player", self._browser, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
@@ -2830,11 +2830,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("updated_db", self._on_updated_db)
 
 		# packing
-		self._cover_playlist_box.append(self._cover_lyrics_window)
-		self._cover_playlist_box.append(Gtk.Separator())
-		self._cover_playlist_box.append(playlist_window)
+		cover_playlist_box.append(self._cover_lyrics_window)
+		cover_playlist_box.append(Gtk.Separator())
+		cover_playlist_box.append(playlist_window)
 		self._paned2.set_start_child(self._browser)
-		self._paned2.set_end_child(self._cover_playlist_box)
+		self._paned2.set_end_child(cover_playlist_box)
 		action_bar=Gtk.ActionBar()
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
