@@ -8,3 +8,4 @@ Terminal=false
 Type=Application
 StartupNotify=true
 Categories=Audio;AudioVideo;Player;GTK
+Keywords=Music;Player;
