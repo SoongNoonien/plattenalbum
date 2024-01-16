@@ -1828,7 +1828,7 @@ class Browser(Gtk.Box):
 		# widgets
 		self._artist_list=ArtistList(self._client, self._settings)
 		self._album_list=AlbumList(self._client, self._settings)
-		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
+		artist_window=Gtk.ScrolledWindow(child=self._artist_list, hexpand=True)
 		album_window=Gtk.ScrolledWindow(child=self._album_list)
 		self._album_view=AlbumView(self._client, self._settings)
 		self._search_window=SearchView(self._client)
@@ -1844,12 +1844,15 @@ class Browser(Gtk.Box):
 		self._album_stack.add_named(album_window, "album_list")
 		self._album_stack.add_named(self._album_view, "album_view")
 
+		# split view
+		sidebar=Gtk.Box()
+		sidebar.append(artist_window)
+		sidebar.append(Gtk.Separator(opacity=0.3))
+		overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=self._album_stack)
+
 		# main stack
-		self.paned1=Gtk.Paned(resize_start_child=False, shrink_start_child=False, resize_end_child=True, shrink_end_child=False)
-		self.paned1.set_start_child(artist_window)
-		self.paned1.set_end_child(self._album_stack)
 		self._main_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-		self._main_stack.add_named(self.paned1, "browser")  # TODO name
+		self._main_stack.add_named(overlay_split_view, "browser")  # TODO name
 		self._main_stack.add_named(self._search_window, "search")
 
 		# event controller
@@ -2778,10 +2781,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
-		cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		self._paned2=Gtk.Paned(resize_start_child=True,shrink_start_child=False,resize_end_child=False,shrink_end_child=False,vexpand=True)
+		self._cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._browser=Browser(self._client, self._settings)
-		self._settings.bind("mini-player", self._browser, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 		self._cover_lyrics_window=CoverLyricsWindow(self._client, self._settings)
 		playlist_window=PlaylistWindow(self._client, self._settings)
 		playback_control=PlaybackControl(self._client, self._settings)
@@ -2795,6 +2796,20 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"), can_focus=False)
 		self._search_button.bind_property("active", self._browser.search_bar, "search-mode-enabled",  GObject.BindingFlags.BIDIRECTIONAL)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
+
+		# sidebar
+		self._cover_playlist_box.append(self._cover_lyrics_window)
+		self._cover_playlist_box.append(Gtk.Separator())
+		self._cover_playlist_box.append(playlist_window)
+		self._sidebar=Gtk.Box()
+		self._sidebar.append(Gtk.Separator(opacity=0.3))
+		self._sidebar.append(self._cover_playlist_box)
+
+		# split view
+		self._overlay_split_view=Adw.OverlaySplitView(
+			sidebar_position=Gtk.PackType.END, min_sidebar_width=300, max_sidebar_width=500, sidebar_width_fraction=0.30)
+		self._overlay_split_view.set_content(self._browser)
+		self._overlay_split_view.set_sidebar(self._sidebar)
 
 		# type to search in browser
 		self._browser.search_bar.set_key_capture_widget(self)
@@ -2830,11 +2845,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("updated_db", self._on_updated_db)
 
 		# packing
-		cover_playlist_box.append(self._cover_lyrics_window)
-		cover_playlist_box.append(Gtk.Separator())
-		cover_playlist_box.append(playlist_window)
-		self._paned2.set_start_child(self._browser)
-		self._paned2.set_end_child(cover_playlist_box)
 		action_bar=Gtk.ActionBar()
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
@@ -2849,10 +2859,10 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.pack_end(volume_button)
 		action_bar.pack_end(playback_options)
 		action_bar.pack_end(audio)
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		vbox.append(self._paned2)
-		vbox.append(action_bar)
-		self._toast_overlay=Adw.ToastOverlay(child=vbox)
+		self._vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		self._vbox.prepend(self._overlay_split_view)
+		self._vbox.append(action_bar)
+		self._toast_overlay=Adw.ToastOverlay(child=self._vbox)
 		self.set_child(self._toast_overlay)
 
 	def open(self):
@@ -2864,7 +2874,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._bind_mini_player_dimension_settings()
 		else:
 			self._bind_default_dimension_settings()
-			self._bind_paned_settings()
 		if self._settings.get_boolean("maximize"):
 			self.maximize()
 		self.present()
@@ -2895,23 +2904,19 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.unbind(self, "default-width")
 		self._settings.unbind(self, "default-height")
 
-	def _bind_paned_settings(self):
-		self._settings.bind("paned1", self._browser.paned1, "position", Gio.SettingsBindFlags.DEFAULT)
-		self._settings.bind("paned2", self._paned2, "position", Gio.SettingsBindFlags.DEFAULT)
-
-	def _unbind_paned_settings(self):
-		self._settings.unbind(self._browser.paned1, "position")
-		self._settings.unbind(self._paned2, "position")
-
 	def _mini_player(self, *args):
 		if self._settings.get_boolean("mini-player"):
-			self._unbind_paned_settings()
+			self._sidebar.remove(self._cover_playlist_box)
+			self._vbox.remove(self._overlay_split_view)
+			self._vbox.prepend(self._cover_playlist_box)
 			self._unbind_dimension_settings()
 			self._bind_mini_player_dimension_settings()
 		else:
 			self._unbind_dimension_settings()
 			self._bind_default_dimension_settings()
-			self._bind_paned_settings()
+			self._vbox.remove(self._cover_playlist_box)
+			self._sidebar.append(self._cover_playlist_box)
+			self._vbox.prepend(self._overlay_split_view)
 
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_lyrics_window.lyrics_button.emit("clicked")
