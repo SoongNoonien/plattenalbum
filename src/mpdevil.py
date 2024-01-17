@@ -1374,7 +1374,7 @@ class BrowserSongList(SongList):
 
 		# connect
 		self.connect("activate", self._on_activate)
-		button_controller.connect("released", self._on_button_released)
+		button_controller.connect("pressed", self._on_button_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
 
 	def clear(self):
@@ -1387,7 +1387,7 @@ class BrowserSongList(SongList):
 	def _on_activate(self, listview, pos):
 		self._client.file_to_playlist(self.get_model().get_item(pos)["file"], "play")
 
-	def _on_button_released(self, controller, n_press, x, y):
+	def _on_button_pressed(self, controller, n_press, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if item is not self:
 			row=item.get_first_child()
@@ -3082,3 +3082,4 @@ if __name__ == "__main__":
 	app=mpdevil()
 	signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
 	app.run(sys.argv)
+
