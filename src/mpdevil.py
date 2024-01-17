@@ -1331,7 +1331,10 @@ class SongList(Gtk.ListView):
 		return self.get_focus_child().get_first_child()
 
 	def get_focus_popup_point(self):
-		return self._get_focus_row().translate_coordinates(self, 0, 0)
+		computed_point,point=self._get_focus_row().compute_point(self, Graphene.Point.zero())
+		if computed_point:
+			return (point.x, point.y)
+		return (0, 0)
 
 	def get_focus_position(self):
 		return self._get_focus_row().get_property("position")
@@ -2073,6 +2076,14 @@ class PlaylistView(SongList):
 		if (position:=self.get_position_at(x,y)) is not None:
 			return Gdk.ContentProvider.new_for_value(position)
 
+	def _point_in_upper_half(self, x, y, widget):
+		point=Graphene.Point.zero()
+		point.x,point.y=x,y
+		computed_point,point=self.compute_point(widget, point)
+		if computed_point:
+			return point.y > widget.get_height()/2
+		return False
+
 	def _on_drop(self, drop_target, value, x, y):  # TODO
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if isinstance(value, int):
@@ -2083,7 +2094,7 @@ class PlaylistView(SongList):
 					return False
 				if value < position:
 					position-=1
-				if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
+				if self._point_in_upper_half(x, y, item):
 					position+=1
 			else:
 				position=self.get_model().get_n_items()-1
@@ -2095,7 +2106,7 @@ class PlaylistView(SongList):
 			if item is not self:
 				row=item.get_first_child()
 				position=row.get_property("position")
-				if self.translate_coordinates(item, x, y)[1] > item.get_height()/2:
+				if self._point_in_upper_half(x, y, item):
 					position+=1
 			else:
 				position=self.get_model().get_n_items()
