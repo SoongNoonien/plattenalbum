@@ -1841,8 +1841,9 @@ class Browser(Gtk.Box):
 
 		# split view
 		sidebar=Gtk.Box()
+		sidebar.add_css_class("view")
 		sidebar.append(artist_window)
-		sidebar.append(Gtk.Separator(opacity=0.3))
+		sidebar.append(Gtk.Separator())
 		overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=self._album_stack)
 
 		# main stack
@@ -2805,7 +2806,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._cover_playlist_box.append(Gtk.Separator())
 		self._cover_playlist_box.append(playlist_window)
 		self._sidebar=Gtk.Box()
-		self._sidebar.append(Gtk.Separator(opacity=0.3))
+		self._sidebar.add_css_class("view")
+		self._sidebar.append(Gtk.Separator())
 		self._sidebar.append(self._cover_playlist_box)
 
 		# split view
