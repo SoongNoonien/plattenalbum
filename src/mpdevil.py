@@ -1744,8 +1744,8 @@ class AlbumView(Gtk.Box):
 		self._tag_filter=()
 
 		# songs list
-		self.songs_list=BrowserSongList(self._client)
-		clamp=Adw.ClampScrollable(child=self.songs_list)
+		self.song_list=BrowserSongList(self._client)
+		clamp=Adw.ClampScrollable(child=self.song_list)
 		clamp.add_css_class("view")
 		scroll=Gtk.ScrolledWindow(child=clamp, vexpand=True)
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -1795,7 +1795,7 @@ class AlbumView(Gtk.Box):
 				f"{GLib.markup_escape_text(albumartist)}")
 		else:
 			self._title.set_markup(f"<b>{GLib.markup_escape_text(album)}</b>\n{GLib.markup_escape_text(albumartist)}")
-		self.songs_list.clear()
+		self.song_list.clear()
 		self._tag_filter=("albumartist", albumartist, "album", album, "date", date)
 		count=self._client.count(*self._tag_filter)
 		duration=str(Duration(count["playtime"]))
@@ -1805,7 +1805,7 @@ class AlbumView(Gtk.Box):
 		self._client.restrict_tagtypes("track", "title", "artist")
 		songs=self._client.find(*self._tag_filter)
 		self._client.tagtypes("all")
-		self.songs_list.append(songs)
+		self.song_list.append(songs)
 		size=self._settings.get_int("album-cover")*1.5
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
 			self._cover.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
@@ -1814,9 +1814,9 @@ class AlbumView(Gtk.Box):
 		self._cover.set_size_request(-1, size)
 
 	def select(self, file):
-		for i, song in enumerate(self.songs_list.get_model()):
+		for i, song in enumerate(self.song_list.get_model()):
 			if song["file"] == file:
-				self.songs_list.scroll_to(i, Gtk.ListScrollFlags.FOCUS, None)
+				self.song_list.scroll_to(i, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _on_button1_released(self, controller, n_press, x, y):
 		if self._cover.contains(x, y):
@@ -1900,7 +1900,7 @@ class Browser(Gtk.Box):
 	def _on_album_selected(self, widget, *tags):
 		self._album_view.display(*tags)
 		self._album_stack.set_visible_child_name("album_view")
-		self._album_view.songs_list.grab_focus()
+		self._album_view.song_list.grab_focus()
 
 	def _on_song_selected(self, widget, song):
 		self._artist_list.select(song["albumartist"][0])
