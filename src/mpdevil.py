@@ -1427,7 +1427,9 @@ class SearchView(Gtk.Stack):
 		self._song_list.connect("activate", self._on_activate)
 
 		# packing
-		self.add_named(Gtk.ScrolledWindow(child=self._song_list, vexpand=True), "results")
+		clamp=Adw.ClampScrollable(child=self._song_list)
+		clamp.add_css_class("view")
+		self.add_named(Gtk.ScrolledWindow(child=clamp, vexpand=True), "results")
 		self.add_named(status_page, "no-results")
 
 	def search(self, keywords):
@@ -1743,11 +1745,13 @@ class AlbumView(Gtk.Box):
 
 		# songs list
 		self.songs_list=BrowserSongList(self._client)
-		scroll=Gtk.ScrolledWindow(child=self.songs_list, vexpand=True)
+		clamp=Adw.ClampScrollable(child=self.songs_list)
+		clamp.add_css_class("view")
+		scroll=Gtk.ScrolledWindow(child=clamp, vexpand=True)
 		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
 		# buttons
-		self._buttons=Gtk.Box(spacing=6, halign=Gtk.Align.END)
+		self._buttons=Gtk.Box(spacing=6)
 		data=((_("Append"), "list-add-symbolic", "append"),
 			(_("Play"), "media-playback-start-symbolic", "play")
 		)
@@ -1761,8 +1765,8 @@ class AlbumView(Gtk.Box):
 		self._cover=Gtk.Picture()
 
 		# labels
-		self._title=Gtk.Label(margin_start=12, margin_end=12, xalign=0, wrap=True, vexpand=True)
-		self._duration=Gtk.Label(xalign=1, ellipsize=Pango.EllipsizeMode.END)
+		self._title=Gtk.Label(xalign=0, wrap=True, vexpand=True)
+		self._duration=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
 
 		# event controller
 		button1_controller=Gtk.GestureClick(button=1)
@@ -1772,15 +1776,14 @@ class AlbumView(Gtk.Box):
 		button1_controller.connect("released", self._on_button1_released)
 
 		# packing
-		hbox=Gtk.Box(spacing=12, halign=Gtk.Align.END)
-		hbox.append(self._duration)
+		hbox=Gtk.Box(spacing=12)
 		hbox.append(self._buttons)
-		vbox=Gtk.CenterBox(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6, hexpand=True)
+		hbox.append(self._duration)
+		vbox=Gtk.CenterBox(orientation=Gtk.Orientation.VERTICAL, margin_start=18, margin_end=18, margin_top=12, margin_bottom=12)
 		vbox.set_center_widget(self._title)
 		vbox.set_end_widget(hbox)
-		header=Gtk.Box()
+		header=Gtk.Box(halign=Gtk.Align.CENTER)
 		header.append(self._cover)
-		header.append(Gtk.Separator())
 		header.append(vbox)
 		self.append(header)
 		self.append(Gtk.Separator())
