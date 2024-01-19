@@ -1097,19 +1097,6 @@ class SettingsDialog(Adw.PreferencesWindow):
 # other dialogs #
 #################
 
-class NumericPropertyRow(Adw.ActionRow):  # TODO this is a hack inspired by nautilus-properties-window.ui
-	def __init__(self, key, value):
-		super().__init__(activatable=False, selectable=False)
-		key_label=Gtk.Label(label=key, ellipsize=Pango.EllipsizeMode.END, halign=Gtk.Align.START, hexpand=True)
-		key_label.add_css_class("caption")
-		key_label.add_css_class("dim-label")
-		value_label=Gtk.Label(label=value, selectable=True, ellipsize=Pango.EllipsizeMode.END, halign=Gtk.Align.START, hexpand=True)
-		value_label.add_css_class("numeric")
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3, halign=Gtk.Align.START, valign=Gtk.Align.CENTER)
-		box.append(key_label)
-		box.append(value_label)
-		self.add_prefix(box)
-
 class ServerStats(Adw.Window):
 	def __init__(self, parent, client, settings):
 		super().__init__(title=_("Server Stats"), modal=True, transient_for=parent, destroy_with_parent=True,
@@ -1136,7 +1123,9 @@ class ServerStats(Adw.Window):
 			stats[key]=str(Duration(stats[key]))
 		stats["db_update"]=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%a %d %B %Y, %H∶%M")
 		for key in ("protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs"):
-			list_box.append(NumericPropertyRow(display_str[key], stats[key]))
+			row=Adw.ActionRow(activatable=False, selectable=False, subtitle_selectable=True, title=display_str[key], subtitle=stats[key])
+			row.add_css_class("property")
+			list_box.append(row)
 
 		# shortcuts
 		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Escape, 0), Gtk.NamedAction.new("window.close")))
