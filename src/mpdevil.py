@@ -2854,8 +2854,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
 			self.set_titlebar(self._header_bar)
+			self._header_bar.pack_start(self._search_button)
 			self._header_bar.pack_end(self._menu_button)
-			self._header_bar.pack_end(self._search_button)
 		else:
 			action_bar.pack_end(self._menu_button)
 			action_bar.pack_end(self._search_button)
