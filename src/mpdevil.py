@@ -1752,6 +1752,8 @@ class AlbumView(Gtk.Box):
 
 		# cover
 		self._cover=Gtk.Picture()
+		settings.bind("album-cover", self._cover, "height-request", Gio.SettingsBindFlags.GET)
+		settings.bind("album-cover", self._cover, "width-request", Gio.SettingsBindFlags.GET)
 
 		# labels
 		self._title=Gtk.Label(xalign=0, wrap=True, vexpand=True)
@@ -1795,12 +1797,10 @@ class AlbumView(Gtk.Box):
 		songs=self._client.find(*self._tag_filter)
 		self._client.tagtypes("all")
 		self.song_list.append(songs)
-		size=self._settings.get_int("album-cover")*1.5
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
 			self._cover.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
 		else:
 			self._cover.set_paintable(cover.get_paintable())
-		self._cover.set_size_request(-1, size)
 
 	def select(self, file):
 		for i, song in enumerate(self.song_list.get_model()):
@@ -1872,7 +1872,6 @@ class Browser(Gtk.Box):
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._client.emitter.connect("disconnected", lambda *args: self._navigation_view.pop_to_tag("album_list"))
-		self._settings.connect("changed::album-cover", lambda *args: self._navigation_view.pop_to_tag("album_list"))
 
 		# packing
 		self.append(self.search_bar)
