@@ -1834,17 +1834,19 @@ class Browser(Gtk.Box):
 		self.search_bar.set_child(self._search_entry)
 		self.search_bar.connect_entry(self._search_entry)
 
-		# album stack
-		self._album_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT, hhomogeneous=False, vhomogeneous=False)
-		self._album_stack.add_named(album_window, "album_list")
-		self._album_stack.add_named(self._album_view, "album_view")
+		# navigation view
+		self._navigation_view=Adw.NavigationView()
+		albums_page=Adw.NavigationPage(child=album_window, title="Album List", tag="album_list")  # TODO title
+		self._navigation_view.add(albums_page)
+		album_page=Adw.NavigationPage(child=self._album_view, title="Album View", tag="album_view")  # TODO title
+		self._navigation_view.add(album_page)
 
 		# split view
 		sidebar=Gtk.Box()
 		sidebar.add_css_class("view")
 		sidebar.append(artist_window)
 		sidebar.append(Gtk.Separator())
-		overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=self._album_stack)
+		overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=self._navigation_view)
 
 		# main stack
 		self._main_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
@@ -1857,9 +1859,9 @@ class Browser(Gtk.Box):
 
 		# connect
 		self._album_list.connect("album-selected", self._on_album_selected)
-		self._album_view.connect("close", lambda *args: self._album_stack.set_visible_child_name("album_list"))
+		self._album_view.connect("close", lambda *args: self._navigation_view.pop_to_tag("album_list"))
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
-		self._artist_list.artist_selection_model.connect("reselected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
+		self._artist_list.artist_selection_model.connect("reselected", lambda *args: self._navigation_view.pop_to_tag("album_list"))
 		self._artist_list.artist_selection_model.connect("clear", self._album_list.clear)
 		self._search_window.connect("song-selected", self._on_song_selected)
 		self._search_window.connect("search-started", lambda *args: self._main_stack.set_visible_child_name("search"))
@@ -1869,27 +1871,23 @@ class Browser(Gtk.Box):
 		self._search_entry.connect("search-changed", self._search)
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
-		self._client.emitter.connect("disconnected", lambda *args: self._album_stack.set_visible_child_name("album_list"))
-		self._settings.connect("changed::album-cover", lambda *args: self._album_stack.set_visible_child_name("album_list"))
+		self._client.emitter.connect("disconnected", lambda *args: self._navigation_view.pop_to_tag("album_list"))
+		self._settings.connect("changed::album-cover", lambda *args: self._navigation_view.pop_to_tag("album_list"))
 
 		# packing
 		self.append(self.search_bar)
 		self.append(self._main_stack)
 
-	def back(self):
-		if self._album_stack.get_visible_child_name() == "album_view":
-			self._album_stack.set_visible_child_name("album_list")
-
 	def _search(self, *args):
 		self._search_window.search(self._search_entry.get_text())
 
 	def _on_artist_selected(self, obj, artist):
-		self._album_stack.set_visible_child_name("album_list")
+		self._navigation_view.pop_to_tag("album_list")
 		self._album_list.display(artist)
 
 	def _on_album_selected(self, widget, *tags):
 		self._album_view.display(*tags)
-		self._album_stack.set_visible_child_name("album_view")
+		self._navigation_view.push_by_tag("album_view")
 		self._album_view.song_list.grab_focus()
 
 	def _on_song_selected(self, widget, song):
@@ -2772,7 +2770,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._use_csd=self._settings.get_boolean("use-csd")
 
 		# actions
-		simple_actions_data=("settings","reconnect","stats","help","toggle-lyrics","back","toggle-search")
+		simple_actions_data=("settings","reconnect","stats","help","toggle-lyrics","toggle-search")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2926,12 +2924,6 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_lyrics_window.lyrics_button.emit("clicked")
 
-	def _on_back(self, action, param):
-		if self._search_button.get_active():
-			self._search_button.set_active(False)
-		else:
-			self._browser.back()
-
 	def _on_toggle_search(self, action, param):
 		self._search_button.emit("clicked")
 
@@ -2977,13 +2969,13 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_connected(self, *args):
 		self._clear_title()
-		for action in ("stats","toggle-lyrics","back","toggle-search"):
+		for action in ("stats","toggle-lyrics","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
-		for action in ("stats","toggle-lyrics","back","toggle-search"):
+		for action in ("stats","toggle-lyrics","toggle-search"):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
@@ -3041,12 +3033,12 @@ class mpdevil(Adw.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.back", ["Escape"]),("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),
+			("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Shift>space"]),
-			("mpd.next", ["<Alt>Down", "KP_Add"]),("mpd.prev", ["<Alt>Up", "KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
+			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
 			("mpd.single-oneshot", ["<Shift><Control>s"]),
-			("mpd.seek-forward", ["<Alt>Right", "KP_Multiply"]),("mpd.seek-backward", ["<Alt>Left", "KP_Divide"]),
+			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
 			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])  # TODO add to help overlay
 		)
 		for action, accels in action_accels:

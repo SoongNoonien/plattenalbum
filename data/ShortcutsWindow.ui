@@ -99,25 +99,25 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Next title</property>
-			<property name="accelerator">&lt;Alt&gt;Down KP_Add</property>
+			<property name="accelerator">KP_Add</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Previous title</property>
-			<property name="accelerator">&lt;Alt&gt;Up KP_Subtract</property>
+			<property name="accelerator">KP_Subtract</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Seek forward</property>
-			<property name="accelerator">&lt;Alt&gt;Right KP_Multiply</property>
+			<property name="accelerator">KP_Multiply</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Seek backward</property>
-			<property name="accelerator">&lt;Alt&gt;Left KP_Divide</property>
+			<property name="accelerator">KP_Divide</property>
 			</object>
 		</child>
 		<child>
