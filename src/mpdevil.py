@@ -1756,8 +1756,8 @@ class AlbumView(Gtk.Box):
 		settings.bind("album-cover", self._cover, "width-request", Gio.SettingsBindFlags.GET)
 
 		# labels
-		self._title=Gtk.Label(xalign=0, wrap=True, vexpand=True)
-		self._duration=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
+		self._title=Gtk.Label(xalign=0, wrap=True)
+		self._duration=Gtk.Label(xalign=0, wrap=True)
 
 		# event controller
 		button1_controller=Gtk.GestureClick(button=1)
@@ -1767,16 +1767,15 @@ class AlbumView(Gtk.Box):
 		button1_controller.connect("released", self._on_button1_released)
 
 		# packing
-		hbox=Gtk.Box(spacing=12)
-		hbox.append(self._buttons)
-		hbox.append(self._duration)
-		vbox=Gtk.CenterBox(orientation=Gtk.Orientation.VERTICAL, margin_start=18, margin_end=18, margin_top=12, margin_bottom=12)
-		vbox.set_center_widget(self._title)
-		vbox.set_end_widget(hbox)
-		header=Gtk.Box(halign=Gtk.Align.CENTER)
+		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True,
+			margin_start=18, margin_end=18, margin_top=12, margin_bottom=12, spacing=18)
+		vbox.append(self._title)
+		vbox.append(self._duration)
+		vbox.append(self._buttons)
+		header=Gtk.Box()
 		header.append(self._cover)
 		header.append(vbox)
-		self.append(header)
+		self.append(Adw.Clamp(child=header))
 		self.append(Gtk.Separator())
 		self.append(scroll)
 
