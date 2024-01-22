@@ -2846,24 +2846,24 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("updated_db", self._on_updated_db)
 
 		# packing
-		action_bar=Gtk.ActionBar()
+		action_bar=Gtk.Box()
+		action_bar.add_css_class("toolbar")
+		action_bar.append(playback_control)
+		action_bar.append(seek_bar)
+		action_bar.append(audio)
+		action_bar.append(playback_options)
+		action_bar.append(volume_button)
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_start(self._search_button)
 			self._header_bar.pack_end(self._menu_button)
 		else:
-			action_bar.pack_end(self._menu_button)
-			action_bar.pack_end(self._search_button)
-		action_bar.pack_start(playback_control)
-		action_bar.pack_start(seek_bar)
-		action_bar.pack_end(volume_button)
-		action_bar.pack_end(playback_options)
-		action_bar.pack_end(audio)
-		self._vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		self._vbox.prepend(self._overlay_split_view)
-		self._vbox.append(action_bar)
-		self._toast_overlay=Adw.ToastOverlay(child=self._vbox)
+			action_bar.append(self._search_button)
+			action_bar.append(self._menu_button)
+		self._toolbar_view=Adw.ToolbarView(content=self._overlay_split_view, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
+		self._toolbar_view.add_bottom_bar(action_bar)
+		self._toast_overlay=Adw.ToastOverlay(child=self._toolbar_view)
 		self.set_child(self._toast_overlay)
 
 	def open(self):
@@ -2908,16 +2908,14 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _mini_player(self, *args):
 		if self._settings.get_boolean("mini-player"):
 			self._sidebar.remove(self._cover_playlist_box)
-			self._vbox.remove(self._overlay_split_view)
-			self._vbox.prepend(self._cover_playlist_box)
+			self._toolbar_view.set_content(self._cover_playlist_box)
 			self._unbind_dimension_settings()
 			self._bind_mini_player_dimension_settings()
 		else:
 			self._unbind_dimension_settings()
 			self._bind_default_dimension_settings()
-			self._vbox.remove(self._cover_playlist_box)
+			self._toolbar_view.set_content(self._overlay_split_view)
 			self._sidebar.append(self._cover_playlist_box)
-			self._vbox.prepend(self._overlay_split_view)
 
 	def _on_toggle_lyrics(self, action, param):
 		self._cover_lyrics_window.lyrics_button.emit("clicked")
