@@ -2804,7 +2804,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._sidebar=Gtk.Box()
 		self._sidebar.add_css_class("view")
 		self._sidebar.append(Gtk.Separator())
-		self._sidebar.append(self._cover_playlist_box)
 
 		# split view
 		self._overlay_split_view=Adw.OverlaySplitView(
@@ -2861,8 +2860,13 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			action_bar.append(self._search_button)
 			action_bar.append(self._menu_button)
-		self._toolbar_view=Adw.ToolbarView(content=self._overlay_split_view, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
+		self._toolbar_view=Adw.ToolbarView(bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
 		self._toolbar_view.add_bottom_bar(action_bar)
+		if self._settings.get_boolean("mini-player"):
+			self._toolbar_view.set_content(self._cover_playlist_box)
+		else:
+			self._sidebar.append(self._cover_playlist_box)
+			self._toolbar_view.set_content(self._overlay_split_view)
 		self._toast_overlay=Adw.ToastOverlay(child=self._toolbar_view)
 		self.set_child(self._toast_overlay)
 
