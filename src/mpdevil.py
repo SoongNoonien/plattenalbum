@@ -2115,8 +2115,6 @@ class PlaylistView(SongList):
 class PlaylistWindow(Gtk.ScrolledWindow):  # TODO scroll to song
 	def __init__(self, client, settings):
 		super().__init__(hexpand=True, vexpand=True)
-		self.add_css_class("undershoot-top")
-		self.add_css_class("undershoot-bottom")
 		self.set_child(PlaylistView(client, settings))
 
 ####################
