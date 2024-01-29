@@ -2993,7 +2993,7 @@ class mpdevil(Adw.Application):
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
 			("mpd.single-oneshot", ["<Shift><Control>s"]),
 			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
-			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])  # TODO add to help overlay
+			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)

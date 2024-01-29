@@ -10,7 +10,7 @@
 		<property name="title" translatable="yes">General</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Open online help</property>
+			<property name="title" translatable="yes">Online Help</property>
 			<property name="accelerator">F1</property>
 			</object>
 		</child>
@@ -22,13 +22,13 @@
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Open shortcuts window</property>
+			<property name="title" translatable="yes">Shortcuts</property>
 			<property name="accelerator">&lt;Control&gt;question</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Open menu</property>
+			<property name="title" translatable="yes">Main Menu</property>
 			<property name="accelerator">F10</property>
 			</object>
 		</child>
@@ -40,14 +40,8 @@
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Update database</property>
+			<property name="title" translatable="yes">Update Database</property>
 			<property name="accelerator">F5</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Clear playlist</property>
-			<property name="accelerator">&lt;Shift&gt;Delete</property>
 			</object>
 		</child>
 		<child>
@@ -63,19 +57,19 @@
 		<property name="title" translatable="yes">Window</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle mini player</property>
+			<property name="title" translatable="yes">Toggle Mini Player</property>
 			<property name="accelerator">&lt;Control&gt;m</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle lyrics</property>
+			<property name="title" translatable="yes">Toggle Lyrics</property>
 			<property name="accelerator">&lt;Control&gt;l</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle search</property>
+			<property name="title" translatable="yes">Toggle Search</property>
 			<property name="accelerator">&lt;Control&gt;f</property>
 			</object>
 		</child>
@@ -98,56 +92,84 @@
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Stop after current title</property>
-			<property name="accelerator">&lt;Shift&gt;&lt;Control&gt;s</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Next title</property>
+			<property name="title" translatable="yes">Next</property>
 			<property name="accelerator">KP_Add</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Previous title</property>
+			<property name="title" translatable="yes">Previous</property>
 			<property name="accelerator">KP_Subtract</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Seek forward</property>
+			<property name="title" translatable="yes">Seek Forward</property>
 			<property name="accelerator">KP_Multiply</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Seek backward</property>
+			<property name="title" translatable="yes">Seek Backward</property>
 			<property name="accelerator">KP_Divide</property>
 			</object>
 		</child>
+		</object>
+	</child>
+	<child>
+		<object class="GtkShortcutsGroup">
+		<property name="title" translatable="yes">Playback Options</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle repeat mode</property>
+			<property name="title" translatable="yes">Toggle Repeat Mode</property>
 			<property name="accelerator">&lt;Control&gt;r</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle random mode</property>
+			<property name="title" translatable="yes">Toggle Random Mode</property>
 			<property name="accelerator">&lt;Control&gt;n</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle single mode</property>
+			<property name="title" translatable="yes">Toggle Single Mode</property>
 			<property name="accelerator">&lt;Control&gt;s</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle consume mode</property>
+			<property name="title" translatable="yes">Stop After Song</property>
+			<property name="accelerator">&lt;Shift&gt;&lt;Control&gt;s</property>
+			</object>
+		</child>
+		<child>
+			<object class="GtkShortcutsShortcut">
+			<property name="title" translatable="yes">Toggle Consume Mode</property>
 			<property name="accelerator">&lt;Control&gt;o</property>
+			</object>
+		</child>
+		</object>
+	</child>
+	<child>
+		<object class="GtkShortcutsGroup">
+		<property name="title" translatable="yes">Playlist</property>
+		<child>
+			<object class="GtkShortcutsShortcut">
+			<property name="title" translatable="yes">Clear</property>
+			<property name="accelerator">&lt;Shift&gt;Delete</property>
+			</object>
+		</child>
+		<child>
+			<object class="GtkShortcutsShortcut">
+			<property name="title" translatable="yes">Tidy</property>
+			<property name="accelerator">&lt;Control&gt;t</property>
+			</object>
+		</child>
+		<child>
+			<object class="GtkShortcutsShortcut">
+			<property name="title" translatable="yes">Enqueue Album</property>
+			<property name="accelerator">&lt;Control&gt;e</property>
 			</object>
 		</child>
 		</object>
