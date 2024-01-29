@@ -2991,7 +2991,7 @@ class mpdevil(Adw.Application):
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
 			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
-			("mpd.single-oneshot", ["<Shift><Control>s"]),
+			("mpd.single-oneshot", ["<Control>p"]),
 			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
 			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])
 		)

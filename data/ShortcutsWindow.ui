@@ -140,7 +140,7 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Stop After Song</property>
-			<property name="accelerator">&lt;Shift&gt;&lt;Control&gt;s</property>
+			<property name="accelerator">&lt;Control&gt;p</property>
 			</object>
 		</child>
 		<child>
