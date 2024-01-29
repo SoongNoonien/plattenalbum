@@ -640,7 +640,8 @@ class EventEmitter(GObject.Object):
 		"playlist": (GObject.SignalFlags.RUN_FIRST, None, (int,int,str)),
 		"repeat": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"single": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+		"single": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"single-oneshot": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"audio": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -858,11 +859,6 @@ class Client(MPDClient):
 			except:
 				pass
 
-	def toggle_option(self, option):  # repeat, random, single, consume
-		new_state=int(self.status()[option] == "0")
-		func=getattr(self, option)
-		func(new_state)
-
 	def conditional_previous(self):
 		if self._settings.get_boolean("rewind-mode"):
 			double_click_time=Gtk.Settings.get_default().get_property("gtk-double-click-time")
@@ -901,15 +897,15 @@ class Client(MPDClient):
 					self.emitter.emit("bitrate", diff["bitrate"])
 			if "volume" in diff:
 				self.emitter.emit("volume", float(diff["volume"]))
-			for key in ("state", "single", "audio"):
+			for key in ("state", "audio"):
 				if key in diff:
 					self.emitter.emit(key, diff[key])
+			if "single" in diff:
+				self.emitter.emit("single", diff["single"] == "1")
+				self.emitter.emit("single-oneshot", diff["single"] == "oneshot")
 			for key in ("repeat", "random", "consume"):
 				if key in diff:
-					if diff[key] == "1":
-						self.emitter.emit(key, True)
-					else:
-						self.emitter.emit(key, False)
+					self.emitter.emit(key, diff[key] == "1")
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
@@ -2557,72 +2553,26 @@ class AudioFormat(Gtk.Box):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-class PlaybackOptions(Gtk.Box):
-	def __init__(self, client, settings):
-		super().__init__(spacing=6)
+class PlaybackModeMenuButton(Gtk.MenuButton):
+	def __init__(self, client):
+		super().__init__(tooltip_text=_("Playback Options"), icon_name="view-more-symbolic", direction=Gtk.ArrowType.UP)
 		self._client=client
-		self._settings=settings
 
-		# buttons
-		self._buttons={}
-		data=(
-			("repeat", "media-playlist-repeat-symbolic", _("Repeat mode")),
-			("random", "media-playlist-shuffle-symbolic", _("Random mode")),
-			("single", "org.mpdevil.mpdevil-single-symbolic", _("Single mode")),
-			("consume", "org.mpdevil.mpdevil-consume-symbolic", _("Consume mode")),
-		)
-		for name, icon, tooltip in data:
-			button=Gtk.ToggleButton(icon_name=icon, tooltip_text=tooltip, can_focus=False)
-			handler=button.connect("toggled", self._set_option, name)
-			self.append(button)
-			self._buttons[name]=(button, handler)
-
-		# event controller
-		button3_controller=Gtk.GestureClick(button=3)
-		self._buttons["single"][0].add_controller(button3_controller)
+		# menu model
+		menu=Gio.Menu()
+		menu.append(_("Repeat mode"), "mpd.repeat")
+		menu.append(_("Random mode"), "mpd.random")
+		menu.append(_("Single mode"), "mpd.single")
+		menu.append(_("Stop after current title"), "mpd.single-oneshot")
+		menu.append(_("Consume mode"), "mpd.consume")
+		self.set_menu_model(menu)
 
 		# connect
-		button3_controller.connect("pressed", self._on_button3_pressed)
-		for name in ("repeat", "random", "consume"):
-			self._client.emitter.connect(name, self._button_refresh, name)
-		self._client.emitter.connect("single", self._single_refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
-		self._settings.bind("mini-player", self, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
-
-	def _set_option(self, widget, option):
-		func=getattr(self._client, option)
-		if widget.get_active():
-			func("1")
-		else:
-			func("0")
-
-	def _button_refresh(self, emitter, val, name):
-		self._buttons[name][0].handler_block(self._buttons[name][1])
-		self._buttons[name][0].set_active(val)
-		self._buttons[name][0].handler_unblock(self._buttons[name][1])
-
-	def _single_refresh(self, emitter, val):
-		self._buttons["single"][0].handler_block(self._buttons["single"][1])
-		self._buttons["single"][0].set_active((val in ("1", "oneshot")))
-		if val == "oneshot":
-			self._buttons["single"][0].add_css_class("suggested-action")
-		else:
-			self._buttons["single"][0].remove_css_class("suggested-action")
-		self._buttons["single"][0].handler_unblock(self._buttons["single"][1])
-
-	def _on_button3_pressed(self, controller, n_press, x, y):
-		if n_press == 1:
-			if self._client.status()["single"] == "oneshot":
-				self._client.single("0")
-			else:
-				self._client.single("oneshot")
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
-		for name in ("repeat", "random", "consume"):
-			self._button_refresh(None, False, name)
-		self._single_refresh(None, "0")
 
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
@@ -2678,14 +2628,22 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client=client
 
 		# actions
-		self._disable_on_stop_data=("next","prev","seek-forward","seek-backward")
-		self._disable_no_song=("tidy","enqueue")
-		self._enable_on_reconnect_data=("toggle-play","stop","clear","update","repeat","random","single","consume","single-oneshot")
+		self._disable_on_stop_data=["next","prev","seek-forward","seek-backward"]
+		self._disable_no_song=["tidy","enqueue"]
+		self._enable_on_reconnect_data=["toggle-play","stop","clear","update"]
 		self._data=self._disable_on_stop_data+self._disable_no_song+self._enable_on_reconnect_data
 		for name in self._data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
+		playback_data=["repeat","random","single","single-oneshot","consume"]
+		self._enable_on_reconnect_data+=playback_data
+		self._data+=playback_data
+		for name in playback_data:
+			action=Gio.SimpleAction.new_stateful(name , None, GLib.Variant("b", False))
+			handler=action.connect("notify::state", self._on_mode_change, name)
+			self.add_action(action)
+			self._client.emitter.connect(name, self._update_action, action, handler)
 
 		# connect
 		self._client.emitter.connect("state", self._on_state)
@@ -2724,20 +2682,16 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 	def _on_update(self, action, param):
 		self._client.update()
 
-	def _on_repeat(self, action, param):
-		self._client.toggle_option("repeat")
+	def _update_action(self, emitter, value, action, handler):
+		action.handler_block(handler)
+		action.set_state(GLib.Variant("b", value))
+		action.handler_unblock(handler)
 
-	def _on_random(self, action, param):
-		self._client.toggle_option("random")
-
-	def _on_single(self, action, param):
-		self._client.toggle_option("single")
-
-	def _on_consume(self, action, param):
-		self._client.toggle_option("consume")
-
-	def _on_single_oneshot(self, action, param):
-		self._client.single("oneshot")
+	def _on_mode_change(self, action, typestring, name):
+		if name == "single-oneshot":
+			self._client.single("oneshot" if action.get_state() else "0")
+		else:
+			getattr(self._client, name)("1" if action.get_state() else "0")
 
 	def _on_state(self, emitter, state):
 		state_dict={"play": True, "pause": True, "stop": False}
@@ -2788,7 +2742,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		audio=AudioFormat(self._client, self._settings)
-		playback_options=PlaybackOptions(self._client, self._settings)
+		playback_mode_menu_button=PlaybackModeMenuButton(self._client)
 		volume_button=VolumeButton(self._client, self._settings)
 		self._update_toast=Adw.Toast(title=_("Database updated"))
 		self._connection_toast=Adw.Toast(
@@ -2850,8 +2804,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.append(playback_control)
 		action_bar.append(seek_bar)
 		action_bar.append(audio)
-		action_bar.append(playback_options)
 		action_bar.append(volume_button)
+		action_bar.append(playback_mode_menu_button)
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
 			self.set_titlebar(self._header_bar)
