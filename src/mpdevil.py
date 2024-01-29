@@ -2553,9 +2553,9 @@ class AudioFormat(Gtk.Box):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-class PlaybackModeMenuButton(Gtk.MenuButton):
+class PlaybackMenuButton(Gtk.MenuButton):
 	def __init__(self, client):
-		super().__init__(tooltip_text=_("Playback Options"), icon_name="view-more-symbolic", direction=Gtk.ArrowType.UP)
+		super().__init__(tooltip_text=_("Playback Menu"), icon_name="view-more-symbolic", direction=Gtk.ArrowType.UP)
 		self._client=client
 
 		# menu model
@@ -2722,7 +2722,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._use_csd=self._settings.get_boolean("use-csd")
 
 		# actions
-		simple_actions_data=("settings","reconnect","stats","help","toggle-lyrics","toggle-search")
+		simple_actions_data=("settings","reconnect","stats","help","toggle-lyrics","toggle-search","playback-menu")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2742,7 +2742,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		audio=AudioFormat(self._client, self._settings)
-		playback_mode_menu_button=PlaybackModeMenuButton(self._client)
+		self._playback_menu_button=PlaybackMenuButton(self._client)
 		volume_button=VolumeButton(self._client, self._settings)
 		self._update_toast=Adw.Toast(title=_("Database updated"))
 		self._connection_toast=Adw.Toast(
@@ -2805,7 +2805,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		action_bar.append(seek_bar)
 		action_bar.append(audio)
 		action_bar.append(volume_button)
-		action_bar.append(playback_mode_menu_button)
+		action_bar.append(self._playback_menu_button)
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
 			self.set_titlebar(self._header_bar)
@@ -2880,6 +2880,9 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_toggle_search(self, action, param):
 		self._search_button.emit("clicked")
+
+	def _on_playback_menu(self, action, param):
+		self._playback_menu_button.popup()
 
 	def _on_settings(self, action, param):
 		settings=SettingsDialog(self, self._client, self._settings)
@@ -2987,7 +2990,7 @@ class mpdevil(Adw.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),
+			("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),("win.playback-menu", ["<Control>k"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
 			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
