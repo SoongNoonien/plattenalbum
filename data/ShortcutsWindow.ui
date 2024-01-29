@@ -87,7 +87,7 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Stop</property>
-			<property name="accelerator">&lt;Shift&gt;space</property>
+			<property name="accelerator">&lt;Control&gt;space</property>
 			</object>
 		</child>
 		<child>
