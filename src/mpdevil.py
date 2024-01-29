@@ -220,7 +220,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		# connect
 		self._application.connect("shutdown", lambda *args: self._tmp_cover_file.delete(None))
 		self._client.emitter.connect("state", self._on_state_changed)
-		self._client.emitter.connect("current_song", self._on_song_changed)
+		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("volume", self._on_volume_changed)
 		self._client.emitter.connect("repeat", self._on_loop_changed)
 		self._client.emitter.connect("single", self._on_loop_changed)
@@ -627,13 +627,13 @@ class FileCover(str):
 
 class EventEmitter(GObject.Object):
 	__gsignals__={
-		"updating_db": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"updated_db": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"updating-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"updated-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"current_song": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
+		"current-song": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"volume": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
@@ -882,12 +882,12 @@ class Client(MPDClient):
 			status=self.status()
 			diff=dict(set(status.items())-set(self._last_status.items()))
 			if "updating_db" in diff:
-				self.emitter.emit("updating_db")
+				self.emitter.emit("updating-db")
 			if "playlist" in diff:
 				self.emitter.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
 			if "songid" in diff:
 				self.current_cover=self.get_cover(self.currentsong())
-				self.emitter.emit("current_song", status["song"], status["songid"], status["state"])
+				self.emitter.emit("current-song", status["song"], status["songid"], status["state"])
 			if "elapsed" in diff:
 				self.emitter.emit("elapsed", float(diff["elapsed"]), float(status.get("duration", 0.0)))
 			if "bitrate" in diff:
@@ -910,11 +910,11 @@ class Client(MPDClient):
 			for key in diff:
 				if "songid" == key:
 					self.current_cover=None
-					self.emitter.emit("current_song", None, None, status["state"])
+					self.emitter.emit("current-song", None, None, status["state"])
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
 				elif "updating_db" == key:
-					self.emitter.emit("updated_db")
+					self.emitter.emit("updated-db")
 				elif "bitrate" == key:
 					self.emitter.emit("bitrate", None)
 				elif "audio" == key:
@@ -1564,7 +1564,7 @@ class ArtistList(Gtk.ListView):
 		# connect
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
-		self._client.emitter.connect("updated_db", self._on_updated_db)
+		self._client.emitter.connect("updated-db", self._on_updated_db)
 
 	def select(self, name):
 		self.artist_selection_model.select_artist(name)
@@ -1998,7 +1998,7 @@ class PlaylistView(SongList):
 		drag_source.connect("prepare", self._on_drag_prepare)
 		drop_target.connect("drop", self._on_drop)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
-		self._client.emitter.connect("current_song", self._on_song_changed)
+		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 
@@ -2157,7 +2157,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 
 		# connect
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._song_changed=self._client.emitter.connect("current_song", self._refresh)
+		self._song_changed=self._client.emitter.connect("current-song", self._refresh)
 		self._client.emitter.handler_block(self._song_changed)
 
 		# packing
@@ -2220,7 +2220,7 @@ class MainCover(Gtk.Picture):
 		self._client=client
 
 		# connect
-		self._client.emitter.connect("current_song", self._refresh)
+		self._client.emitter.connect("current-song", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 
@@ -2379,7 +2379,7 @@ class SeekBar(Gtk.Box):
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed", self._refresh)
-		self._client.emitter.connect("current_song", self._on_song_changed)
+		self._client.emitter.connect("current-song", self._on_song_changed)
 
 		# packing
 		self.append(self._elapsed)
@@ -2503,7 +2503,7 @@ class AudioFormat(Gtk.Box):
 		self._settings.connect("changed::show-audio-format", self._mini_player)
 		self._client.emitter.connect("audio", self._on_audio)
 		self._client.emitter.connect("bitrate", self._on_bitrate)
-		self._client.emitter.connect("current_song", self._on_song_changed)
+		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 
@@ -2647,7 +2647,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 
 		# connect
 		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("current_song", self._on_song_changed)
+		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 
@@ -2791,12 +2791,12 @@ class MainWindow(Gtk.ApplicationWindow):
 		# connect
 		self._settings.connect_after("changed::mini-player", self._mini_player)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
-		self._client.emitter.connect("current_song", self._on_song_changed)
+		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connecting", self._on_connecting)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
-		self._client.emitter.connect("updated_db", self._on_updated_db)
+		self._client.emitter.connect("updated-db", self._on_updated_db)
 
 		# packing
 		action_bar=Gtk.Box()
