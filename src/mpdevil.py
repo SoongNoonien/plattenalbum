@@ -2309,9 +2309,9 @@ class PlaybackControl(Gtk.Box):
 		self._stop_button=Gtk.Button(
 			icon_name="media-playback-stop-symbolic", tooltip_text=_("Stop"), action_name="mpd.stop", can_focus=False)
 		self._prev_button=Gtk.Button(
-			icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous title"), action_name="mpd.prev", can_focus=False)
+			icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev", can_focus=False)
 		self._next_button=Gtk.Button(
-			icon_name="media-skip-forward-symbolic", tooltip_text=_("Next title"), action_name="mpd.next", can_focus=False)
+			icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next", can_focus=False)
 
 		# connect
 		self._settings.connect("changed::mini-player", self._mini_player)
@@ -2560,11 +2560,11 @@ class PlaybackModeMenuButton(Gtk.MenuButton):
 
 		# menu model
 		menu=Gio.Menu()
-		menu.append(_("Repeat mode"), "mpd.repeat")
-		menu.append(_("Random mode"), "mpd.random")
-		menu.append(_("Single mode"), "mpd.single")
-		menu.append(_("Stop after current title"), "mpd.single-oneshot")
-		menu.append(_("Consume mode"), "mpd.consume")
+		menu.append(_("Repeat Mode"), "mpd.repeat")
+		menu.append(_("Random Mode"), "mpd.random")
+		menu.append(_("Single Mode"), "mpd.single")
+		menu.append(_("Pause After Song"), "mpd.single-oneshot")
+		menu.append(_("Consume Mode"), "mpd.consume")
 		self.set_menu_model(menu)
 
 		# connect
@@ -2784,7 +2784,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		menu.append_section(None, subsection)
 
 		# menu button / popover
-		self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Menu"), menu_model=menu, primary=True)
+		self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), menu_model=menu, primary=True)
 		if not self._use_csd:
 			self._menu_button.set_direction(Gtk.ArrowType.UP)
 
