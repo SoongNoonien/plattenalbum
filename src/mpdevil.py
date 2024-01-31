@@ -1460,7 +1460,7 @@ class ArtistSelectionModel(ListModel, Gtk.SelectionModel, Gtk.SectionModel):
 	def set_artists(self, artists):
 		self.clear()
 		letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		artists.extend(zip([""]*len(letters), letters))
+		artists[:0]=zip([""]*len(letters), letters)
 		artists.sort(key=lambda item: locale.strxfrm(item[1]))
 		char="#"
 		section_start=0
