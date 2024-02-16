@@ -54,10 +54,6 @@
 			<default>false</default>
 			<summary>Start player in mini player mode</summary>
 		</key>
-		<key type="i" name="album-cover">
-			<default>160</default>
-			<summary>Size of covers in album view</summary>
-		</key>
 		<key type="b" name="use-csd">
 			<default>true</default>
 			<summary>Use Client-side decoration</summary>

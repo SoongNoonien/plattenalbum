@@ -936,6 +936,7 @@ class Settings(Gio.Settings):
 	BASE_KEY="org.mpdevil.mpdevil"
 	# temp settings
 	cursor_watch=GObject.Property(type=bool, default=False)
+	cover_size=GObject.Property(type=int, default=150)
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
 
@@ -967,14 +968,6 @@ class ViewSettings(Adw.PreferencesGroup):
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle)
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
-			self.add(row)
-		int_data=(
-			(_("Album view cover size"), (50, 600, 10), "album-cover"),
-		)
-		for title, (vmin, vmax, step), key in int_data:
-			row=Adw.SpinRow.new_with_range(vmin, vmax, step)
-			row.set_title(title)
-			settings.bind(key, row, "value", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
 class BehaviorSettings(Adw.PreferencesGroup):
@@ -1610,13 +1603,15 @@ class Album(GObject.Object):
 		self.cover=None
 
 class AlbumListRow(Gtk.Box):
-	def __init__(self, client):
+	def __init__(self, client, settings):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
 		self.set_halign(Gtk.Align.CENTER)
 		self._client=client
-		self.cover=Gtk.Picture()
+		self._cover=Gtk.Picture(height_request=settings.get_property("cover-size"), width_request=settings.get_property("cover-size"))
+		settings.bind_property("cover-size", self._cover, "height-request",  GObject.BindingFlags.DEFAULT)
+		settings.bind_property("cover-size", self._cover, "width-request",  GObject.BindingFlags.DEFAULT)
 		self._label=Gtk.Label(use_markup=True, justify=Gtk.Justification.CENTER, wrap=True)
-		self.append(self.cover)
+		self.append(self._cover)
 		self.append(self._label)
 
 	def set_album(self, album):
@@ -1633,7 +1628,7 @@ class AlbumListRow(Gtk.Box):
 				album.cover=lookup_icon(FALLBACK_COVER, 1024)
 			else:
 				album.cover=cover.get_paintable()
-		self.cover.set_paintable(album.cover)
+		self._cover.set_paintable(album.cover)
 
 class AlbumList(Gtk.GridView):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
@@ -1644,20 +1639,14 @@ class AlbumList(Gtk.GridView):
 
 		# factory
 		def setup(factory, item):
-			item.set_child(AlbumListRow(self._client))
+			row=AlbumListRow(self._client, settings)
+			item.set_child(row)
 		def bind(factory, item):
 			row=item.get_child()
 			row.set_album(item.get_item())
-			settings.bind("album-cover", row.cover, "height-request", Gio.SettingsBindFlags.GET)
-			settings.bind("album-cover", row.cover, "width-request", Gio.SettingsBindFlags.GET)
-		def unbind(factory, item):
-			row=item.get_child()
-			settings.unbind(row.cover, "height-request")
-			settings.unbind(row.cover, "width-request")
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
-		factory.connect("unbind", unbind)
 		self.set_factory(factory)
 
 		# model
@@ -1746,9 +1735,9 @@ class AlbumView(Gtk.Box):
 			self._buttons.append(button)
 
 		# cover
-		self._cover=Gtk.Picture()
-		settings.bind("album-cover", self._cover, "height-request", Gio.SettingsBindFlags.GET)
-		settings.bind("album-cover", self._cover, "width-request", Gio.SettingsBindFlags.GET)
+		self._cover=Gtk.Picture(height_request=settings.get_property("cover-size"), width_request=settings.get_property("cover-size"))
+		settings.bind_property("cover-size", self._cover, "height-request",  GObject.BindingFlags.DEFAULT)
+		settings.bind_property("cover-size", self._cover, "width-request",  GObject.BindingFlags.DEFAULT)
 
 		# labels
 		self._title=Gtk.Label(xalign=0, wrap=True)
@@ -1808,6 +1797,18 @@ class AlbumView(Gtk.Box):
 	def _on_button_clicked(self, widget, mode):
 		self._client.filter_to_playlist(self._tag_filter, mode)
 
+class BreakpointBin(Adw.BreakpointBin):
+	def __init__(self, settings):
+		# The breakpoints expect a margin of 6 around the covers in AlbumList. In addition to the default 3 pixel margin of Adwaita
+		# this amounts to a total of 9 pixels on each side of the covers respectively 18 pixels per cover.
+		super().__init__(width_request=336, height_request=336)  # TODO height_request
+
+		for width, cover_size in ((396,180), (504,150), (594,180), (702,216), (792,180), (936,216), (1108,259), (1170,216), (1385,259)):
+			break_point=Adw.Breakpoint()
+			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}px"))
+			break_point.add_setter(settings, "cover-size", cover_size)
+			self.add_breakpoint(break_point)
+
 class Browser(Gtk.Box):
 	def __init__(self, client, settings):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
@@ -1818,7 +1819,7 @@ class Browser(Gtk.Box):
 		self._artist_list=ArtistList(self._client, self._settings)
 		self._album_list=AlbumList(self._client, self._settings)
 		artist_window=Gtk.ScrolledWindow(child=self._artist_list, hexpand=True)
-		album_window=Gtk.ScrolledWindow(child=self._album_list)
+		album_window=Gtk.ScrolledWindow(child=self._album_list, hscrollbar_policy=Gtk.PolicyType.NEVER)
 		self._album_view=AlbumView(self._client, self._settings)
 		self._search_window=SearchView(self._client)
 
@@ -1835,12 +1836,16 @@ class Browser(Gtk.Box):
 		album_page=Adw.NavigationPage(child=self._album_view, title="Album View", tag="album_view")  # TODO title
 		self._navigation_view.add(album_page)
 
+		# breakpoint bin
+		breakpoint_bin=BreakpointBin(self._settings)
+		breakpoint_bin.set_child(self._navigation_view)
+
 		# split view
 		sidebar=Gtk.Box()
 		sidebar.add_css_class("view")
 		sidebar.append(artist_window)
 		sidebar.append(Gtk.Separator())
-		overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=self._navigation_view)
+		overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=breakpoint_bin)
 
 		# main stack
 		self._main_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
