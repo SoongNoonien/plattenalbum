@@ -6,11 +6,11 @@
 			<summary>Maximize mpdevil on startup</summary>
 		</key>
 		<key type="i" name="width">
-			<default>1069</default>
+			<default>876</default>
 			<summary>Default width of window</summary>
 		</key>
 		<key type="i" name="height">
-			<default>691</default>
+			<default>584</default>
 			<summary>Default height of window</summary>
 		</key>
 		<key type="i" name="mini-player-width">
@@ -18,7 +18,7 @@
 			<summary>Default width of mini player</summary>
 		</key>
 		<key type="i" name="mini-player-height">
-			<default>447</default>
+			<default>584</default>
 			<summary>Default height of mini player</summary>
 		</key>
 		<key type="b" name="socket-connection">
