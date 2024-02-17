@@ -1214,6 +1214,7 @@ class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
 class SongMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
 		super().__init__(has_arrow=False, halign=Gtk.Align.START)
+		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
 		self._client=client
 		self._file=None
 
@@ -1620,6 +1621,7 @@ class AlbumListRow(Gtk.Box):
 		else:
 			display_label=f"<b>{GLib.markup_escape_text(album.name)}</b>"
 		self._label.set_label(display_label)
+		self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album.name)])
 		if album.cover is None:
 			self._client.restrict_tagtypes("albumartist", "album")
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
@@ -1685,6 +1687,7 @@ class AlbumList(Gtk.GridView):
 		main=GLib.main_context_default()
 		while main.pending():
 			main.iteration()
+		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist)])
 		if self._settings.get_boolean("sort-albums-by-year"):
 			self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
 		else:
@@ -1769,6 +1772,7 @@ class AlbumView(Gtk.Box):
 				f"{GLib.markup_escape_text(albumartist)}")
 		else:
 			self._title.set_markup(f"<b>{GLib.markup_escape_text(album)}</b>\n{GLib.markup_escape_text(albumartist)}")
+		self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album)])
 		self.song_list.clear()
 		self._tag_filter=("albumartist", albumartist, "album", album, "date", date)
 		count=self._client.count(*self._tag_filter)
@@ -1825,8 +1829,9 @@ class Browser(Gtk.Box):
 
 		# search bar
 		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search songs"))
-		self.search_bar=Gtk.SearchBar()
-		self.search_bar.set_child(self._search_entry)
+		self._search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search songs")])
+		self.search_bar=Gtk.SearchBar(child=self._search_entry)
+		self.search_bar.update_property([Gtk.AccessibleProperty.LABEL], [_("Search songs")])
 		self.search_bar.connect_entry(self._search_entry)
 
 		# navigation view
@@ -1917,6 +1922,7 @@ class Browser(Gtk.Box):
 class PlaylistMenu(Gtk.PopoverMenu):  # TODO
 	def __init__(self, client):
 		super().__init__(has_arrow=False, halign=Gtk.Align.START)
+		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
 		self._client=client
 		self._file=None
 		self._position=None
@@ -2203,6 +2209,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 
 	def _refresh(self, *args):
 		if (song:=self._client.currentsong()):
+			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
 			self._displayed_song_file=song["file"]
 			update_thread=threading.Thread(
 					target=self._display_lyrics,
@@ -2213,6 +2220,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		else:
 			self._displayed_song_file=None
 			self._text_buffer.set_text("", -1)
+			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 	def _on_disconnected(self, *args):
 		self._displayed_song_file=None
@@ -2221,6 +2229,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 class MainCover(Gtk.Picture):
 	def __init__(self, client):
 		super().__init__()
+		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Current album cover")])
 		self._client=client
 
 		# connect
@@ -2357,6 +2366,7 @@ class SeekBar(Gtk.Box):
 		# progress bar
 		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True, can_focus=False)
 		self._scale.set_increments(10, 10)
+		self._scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
 		self._adjustment=self._scale.get_adjustment()
 
 		# popover
