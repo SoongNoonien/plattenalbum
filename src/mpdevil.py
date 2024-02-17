@@ -1912,8 +1912,6 @@ class Browser(Gtk.Box):
 			app.set_accels_for_action("mpd.toggle-play", [])
 		else:
 			app.set_accels_for_action("mpd.toggle-play", ["space"])
-			if self._main_stack.get_visible_child_name() == "browser":
-				self.search_bar.set_search_mode(False)
 
 ############
 # playlist #
