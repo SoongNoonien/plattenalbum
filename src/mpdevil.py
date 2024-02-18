@@ -1555,7 +1555,8 @@ class ArtistList(Gtk.ListView):
 			artist=song["albumartist"][0]
 			self.select(artist)
 		else:
-			self.scroll_to(0, Gtk.ListScrollFlags.SELECT|Gtk.ListScrollFlags.FOCUS, None)
+			self.artist_selection_model.select(0)
+			self.scroll_to(self.artist_selection_model.get_selected(), Gtk.ListScrollFlags.FOCUS, None)
 		self.set_sensitive(True)
 
 	def _on_updated_db(self, *args):
