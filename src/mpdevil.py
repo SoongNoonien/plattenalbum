@@ -1148,6 +1148,9 @@ class ListModel(GObject.Object, Gio.ListModel):
 		return len(self.data)
 
 class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
+	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
+			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, item_type):
 		super().__init__(item_type)
 		self._selected=None
@@ -1159,6 +1162,8 @@ class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
 			if self._selected >= self.get_n_items():
 				self._selected=None
 		self.items_changed(position, n, 0)
+		if position == 0:
+			self.emit("clear")
 
 	def append(self, data):
 		n=self.get_n_items()
@@ -1173,21 +1178,24 @@ class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
 	def get_selected(self):
 		return self._selected
 
-	def get_selected_song(self):
-		return self.get_item(self.get_selected())
-
-	def set(self, position, song):
+	def set(self, position, item):
 		if position < len(self.data):
-			self.data[position]=song
+			self.data[position]=item
 			self.items_changed(position, 1, 1)
 		else:
-			self.data.append(song)
+			self.data.append(item)
 			self.items_changed(position, 0, 1)
 
 	def select(self, position):
-		self.unselect()
-		self._selected=position
-		self.selection_changed(position, 1)
+		if position == self._selected:
+			self.emit("reselected")
+		else:
+			old_selected=self._selected
+			self._selected=position
+			if old_selected is not None:
+				self.selection_changed(old_selected, 1)
+			self.selection_changed(position, 1)
+			self.emit("selected", position)
 
 	def unselect(self):
 		old_selected=self._selected
@@ -1195,6 +1203,7 @@ class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
 		if old_selected is not None:
 			self.selection_changed(old_selected, 1)
 
+	def do_select_item(self, position, unselect_rest): return False
 	def do_select_all(self): return False
 	def do_select_range(self, position, n_items, unselect_rest): return False
 	def do_set_selection(self, selected, mask): return False
@@ -1207,9 +1216,6 @@ class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
 
 	def do_is_selected(self, position):
 		return position == self._selected
-
-	def do_select_item(self, position, unselect_rest):
-		return False
 
 class SongMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
@@ -1435,20 +1441,9 @@ class Artist(GObject.Object):
 		self.section_name=section_name
 		self.section_start=section_start
 
-class ArtistSelectionModel(ListModel, Gtk.SelectionModel, Gtk.SectionModel):
-	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
-			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
+class ArtistSelectionModel(SelectionModel, Gtk.SectionModel):  # TODO
 	def __init__(self):
 		super().__init__(Artist)
-		self._selected=None
-
-	def clear(self):
-		n=self.get_n_items()
-		self.data=[]
-		self._selected=None
-		self.items_changed(0, n, 0)
-		self.emit("clear")
 
 	def set_artists(self, artists):
 		self.clear()
@@ -1468,47 +1463,20 @@ class ArtistSelectionModel(ListModel, Gtk.SelectionModel, Gtk.SectionModel):
 				section_length=0
 		self.items_changed(0, 0, self.get_n_items())
 
-	def get_selected(self):
-		return self._selected
-
-	def get_selected_artist(self):
-		if self._selected is None:
-			return None
-		return self.data[self._selected].name
-
 	def select_artist(self, name):
 		for i, artist in enumerate(self.data):
 			if artist.name == name:
-				self.select_item(i, True)
+				self.select(i)
 				return
 
-	def do_select_all(self): return False
-	def do_select_range(self, position, n_items, unselect_rest): return False
-	def do_set_selection(self, selected, mask): return False
-	def do_unselect_all(self): return False
-	def do_unselect_item(self, position): return False
-	def do_unselect_range(self, position, n_items): return False
+	def get_artist(self, position):
+		return self.get_item(position).name
 
-	def do_get_selection_in_range(self, position, n_items):  # TODO
-		return Gtk.Bitset.new_range(0, n_items)
-
-	def do_is_selected(self, position):
-		return position == self._selected
-
-	def do_select_item(self, position, unselect_rest):
-		if position < self.get_n_items():
-			if position == self._selected:
-				self.emit("reselected")
-			else:
-				old_selected=self._selected
-				self._selected=position
-				if old_selected is not None:
-					self.selection_changed(old_selected, 1)
-				self.selection_changed(position, 1)
-				self.emit("selected", self.data[position].name)
-			return True
+	def get_selected_artist(self):
+		if (selected:=self.get_selected()) is None:
+			return None
 		else:
-			return False
+			return self.get_artist(selected)
 
 	def do_get_section(self, position):
 		if position < self.get_n_items():
@@ -1522,7 +1490,7 @@ class ArtistSelectionModel(ListModel, Gtk.SelectionModel, Gtk.SectionModel):
 
 class ArtistList(Gtk.ListView):
 	def __init__(self, client, settings):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["rich-list"])
 		self._client=client
 		self._settings=settings
 
@@ -1555,6 +1523,7 @@ class ArtistList(Gtk.ListView):
 		self.set_model(self.artist_selection_model)
 
 		# connect
+		self.connect("activate", self._on_activate)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("updated-db", self._on_updated_db)
@@ -1572,6 +1541,9 @@ class ArtistList(Gtk.ListView):
 			if next(artist, None) is not None:
 				filtered_artists[-1]=(name, name)
 		self.artist_selection_model.set_artists(filtered_artists)
+
+	def _on_activate(self, widget, pos):
+		self.artist_selection_model.select(pos)
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
@@ -1884,9 +1856,9 @@ class Browser(Gtk.Box):
 	def _search(self, *args):
 		self._search_window.search(self._search_entry.get_text())
 
-	def _on_artist_selected(self, obj, artist):
+	def _on_artist_selected(self, model, position):
 		self._navigation_view.pop_to_tag("album_list")
-		self._album_list.display(artist)
+		self._album_list.display(model.get_artist(position))
 
 	def _on_album_selected(self, widget, *tags):
 		self._album_view.display(*tags)
