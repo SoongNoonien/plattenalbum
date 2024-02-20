@@ -936,7 +936,6 @@ class Settings(Gio.Settings):
 	BASE_KEY="org.mpdevil.mpdevil"
 	# temp settings
 	cursor_watch=GObject.Property(type=bool, default=False)
-	cover_size=GObject.Property(type=int, default=150)
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
 
@@ -1576,24 +1575,37 @@ class Album(GObject.Object):
 		self.date=date
 		self.cover=None
 
+class SquareContainer(Gtk.Widget):
+	def __init__(self, child):
+		super().__init__(hexpand=True)
+		child.set_parent(self)
+		self.connect("destroy", lambda *args: child.unparent())
+
+	def do_get_request_mode(self):
+		return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
+
+	def do_size_allocate(self, width, height, baseline):
+		self.get_first_child().allocate(width, height, baseline, None)
+
+	def do_measure(self, orientation, for_size):
+		return (for_size, for_size, -1, -1)
+
 class AlbumListRow(Gtk.Box):
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
-		self.set_halign(Gtk.Align.CENTER)
 		self._client=client
-		self._cover=Gtk.Picture(height_request=settings.get_property("cover-size"), width_request=settings.get_property("cover-size"))
-		settings.bind_property("cover-size", self._cover, "height-request",  GObject.BindingFlags.DEFAULT)
-		settings.bind_property("cover-size", self._cover, "width-request",  GObject.BindingFlags.DEFAULT)
-		self._label=Gtk.Label(use_markup=True, justify=Gtk.Justification.CENTER, wrap=True)
-		self.append(self._cover)
-		self.append(self._label)
+		self._cover=Gtk.Picture()
+		square_container=SquareContainer(self._cover)
+		square_container.set_valign(Gtk.Align.START)
+		self._title_label=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
+		self._date_label=Gtk.Label(single_line_mode=True)
+		self.append(square_container)
+		self.append(self._title_label)
+		self.append(self._date_label)
 
 	def set_album(self, album):
-		if album.date:
-			display_label=f"<b>{GLib.markup_escape_text(album.name)}</b> ({GLib.markup_escape_text(album.date)})"
-		else:
-			display_label=f"<b>{GLib.markup_escape_text(album.name)}</b>"
-		self._label.set_label(display_label)
+		self._title_label.set_text(album.name)
+		self._date_label.set_text(album.date)
 		self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album.name)])
 		if album.cover is None:
 			self._client.restrict_tagtypes("albumartist", "album")
@@ -1608,13 +1620,13 @@ class AlbumListRow(Gtk.Box):
 class AlbumList(Gtk.GridView):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client, settings):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True)
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
 		self._settings=settings
 		self._client=client
 
 		# factory
 		def setup(factory, item):
-			row=AlbumListRow(self._client, settings)
+			row=AlbumListRow(self._client)
 			item.set_child(row)
 		def bind(factory, item):
 			row=item.get_child()
@@ -1711,12 +1723,11 @@ class AlbumView(Gtk.Box):
 			self._buttons.append(button)
 
 		# cover
-		self._cover=Gtk.Picture(height_request=settings.get_property("cover-size"), width_request=settings.get_property("cover-size"))
-		settings.bind_property("cover-size", self._cover, "height-request",  GObject.BindingFlags.DEFAULT)
-		settings.bind_property("cover-size", self._cover, "width-request",  GObject.BindingFlags.DEFAULT)
+		self._cover=Gtk.Picture()
 
 		# labels
-		self._title=Gtk.Label(xalign=0, wrap=True)
+		self._title=Gtk.Label(xalign=0, wrap=True, css_classes=["heading"])
+		self._date=Gtk.Label(xalign=0)
 		self._duration=Gtk.Label(xalign=0, wrap=True)
 
 		# event controller
@@ -1727,24 +1738,25 @@ class AlbumView(Gtk.Box):
 		button1_controller.connect("released", self._on_button1_released)
 
 		# packing
-		vbox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True,
-			margin_start=18, margin_end=18, margin_top=12, margin_bottom=12, spacing=18)
-		vbox.append(self._title)
-		vbox.append(self._duration)
-		vbox.append(self._buttons)
-		header=Gtk.Box()
-		header.append(self._cover)
-		header.append(vbox)
+		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START)
+		title_box.append(self._title)
+		title_box.append(self._date)
+		control_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.END, spacing=6)
+		control_box.append(self._duration)
+		control_box.append(self._buttons)
+		vbox=Gtk.CenterBox(orientation=Gtk.Orientation.VERTICAL, margin_start=12, margin_end=12, margin_top=9, margin_bottom=9)
+		vbox.set_start_widget(title_box)
+		vbox.set_end_widget(control_box)
+		header=Gtk.Grid(column_homogeneous=True)
+		header.attach(self._cover, 0, 0, 1, 1)
+		header.attach(vbox, 1, 0, 1, 1)
 		self.append(Adw.Clamp(child=header))
 		self.append(Gtk.Separator())
 		self.append(scroll)
 
 	def display(self, albumartist, album, date):
-		if date:
-			self._title.set_markup(f"<b>{GLib.markup_escape_text(album)}</b> ({GLib.markup_escape_text(date)})\n"
-				f"{GLib.markup_escape_text(albumartist)}")
-		else:
-			self._title.set_markup(f"<b>{GLib.markup_escape_text(album)}</b>\n{GLib.markup_escape_text(albumartist)}")
+		self._title.set_text(album)
+		self._date.set_text(date)
 		self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album)])
 		self.song_list.clear()
 		self._tag_filter=("albumartist", albumartist, "album", album, "date", date)
@@ -1775,15 +1787,12 @@ class AlbumView(Gtk.Box):
 		self._client.filter_to_playlist(self._tag_filter, mode)
 
 class BreakpointBin(Adw.BreakpointBin):
-	def __init__(self, settings):
-		# The breakpoints expect a margin of 6 around the covers in AlbumList. In addition to the default 3 pixel margin of Adwaita
-		# this amounts to a total of 9 pixels on each side of the covers respectively 18 pixels per cover.
-		super().__init__(width_request=336, height_request=336)  # TODO height_request
-
-		for width, cover_size in ((396,180), (504,150), (594,180), (702,216), (792,180), (936,216), (1108,259), (1170,216), (1385,259)):
+	def __init__(self, settings, grid):
+		super().__init__(width_request=320, height_request=336)  # TODO height_request
+		for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
 			break_point=Adw.Breakpoint()
-			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}px"))
-			break_point.add_setter(settings, "cover-size", cover_size)
+			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
+			break_point.add_setter(grid, "max-columns", columns)
 			self.add_breakpoint(break_point)
 
 class Browser(Gtk.Box):
@@ -1815,7 +1824,7 @@ class Browser(Gtk.Box):
 		self._navigation_view.add(album_page)
 
 		# breakpoint bin
-		breakpoint_bin=BreakpointBin(self._settings)
+		breakpoint_bin=BreakpointBin(self._settings, self._album_list)
 		breakpoint_bin.set_child(self._navigation_view)
 
 		# split view
