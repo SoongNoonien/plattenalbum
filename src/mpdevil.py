@@ -1263,11 +1263,9 @@ class SongListRow(Gtk.Box):
 		super().__init__(can_target=False)  # can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
 
 		# labels
-		attrs=Pango.AttrList()
-		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		self._track=Gtk.Label(xalign=1, width_chars=3, attributes=attrs)
-		self._title=Gtk.Label(use_markup=True, xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
-		self._length=Gtk.Label(xalign=1, attributes=attrs)
+		self._track=Gtk.Label(xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric"])
+		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
+		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
 
 		# packing
 		self.append(self._track)
@@ -1275,14 +1273,14 @@ class SongListRow(Gtk.Box):
 		self.append(self._length)
 
 	def set_song(self, song):
-		self._track.set_label(song["track"][0])
-		self._title.set_label(song.get_markup())
-		self._length.set_label(str(song["duration"]))
+		self._track.set_text(song["track"][0])
+		self._title.set_markup(song.get_markup())
+		self._length.set_text(str(song["duration"]))
 
 	def unset_song(self):
-		self._track.set_label("")
-		self._title.set_label("")
-		self._length.set_label("")
+		self._track.set_text("")
+		self._title.set_text("")
+		self._length.set_text("")
 
 class SongList(Gtk.ListView):
 	def __init__(self):
@@ -1495,11 +1493,11 @@ class ArtistList(Gtk.ListView):
 
 		# factory
 		def setup(factory, item):
-			label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, valign=Gtk.Align.FILL, vexpand=True)
+			label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
 			item.set_child(label)
 		def bind(factory, item):
 			label=item.get_child()
-			label.set_label(item.get_item().name)
+			label.set_text(item.get_item().name)
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
@@ -1507,11 +1505,11 @@ class ArtistList(Gtk.ListView):
 
 		# header factory
 		def header_setup(factory, item):
-			label=Gtk.Label(xalign=0)
+			label=Gtk.Label(xalign=0, single_line_mode=True)
 			item.set_child(label)
 		def header_bind(factory, item):
 			label=item.get_child()
-			label.set_label(item.get_item().section_name)
+			label.set_text(item.get_item().section_name)
 		header_factory=Gtk.SignalListItemFactory()
 		header_factory.connect("setup", header_setup)
 		header_factory.connect("bind", header_bind)
@@ -1727,7 +1725,7 @@ class AlbumView(Gtk.Box):
 
 		# labels
 		self._title=Gtk.Label(xalign=0, wrap=True, css_classes=["heading"])
-		self._date=Gtk.Label(xalign=0)
+		self._date=Gtk.Label(xalign=0, single_line_mode=True)
 		self._duration=Gtk.Label(xalign=0, wrap=True)
 
 		# event controller
@@ -2338,10 +2336,8 @@ class SeekBar(Gtk.Box):
 		self._second_mark=None
 
 		# labels
-		attrs=Pango.AttrList()
-		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		self._elapsed=Gtk.Label(xalign=0, attributes=attrs)
-		self._rest=Gtk.Label(xalign=1, attributes=attrs)
+		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, css_classes=["numeric"])
+		self._rest=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
 
 		# progress bar
 		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True, can_focus=False)
@@ -2351,7 +2347,7 @@ class SeekBar(Gtk.Box):
 
 		# popover
 		self._popover=Gtk.Popover(autohide=False, has_arrow=False)
-		self._time_label=Gtk.Label(attributes=attrs)
+		self._time_label=Gtk.Label(single_line_mode=True, css_classes=["numeric"])
 		self._popover.set_child(self._time_label)
 		self._popover.set_parent(self)
 		self._popover.set_position(Gtk.PositionType.TOP)
@@ -2485,12 +2481,10 @@ class AudioFormat(Gtk.Box):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER)
 		self._client=client
 		self._settings=settings
-		self._file_type_label=Gtk.Label(xalign=1, visible=True)
-		self._separator_label=Gtk.Label(xalign=1, visible=True)
-		attrs=Pango.AttrList()
-		attrs.insert(Pango.AttrFontFeatures.new("tnum 1"))
-		self._brate_label=Gtk.Label(xalign=1, width_chars=5, visible=True, attributes=attrs)
-		self._format_label=Gtk.Label(visible=True)
+		self._file_type_label=Gtk.Label(xalign=1, single_line_mode=True)
+		self._separator_label=Gtk.Label(xalign=1, single_line_mode=True)
+		self._brate_label=Gtk.Label(xalign=1, single_line_mode=True, width_chars=5, css_classes=["numeric"])
+		self._format_label=Gtk.Label(single_line_mode=True, css_classes=["caption"])
 
 		# connect
 		self._settings.connect("changed::mini-player", self._mini_player)
@@ -2502,7 +2496,7 @@ class AudioFormat(Gtk.Box):
 		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
-		hbox=Gtk.Box(halign=Gtk.Align.END, visible=True)
+		hbox=Gtk.Box(halign=Gtk.Align.END)
 		hbox.append(self._brate_label)
 		hbox.append(self._separator_label)
 		hbox.append(self._file_type_label)
@@ -2516,9 +2510,9 @@ class AudioFormat(Gtk.Box):
 
 	def _on_audio(self, emitter, audio_format):
 		if audio_format is None:
-			self._format_label.set_markup("<small> </small>")
+			self._format_label.set_text("")
 		else:
-			self._format_label.set_markup(f"<small>{Format(audio_format)}</small>")
+			self._format_label.set_text(str(Format(audio_format)))
 
 	def _on_bitrate(self, emitter, brate):
 		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
@@ -2535,14 +2529,14 @@ class AudioFormat(Gtk.Box):
 		else:
 			self._file_type_label.set_text("")
 			self._separator_label.set_text(" kb∕s")
-			self._format_label.set_markup("<small> </small>")
+			self._format_label.set_text("")
 
 	def _on_disconnected(self, *args):
 		self.set_sensitive(False)
 		self._brate_label.set_text("—")
 		self._separator_label.set_text(" kb/s")
 		self._file_type_label.set_text("")
-		self._format_label.set_markup("<small> </small>")
+		self._format_label.set_text("")
 
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
