@@ -66,10 +66,6 @@
 			<default>true</default>
 			<summary>Show audio format</summary>
 		</key>
-		<key type="b" name="show-lyrics-button">
-			<default>true</default>
-			<summary>Show lyrics button</summary>
-		</key>
 		<key type="b" name="sort-albums-by-year">
 			<default>true</default>
 			<summary>Sort albums by year</summary>

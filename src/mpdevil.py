@@ -962,7 +962,6 @@ class ViewSettings(Adw.PreferencesGroup):
 			(_("Use Client-side decoration"), "use-csd", _("restart required")),
 			(_("Show stop button"), "show-stop", ""),
 			(_("Show audio format"), "show-audio-format", ""),
-			(_("Show lyrics button"), "show-lyrics-button", ""),
 		)
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle)
@@ -2230,9 +2229,10 @@ class MainCover(Gtk.Picture):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-class CoverLyricsWindow(Gtk.Overlay):
+class CoverLyricsWindow(Gtk.Stack):
+	show_lyrics=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
-		super().__init__()
+		super().__init__(transition_type=Gtk.StackTransitionType.CROSSFADE)
 		self._client=client
 		self._settings=settings
 
@@ -2240,47 +2240,23 @@ class CoverLyricsWindow(Gtk.Overlay):
 		main_cover=MainCover(self._client)
 		self._window_handle=Gtk.WindowHandle(child=main_cover)
 
-		# lyrics button
-		self.lyrics_button=Gtk.ToggleButton(icon_name="org.mpdevil.mpdevil-lyrics-symbolic", tooltip_text=_("Lyrics"), can_focus=False)
-		self.lyrics_button.add_css_class("osd")
-		self.lyrics_button.add_css_class("circular")
-
 		# lyrics window
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
 
-		# revealer
-		self._lyrics_button_revealer=Gtk.Revealer(
-			child=self.lyrics_button, transition_duration=0, margin_top=6, margin_end=6, halign=Gtk.Align.END, valign=Gtk.Align.START)
-		self._settings.bind("show-lyrics-button", self._lyrics_button_revealer, "reveal-child", Gio.SettingsBindFlags.DEFAULT)
-
-		# stack
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-		self._stack.add_named(self._window_handle, "cover")
-		self._stack.add_named(self._lyrics_window, "lyrics")
-		self._stack.set_visible_child(self._window_handle)
-
 		# connect
-		self.lyrics_button.connect("toggled", self._on_lyrics_toggled)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
+		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
 
 		# packing
-		self.set_child(self._stack)
-		self.add_overlay(self._lyrics_button_revealer)
+		self.add_named(self._window_handle, "cover")
+		self.add_named(self._lyrics_window, "lyrics")
+		self.set_visible_child(self._window_handle)
 
-	def _on_connected(self, *args):
-		self.lyrics_button.set_sensitive(True)
-
-	def _on_disconnected(self, *args):
-		self.lyrics_button.set_active(False)
-		self.lyrics_button.set_sensitive(False)
-
-	def _on_lyrics_toggled(self, widget):
-		if widget.get_active():
-			self._stack.set_visible_child(self._lyrics_window)
+	def _on_lyrics_toggled(self, *args):
+		if self.get_property("show-lyrics"):
+			self.set_visible_child(self._lyrics_window)
 			self._lyrics_window.enable()
 		else:
-			self._stack.set_visible_child(self._window_handle)
+			self.set_visible_child(self._window_handle)
 			self._lyrics_window.disable()
 
 ######################
@@ -2708,14 +2684,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings=settings
 		self._use_csd=self._settings.get_boolean("use-csd")
 
-		# actions
-		simple_actions_data=("settings","reconnect","stats","help","toggle-lyrics","toggle-search","playback-menu")
-		for name in simple_actions_data:
-			action=Gio.SimpleAction.new(name, None)
-			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
-			self.add_action(action)
-		self.add_action(self._settings.create_action("mini-player"))
-
 		# shortcuts
 		builder=Gtk.Builder()
 		builder.add_from_resource("/org/mpdevil/mpdevil/ShortcutsWindow.ui")
@@ -2724,7 +2692,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		# widgets
 		self._cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._browser=Browser(self._client, self._settings)
-		self._cover_lyrics_window=CoverLyricsWindow(self._client, self._settings)
+		cover_lyrics_window=CoverLyricsWindow(self._client, self._settings)
 		playlist_window=PlaylistWindow(self._client, self._settings)
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
@@ -2738,8 +2706,17 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._search_button.bind_property("active", self._browser.search_bar, "search-mode-enabled",  GObject.BindingFlags.BIDIRECTIONAL)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
+		# actions
+		simple_actions_data=("settings","reconnect","stats","help","toggle-search","playback-menu")
+		for name in simple_actions_data:
+			action=Gio.SimpleAction.new(name, None)
+			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
+			self.add_action(action)
+		self.add_action(self._settings.create_action("mini-player"))
+		self.add_action(Gio.PropertyAction.new("toggle-lyrics", cover_lyrics_window, "show-lyrics"))
+
 		# sidebar
-		self._cover_playlist_box.append(self._cover_lyrics_window)
+		self._cover_playlist_box.append(cover_lyrics_window)
 		self._cover_playlist_box.append(Gtk.Separator())
 		self._cover_playlist_box.append(playlist_window)
 		self._sidebar=Gtk.Box()
@@ -2767,6 +2744,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		mpd_subsection.append(_("Server Stats"), "win.stats")
 		menu=Gio.Menu()
 		menu.append(_("Mini Player"), "win.mini-player")
+		menu.append(_("Lyrics"), "win.toggle-lyrics")
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
@@ -2862,9 +2840,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._toolbar_view.set_content(self._overlay_split_view)
 			self._sidebar.append(self._cover_playlist_box)
 
-	def _on_toggle_lyrics(self, action, param):
-		self._cover_lyrics_window.lyrics_button.emit("clicked")
-
 	def _on_toggle_search(self, action, param):
 		self._search_button.emit("clicked")
 
@@ -2913,13 +2888,13 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_connected(self, *args):
 		self._clear_title()
-		for action in ("stats","toggle-lyrics","toggle-search"):
+		for action in ("stats","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
-		for action in ("stats","toggle-lyrics","toggle-search"):
+		for action in ("stats","toggle-search"):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
