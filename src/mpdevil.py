@@ -2135,7 +2135,7 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		self._text_view=Gtk.TextView(
 			editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD,
 			justification=Gtk.Justification.CENTER,
-			left_margin=5, right_margin=5, bottom_margin=5, top_margin=3
+			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9
 		)
 
 		# text buffer
