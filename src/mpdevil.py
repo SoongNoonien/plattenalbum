@@ -2270,14 +2270,10 @@ class PlaybackControl(Gtk.Box):
 		self._settings=settings
 
 		# widgets
-		self._play_button=Gtk.Button(
-			icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"), can_focus=False)
-		self._stop_button=Gtk.Button(
-			icon_name="media-playback-stop-symbolic", tooltip_text=_("Stop"), action_name="mpd.stop", can_focus=False)
-		self._prev_button=Gtk.Button(
-			icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev", can_focus=False)
-		self._next_button=Gtk.Button(
-			icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next", can_focus=False)
+		self._play_button=Gtk.Button(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
+		self._stop_button=Gtk.Button(icon_name="media-playback-stop-symbolic", tooltip_text=_("Stop"), action_name="mpd.stop")
+		self._prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
+		self._next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
 
 		# connect
 		self._settings.connect("changed::mini-player", self._mini_player)
@@ -2315,7 +2311,7 @@ class SeekBar(Gtk.Box):
 		self._rest=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
 
 		# progress bar
-		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True, can_focus=False)
+		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True)
 		self._scale.set_increments(10, 10)
 		self._scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
 		self._adjustment=self._scale.get_adjustment()
@@ -2702,7 +2698,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._update_toast=Adw.Toast(title=_("Database updated"))
 		self._connection_toast=Adw.Toast(
 			title=_("Connection failed"), priority=Adw.ToastPriority.HIGH, button_label=_("Preferences"), action_name="win.settings")
-		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"), can_focus=False)
+		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
 		self._search_button.bind_property("active", self._browser.search_bar, "search-mode-enabled",  GObject.BindingFlags.BIDIRECTIONAL)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
