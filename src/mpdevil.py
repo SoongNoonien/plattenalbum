@@ -1765,6 +1765,7 @@ class AlbumView(Gtk.Box):
 		songs=self._client.find(*self._tag_filter)
 		self._client.tagtypes("all")
 		self.song_list.append(songs)
+		self.song_list.scroll_to(0, Gtk.ListScrollFlags.NONE, None)
 		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
 			self._cover.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
 		else:
