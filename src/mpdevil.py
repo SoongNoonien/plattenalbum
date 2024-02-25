@@ -2124,12 +2124,17 @@ class LetrasParser(HTMLParser):
 		if self._found_text and data:
 			self.text+=data+"\n"
 
-class LyricsWindow(Gtk.ScrolledWindow):
+class LyricsWindow(Gtk.Stack):
 	def __init__(self, client, settings):
 		super().__init__()
 		self._settings=settings
 		self._client=client
 		self._displayed_song_file=None
+
+		# status pages
+		no_lyrics_status_page=Adw.StatusPage(icon_name="org.mpdevil.mpdevil-lyrics-symbolic", title=_("No Lyrics Found"))
+		connection_error_status_page=Adw.StatusPage(
+			icon_name="network-wired-disconnected-symbolic", title=_("Connection Error"), description=_("Check your network connection"))
 
 		# text view
 		self._text_view=Gtk.TextView(
@@ -2147,15 +2152,13 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		self._client.emitter.handler_block(self._song_changed)
 
 		# packing
-		self.set_child(self._text_view)
+		scroll=Gtk.ScrolledWindow(child=self._text_view)
+		self.add_named(scroll, "lyrics")
+		self.add_named(no_lyrics_status_page, "no-lyrics")
+		self.add_named(connection_error_status_page, "connection-error")
 
 	def enable(self, *args):
-		if (song:=self._client.currentsong()):
-			if song["file"] != self._displayed_song_file:
-				self._refresh()
-		else:
-			if self._displayed_song_file is not None:
-				self._refresh()
+		self._refresh()
 		self._client.emitter.handler_unblock(self._song_changed)
 		self._text_view.grab_focus()
 
@@ -2173,34 +2176,30 @@ class LyricsWindow(Gtk.ScrolledWindow):
 		return parser.text.strip("\n ")
 
 	def _display_lyrics(self, song):
-		idle_add(self._text_buffer.set_text, _("searching…"), -1)
 		try:
 			text=self._get_lyrics(song["title"][0], song["artist"][0])
+			idle_add(self._text_buffer.set_text, text)
 		except urllib.error.URLError:
-			self._displayed_song_file=None
-			text=_("connection error")
+			idle_add(self.set_visible_child_name, "connection-error")
 		except ValueError:
-			text=_("lyrics not found")
-		idle_add(self._text_buffer.set_text, text, -1)
+			idle_add(self.set_visible_child_name, "no-lyrics")
 
 	def _refresh(self, *args):
 		if (song:=self._client.currentsong()):
 			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
-			self._displayed_song_file=song["file"]
-			update_thread=threading.Thread(
-					target=self._display_lyrics,
-					kwargs={"song": song},
-					daemon=True
-			)
+			self._text_buffer.set_text(_("searching…"))
+			self.set_visible_child_name("lyrics")
+			update_thread=threading.Thread(target=self._display_lyrics, kwargs={"song": song}, daemon=True)
 			update_thread.start()
 		else:
-			self._displayed_song_file=None
-			self._text_buffer.set_text("", -1)
+			self.set_visible_child_name("no-lyrics")
+			self._text_buffer.set_text("")
 			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 	def _on_disconnected(self, *args):
-		self._displayed_song_file=None
-		self._text_buffer.set_text("", -1)
+		self.set_visible_child_name("no-lyrics")
+		self._text_buffer.set_text("")
+		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 class MainCover(Gtk.Picture):
 	def __init__(self, client):
