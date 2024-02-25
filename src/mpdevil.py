@@ -2094,10 +2094,44 @@ class PlaylistView(SongList):
 	def _on_connected(self, *args):
 		self.set_sensitive(True)
 
-class PlaylistWindow(Gtk.ScrolledWindow):  # TODO scroll to song
+class PlaylistWindow(Gtk.Stack):
 	def __init__(self, client, settings):
-		super().__init__(hexpand=True, vexpand=True)
-		self.set_child(PlaylistView(client, settings))
+		super().__init__()
+		self._client=client
+
+		# widgets
+		scroll=Gtk.ScrolledWindow(child=PlaylistView(self._client, settings), hexpand=True, vexpand=True)  # TODO scroll to song
+		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
+
+		# event controller
+		drop_target=Gtk.DropTarget()
+		drop_target.set_actions(Gdk.DragAction.COPY)
+		drop_target.set_gtypes((Song,))
+		status_page.add_controller(drop_target)
+
+		# connect
+		drop_target.connect("drop", self._on_drop)
+		self._client.emitter.connect("playlist", self._on_playlist_changed)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+
+		# packing
+		self.add_named(scroll, "playlist")
+		self.add_named(status_page, "empty-playlist")
+
+	def _on_drop(self, drop_target, value, x, y):
+		if isinstance(value, Song):
+			self._client.addid(value["file"])
+			return True
+		return False
+
+	def _on_playlist_changed(self, emitter, version, length, song_pos):
+		if length:
+			self.set_visible_child_name("playlist")
+		else:
+			self.set_visible_child_name("empty-playlist")
+
+	def _on_disconnected(self, *args):
+		self.set_visible_child_name("playlist")
 
 ####################
 # cover and lyrics #
