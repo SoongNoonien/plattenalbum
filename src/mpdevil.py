@@ -2237,7 +2237,7 @@ class CoverLyricsWindow(Gtk.Stack):
 
 		# cover
 		main_cover=MainCover(self._client)
-		self._window_handle=Gtk.WindowHandle(child=main_cover)
+		window_handle=Gtk.WindowHandle(child=main_cover)
 
 		# lyrics window
 		self._lyrics_window=LyricsWindow(self._client, self._settings)
@@ -2246,16 +2246,15 @@ class CoverLyricsWindow(Gtk.Stack):
 		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
 
 		# packing
-		self.add_named(self._window_handle, "cover")
+		self.add_named(window_handle, "cover")
 		self.add_named(self._lyrics_window, "lyrics")
-		self.set_visible_child(self._window_handle)
 
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
-			self.set_visible_child(self._lyrics_window)
+			self.set_visible_child_name("lyrics")
 			self._lyrics_window.enable()
 		else:
-			self.set_visible_child(self._window_handle)
+			self.set_visible_child_name("cover")
 			self._lyrics_window.disable()
 
 ######################
