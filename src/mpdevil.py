@@ -2890,7 +2890,7 @@ class MainWindow(Gtk.ApplicationWindow):
 	def _on_help(self, action, param):
 		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/mpdevil/wiki/Usage").launch(self, None, None, None)
 
-	def _on_song_changed(self, *args):
+	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
 			album=song.get_album_with_date()
 			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
@@ -2901,7 +2901,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			else:
 				self.set_title(" • ".join(filter(None, (title, album))))
 			if self._settings.get_boolean("send-notify"):
-				if not self.is_active() and self._client.status()["state"] == "play":
+				if not self.is_active() and state == "play":
 					notify=Gio.Notification()
 					notify.set_title(title)
 					notify.set_body(album)
