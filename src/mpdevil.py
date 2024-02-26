@@ -658,6 +658,7 @@ class Client(MPDClient):
 		self._start_idle_id=None
 		self.music_directory=None
 		self.current_cover=None
+		self.database_is_empty=True
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 
 	# overloads to use Song class
@@ -1450,13 +1451,13 @@ class ArtistSelectionModel(SelectionModel, Gtk.SectionModel):  # TODO
 		section_start=0
 		section_length=0
 		for item in artists:
-			if item[0]:
-				self.data.append(Artist(item[0], char, section_start))
-				section_length+=1
-			else:
+			if item[1] and not item[0]:  # item is a heading and not an artist
 				char=item[1]
 				section_start+=section_length
 				section_length=0
+			else:
+				self.data.append(Artist(item[0], char, section_start))
+				section_length+=1
 		self.items_changed(0, 0, self.get_n_items())
 
 	def select_artist(self, name):
