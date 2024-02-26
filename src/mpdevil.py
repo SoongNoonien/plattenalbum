@@ -675,6 +675,13 @@ class Client(MPDClient):
 		return [Song(song) for song in super().lsinfo(uri)]
 	def listplaylistinfo(self, name):
 		return [Song(song) for song in super().listplaylistinfo(name)]
+	def update(self):
+		# This is a rather ugly workaround for database updates that are quicker
+		# than around a tenth of a second and therefore can't be detected by _main_loop.
+		job_id=super().update()
+		self._last_status["updating_db"]=job_id
+		self.emitter.emit("updating-db")
+		return job_id
 
 	def start(self):
 		self.emitter.emit("connecting")
