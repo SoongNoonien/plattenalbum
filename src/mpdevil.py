@@ -2219,7 +2219,7 @@ class LyricsWindow(Gtk.Stack):
 			idle_add(self.set_visible_child_name, "no-lyrics")
 
 	def _refresh(self, *args):
-		if (song:=self._client.currentsong()):
+		if self._client.connected() and (song:=self._client.currentsong()):
 			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
 			self._text_buffer.set_text(_("searching…"))
 			self.set_visible_child_name("lyrics")
