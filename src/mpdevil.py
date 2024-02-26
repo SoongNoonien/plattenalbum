@@ -628,9 +628,9 @@ class FileCover(str):
 class EventEmitter(GObject.Object):
 	__gsignals__={
 		"updating-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"updated-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"updated-db": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"connected": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"current-song": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
@@ -700,7 +700,7 @@ class Client(MPDClient):
 			else:
 				self.music_directory=self._settings.get_music_directory()
 			if "status" in self.commands():
-				self.emitter.emit("connected")
+				self.emitter.emit("connected", self.stats()["songs"] == "0")
 				self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
 			else:
 				self.disconnect()
@@ -913,7 +913,7 @@ class Client(MPDClient):
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
 				elif "updating_db" == key:
-					self.emitter.emit("updated-db")
+					self.emitter.emit("updated-db", self.stats()["songs"] == "0")
 				elif "bitrate" == key:
 					self.emitter.emit("bitrate", None)
 				elif "audio" == key:
@@ -1526,7 +1526,11 @@ class ArtistList(Gtk.ListView):
 
 	def select(self, name):
 		self.artist_selection_model.select_artist(name)
-		self.scroll_to(self.artist_selection_model.get_selected(), Gtk.ListScrollFlags.FOCUS, None)
+		if (selected:=self.artist_selection_model.get_selected()) is None:
+			self.artist_selection_model.select(0)
+			self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
+		else:
+			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _refresh(self):
 		artists=self._client.list("albumartistsort", "group", "albumartist")
@@ -1545,23 +1549,26 @@ class ArtistList(Gtk.ListView):
 		self.set_sensitive(False)
 		self.artist_selection_model.clear()
 
-	def _on_connected(self, *args):
-		self._refresh()
-		if (song:=self._client.currentsong()):
-			artist=song["albumartist"][0]
-			self.select(artist)
-		else:
-			self.artist_selection_model.select(0)
-			self.scroll_to(self.artist_selection_model.get_selected(), Gtk.ListScrollFlags.FOCUS, None)
+	def _on_connected(self, emitter, database_is_empty):
+		if not database_is_empty:
+			self._refresh()
+			if (song:=self._client.currentsong()):
+				artist=song["albumartist"][0]
+				self.select(artist)
+			else:
+				self.artist_selection_model.select(0)
+				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
 		self.set_sensitive(True)
 
-	def _on_updated_db(self, *args):
-		if self.artist_selection_model.get_selected_artist() is None:
-			self._refresh()
-		else:
-			artist=self.artist_selection_model.get_selected_artist()
-			self._refresh()
-			self.select(artist)
+	def _on_updated_db(self, emitter, database_is_empty):
+		if not database_is_empty:
+			if (artist:=self.artist_selection_model.get_selected_artist()) is None:
+				self._refresh()
+				self.artist_selection_model.select(0)
+				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
+			else:
+				self._refresh()
+				self.select(artist)
 
 class Album(GObject.Object):
 	def __init__(self, artist, name, sortname, date):
