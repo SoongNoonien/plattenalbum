@@ -2727,7 +2727,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		audio=AudioFormat(self._client, self._settings)
 		self._playback_menu_button=PlaybackMenuButton(self._client)
 		volume_button=VolumeButton(self._client, self._settings)
-		self._update_toast=Adw.Toast(title=_("Database updated"))
+		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
+		self._updated_toast=Adw.Toast(title=_("Database updated"))
 		self._connection_toast=Adw.Toast(
 			title=_("Connection failed"), priority=Adw.ToastPriority.HIGH, button_label=_("Preferences"), action_name="win.settings")
 		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
@@ -2789,6 +2790,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connecting", self._on_connecting)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
+		self._client.emitter.connect("updating-db", self._on_updating_db)
 		self._client.emitter.connect("updated-db", self._on_updated_db)
 
 		# packing
@@ -2926,6 +2928,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
+		self._updating_toast.dismiss()
 
 	def _on_connecting(self, *args):
 		if self._use_csd:
@@ -2940,8 +2943,12 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_title("mpdevil • "+_("Not Connected"))
 		self._toast_overlay.add_toast(self._connection_toast)
 
+	def _on_updating_db(self, *args):
+		self._toast_overlay.add_toast(self._updating_toast)
+
 	def _on_updated_db(self, *args):
-		self._toast_overlay.add_toast(self._update_toast)
+		self._updating_toast.dismiss()
+		self._toast_overlay.add_toast(self._updated_toast)
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
