@@ -658,7 +658,6 @@ class Client(MPDClient):
 		self._start_idle_id=None
 		self.music_directory=None
 		self.current_cover=None
-		self.database_is_empty=True
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 
 	# overloads to use Song class
