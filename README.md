@@ -58,7 +58,7 @@ Dependencies:
 - Python3
 
 Python modules:
-- mpd (python-mpd2 >=1.1)
+- mpd (python-mpd2 >=3.1)
 - gi (Gtk, Adw, Gio, Gdk, Pango, GObject, GLib)
 
 Run:
