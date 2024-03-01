@@ -1247,11 +1247,11 @@ class SongMenu(Gtk.PopoverMenu):
 
 		# menu model
 		menu=Gio.Menu()
-		menu.append(_("Append"), "menu.append")
-		menu.append(_("As Next"), "menu.as_next")
-		menu.append(_("Play"), "menu.play")
+		menu.append(_("_Append"), "menu.append")
+		menu.append(_("As _Next"), "menu.as_next")
+		menu.append(_("_Play"), "menu.play")
 		subsection=Gio.Menu()
-		subsection.append(_("Show"), "menu.show")
+		subsection.append(_("_Show"), "menu.show")
 		menu.append_section(None, subsection)
 		self.set_menu_model(menu)
 
@@ -1952,13 +1952,13 @@ class PlaylistMenu(Gtk.PopoverMenu):  # TODO
 
 		# menu model
 		menu=Gio.Menu()
-		menu.append(_("Remove"), "menu.remove")
-		menu.append(_("Show"), "menu.show")
+		menu.append(_("_Remove"), "menu.remove")
+		menu.append(_("_Show"), "menu.show")
 		current_song_section=Gio.Menu()
-		current_song_section.append(_("Enqueue Album"), "mpd.enqueue")
-		current_song_section.append(_("Tidy"), "mpd.tidy")
+		current_song_section.append(_("_Enqueue Album"), "mpd.enqueue")
+		current_song_section.append(_("_Tidy"), "mpd.tidy")
 		subsection=Gio.Menu()
-		subsection.append(_("Clear"), "mpd.clear")
+		subsection.append(_("_Clear"), "mpd.clear")
 		menu.append_section(None, current_song_section)
 		menu.append_section(None, subsection)
 		self.set_menu_model(menu)
@@ -2575,11 +2575,11 @@ class PlaybackMenuButton(Gtk.MenuButton):
 
 		# menu model
 		menu=Gio.Menu()
-		menu.append(_("Repeat Mode"), "mpd.repeat")
-		menu.append(_("Random Mode"), "mpd.random")
-		menu.append(_("Single Mode"), "mpd.single")
-		menu.append(_("Pause After Song"), "mpd.single-oneshot")
-		menu.append(_("Consume Mode"), "mpd.consume")
+		menu.append(_("_Repeat Mode"), "mpd.repeat")
+		menu.append(_("R_andom Mode"), "mpd.random")
+		menu.append(_("_Single Mode"), "mpd.single")
+		menu.append(_("_Pause After Song"), "mpd.single-oneshot")
+		menu.append(_("_Consume Mode"), "mpd.consume")
 		self.set_menu_model(menu)
 
 class VolumeButton(Gtk.VolumeButton):
@@ -2771,17 +2771,17 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# menu
 		subsection=Gio.Menu()
-		subsection.append(_("Preferences"), "win.settings")
-		subsection.append(_("Keyboard Shortcuts"), "win.show-help-overlay")
-		subsection.append(_("Help"), "win.help")
-		subsection.append(_("About mpdevil"), "app.about")
+		subsection.append(_("_Preferences"), "win.settings")
+		subsection.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
+		subsection.append(_("_Help"), "win.help")
+		subsection.append(_("_About mpdevil"), "app.about")
 		mpd_subsection=Gio.Menu()
-		mpd_subsection.append(_("Reconnect"), "win.reconnect")
-		mpd_subsection.append(_("Update Database"), "mpd.update")
-		mpd_subsection.append(_("Server Statistics"), "win.stats")
+		mpd_subsection.append(_("_Reconnect"), "win.reconnect")
+		mpd_subsection.append(_("_Update Database"), "mpd.update")
+		mpd_subsection.append(_("_Server Statistics"), "win.stats")
 		menu=Gio.Menu()
-		menu.append(_("Mini Player"), "win.mini-player")
-		menu.append(_("Lyrics"), "win.toggle-lyrics")
+		menu.append(_("_Mini Player"), "win.mini-player")
+		menu.append(_("_Lyrics"), "win.toggle-lyrics")
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
 
