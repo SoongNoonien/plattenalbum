@@ -1611,20 +1611,20 @@ class AlbumListRow(Gtk.Box):
 		self._cover=Gtk.Picture()
 		square_container=SquareContainer(self._cover)
 		square_container.set_valign(Gtk.Align.START)
-		self._title_label=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
-		self._date_label=Gtk.Label(single_line_mode=True)
+		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
+		self._date=Gtk.Label(single_line_mode=True)
 		self.append(square_container)
-		self.append(self._title_label)
-		self.append(self._date_label)
+		self.append(self._title)
+		self.append(self._date)
 
 	def set_album(self, album):
 		if album.name:
-			self._title_label.set_text(album.name)
+			self._title.set_text(album.name)
 			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album.name)])
 		else:
-			self._title_label.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Album"))}</i>')
+			self._title.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Album"))}</i>')
 			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of an unknown album")])
-		self._date_label.set_text(album.date)
+		self._date.set_text(album.date)
 		if album.cover is None:
 			self._client.restrict_tagtypes("albumartist", "album")
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
