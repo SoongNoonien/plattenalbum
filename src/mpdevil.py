@@ -1553,7 +1553,6 @@ class ArtistList(Gtk.ListView):
 		self.artist_selection_model.select(pos)
 
 	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
 		self.artist_selection_model.clear()
 
 	def _on_connected(self, emitter, database_is_empty):
@@ -1565,7 +1564,6 @@ class ArtistList(Gtk.ListView):
 			else:
 				self.artist_selection_model.select(0)
 				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
-		self.set_sensitive(True)
 
 	def _on_updated_db(self, emitter, database_is_empty):
 		if not database_is_empty:
@@ -1653,8 +1651,6 @@ class AlbumList(Gtk.GridView):
 
 		# connect
 		self.connect("activate", self._on_activate)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
 		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 
 	def clear(self, *args):
@@ -1700,12 +1696,6 @@ class AlbumList(Gtk.GridView):
 	def _on_activate(self, widget, pos):
 		album=self._selection_model.get_item(pos)
 		self.emit("album-selected", album.artist, album.name, album.date)
-
-	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
-
-	def _on_connected(self, *args):
-		self.set_sensitive(True)
 
 class AlbumView(Gtk.Box):
 	__gsignals__={"close": (GObject.SignalFlags.RUN_FIRST, None, ())}
@@ -1844,10 +1834,18 @@ class Browser(Gtk.Box):
 		sidebar.append(Gtk.Separator())
 		overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=breakpoint_bin)
 
-		# main stack
+		# status page
+		status_page=Adw.StatusPage(title=_("Collection is Empty"), icon_name="folder-music-symbolic")
+
+		# stacks
+		# TODO names
+		self._collection_stack=Gtk.Stack()
+		self._collection_stack.add_named(overlay_split_view, "browser")
+		self._collection_stack.add_named(status_page, "empty-collection")
 		self._main_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-		self._main_stack.add_named(overlay_split_view, "browser")  # TODO name
+		self._main_stack.add_named(self._collection_stack, "collection")
 		self._main_stack.add_named(self._search_window, "search")
+		self._main_stack.add_css_class("view")
 
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
@@ -1861,13 +1859,15 @@ class Browser(Gtk.Box):
 		self._artist_list.artist_selection_model.connect("clear", self._album_list.clear)
 		self._search_window.connect("song-selected", self._on_song_selected)
 		self._search_window.connect("search-started", lambda *args: self._main_stack.set_visible_child_name("search"))
-		self._search_window.connect("search-stopped", lambda *args: self._main_stack.set_visible_child_name("browser"))
+		self._search_window.connect("search-stopped", lambda *args: self._main_stack.set_visible_child_name("collection"))
 		self.search_bar.connect("notify::search-mode-enabled", self._on_search_bar_toggled)
 		self._search_entry.connect("activate", self._search)
 		self._search_entry.connect("search-changed", self._search)
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
-		self._client.emitter.connect("disconnected", lambda *args: self._navigation_view.pop_to_tag("album_list"))
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connected", self._on_connected_or_updated_db)
+		self._client.emitter.connect("updated-db", self._on_connected_or_updated_db)
 
 		# packing
 		self.append(self.search_bar)
@@ -1890,13 +1890,13 @@ class Browser(Gtk.Box):
 		self._album_list.select(song["album"][0], song["date"][0])
 		self._album_view.select(song["file"])
 		self.search_bar.set_search_mode(False)
-		self._main_stack.set_visible_child_name("browser")
+		self._main_stack.set_visible_child_name("collection")
 		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
 		self.get_root().set_focus_visible(True)
 
 	def _on_search_bar_toggled(self, *args):
 		if not self.search_bar.get_search_mode():
-			self._main_stack.set_visible_child_name("browser")
+			self._main_stack.set_visible_child_name("collection")
 
 	def _on_search_entry_focus_event(self, controller, focus):
 		app=self.get_root().get_application()
@@ -1904,6 +1904,14 @@ class Browser(Gtk.Box):
 			app.set_accels_for_action("mpd.toggle-play", [])
 		else:
 			app.set_accels_for_action("mpd.toggle-play", ["space"])
+
+	def _on_disconnected(self, *args):
+		self._navigation_view.pop_to_tag("album_list")
+		self._collection_stack.set_visible_child_name("empty-collection")
+
+	def _on_connected_or_updated_db(self, emitter, database_is_empty):
+		if not database_is_empty:
+			self._collection_stack.set_visible_child_name("browser")
 
 ############
 # playlist #
@@ -2000,7 +2008,6 @@ class PlaylistView(SongList):
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
 
 	def _clear(self, *args):
 		self._menu.popdown()
@@ -2102,11 +2109,7 @@ class PlaylistView(SongList):
 		return False
 
 	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
 		self._clear()
-
-	def _on_connected(self, *args):
-		self.set_sensitive(True)
 
 class PlaylistWindow(Gtk.Stack):
 	def __init__(self, client, settings):
@@ -2146,7 +2149,7 @@ class PlaylistWindow(Gtk.Stack):
 			self.set_visible_child_name("empty-playlist")
 
 	def _on_disconnected(self, *args):
-		self.set_visible_child_name("playlist")
+		self.set_visible_child_name("empty-playlist")
 
 ####################
 # cover and lyrics #
@@ -2261,7 +2264,6 @@ class MainCover(Gtk.Picture):
 		# connect
 		self._client.emitter.connect("current-song", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
 
 	def _clear(self):
 		self.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
@@ -2273,11 +2275,7 @@ class MainCover(Gtk.Picture):
 			self.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
 		self._clear()
-
-	def _on_connected(self, *args):
-		self.set_sensitive(True)
 
 class CoverLyricsWindow(Gtk.Stack):
 	show_lyrics=GObject.Property(type=bool, default=False)
@@ -2513,7 +2511,6 @@ class AudioFormat(Gtk.Box):
 		self._client.emitter.connect("bitrate", self._on_bitrate)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
 		hbox=Gtk.Box(halign=Gtk.Align.END)
@@ -2552,19 +2549,14 @@ class AudioFormat(Gtk.Box):
 			self._format_label.set_text("")
 
 	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
 		self._brate_label.set_text("—")
 		self._separator_label.set_text(" kb/s")
 		self._file_type_label.set_text("")
 		self._format_label.set_text("")
 
-	def _on_connected(self, *args):
-		self.set_sensitive(True)
-
 class PlaybackMenuButton(Gtk.MenuButton):
-	def __init__(self, client):
+	def __init__(self):
 		super().__init__(tooltip_text=_("Playback Menu"), icon_name="view-more-symbolic", direction=Gtk.ArrowType.UP)
-		self._client=client
 
 		# menu model
 		menu=Gio.Menu()
@@ -2574,16 +2566,6 @@ class PlaybackMenuButton(Gtk.MenuButton):
 		menu.append(_("Pause After Song"), "mpd.single-oneshot")
 		menu.append(_("Consume Mode"), "mpd.consume")
 		self.set_menu_model(menu)
-
-		# connect
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
-
-	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
-
-	def _on_connected(self, *args):
-		self.set_sensitive(True)
 
 class VolumeButton(Gtk.VolumeButton):
 	def __init__(self, client, settings):
@@ -2599,7 +2581,6 @@ class VolumeButton(Gtk.VolumeButton):
 		self._changed=self.connect("value-changed", self._set_volume)
 		self._client.emitter.connect("volume", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
 
 	def _set_volume(self, widget, value):
 		self._client.setvol(str(int(value)))
@@ -2620,11 +2601,7 @@ class VolumeButton(Gtk.VolumeButton):
 		else:
 			self._client.disableoutput(out_id)
 
-	def _on_connected(self, *args):
-		self.set_sensitive(True)
-
 	def _on_disconnected(self, *args):
-		self.set_sensitive(False)
 		self._refresh(None, -1)
 
 ###################
@@ -2742,12 +2719,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		audio=AudioFormat(self._client, self._settings)
-		self._playback_menu_button=PlaybackMenuButton(self._client)
+		self._playback_menu_button=PlaybackMenuButton()
 		volume_button=VolumeButton(self._client, self._settings)
+		self._connection_banner=Adw.Banner(title=_("Not connected to MPD"), button_label=_("Preferences"), action_name="win.settings")
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
-		self._connection_toast=Adw.Toast(
-			title=_("Connection failed"), priority=Adw.ToastPriority.HIGH, button_label=_("Preferences"), action_name="win.settings")
 		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
 		self._search_button.bind_property("active", self._browser.search_bar, "search-mode-enabled",  GObject.BindingFlags.BIDIRECTIONAL)
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
@@ -2811,23 +2787,24 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.connect("updated-db", self._on_updated_db)
 
 		# packing
-		action_bar=Gtk.Box()
-		action_bar.add_css_class("toolbar")
-		action_bar.append(playback_control)
-		action_bar.append(seek_bar)
-		action_bar.append(audio)
-		action_bar.append(volume_button)
-		action_bar.append(self._playback_menu_button)
+		self._action_bar=Gtk.Box()
+		self._action_bar.add_css_class("toolbar")
+		self._action_bar.append(playback_control)
+		self._action_bar.append(seek_bar)
+		self._action_bar.append(audio)
+		self._action_bar.append(volume_button)
+		self._action_bar.append(self._playback_menu_button)
 		if self._use_csd:
 			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
 			self.set_titlebar(self._header_bar)
 			self._header_bar.pack_start(self._search_button)
 			self._header_bar.pack_end(self._menu_button)
 		else:
-			action_bar.append(self._search_button)
-			action_bar.append(self._menu_button)
+			self._action_bar.append(self._search_button)
+			self._action_bar.append(self._menu_button)
 		self._toolbar_view=Adw.ToolbarView(bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
-		self._toolbar_view.add_bottom_bar(action_bar)
+		self._toolbar_view.add_top_bar(self._connection_banner)
+		self._toolbar_view.add_bottom_bar(self._action_bar)
 		if self._settings.get_boolean("mini-player"):
 			self._toolbar_view.set_content(self._cover_playlist_box)
 		else:
@@ -2859,7 +2836,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.set_title("mpdevil")
 		if self._use_csd:
 			self._header_bar.get_title_widget().set_title("mpdevil")
-			self._header_bar.get_title_widget().set_subtitle(" ")
+			self._header_bar.get_title_widget().set_subtitle("")
 
 	def _bind_mini_player_dimension_settings(self):
 		self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
@@ -2935,9 +2912,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _on_connected(self, *args):
 		self._clear_title()
+		self._connection_banner.set_revealed(False)
 		for action in ("stats","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
+		self._action_bar.set_sensitive(True)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
@@ -2945,6 +2924,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.lookup_action(action).set_enabled(False)
 		self._search_button.set_active(False)
 		self._search_button.set_sensitive(False)
+		self._action_bar.set_sensitive(False)
 		self._updating_toast.dismiss()
 
 	def _on_connecting(self, *args):
@@ -2954,11 +2934,8 @@ class MainWindow(Gtk.ApplicationWindow):
 			self.set_title("mpdevil • "+_("connecting…"))
 
 	def _on_connection_error(self, *args):
-		if self._use_csd:
-			self._header_bar.get_title_widget().set_subtitle(_("Not Connected"))
-		else:
-			self.set_title("mpdevil • "+_("Not Connected"))
-		self._toast_overlay.add_toast(self._connection_toast)
+		self._clear_title()
+		self._connection_banner.set_revealed(True)
 
 	def _on_updating_db(self, *args):
 		self._toast_overlay.add_toast(self._updating_toast)
