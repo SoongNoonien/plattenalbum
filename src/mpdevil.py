@@ -1566,7 +1566,9 @@ class ArtistList(Gtk.ListView):
 				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _on_updated_db(self, emitter, database_is_empty):
-		if not database_is_empty:
+		if database_is_empty:
+			self.artist_selection_model.clear()
+		else:
 			if (artist:=self.artist_selection_model.get_selected_artist()) is None:
 				self._refresh()
 				self.artist_selection_model.select(0)
@@ -1910,7 +1912,9 @@ class Browser(Gtk.Box):
 		self._collection_stack.set_visible_child_name("empty-collection")
 
 	def _on_connected_or_updated_db(self, emitter, database_is_empty):
-		if not database_is_empty:
+		if database_is_empty:
+			self._collection_stack.set_visible_child_name("empty-collection")
+		else:
 			self._collection_stack.set_visible_child_name("browser")
 
 ############
