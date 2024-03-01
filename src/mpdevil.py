@@ -2744,7 +2744,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# actions
-		simple_actions_data=("settings","reconnect","stats","help","toggle-search","playback-menu")
+		simple_actions_data=("settings","reconnect","stats","help","toggle-search")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2778,7 +2778,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		mpd_subsection=Gio.Menu()
 		mpd_subsection.append(_("Reconnect"), "win.reconnect")
 		mpd_subsection.append(_("Update Database"), "mpd.update")
-		mpd_subsection.append(_("Server Stats"), "win.stats")
+		mpd_subsection.append(_("Server Statistics"), "win.stats")
 		menu=Gio.Menu()
 		menu.append(_("Mini Player"), "win.mini-player")
 		menu.append(_("Lyrics"), "win.toggle-lyrics")
@@ -2880,10 +2880,7 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._sidebar.append(self._cover_playlist_box)
 
 	def _on_toggle_search(self, action, param):
-		self._search_button.emit("clicked")
-
-	def _on_playback_menu(self, action, param):
-		self._playback_menu_button.popup()
+		self._browser.search_bar.set_search_mode(not self._browser.search_bar.get_search_mode())
 
 	def _on_settings(self, action, param):
 		settings=SettingsDialog(self, self._client, self._settings)
@@ -2996,7 +2993,7 @@ class mpdevil(Adw.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),("win.playback-menu", ["<Control>k"]),
+			("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),("win.stats", ["<Control>i"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
 			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),

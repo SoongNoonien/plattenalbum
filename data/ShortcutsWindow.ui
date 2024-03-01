@@ -34,12 +34,6 @@
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Playback Menu</property>
-			<property name="accelerator">&lt;Control&gt;k</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Reconnect</property>
 			<property name="accelerator">&lt;Shift&gt;F5</property>
 			</object>
@@ -48,6 +42,12 @@
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Update Database</property>
 			<property name="accelerator">F5</property>
+			</object>
+		</child>
+		<child>
+			<object class="GtkShortcutsShortcut">
+			<property name="title" translatable="yes">Server Statistics</property>
+			<property name="accelerator">&lt;Control&gt;i</property>
 			</object>
 		</child>
 		<child>
