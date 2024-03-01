@@ -1503,7 +1503,10 @@ class ArtistList(Gtk.ListView):
 			item.set_child(label)
 		def bind(factory, item):
 			label=item.get_child()
-			label.set_text(item.get_item().name)
+			if name:=item.get_item().name:
+				label.set_text(name)
+			else:
+				label.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Artist"))}</i>')
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
@@ -1615,9 +1618,13 @@ class AlbumListRow(Gtk.Box):
 		self.append(self._date_label)
 
 	def set_album(self, album):
-		self._title_label.set_text(album.name)
+		if album.name:
+			self._title_label.set_text(album.name)
+			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album.name)])
+		else:
+			self._title_label.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Album"))}</i>')
+			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of an unknown album")])
 		self._date_label.set_text(album.date)
-		self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album.name)])
 		if album.cover is None:
 			self._client.restrict_tagtypes("albumartist", "album")
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
@@ -1756,9 +1763,13 @@ class AlbumView(Gtk.Box):
 		self.append(scroll)
 
 	def display(self, albumartist, album, date):
-		self._title.set_text(album)
+		if album:
+			self._title.set_text(album)
+			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album)])
+		else:
+			self._title.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Album"))}</i>')
+			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of an unknown album")])
 		self._date.set_text(date)
-		self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album)])
 		self.song_list.clear()
 		self._tag_filter=("albumartist", albumartist, "album", album, "date", date)
 		count=self._client.count(*self._tag_filter)
