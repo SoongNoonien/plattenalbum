@@ -2110,12 +2110,13 @@ class PlaylistView(SongList):
 
 class PlaylistWindow(Gtk.Stack):
 	def __init__(self, client, settings):
-		super().__init__()
+		super().__init__(vhomogeneous=False)
 		self._client=client
 
 		# widgets
 		scroll=Gtk.ScrolledWindow(child=PlaylistView(self._client, settings), hexpand=True, vexpand=True)  # TODO scroll to song
 		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
+		status_page.add_css_class("compact")
 
 		# event controller
 		drop_target=Gtk.DropTarget()
@@ -2181,8 +2182,10 @@ class LyricsWindow(Gtk.Stack):
 
 		# status pages
 		no_lyrics_status_page=Adw.StatusPage(icon_name="org.mpdevil.mpdevil-lyrics-symbolic", title=_("No Lyrics Found"))
+		no_lyrics_status_page.add_css_class("compact")
 		connection_error_status_page=Adw.StatusPage(
 			icon_name="network-wired-disconnected-symbolic", title=_("Connection Error"), description=_("Check your network connection"))
+		connection_error_status_page.add_css_class("compact")
 
 		# text view
 		self._text_view=Gtk.TextView(
