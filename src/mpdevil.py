@@ -1090,7 +1090,7 @@ class SettingsDialog(Adw.PreferencesWindow):
 
 class ServerStats(Adw.Window):
 	def __init__(self, parent, client, settings):
-		super().__init__(title=_("Server Stats"), modal=True, transient_for=parent, destroy_with_parent=True,
+		super().__init__(title=_("Server Statistics"), modal=True, transient_for=parent, destroy_with_parent=True,
 			default_width=360, width_request=360, height_request=294)
 
 		# list box
