@@ -966,12 +966,12 @@ class ViewSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("View"))
 		toggle_data=(
-			(_("Use Client-side decoration"), "use-csd", _("restart required")),
-			(_("Show stop button"), "show-stop", ""),
-			(_("Show audio format"), "show-audio-format", ""),
+			(_("Use _Client-side decoration"), "use-csd", _("restart required")),
+			(_("Show _stop button"), "show-stop", ""),
+			(_("Show audio _format"), "show-audio-format", ""),
 		)
 		for title, key, subtitle in toggle_data:
-			row=Adw.SwitchRow(title=title, subtitle=subtitle)
+			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
@@ -979,14 +979,14 @@ class BehaviorSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
-			(_("Support “MPRIS”"), "mpris", _("restart required")),
-			(_("Sort albums by year"), "sort-albums-by-year", ""),
-			(_("Send notification on title change"), "send-notify", ""),
-			(_("Rewind via previous button"), "rewind-mode", ""),
-			(_("Stop playback on quit"), "stop-on-quit", ""),
+			(_("Support “_MPRIS”"), "mpris", _("restart required")),
+			(_("Sort _albums by year"), "sort-albums-by-year", ""),
+			(_("Send _notification on title change"), "send-notify", ""),
+			(_("_Rewind via previous button"), "rewind-mode", ""),
+			(_("Stop _playback on quit"), "stop-on-quit", ""),
 		)
 		for title, key, subtitle in toggle_data:
-			row=Adw.SwitchRow(title=title, subtitle=subtitle)
+			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
@@ -1034,7 +1034,7 @@ class ConnectionSettings(Adw.PreferencesGroup):
 	def __init__(self, client, settings, parent):
 		super().__init__(title=_("Connection"))
 
-		socket_connect_row=Adw.SwitchRow(title=_("Connect via Unix domain socket"))
+		socket_connect_row=Adw.SwitchRow(title=_("Connect via _Unix domain socket"), use_underline=True)
 		settings.bind("socket-connection", socket_connect_row, "active", Gio.SettingsBindFlags.DEFAULT)
 		self.add(socket_connect_row)
 
