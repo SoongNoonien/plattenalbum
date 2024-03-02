@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-03-02 13:36+0100\n"
-"PO-Revision-Date: 2024-03-02 13:43+0100\n"
+"PO-Revision-Date: 2024-03-02 13:46+0100\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -50,7 +50,7 @@ msgstr "Verhalten"
 
 #: src/mpdevil.py:980
 msgid "Support “_MPRIS”"
-msgstr "„_MPRIS“ unterstützen"
+msgstr "»_MPRIS« unterstützen"
 
 #: src/mpdevil.py:980
 msgid "restart required"
@@ -94,7 +94,7 @@ msgstr "Verbindung"
 
 #: src/mpdevil.py:1035
 msgid "Connect via _Unix domain socket"
-msgstr "Über „_Unix domain socket“ verbinden"
+msgstr "Über »_Unix domain socket« verbinden"
 
 #: src/mpdevil.py:1045
 msgid "Port"
