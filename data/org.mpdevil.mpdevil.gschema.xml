@@ -13,14 +13,6 @@
 			<default>584</default>
 			<summary>Default height of window</summary>
 		</key>
-		<key type="i" name="mini-player-width">
-			<default>400</default>
-			<summary>Default width of mini player</summary>
-		</key>
-		<key type="i" name="mini-player-height">
-			<default>584</default>
-			<summary>Default height of mini player</summary>
-		</key>
 		<key type="b" name="socket-connection">
 			<default>true</default>
 			<summary>Connect via Unix domain socket</summary>
@@ -49,10 +41,6 @@
 		<key type="s" name="regex">
 			<default>""</default>
 			<summary>Cover regex</summary>
-		</key>
-		<key type="b" name="mini-player">
-			<default>false</default>
-			<summary>Start player in mini player mode</summary>
 		</key>
 		<key type="b" name="use-csd">
 			<default>true</default>

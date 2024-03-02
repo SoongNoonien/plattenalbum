@@ -63,12 +63,6 @@
 		<property name="title" translatable="yes">Window</property>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle Mini Player</property>
-			<property name="accelerator">&lt;Control&gt;m</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Toggle Lyrics</property>
 			<property name="accelerator">&lt;Control&gt;l</property>
 			</object>

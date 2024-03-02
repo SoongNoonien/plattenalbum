@@ -2334,12 +2334,11 @@ class PlaybackControl(Gtk.Box):
 		# widgets
 		self._play_button=Gtk.Button(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
 		self._stop_button=Gtk.Button(icon_name="media-playback-stop-symbolic", tooltip_text=_("Stop"), action_name="mpd.stop")
+		self._settings.bind("show-stop", self._stop_button, "visible", Gio.SettingsBindFlags.GET)
 		self._prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
 		self._next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
 
 		# connect
-		self._settings.connect("changed::mini-player", self._mini_player)
-		self._settings.connect("changed::show-stop", self._mini_player)
 		self._client.emitter.connect("state", self._on_state)
 
 		# packing
@@ -2347,11 +2346,6 @@ class PlaybackControl(Gtk.Box):
 		self.append(self._play_button)
 		self.append(self._stop_button)
 		self.append(self._next_button)
-		self._mini_player()
-
-	def _mini_player(self, *args):
-		visibility=(self._settings.get_boolean("show-stop") and not self._settings.get_boolean("mini-player"))
-		self._stop_button.set_property("visible", visibility)
 
 	def _on_state(self, emitter, state):
 		if state == "play":
@@ -2514,14 +2508,15 @@ class AudioFormat(Gtk.Box):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER)
 		self._client=client
 		self._settings=settings
+		self._settings.bind("show-audio-format", self, "visible", Gio.SettingsBindFlags.GET)
+
+		# labels
 		self._file_type_label=Gtk.Label(xalign=1, single_line_mode=True)
 		self._separator_label=Gtk.Label(xalign=1, single_line_mode=True)
 		self._brate_label=Gtk.Label(xalign=1, single_line_mode=True, width_chars=5, css_classes=["numeric"])
 		self._format_label=Gtk.Label(single_line_mode=True, css_classes=["caption"])
 
 		# connect
-		self._settings.connect("changed::mini-player", self._mini_player)
-		self._settings.connect("changed::show-audio-format", self._mini_player)
 		self._client.emitter.connect("audio", self._on_audio)
 		self._client.emitter.connect("bitrate", self._on_bitrate)
 		self._client.emitter.connect("current-song", self._on_song_changed)
@@ -2534,11 +2529,6 @@ class AudioFormat(Gtk.Box):
 		hbox.append(self._file_type_label)
 		self.append(hbox)
 		self.append(self._format_label)
-		self._mini_player()
-
-	def _mini_player(self, *args):
-		visibility=(self._settings.get_boolean("show-audio-format") and not self._settings.get_boolean("mini-player"))
-		self.set_property("visible", visibility)
 
 	def _on_audio(self, emitter, audio_format):
 		if audio_format is None:
@@ -2727,7 +2717,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
-		self._cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._browser=Browser(self._client, self._settings)
 		cover_lyrics_window=CoverLyricsWindow(self._client, self._settings)
 		playlist_window=PlaylistWindow(self._client, self._settings)
@@ -2741,7 +2731,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
 		self._search_button.bind_property("active", self._browser.search_bar, "search-mode-enabled",  GObject.BindingFlags.BIDIRECTIONAL)
-		self._settings.bind("mini-player", self._search_button, "visible", Gio.SettingsBindFlags.INVERT_BOOLEAN|Gio.SettingsBindFlags.GET)
 
 		# actions
 		simple_actions_data=("settings","reconnect","stats","help","toggle-search")
@@ -2749,22 +2738,22 @@ class MainWindow(Gtk.ApplicationWindow):
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
-		self.add_action(self._settings.create_action("mini-player"))
 		self.add_action(Gio.PropertyAction.new("toggle-lyrics", cover_lyrics_window, "show-lyrics"))
 
 		# sidebar
-		self._cover_playlist_box.append(cover_lyrics_window)
-		self._cover_playlist_box.append(Gtk.Separator())
-		self._cover_playlist_box.append(playlist_window)
-		self._sidebar=Gtk.Box()
-		self._sidebar.add_css_class("view")
-		self._sidebar.append(Gtk.Separator())
+		cover_playlist_box.append(cover_lyrics_window)
+		cover_playlist_box.append(Gtk.Separator())
+		cover_playlist_box.append(playlist_window)
+		sidebar=Gtk.Box()
+		sidebar.add_css_class("view")
+		sidebar.append(Gtk.Separator())
+		sidebar.append(cover_playlist_box)
 
 		# split view
-		self._overlay_split_view=Adw.OverlaySplitView(
+		overlay_split_view=Adw.OverlaySplitView(
 			sidebar_position=Gtk.PackType.END, min_sidebar_width=300, max_sidebar_width=500, sidebar_width_fraction=0.30)
-		self._overlay_split_view.set_content(self._browser)
-		self._overlay_split_view.set_sidebar(self._sidebar)
+		overlay_split_view.set_content(self._browser)
+		overlay_split_view.set_sidebar(sidebar)
 
 		# type to search in browser
 		self._browser.search_bar.set_key_capture_widget(self)
@@ -2780,7 +2769,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		mpd_subsection.append(_("_Update Database"), "mpd.update")
 		mpd_subsection.append(_("_Server Statistics"), "win.stats")
 		menu=Gio.Menu()
-		menu.append(_("_Mini Player"), "win.mini-player")
 		menu.append(_("_Lyrics"), "win.toggle-lyrics")
 		menu.append_section(None, mpd_subsection)
 		menu.append_section(None, subsection)
@@ -2791,7 +2779,6 @@ class MainWindow(Gtk.ApplicationWindow):
 			self._menu_button.set_direction(Gtk.ArrowType.UP)
 
 		# connect
-		self._settings.connect_after("changed::mini-player", self._mini_player)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("connected", self._on_connected)
@@ -2817,15 +2804,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		else:
 			self._action_bar.append(self._search_button)
 			self._action_bar.append(self._menu_button)
-		self._toolbar_view=Adw.ToolbarView(bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
-		self._toolbar_view.add_top_bar(self._connection_banner)
-		self._toolbar_view.add_bottom_bar(self._action_bar)
-		if self._settings.get_boolean("mini-player"):
-			self._toolbar_view.set_content(self._cover_playlist_box)
-		else:
-			self._sidebar.append(self._cover_playlist_box)
-			self._toolbar_view.set_content(self._overlay_split_view)
-		self._toast_overlay=Adw.ToastOverlay(child=self._toolbar_view)
+		toolbar_view=Adw.ToolbarView(bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
+		toolbar_view.add_top_bar(self._connection_banner)
+		toolbar_view.add_bottom_bar(self._action_bar)
+		toolbar_view.set_content(overlay_split_view)
+		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
 		self.set_child(self._toast_overlay)
 
 	def open(self):
@@ -2833,10 +2816,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._client.emitter.emit("disconnected")
 		self._client.emitter.emit("connecting")
 		# set default window size
-		if self._settings.get_boolean("mini-player"):
-			self._bind_mini_player_dimension_settings()
-		else:
-			self._bind_default_dimension_settings()
+		self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
+		self._settings.bind("width", self, "default-width", Gio.SettingsBindFlags.SET)
+		self._settings.bind("height", self, "default-height", Gio.SettingsBindFlags.SET)
 		if self._settings.get_boolean("maximize"):
 			self.maximize()
 		self.present()
@@ -2852,32 +2834,6 @@ class MainWindow(Gtk.ApplicationWindow):
 		if self._use_csd:
 			self._header_bar.get_title_widget().set_title("mpdevil")
 			self._header_bar.get_title_widget().set_subtitle("")
-
-	def _bind_mini_player_dimension_settings(self):
-		self.set_default_size(self._settings.get_int("mini-player-width"), self._settings.get_int("mini-player-height"))
-		self._settings.bind("mini-player-width", self, "default-width", Gio.SettingsBindFlags.SET)
-		self._settings.bind("mini-player-height", self, "default-height", Gio.SettingsBindFlags.SET)
-
-	def _bind_default_dimension_settings(self):
-		self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
-		self._settings.bind("width", self, "default-width", Gio.SettingsBindFlags.SET)
-		self._settings.bind("height", self, "default-height", Gio.SettingsBindFlags.SET)
-
-	def _unbind_dimension_settings(self):
-		self._settings.unbind(self, "default-width")
-		self._settings.unbind(self, "default-height")
-
-	def _mini_player(self, *args):
-		if self._settings.get_boolean("mini-player"):
-			self._sidebar.remove(self._cover_playlist_box)
-			self._toolbar_view.set_content(self._cover_playlist_box)
-			self._unbind_dimension_settings()
-			self._bind_mini_player_dimension_settings()
-		else:
-			self._unbind_dimension_settings()
-			self._bind_default_dimension_settings()
-			self._toolbar_view.set_content(self._overlay_split_view)
-			self._sidebar.append(self._cover_playlist_box)
 
 	def _on_toggle_search(self, action, param):
 		self._browser.search_bar.set_search_mode(not self._browser.search_bar.get_search_mode())
@@ -2991,7 +2947,7 @@ class mpdevil(Adw.Application):
 		self.add_action(action)
 		# accelerators
 		action_accels=(
-			("app.quit", ["<Control>q"]),("win.mini-player", ["<Control>m"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
+			("app.quit", ["<Control>q"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
 			("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),("win.stats", ["<Control>i"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
