@@ -42,10 +42,6 @@
 			<default>""</default>
 			<summary>Cover regex</summary>
 		</key>
-		<key type="b" name="use-csd">
-			<default>true</default>
-			<summary>Use Client-side decoration</summary>
-		</key>
 		<key type="b" name="show-stop">
 			<default>true</default>
 			<summary>Show stop button</summary>

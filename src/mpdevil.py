@@ -965,7 +965,6 @@ class ViewSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("View"))
 		toggle_data=(
-			(_("Use _Client-side decoration"), "use-csd", _("restart required")),
 			(_("Show _stop button"), "show-stop", ""),
 			(_("Show audio _format"), "show-audio-format", ""),
 		)
@@ -2691,13 +2690,12 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 ###############
 # main window #
 ###############
-class MainWindow(Gtk.ApplicationWindow):
+class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
 		super().__init__(title="mpdevil", icon_name="org.mpdevil.mpdevil", **kwargs)
 		self.set_default_icon_name("org.mpdevil.mpdevil")
 		self._client=client
 		self._settings=settings
-		self._use_csd=self._settings.get_boolean("use-csd")
 
 		# shortcuts
 		builder=Gtk.Builder()
@@ -2743,6 +2741,11 @@ class MainWindow(Gtk.ApplicationWindow):
 		overlay_split_view.set_content(self._browser)
 		overlay_split_view.set_sidebar(sidebar)
 
+		# banner box
+		banner_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		banner_box.append(self._connection_banner)
+		banner_box.append(overlay_split_view)
+
 		# type to search in browser
 		self._browser.search_bar.set_key_capture_widget(self)
 
@@ -2763,8 +2766,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
 		# menu button / popover
 		self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), menu_model=menu, primary=True)
-		if not self._use_csd:
-			self._menu_button.set_direction(Gtk.ArrowType.UP)
 
 		# connect
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
@@ -2784,20 +2785,15 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._action_bar.append(audio)
 		self._action_bar.append(volume_button)
 		self._action_bar.append(self._playback_menu_button)
-		if self._use_csd:
-			self._header_bar=Gtk.HeaderBar(title_widget=Adw.WindowTitle())
-			self.set_titlebar(self._header_bar)
-			self._header_bar.pack_start(self._search_button)
-			self._header_bar.pack_end(self._menu_button)
-		else:
-			self._action_bar.append(self._search_button)
-			self._action_bar.append(self._menu_button)
-		toolbar_view=Adw.ToolbarView(bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
-		toolbar_view.add_top_bar(self._connection_banner)
+		self._header_bar=Adw.HeaderBar(title_widget=Adw.WindowTitle())
+		self._header_bar.pack_start(self._search_button)
+		self._header_bar.pack_end(self._menu_button)
+		toolbar_view=Adw.ToolbarView(top_bar_style=Adw.ToolbarStyle.RAISED_BORDER, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
+		toolbar_view.add_top_bar(self._header_bar)
 		toolbar_view.add_bottom_bar(self._action_bar)
-		toolbar_view.set_content(overlay_split_view)
+		toolbar_view.set_content(banner_box)
 		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
-		self.set_child(self._toast_overlay)
+		self.set_content(self._toast_overlay)
 
 	def open(self):
 		# bring player in consistent state
@@ -2819,9 +2815,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
 	def _clear_title(self):
 		self.set_title("mpdevil")
-		if self._use_csd:
-			self._header_bar.get_title_widget().set_title("mpdevil")
-			self._header_bar.get_title_widget().set_subtitle("")
+		self._header_bar.get_title_widget().set_title("mpdevil")
+		self._header_bar.get_title_widget().set_subtitle("")
 
 	def _on_toggle_search(self, action, param):
 		self._browser.search_bar.set_search_mode(not self._browser.search_bar.get_search_mode())
@@ -2844,12 +2839,9 @@ class MainWindow(Gtk.ApplicationWindow):
 		if (song:=self._client.currentsong()):
 			album=song.get_album_with_date()
 			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
-			if self._use_csd:
-				self.set_title(title)
-				self._header_bar.get_title_widget().set_title(title)
-				self._header_bar.get_title_widget().set_subtitle(album)
-			else:
-				self.set_title(" • ".join(filter(None, (title, album))))
+			self.set_title(title)
+			self._header_bar.get_title_widget().set_title(title)
+			self._header_bar.get_title_widget().set_subtitle(album)
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and state == "play":
 					notify=Gio.Notification()
@@ -2884,10 +2876,7 @@ class MainWindow(Gtk.ApplicationWindow):
 		self._updating_toast.dismiss()
 
 	def _on_connecting(self, *args):
-		if self._use_csd:
-			self._header_bar.get_title_widget().set_subtitle(_("connecting…"))
-		else:
-			self.set_title("mpdevil • "+_("connecting…"))
+		self._header_bar.get_title_widget().set_subtitle(_("connecting…"))
 
 	def _on_connection_error(self, *args):
 		self._clear_title()
