@@ -2705,13 +2705,14 @@ class MainWindow(Adw.ApplicationWindow):
 		# widgets
 		cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._browser=Browser(self._client, self._settings)
+		self._browser.search_bar.set_key_capture_widget(self)  # type to search in browser
 		cover_lyrics_window=CoverLyricsWindow(self._client)
 		playlist_window=PlaylistWindow(self._client)
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		audio=AudioFormat(self._client, self._settings)
-		self._playback_menu_button=PlaybackMenuButton()
 		volume_button=VolumeButton(self._client, self._settings)
+		self._playback_menu_button=PlaybackMenuButton()
 		self._connection_banner=Adw.Banner(title=_("Not connected to MPD"), button_label=_("Preferences"), action_name="win.settings")
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
@@ -2725,6 +2726,29 @@ class MainWindow(Adw.ApplicationWindow):
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
 		self.add_action(Gio.PropertyAction.new("toggle-lyrics", cover_lyrics_window, "show-lyrics"))
+
+		# menu
+		subsection=Gio.Menu()
+		subsection.append(_("_Preferences"), "win.settings")
+		subsection.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
+		subsection.append(_("_Help"), "win.help")
+		subsection.append(_("_About mpdevil"), "app.about")
+		mpd_subsection=Gio.Menu()
+		mpd_subsection.append(_("_Reconnect"), "win.reconnect")
+		mpd_subsection.append(_("_Update Database"), "mpd.update")
+		mpd_subsection.append(_("_Server Statistics"), "win.stats")
+		menu=Gio.Menu()
+		menu.append(_("_Lyrics"), "win.toggle-lyrics")
+		menu.append_section(None, mpd_subsection)
+		menu.append_section(None, subsection)
+
+		# menu button / popover
+		self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), menu_model=menu, primary=True)
+
+		# header bar
+		self._header_bar=Adw.HeaderBar(title_widget=Adw.WindowTitle())
+		self._header_bar.pack_start(self._search_button)
+		self._header_bar.pack_end(self._menu_button)
 
 		# sidebar
 		cover_playlist_box.append(cover_lyrics_window)
@@ -2746,26 +2770,20 @@ class MainWindow(Adw.ApplicationWindow):
 		banner_box.append(self._connection_banner)
 		banner_box.append(overlay_split_view)
 
-		# type to search in browser
-		self._browser.search_bar.set_key_capture_widget(self)
+		# action bar
+		self._action_bar=Gtk.Box()
+		self._action_bar.add_css_class("toolbar")
+		self._action_bar.append(playback_control)
+		self._action_bar.append(seek_bar)
+		self._action_bar.append(audio)
+		self._action_bar.append(volume_button)
+		self._action_bar.append(self._playback_menu_button)
 
-		# menu
-		subsection=Gio.Menu()
-		subsection.append(_("_Preferences"), "win.settings")
-		subsection.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
-		subsection.append(_("_Help"), "win.help")
-		subsection.append(_("_About mpdevil"), "app.about")
-		mpd_subsection=Gio.Menu()
-		mpd_subsection.append(_("_Reconnect"), "win.reconnect")
-		mpd_subsection.append(_("_Update Database"), "mpd.update")
-		mpd_subsection.append(_("_Server Statistics"), "win.stats")
-		menu=Gio.Menu()
-		menu.append(_("_Lyrics"), "win.toggle-lyrics")
-		menu.append_section(None, mpd_subsection)
-		menu.append_section(None, subsection)
-
-		# menu button / popover
-		self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), menu_model=menu, primary=True)
+		# toolbar view
+		toolbar_view=Adw.ToolbarView(top_bar_style=Adw.ToolbarStyle.RAISED_BORDER, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
+		toolbar_view.add_top_bar(self._header_bar)
+		toolbar_view.add_bottom_bar(self._action_bar)
+		toolbar_view.set_content(banner_box)
 
 		# connect
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
@@ -2778,20 +2796,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.emitter.connect("updated-db", self._on_updated_db)
 
 		# packing
-		self._action_bar=Gtk.Box()
-		self._action_bar.add_css_class("toolbar")
-		self._action_bar.append(playback_control)
-		self._action_bar.append(seek_bar)
-		self._action_bar.append(audio)
-		self._action_bar.append(volume_button)
-		self._action_bar.append(self._playback_menu_button)
-		self._header_bar=Adw.HeaderBar(title_widget=Adw.WindowTitle())
-		self._header_bar.pack_start(self._search_button)
-		self._header_bar.pack_end(self._menu_button)
-		toolbar_view=Adw.ToolbarView(top_bar_style=Adw.ToolbarStyle.RAISED_BORDER, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
-		toolbar_view.add_top_bar(self._header_bar)
-		toolbar_view.add_bottom_bar(self._action_bar)
-		toolbar_view.set_content(banner_box)
 		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
 		self.set_content(self._toast_overlay)
 
