@@ -1932,7 +1932,7 @@ class Browser(Gtk.Box):
 # playlist #
 ############
 
-class PlaylistMenu(Gtk.PopoverMenu):  # TODO
+class PlaylistMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
 		super().__init__(has_arrow=False, halign=Gtk.Align.START)
 		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
