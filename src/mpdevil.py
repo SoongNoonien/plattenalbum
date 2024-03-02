@@ -1608,7 +1608,7 @@ class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
 		self._client=client
-		self._cover=Gtk.Picture()
+		self._cover=Gtk.Picture(margin_bottom=3)
 		square_container=SquareContainer(self._cover)
 		square_container.set_valign(Gtk.Align.START)
 		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
