@@ -174,11 +174,10 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	</node>
 	"""
 
-	def __init__(self, application, window, client, settings):
+	def __init__(self, application, window, client):
 		self._application=application
 		self._window=window
 		self._client=client
-		self._settings=settings
 		self._metadata={}
 		self._tmp_cover_file,_=Gio.File.new_tmp(None)
 
@@ -1492,10 +1491,9 @@ class ArtistSelectionModel(SelectionModel, Gtk.SectionModel):  # TODO
 			return (self.get_n_items(), GObject.G_MAXUINT)
 
 class ArtistList(Gtk.ListView):
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["rich-list"])
 		self._client=client
-		self._settings=settings
 
 		# factory
 		def setup(factory, item):
@@ -1708,10 +1706,9 @@ class AlbumList(Gtk.GridView):
 
 class AlbumView(Gtk.Box):
 	__gsignals__={"close": (GObject.SignalFlags.RUN_FIRST, None, ())}
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
-		self._settings=settings
 		self._tag_filter=()
 
 		# songs list
@@ -1800,7 +1797,7 @@ class AlbumView(Gtk.Box):
 		self._client.filter_to_playlist(self._tag_filter, mode)
 
 class BreakpointBin(Adw.BreakpointBin):
-	def __init__(self, settings, grid):
+	def __init__(self, grid):
 		super().__init__(width_request=320, height_request=336)  # TODO height_request
 		for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
 			break_point=Adw.Breakpoint()
@@ -1811,16 +1808,14 @@ class BreakpointBin(Adw.BreakpointBin):
 class Browser(Gtk.Box):
 	def __init__(self, client, settings):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
-		self._client=client
-		self._settings=settings
 
 		# widgets
-		self._artist_list=ArtistList(self._client, self._settings)
-		self._album_list=AlbumList(self._client, self._settings)
+		self._artist_list=ArtistList(client)
+		self._album_list=AlbumList(client, settings)
 		artist_window=Gtk.ScrolledWindow(child=self._artist_list, hexpand=True)
 		album_window=Gtk.ScrolledWindow(child=self._album_list, hscrollbar_policy=Gtk.PolicyType.NEVER)
-		self._album_view=AlbumView(self._client, self._settings)
-		self._search_window=SearchView(self._client)
+		self._album_view=AlbumView(client)
+		self._search_window=SearchView(client)
 
 		# search bar
 		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search songs"))
@@ -1837,7 +1832,7 @@ class Browser(Gtk.Box):
 		self._navigation_view.add(album_page)
 
 		# breakpoint bin
-		breakpoint_bin=BreakpointBin(self._settings, self._album_list)
+		breakpoint_bin=BreakpointBin(self._album_list)
 		breakpoint_bin.set_child(self._navigation_view)
 
 		# split view
@@ -1878,9 +1873,9 @@ class Browser(Gtk.Box):
 		self._search_entry.connect("search-changed", self._search)
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected_or_updated_db)
-		self._client.emitter.connect("updated-db", self._on_connected_or_updated_db)
+		client.emitter.connect("disconnected", self._on_disconnected)
+		client.emitter.connect("connected", self._on_connected_or_updated_db)
+		client.emitter.connect("updated-db", self._on_connected_or_updated_db)
 
 		# packing
 		self.append(self.search_bar)
@@ -1978,10 +1973,9 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		self.popup()
 
 class PlaylistView(SongList):
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__()
 		self._client=client
-		self._settings=settings
 		self._playlist_version=None
 
 		# menu
@@ -2127,12 +2121,12 @@ class PlaylistView(SongList):
 		self._clear()
 
 class PlaylistWindow(Gtk.Stack):
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__(vhomogeneous=False)
 		self._client=client
 
 		# widgets
-		scroll=Gtk.ScrolledWindow(child=PlaylistView(self._client, settings), hexpand=True, vexpand=True)  # TODO scroll to song
+		scroll=Gtk.ScrolledWindow(child=PlaylistView(self._client), hexpand=True, vexpand=True)  # TODO scroll to song
 		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
 		status_page.add_css_class("compact")
 
@@ -2192,9 +2186,8 @@ class LetrasParser(HTMLParser):
 			self.text+=data+"\n"
 
 class LyricsWindow(Gtk.Stack):
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__()
-		self._settings=settings
 		self._client=client
 		self._displayed_song_file=None
 
@@ -2294,17 +2287,15 @@ class MainCover(Gtk.Picture):
 
 class CoverLyricsWindow(Gtk.Stack):
 	show_lyrics=GObject.Property(type=bool, default=False)
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__(transition_type=Gtk.StackTransitionType.CROSSFADE)
-		self._client=client
-		self._settings=settings
 
 		# cover
-		main_cover=MainCover(self._client)
+		main_cover=MainCover(client)
 		window_handle=Gtk.WindowHandle(child=main_cover)
 
 		# lyrics window
-		self._lyrics_window=LyricsWindow(self._client, self._settings)
+		self._lyrics_window=LyricsWindow(client)
 
 		# connect
 		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
@@ -2328,24 +2319,22 @@ class CoverLyricsWindow(Gtk.Stack):
 class PlaybackControl(Gtk.Box):
 	def __init__(self, client, settings):
 		super().__init__(spacing=6)
-		self._client=client
-		self._settings=settings
 
 		# widgets
 		self._play_button=Gtk.Button(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
-		self._stop_button=Gtk.Button(icon_name="media-playback-stop-symbolic", tooltip_text=_("Stop"), action_name="mpd.stop")
-		self._settings.bind("show-stop", self._stop_button, "visible", Gio.SettingsBindFlags.GET)
-		self._prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
-		self._next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
+		stop_button=Gtk.Button(icon_name="media-playback-stop-symbolic", tooltip_text=_("Stop"), action_name="mpd.stop")
+		settings.bind("show-stop", stop_button, "visible", Gio.SettingsBindFlags.GET)
+		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
+		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
 
 		# connect
-		self._client.emitter.connect("state", self._on_state)
+		client.emitter.connect("state", self._on_state)
 
 		# packing
-		self.append(self._prev_button)
+		self.append(prev_button)
 		self.append(self._play_button)
-		self.append(self._stop_button)
-		self.append(self._next_button)
+		self.append(stop_button)
+		self.append(next_button)
 
 	def _on_state(self, emitter, state):
 		if state == "play":
@@ -2507,8 +2496,7 @@ class AudioFormat(Gtk.Box):
 	def __init__(self, client, settings):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER)
 		self._client=client
-		self._settings=settings
-		self._settings.bind("show-audio-format", self, "visible", Gio.SettingsBindFlags.GET)
+		settings.bind("show-audio-format", self, "visible", Gio.SettingsBindFlags.GET)
 
 		# labels
 		self._file_type_label=Gtk.Label(xalign=1, single_line_mode=True)
@@ -2719,8 +2707,8 @@ class MainWindow(Gtk.ApplicationWindow):
 		# widgets
 		cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._browser=Browser(self._client, self._settings)
-		cover_lyrics_window=CoverLyricsWindow(self._client, self._settings)
-		playlist_window=PlaylistWindow(self._client, self._settings)
+		cover_lyrics_window=CoverLyricsWindow(self._client)
+		playlist_window=PlaylistWindow(self._client)
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		audio=AudioFormat(self._client, self._settings)
@@ -2937,7 +2925,7 @@ class mpdevil(Adw.Application):
 		self._window.open()
 		# MPRIS
 		if self._settings.get_boolean("mpris"):
-			dbus_service=MPRISInterface(self, self._window, self._client, self._settings)
+			dbus_service=MPRISInterface(self, self._window, self._client)
 		# actions
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
