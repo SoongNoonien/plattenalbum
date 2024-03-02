@@ -1873,6 +1873,7 @@ class Browser(Gtk.Box):
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		client.emitter.connect("disconnected", self._on_disconnected)
+		client.emitter.connect("connection-error", self._on_connection_error)
 		client.emitter.connect("connected", self._on_connected_or_updated_db)
 		client.emitter.connect("updated-db", self._on_connected_or_updated_db)
 
@@ -1914,6 +1915,9 @@ class Browser(Gtk.Box):
 
 	def _on_disconnected(self, *args):
 		self._navigation_view.pop_to_tag("album_list")
+		self._collection_stack.set_visible_child_name("browser")
+
+	def _on_connection_error(self, *args):
 		self._collection_stack.set_visible_child_name("empty-collection")
 
 	def _on_connected_or_updated_db(self, emitter, database_is_empty):
@@ -2139,6 +2143,7 @@ class PlaylistWindow(Gtk.Stack):
 		drop_target.connect("drop", self._on_drop)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connection-error", self._on_connection_error)
 
 		# packing
 		self.add_named(scroll, "playlist")
@@ -2157,6 +2162,9 @@ class PlaylistWindow(Gtk.Stack):
 			self.set_visible_child_name("empty-playlist")
 
 	def _on_disconnected(self, *args):
+		self.set_visible_child_name("playlist")
+
+	def _on_connection_error(self, *args):
 		self.set_visible_child_name("empty-playlist")
 
 ####################
