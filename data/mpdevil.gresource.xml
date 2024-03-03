@@ -4,4 +4,7 @@
 		<file>AboutDialog.ui</file>
 		<file>ShortcutsWindow.ui</file>
 	</gresource>
+	<gresource prefix="/org/mpdevil/mpdevil/icons/scalable/actions">
+		<file alias="lyrics-symbolic.svg">lyrics-symbolic.svg</file>
+	</gresource>
 </gresources>

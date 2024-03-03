@@ -2199,7 +2199,7 @@ class LyricsWindow(Gtk.Stack):
 		self._displayed_song_file=None
 
 		# status pages
-		no_lyrics_status_page=Adw.StatusPage(icon_name="org.mpdevil.mpdevil-lyrics-symbolic", title=_("No Lyrics Found"))
+		no_lyrics_status_page=Adw.StatusPage(icon_name="lyrics-symbolic", title=_("No Lyrics Found"))
 		no_lyrics_status_page.add_css_class("compact")
 		connection_error_status_page=Adw.StatusPage(
 			icon_name="network-wired-disconnected-symbolic", title=_("Connection Error"), description=_("Check your network connection"))
