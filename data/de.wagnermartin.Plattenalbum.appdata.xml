@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (C) 2020-2024 Martin Wagner <martin.wagner.dev@gmail.com> -->
 <component type="desktop-application">
-  <id>org.mpdevil.mpdevil</id>
+  <id>de.wagnermartin.Plattenalbum</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0</project_license>
-  <name>mpdevil</name>
+  <name>Plattenalbum</name>
   <summary>A simple music browser for MPD</summary>
   <description>
-    <p>Mpdevil is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library mpdevil loads all tags and covers on demand. So you'll never see any outdated information in the browser. Mpdevil strongly relies on tags.</p>
+    <p>Plattenalbum is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library Plattenalbum loads all tags and covers on demand. So you'll never see any outdated information in the browser. Plattenalbum strongly relies on tags.</p>
     <ul>
       <li>Display large covers</li>
       <li>Play songs without double-click</li>
@@ -19,7 +19,7 @@
   <releases>
     <release version="1.11.0" date="2023-11-15"/>
   </releases>
-  <launchable type="desktop-id">org.mpdevil.mpdevil.desktop</launchable>
+  <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <screenshots>
     <screenshot type="default">
       <image type="source" width="1121" height="790">https://raw.githubusercontent.com/SoongNoonien/mpdevil/v1.11.0/screenshots/mainwindow_1.11.0.png</image>
@@ -29,7 +29,7 @@
   <url type="bugtracker">https://github.com/SoongNoonien/mpdevil/issues</url>
   <content_rating type="oars-1.1" />
   <provides>
-    <binary>mpdevil</binary>
+    <binary>Plattenalbum</binary>
   </provides>
   <update_contact>martin.wagner.dev@gmail.com</update_contact>
 </component>

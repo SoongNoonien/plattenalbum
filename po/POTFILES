@@ -1,4 +1,4 @@
-src/mpdevil.py
-data/org.mpdevil.mpdevil.desktop.in
+src/plattenalbum.py
+data/de.wagnermartin.Plattenalbum.desktop.in
 data/AboutDialog.ui
 data/ShortcutsWindow.ui

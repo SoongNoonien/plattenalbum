@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# mpdevil - MPD Client.
+# Plattenalbum - MPD Client.
 # Copyright (C) 2020-2024 Martin Wagner <martin.wagner.dev@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -41,11 +41,11 @@ try:
 	locale.setlocale(locale.LC_ALL, "")
 except locale.Error as e:
 	print(e)
-locale.bindtextdomain("mpdevil", "@LOCALE_DIR@")
-locale.textdomain("mpdevil")
-bindtextdomain("mpdevil", localedir="@LOCALE_DIR@")
-textdomain("mpdevil")
-Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "mpdevil.gresource")))
+locale.bindtextdomain("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@")
+locale.textdomain("de.wagnermartin.Plattenalbum")
+bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
+textdomain("de.wagnermartin.Plattenalbum")
+Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource")))
 
 FALLBACK_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 FALLBACK_COVER="media-optical"
@@ -94,7 +94,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	"""
 	_MPRIS_IFACE="org.mpris.MediaPlayer2"
 	_MPRIS_PLAYER_IFACE="org.mpris.MediaPlayer2.Player"
-	_MPRIS_NAME="org.mpris.MediaPlayer2.mpdevil"
+	_MPRIS_NAME="org.mpris.MediaPlayer2.Plattenalbum"
 	_MPRIS_PATH="/org/mpris/MediaPlayer2"
 	_INTERFACES_XML="""
 	<!DOCTYPE node PUBLIC
@@ -187,8 +187,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				{"CanQuit": (GLib.Variant("b", False), None),
 				"CanRaise": (GLib.Variant("b", True), None),
 				"HasTrackList": (GLib.Variant("b", False), None),
-				"Identity": (GLib.Variant("s", "mpdevil"), None),
-				"DesktopEntry": (GLib.Variant("s", "org.mpdevil.mpdevil"), None),
+				"Identity": (GLib.Variant("s", "Plattenalbum"), None),
+				"DesktopEntry": (GLib.Variant("s", "de.wagnermartin.Plattenalbum"), None),
 				"SupportedUriSchemes": (GLib.Variant("as", []), None),
 				"SupportedMimeTypes": (GLib.Variant("as", []), None)},
 			self._MPRIS_PLAYER_IFACE:
@@ -939,7 +939,7 @@ class Client(MPDClient):
 ########################
 
 class Settings(Gio.Settings):
-	BASE_KEY="org.mpdevil.mpdevil"
+	BASE_KEY="de.wagnermartin.Plattenalbum"
 	# temp settings
 	cursor_watch=GObject.Property(type=bool, default=False)
 	def __init__(self):
@@ -2700,14 +2700,14 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 ###############
 class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
-		super().__init__(title="mpdevil", icon_name="org.mpdevil.mpdevil", **kwargs)
-		self.set_default_icon_name("org.mpdevil.mpdevil")
+		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", **kwargs)
+		self.set_default_icon_name("de.wagnermartin.Plattenalbum")
 		self._client=client
 		self._settings=settings
 
 		# shortcuts
 		builder=Gtk.Builder()
-		builder.add_from_resource("/org/mpdevil/mpdevil/ShortcutsWindow.ui")
+		builder.add_from_resource("/de/wagnermartin/Plattenalbum/ShortcutsWindow.ui")
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
@@ -2740,7 +2740,7 @@ class MainWindow(Adw.ApplicationWindow):
 		subsection.append(_("_Preferences"), "win.settings")
 		subsection.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
 		subsection.append(_("_Help"), "win.help")
-		subsection.append(_("_About mpdevil"), "app.about")
+		subsection.append(_("_About Plattenalbum"), "app.about")
 		mpd_subsection=Gio.Menu()
 		mpd_subsection.append(_("_Reconnect"), "win.reconnect")
 		mpd_subsection.append(_("_Update Database"), "mpd.update")
@@ -2826,8 +2826,8 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.start()
 
 	def _clear_title(self):
-		self.set_title("mpdevil")
-		self._header_bar.get_title_widget().set_title("mpdevil")
+		self.set_title("Plattenalbum")
+		self._header_bar.get_title_widget().set_title("Plattenalbum")
 		self._header_bar.get_title_widget().set_subtitle("")
 
 	def _on_toggle_search(self, action, param):
@@ -2911,9 +2911,9 @@ class MainWindow(Adw.ApplicationWindow):
 # Gtk application #
 ###################
 
-class mpdevil(Adw.Application):
+class Plattenalbum(Adw.Application):
 	def __init__(self):
-		super().__init__(application_id="org.mpdevil.mpdevil", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+		super().__init__(application_id="de.wagnermartin.Plattenalbum", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
 		self.add_main_option("debug", ord("d"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _("Debug mode"), None)
 
 	def do_startup(self):
@@ -2972,7 +2972,7 @@ class mpdevil(Adw.Application):
 
 	def _on_about(self, *args):
 		builder=Gtk.Builder()
-		builder.add_from_resource("/org/mpdevil/mpdevil/AboutDialog.ui")
+		builder.add_from_resource("/de/wagnermartin/Plattenalbum/AboutDialog.ui")
 		dialog=builder.get_object("about_dialog")
 		dialog.set_transient_for(self._window)
 		dialog.present()
@@ -2981,7 +2981,7 @@ class mpdevil(Adw.Application):
 		self.quit()
 
 if __name__ == "__main__":
-	app=mpdevil()
+	app=Plattenalbum()
 	signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
 	app.run(sys.argv)
 

@@ -1,6 +1,6 @@
-README for mpdevil
-==================
-Mpdevil is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library, mpdevil loads all tags and covers on demand. So you'll never see any outdated information in the browser. Mpdevil strongly relies on tags.
+Plattenalbum
+============
+Plattenalbum is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library, Plattenalbum loads all tags and covers on demand. So you'll never see any outdated information in the browser. Plattenalbum strongly relies on tags.
 
 ![ScreenShot](screenshots/main_window.png)
 
@@ -75,4 +75,4 @@ sudo update-desktop-database
 Translation
 -----------
 
-This program is currently available in English, German, Dutch, Bulgarian, Turkish, Polish and French. If you speak one of these or even another language, you can easily translate it by using [poedit](https://poedit.net). Just import `po/mpdevil.pot` from this repo into `poedit`. To test your translation, copy the new `.po` file into the `po` directory of your cloned mpdevil repo and proceed as described in the [Building](#building) section. To get your translation merged, just send me an e-mail or create a pull request.
+This program is currently available in English, German, Dutch, Bulgarian, Turkish, Polish and French. If you speak one of these or even another language, you can easily translate it by using [poedit](https://poedit.net). Just import `po/de.wagnermartin.Plattenalbum.pot` from this repo into `poedit`. To test your translation, copy the new `.po` file into the `po` directory of your cloned mpdevil repo and proceed as described in the [Building](#building) section. To get your translation merged, just send me an e-mail or create a pull request.

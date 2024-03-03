@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
 <object class="AdwAboutWindow" id="about_dialog">
-<property name="application-icon">org.mpdevil.mpdevil</property>
-<property name="application-name">mpdevil</property>
+<property name="application-icon">de.wagnermartin.Plattenalbum</property>
+<property name="application-name">Plattenalbum</property>
 <property name="copyright">Copyright © 2020-2024 Martin Wagner</property>
 <property name="developer-name">Martin Wagner</property>
 <property name="developers">Martin Wagner &lt;martin.wagner.dev@gmail.com&gt;</property>
@@ -15,7 +15,7 @@ Georgi Kamenov
 Oğuz Ersen
 Łukasz Drukała
 Emmanuel Averty</property>
-<property name="version">1.11.0</property>
+<property name="version">2.0.0.beta</property>
 <property name="website">https://github.com/SoongNoonien/mpdevil</property>
 </object>
 </interface>

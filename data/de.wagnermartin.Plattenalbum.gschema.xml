@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-	<schema id="org.mpdevil.mpdevil" path="/org/mpdevil/mpdevil/">
+	<schema id="de.wagnermartin.Plattenalbum" path="/de/wagnermartin/Plattenalbum/">
 		<key type="b" name="maximize">
 			<default>false</default>
-			<summary>Maximize mpdevil on startup</summary>
+			<summary>Maximize window on startup</summary>
 		</key>
 		<key type="i" name="width">
 			<default>876</default>
@@ -76,9 +76,9 @@
 			<description>
 			This setting should only be used if you know what you are doing!
 			It controls the time in msec. between two status requests to MPD.
-			Too high values (long time) will make mpdevil very slow in terms
+			Too high values (long time) will make Plattenalbum very slow in terms
 			of showing the latest status of MPD (e.g. current song).
-			Too low values (short time) can cause gui blocks making mpdevil
+			Too low values (short time) can cause gui blocks making Plattenalbum
 			unresponsive and cpu intensive.
 			</description>
 		</key>

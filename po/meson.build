@@ -1,1 +1,1 @@
-i18n.gettext('mpdevil', preset: 'glib')
+i18n.gettext('de.wagnermartin.Plattenalbum', preset: 'glib')

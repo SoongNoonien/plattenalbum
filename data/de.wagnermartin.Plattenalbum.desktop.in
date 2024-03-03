@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=mpdevil
+Name=Plattenalbum
 GenericName=MPD Client
 Comment=A simple music browser for MPD
-Exec=mpdevil
-Icon=org.mpdevil.mpdevil
+Exec=plattenalbum
+Icon=de.wagnermartin.Plattenalbum
 Terminal=false
 Type=Application
 StartupNotify=true
