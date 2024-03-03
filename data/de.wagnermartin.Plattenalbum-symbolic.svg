@@ -1,20 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg height="16px" viewBox="0 0 16 16" width="16px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <filter id="a" height="100%" width="100%" x="0%" y="0%">
-        <feColorMatrix color-interpolation-filters="sRGB" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/>
-    </filter>
-    <mask id="b">
-        <g filter="url(#a)">
-            <rect fill-opacity="0.15" height="19.2" width="19.2" x="-1.6" y="-1.6"/>
-        </g>
-    </mask>
-    <clipPath id="c">
-        <rect height="152" width="192"/>
-    </clipPath>
-    <g mask="url(#b)">
-        <g clip-path="url(#c)" transform="matrix(1 0 0 1 -168 -16)">
-            <path d="m 96 100 c 0 3.3125 -2.6875 6 -6 6 h -68 v 10 c 0 -3.3125 2.6875 -6 6 -6 h 62 c 3.3125 0 6 -2.6875 6 -6 z m 0 0"/>
-        </g>
-    </g>
+<svg height="16px" viewBox="0 0 16 16" width="16px" xmlns="http://www.w3.org/2000/svg">
     <path d="m 8 1 c -3.867188 0 -7 3.132812 -7 7 s 3.132812 7 7 7 s 7 -3.132812 7 -7 s -3.132812 -7 -7 -7 z m 0 5 c 1.105469 0 2 0.894531 2 2 s -0.894531 2 -2 2 s -2 -0.894531 -2 -2 s 0.894531 -2 2 -2 z m 0 0" fill="#241f31"/>
 </svg>
