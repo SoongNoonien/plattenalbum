@@ -1436,33 +1436,17 @@ class SearchView(Gtk.Stack):
 		self.emit("song-selected", self._song_list.get_model().get_item(pos))
 
 class Artist(GObject.Object):
-	def __init__(self, name, section_name, section_start):
+	def __init__(self, name):
 		GObject.Object.__init__(self)
 		self.name=name
-		self.section_name=section_name
-		self.section_start=section_start
 
-class ArtistSelectionModel(SelectionModel, Gtk.SectionModel):  # TODO
+class ArtistSelectionModel(SelectionModel):  # TODO
 	def __init__(self):
 		super().__init__(Artist)
 
 	def set_artists(self, artists):
 		self.clear()
-		letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		artists[:0]=zip([""]*len(letters), letters)
-		artists.sort(key=lambda item: locale.strxfrm(item[1]))
-		char="#"
-		section_start=0
-		section_length=0
-		for item in artists:
-			if item[1] and not item[0]:  # item is a heading and not an artist
-				char=item[1]
-				section_start+=section_length
-				section_length=0
-			else:
-				self.data.append(Artist(item[0], char, section_start))
-				section_length+=1
-		self.items_changed(0, 0, self.get_n_items())
+		self.append((Artist(item[0]) for item in sorted(artists, key=lambda item: locale.strxfrm(item[1]))))
 
 	def select_artist(self, name):
 		for i, artist in enumerate(self.data):
@@ -1478,16 +1462,6 @@ class ArtistSelectionModel(SelectionModel, Gtk.SectionModel):  # TODO
 			return None
 		else:
 			return self.get_artist(selected)
-
-	def do_get_section(self, position):
-		if position < self.get_n_items():
-			section_start=self.data[position].section_start
-			for artist in self.data[position+1:]:
-				if artist.section_start > section_start:
-					return (section_start, artist.section_start)
-			return (section_start, self.get_n_items())
-		else:
-			return (self.get_n_items(), GObject.G_MAXUINT)
 
 class ArtistList(Gtk.ListView):
 	def __init__(self, client):
