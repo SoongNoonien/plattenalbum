@@ -2806,7 +2806,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# connect
 		self._browser.search_entry.connect("search-started", self._on_search_started)
-		self._browser.search_entry.connect("search-changed", lambda *args: self._browser.search_entry.grab_focus())
+		self._browser.search_entry.connect("search-changed", self._on_search_changed)
 		self._browser.search_entry.connect("stop-search", self._on_search_stopped)
 		self._search_button.connect("clicked", self._on_search_button_clicked)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
@@ -2866,6 +2866,10 @@ class MainWindow(Adw.ApplicationWindow):
 		self._search_button.set_active(True)
 		self._title_stack.set_visible_child_name("search-entry")
 		self._browser.search_entry.grab_focus()
+
+	def _on_search_changed(self, entry):
+		if self._browser.search_entry.get_text():
+			self._browser.search_entry.grab_focus()
 
 	def _on_search_stopped(self, entry):
 		self._search_button.set_active(False)
