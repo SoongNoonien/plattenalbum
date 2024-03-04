@@ -1829,9 +1829,9 @@ class Browser(Gtk.Box):
 
 		# search bar
 		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search music"))
-		self._search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search songs")])
+		self._search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search music")])
 		self.search_bar=Gtk.SearchBar(child=self._search_entry)
-		self.search_bar.update_property([Gtk.AccessibleProperty.LABEL], [_("Search songs")])
+		self.search_bar.update_property([Gtk.AccessibleProperty.LABEL], [_("Search music")])
 		self.search_bar.connect_entry(self._search_entry)
 
 		# navigation view
