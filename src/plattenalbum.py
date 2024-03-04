@@ -1458,7 +1458,7 @@ class SearchView(Gtk.Stack):
 			self._client.tagtypes("all")
 			self._song_model.append(songs)
 			if songs:
-				artists=filter(lambda x: any(keyword.casefold() in x.name.casefold() for keyword in keywords), artists)
+				artists=filter(lambda x: all(keyword.casefold() in x.name.casefold() for keyword in keywords), artists)
 				self._artist_model.append(itertools.islice(artists, 20))  # TODO adjust number of results
 				self._overlay_split_view.set_collapsed(not self._artist_model.get_n_items())
 			else:  # if no songs were found there also won't be any artists matching the keywords
