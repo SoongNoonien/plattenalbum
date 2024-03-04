@@ -1397,43 +1397,80 @@ class BrowserSongList(SongList):
 ###########
 
 class SearchView(Gtk.Stack):
-	__gsignals__={"song-selected": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
+	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+			"song-selected": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
 			"search-started": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"search-stopped": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
 
-		# widgets
-		self._song_list=SongList()
+		# artist list
+		artist_list=Gtk.ListView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["rich-list"])
+		self._artist_model=SelectionModel(Artist)
+		artist_list.set_model(self._artist_model)
+
+		# factory
+		def setup(factory, item):
+			label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
+			item.set_child(label)
+		def bind(factory, item):
+			item.get_child().set_text(item.get_item().name)
+		factory=Gtk.SignalListItemFactory()
+		factory.connect("setup", setup)
+		factory.connect("bind", bind)
+		artist_list.set_factory(factory)
+
+		# song list
+		song_list=SongList()
+		self._song_model=song_list.get_model()
+
+		# split view
+		sidebar=Gtk.Box()
+		sidebar.add_css_class("view")
+		sidebar.append(Gtk.ScrolledWindow(child=artist_list, hexpand=True))
+		sidebar.append(Gtk.Separator())
+		clamp=Adw.ClampScrollable(child=song_list)
+		clamp.add_css_class("view")
+		self._overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=Gtk.ScrolledWindow(child=clamp, vexpand=True))
+
+		# status page
 		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results Found"), description=_("Try a different search"))
 
 		# connect
-		self._song_list.connect("activate", self._on_activate)
+		artist_list.connect("activate", self._on_artist_activate)
+		song_list.connect("activate", self._on_song_activate)
 
 		# packing
-		clamp=Adw.ClampScrollable(child=self._song_list)
-		clamp.add_css_class("view")
-		self.add_named(Gtk.ScrolledWindow(child=clamp, vexpand=True), "results")
+		self.add_named(self._overlay_split_view, "results")
 		self.add_named(status_page, "no-results")
 
-	def search(self, keywords):
-		self._song_list.get_model().clear()
+	def search(self, keywords, artists):
+		self._artist_model.clear()
+		self._song_model.clear()
 		self.set_visible_child_name("results")
-		expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in filter(None, keywords.split(" "))))
-		if expressions:
+		keywords=list(filter(None, keywords.split(" ")))
+		if keywords:
 			self.emit("search-started")
 			self._client.restrict_tagtypes("track", "title", "artist", "albumartist", "album", "date")
+			expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in keywords))
 			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
 			self._client.tagtypes("all")
-			self._song_list.get_model().append(songs)
-			if not songs:
+			self._song_model.append(songs)
+			if songs:
+				artists=filter(lambda x: any(keyword.casefold() in x.name.casefold() for keyword in keywords), artists)
+				self._artist_model.append(itertools.islice(artists, 20))  # TODO adjust number of results
+				self._overlay_split_view.set_collapsed(not self._artist_model.get_n_items())
+			else:  # if no songs were found there also won't be any artists matching the keywords
 				self.set_visible_child_name("no-results")
 		else:
 			self.emit("search-stopped")
 
-	def _on_activate(self, listview, pos):
-		self.emit("song-selected", self._song_list.get_model().get_item(pos))
+	def _on_artist_activate(self, list_view, pos):
+		self.emit("artist-selected", self._artist_model.get_item(pos).name)
+
+	def _on_song_activate(self, list_view, pos):
+		self.emit("song-selected", self._song_model.get_item(pos))
 
 class Artist(GObject.Object):
 	def __init__(self, name):
@@ -1791,7 +1828,7 @@ class Browser(Gtk.Box):
 		self._search_window=SearchView(client)
 
 		# search bar
-		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search songs"))
+		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search music"))
 		self._search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search songs")])
 		self.search_bar=Gtk.SearchBar(child=self._search_entry)
 		self.search_bar.update_property([Gtk.AccessibleProperty.LABEL], [_("Search songs")])
@@ -1838,7 +1875,8 @@ class Browser(Gtk.Box):
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
 		self._artist_list.artist_selection_model.connect("reselected", lambda *args: self._navigation_view.pop_to_tag("album_list"))
 		self._artist_list.artist_selection_model.connect("clear", self._album_list.clear)
-		self._search_window.connect("song-selected", self._on_song_selected)
+		self._search_window.connect("artist-selected", self._on_search_artist_selected)
+		self._search_window.connect("song-selected", self._on_search_song_selected)
 		self._search_window.connect("search-started", lambda *args: self._main_stack.set_visible_child_name("search"))
 		self._search_window.connect("search-stopped", lambda *args: self._main_stack.set_visible_child_name("collection"))
 		self.search_bar.connect("notify::search-mode-enabled", self._on_search_bar_toggled)
@@ -1856,7 +1894,7 @@ class Browser(Gtk.Box):
 		self.append(self._main_stack)
 
 	def _search(self, *args):
-		self._search_window.search(self._search_entry.get_text())
+		self._search_window.search(self._search_entry.get_text(), self._artist_list.artist_selection_model)
 
 	def _on_artist_selected(self, model, position):
 		self._navigation_view.pop_to_tag("album_list")
@@ -1867,7 +1905,12 @@ class Browser(Gtk.Box):
 		self._navigation_view.push_by_tag("album_view")
 		self._album_view.song_list.grab_focus()
 
-	def _on_song_selected(self, widget, song):
+	def _on_search_artist_selected(self, widget, artist):
+		self._artist_list.select(artist)
+		self.search_bar.set_search_mode(False)
+		self._main_stack.set_visible_child_name("collection")
+
+	def _on_search_song_selected(self, widget, song):
 		self._artist_list.select(song["albumartist"][0])
 		self._album_list.select(song["album"][0], song["date"][0])
 		self._album_view.select(song["file"])
