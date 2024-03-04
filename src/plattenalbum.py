@@ -2764,7 +2764,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._title=Adw.WindowTitle()
 		self._title_stack=Gtk.Stack(hhomogeneous=False)
 		self._title_stack.add_named(self._title, "title")
-		self._title_stack.add_named(self._browser.search_entry, "search-entry")
+		self._title_stack.add_named(Adw.Clamp(child=self._browser.search_entry), "search-entry")
 		header_bar=Adw.HeaderBar(title_widget=self._title_stack)
 		header_bar.pack_start(self._search_button)
 		header_bar.pack_end(self._menu_button)
