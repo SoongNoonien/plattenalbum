@@ -2923,7 +2923,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._clear_title()
 		for action in ("stats","toggle-search"):
 			self.lookup_action(action).set_enabled(False)
-		self._search_button.set_active(False)
+		self._search_entry.emit("stop-search")
 		self._search_button.set_sensitive(False)
 		self._action_bar.set_sensitive(False)
 		self._updating_toast.dismiss()
