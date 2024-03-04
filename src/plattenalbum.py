@@ -1828,11 +1828,8 @@ class Browser(Gtk.Box):
 		self._search_window=SearchView(client)
 
 		# search bar
-		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search music"))
-		self._search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search music")])
-		self.search_bar=Gtk.SearchBar(child=self._search_entry)
-		self.search_bar.update_property([Gtk.AccessibleProperty.LABEL], [_("Search music")])
-		self.search_bar.connect_entry(self._search_entry)
+		self.search_entry=Gtk.SearchEntry(placeholder_text=_("Search music"))
+		self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search music")])
 
 		# navigation view
 		self._navigation_view=Adw.NavigationView()
@@ -1867,7 +1864,7 @@ class Browser(Gtk.Box):
 
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
-		self._search_entry.add_controller(controller_focus)
+		self.search_entry.add_controller(controller_focus)
 
 		# connect
 		self._album_list.connect("album-selected", self._on_album_selected)
@@ -1879,9 +1876,8 @@ class Browser(Gtk.Box):
 		self._search_window.connect("song-selected", self._on_search_song_selected)
 		self._search_window.connect("search-started", lambda *args: self._main_stack.set_visible_child_name("search"))
 		self._search_window.connect("search-stopped", lambda *args: self._main_stack.set_visible_child_name("collection"))
-		self.search_bar.connect("notify::search-mode-enabled", self._on_search_bar_toggled)
-		self._search_entry.connect("activate", self._search)
-		self._search_entry.connect("search-changed", self._search)
+		self.search_entry.connect("activate", self._search)
+		self.search_entry.connect("search-changed", self._search)
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		client.emitter.connect("disconnected", self._on_disconnected)
@@ -1890,11 +1886,10 @@ class Browser(Gtk.Box):
 		client.emitter.connect("updated-db", self._on_connected_or_updated_db)
 
 		# packing
-		self.append(self.search_bar)
 		self.append(self._main_stack)
 
 	def _search(self, *args):
-		self._search_window.search(self._search_entry.get_text(), self._artist_list.artist_selection_model)
+		self._search_window.search(self.search_entry.get_text(), self._artist_list.artist_selection_model)
 
 	def _on_artist_selected(self, model, position):
 		self._navigation_view.pop_to_tag("album_list")
@@ -1907,21 +1902,17 @@ class Browser(Gtk.Box):
 
 	def _on_search_artist_selected(self, widget, artist):
 		self._artist_list.select(artist)
-		self.search_bar.set_search_mode(False)
+		self.search_entry.emit("stop-search")
 		self._main_stack.set_visible_child_name("collection")
 
 	def _on_search_song_selected(self, widget, song):
 		self._artist_list.select(song["albumartist"][0])
 		self._album_list.select(song["album"][0], song["date"][0])
 		self._album_view.select(song["file"])
-		self.search_bar.set_search_mode(False)
+		self.search_entry.emit("stop-search")
 		self._main_stack.set_visible_child_name("collection")
 		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
 		self.get_root().set_focus_visible(True)
-
-	def _on_search_bar_toggled(self, *args):
-		if not self.search_bar.get_search_mode():
-			self._main_stack.set_visible_child_name("collection")
 
 	def _on_search_entry_focus_event(self, controller, focus):
 		app=self.get_root().get_application()
@@ -2730,7 +2721,7 @@ class MainWindow(Adw.ApplicationWindow):
 		# widgets
 		cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self._browser=Browser(self._client, self._settings)
-		self._browser.search_bar.set_key_capture_widget(self)  # type to search in browser
+		self._browser.search_entry.set_key_capture_widget(self)  # type to search in browser
 		cover_lyrics_window=CoverLyricsWindow(self._client)
 		playlist_window=PlaylistWindow(self._client)
 		playback_control=PlaybackControl(self._client, self._settings)
@@ -2742,7 +2733,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
-		self._search_button.bind_property("active", self._browser.search_bar, "search-mode-enabled",  GObject.BindingFlags.BIDIRECTIONAL)
 
 		# actions
 		simple_actions_data=("settings","reconnect","stats","help","toggle-search")
@@ -2771,9 +2761,13 @@ class MainWindow(Adw.ApplicationWindow):
 		self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), menu_model=menu, primary=True)
 
 		# header bar
-		self._header_bar=Adw.HeaderBar(title_widget=Adw.WindowTitle())
-		self._header_bar.pack_start(self._search_button)
-		self._header_bar.pack_end(self._menu_button)
+		self._title=Adw.WindowTitle()
+		self._title_stack=Gtk.Stack(hhomogeneous=False)
+		self._title_stack.add_named(self._title, "title")
+		self._title_stack.add_named(self._browser.search_entry, "search-entry")
+		header_bar=Adw.HeaderBar(title_widget=self._title_stack)
+		header_bar.pack_start(self._search_button)
+		header_bar.pack_end(self._menu_button)
 
 		# sidebar
 		cover_playlist_box.append(cover_lyrics_window)
@@ -2806,11 +2800,15 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# toolbar view
 		toolbar_view=Adw.ToolbarView(top_bar_style=Adw.ToolbarStyle.RAISED_BORDER, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
-		toolbar_view.add_top_bar(self._header_bar)
+		toolbar_view.add_top_bar(header_bar)
 		toolbar_view.add_bottom_bar(self._action_bar)
 		toolbar_view.set_content(banner_box)
 
 		# connect
+		self._browser.search_entry.connect("search-started", self._on_search_started)
+		self._browser.search_entry.connect("search-changed", lambda *args: self._browser.search_entry.grab_focus())
+		self._browser.search_entry.connect("stop-search", self._on_search_stopped)
+		self._search_button.connect("clicked", self._on_search_button_clicked)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("connected", self._on_connected)
@@ -2844,11 +2842,11 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _clear_title(self):
 		self.set_title("Plattenalbum")
-		self._header_bar.get_title_widget().set_title("Plattenalbum")
-		self._header_bar.get_title_widget().set_subtitle("")
+		self._title.set_title("Plattenalbum")
+		self._title.set_subtitle("")
 
 	def _on_toggle_search(self, action, param):
-		self._browser.search_bar.set_search_mode(not self._browser.search_bar.get_search_mode())
+		self._search_button.emit("clicked")
 
 	def _on_settings(self, action, param):
 		settings=SettingsDialog(self, self._client, self._settings)
@@ -2864,13 +2862,31 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_help(self, action, param):
 		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/mpdevil/wiki/Usage").launch(self, None, None, None)
 
+	def _on_search_started(self, entry):
+		self._search_button.set_active(True)
+		self._title_stack.set_visible_child_name("search-entry")
+		self._browser.search_entry.grab_focus()
+
+	def _on_search_stopped(self, entry):
+		self._search_button.set_active(False)
+		self._title_stack.set_visible_child_name("title")
+		self._browser.search_entry.set_text("")
+
+	def _on_search_button_clicked(self, button):
+		if button.get_active():
+			self._title_stack.set_visible_child_name("search-entry")
+			self._browser.search_entry.grab_focus()
+		else:
+			self._title_stack.set_visible_child_name("title")
+			self._browser.search_entry.set_text("")
+
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
 			album=song.get_album_with_date()
 			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
 			self.set_title(title)
-			self._header_bar.get_title_widget().set_title(title)
-			self._header_bar.get_title_widget().set_subtitle(album)
+			self._title.set_title(title)
+			self._title.set_subtitle(album)
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and state == "play":
 					notify=Gio.Notification()
@@ -2905,7 +2921,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._updating_toast.dismiss()
 
 	def _on_connecting(self, *args):
-		self._header_bar.get_title_widget().set_subtitle(_("connecting…"))
+		self._title.set_subtitle(_("connecting…"))
 
 	def _on_connection_error(self, *args):
 		self._clear_title()
