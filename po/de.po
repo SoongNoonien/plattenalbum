@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-04 22:34+0100\n"
-"PO-Revision-Date: 2024-03-04 22:36+0100\n"
+"POT-Creation-Date: 2024-03-06 21:34+0100\n"
+"PO-Revision-Date: 2024-03-06 21:34+0100\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -324,72 +324,72 @@ msgid "_Consume Mode"
 msgstr "_Verbrauchsmodus"
 
 #: src/plattenalbum.py:2716
-msgid "Not connected to MPD"
-msgstr "Nicht mit MPD verbunden"
+msgid "Not connected to “Music Player Daemon”"
+msgstr "Nicht mit »Music Player Daemon« verbunden"
 
-#: src/plattenalbum.py:2716 data/ShortcutsWindow.ui:19
+#: src/plattenalbum.py:2717 data/ShortcutsWindow.ui:19
 msgid "Preferences"
 msgstr "Einstellungen"
 
-#: src/plattenalbum.py:2717
+#: src/plattenalbum.py:2718
 msgid "Database is being updated"
 msgstr "Datenbank wird aktualisiert"
 
-#: src/plattenalbum.py:2718
+#: src/plattenalbum.py:2719
 msgid "Database updated"
 msgstr "Datenbank aktualisiert"
 
-#: src/plattenalbum.py:2730
+#: src/plattenalbum.py:2731
 msgid "_Preferences"
 msgstr "_Einstellungen"
 
-#: src/plattenalbum.py:2731
+#: src/plattenalbum.py:2732
 msgid "_Keyboard Shortcuts"
 msgstr "_Tastenkürzel"
 
-#: src/plattenalbum.py:2732
+#: src/plattenalbum.py:2733
 msgid "_Help"
 msgstr "_Hilfe"
 
-#: src/plattenalbum.py:2733
+#: src/plattenalbum.py:2734
 msgid "_About Plattenalbum"
 msgstr "_Info zu Plattenalbum"
 
-#: src/plattenalbum.py:2735
+#: src/plattenalbum.py:2736
 msgid "_Reconnect"
 msgstr "_Neu verbinden"
 
-#: src/plattenalbum.py:2736
+#: src/plattenalbum.py:2737
 msgid "_Update Database"
 msgstr "_Datenbank aktualisieren"
 
-#: src/plattenalbum.py:2737
+#: src/plattenalbum.py:2738
 msgid "_Server Statistics"
 msgstr "_Serverstatistik"
 
-#: src/plattenalbum.py:2739
+#: src/plattenalbum.py:2740
 msgid "_Lyrics"
 msgstr "_Liedtext"
 
 #. menu button / popover
-#: src/plattenalbum.py:2744 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:2745 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
 msgstr "Hauptmenü"
 
 #. search
-#: src/plattenalbum.py:2747
+#: src/plattenalbum.py:2748
 msgid "Search"
 msgstr "Suchen"
 
-#: src/plattenalbum.py:2748 src/plattenalbum.py:2749
+#: src/plattenalbum.py:2749 src/plattenalbum.py:2750
 msgid "Search collection"
 msgstr "Sammlung durchsuchen"
 
-#: src/plattenalbum.py:2932
+#: src/plattenalbum.py:2933
 msgid "connecting…"
 msgstr "verbinden…"
 
-#: src/plattenalbum.py:2958
+#: src/plattenalbum.py:2959
 msgid "Debug mode"
 msgstr "Debugmodus"
 

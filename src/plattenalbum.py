@@ -2713,7 +2713,8 @@ class MainWindow(Adw.ApplicationWindow):
 		audio=AudioFormat(self._client, self._settings)
 		volume_button=VolumeButton(self._client, self._settings)
 		self._playback_menu_button=PlaybackMenuButton()
-		self._connection_banner=Adw.Banner(title=_("Not connected to MPD"), button_label=_("Preferences"), action_name="win.settings")
+		self._connection_banner=Adw.Banner(title=_("Not connected to “Music Player Daemon”"),
+			button_label=_("Preferences"), action_name="win.settings")
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
