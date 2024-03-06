@@ -2693,7 +2693,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 ###############
 class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
-		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", **kwargs)
+		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=600, width_request=800, **kwargs)
 		self.set_default_icon_name("de.wagnermartin.Plattenalbum")
 		self._client=client
 		self._settings=settings
