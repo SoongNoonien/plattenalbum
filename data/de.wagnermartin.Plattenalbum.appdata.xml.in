@@ -10,6 +10,10 @@
     <p>A client for the Music Player Daemon (MPD).</p>
     <p>Browse your collection while viewing large album covers. Play your music without managing playlists.</p>
   </description>
+  <branding>
+    <color type="primary" scheme_preference="light">#ffd199</color>
+    <color type="primary" scheme_preference="dark">#a34400</color>
+  </branding>
   <releases>
     <release version="1.11.0" date="2023-11-15"/>
   </releases>
