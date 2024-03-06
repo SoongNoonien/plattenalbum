@@ -20,7 +20,8 @@
   <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image type="source" width="1121" height="790">https://raw.githubusercontent.com/SoongNoonien/mpdevil/v1.11.0/screenshots/mainwindow_1.11.0.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/mpdevil/v1.11.0/screenshots/mainwindow_1.11.0.png</image>
+      <caption>Main window</caption>
     </screenshot>
   </screenshots>
   <url type="homepage">https://github.com/SoongNoonien/mpdevil</url>
