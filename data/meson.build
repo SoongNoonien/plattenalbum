@@ -7,6 +7,14 @@ i18n.merge_file(
   install_dir: join_paths(get_option('datadir'), 'applications')
 )
 
+i18n.merge_file(
+        input: 'de.wagnermartin.Plattenalbum.appdata.xml.in',
+       output: 'de.wagnermartin.Plattenalbum.appdata.xml',
+       po_dir: '../po',
+      install: true,
+  install_dir: join_paths(get_option('datadir'), 'metainfo')
+)
+
 gnome.compile_resources(
   'de.wagnermartin.Plattenalbum', 'de.wagnermartin.Plattenalbum.gresource.xml',
   gresource_bundle: true,
@@ -15,7 +23,6 @@ gnome.compile_resources(
            install: true
 )
 
-install_data('de.wagnermartin.Plattenalbum.appdata.xml', install_dir: join_paths(get_option('datadir'), 'metainfo'))
 install_data('de.wagnermartin.Plattenalbum.gschema.xml', install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas'))
 
 install_data('de.wagnermartin.Plattenalbum.svg', install_dir: join_paths(get_option('datadir'), 'icons/hicolor/scalable/apps'))

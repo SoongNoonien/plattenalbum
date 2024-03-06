@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-06 22:57+0100\n"
+"POT-Creation-Date: 2024-03-07 00:16+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -390,16 +390,28 @@ msgstr ""
 msgid "Debug mode"
 msgstr ""
 
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr ""
 
-#: data/de.wagnermartin.Plattenalbum.desktop.in:4
-msgid "Music Browser"
-msgstr ""
-
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Browse music with MPD"
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+msgid "A client for the Music Player Daemon (MPD)."
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+msgid ""
+"Browse your collection while viewing large album covers. Play your music "
+"without managing playlists."
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:4
+msgid "Music Browser"
 msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:12
