@@ -6,11 +6,11 @@
 			<summary>Maximize window on startup</summary>
 		</key>
 		<key type="i" name="width">
-			<default>876</default>
+			<default>870</default>
 			<summary>Default width of window</summary>
 		</key>
 		<key type="i" name="height">
-			<default>584</default>
+			<default>650</default>
 			<summary>Default height of window</summary>
 		</key>
 		<key type="b" name="socket-connection">
