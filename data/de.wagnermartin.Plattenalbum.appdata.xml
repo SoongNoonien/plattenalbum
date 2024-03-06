@@ -29,7 +29,7 @@
   <url type="bugtracker">https://github.com/SoongNoonien/mpdevil/issues</url>
   <content_rating type="oars-1.1" />
   <provides>
-    <binary>Plattenalbum</binary>
+    <binary>plattenalbum</binary>
   </provides>
   <update_contact>martin.wagner.dev@gmail.com</update_contact>
 </component>
