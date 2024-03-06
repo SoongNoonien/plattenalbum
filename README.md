@@ -1,48 +1,27 @@
 Plattenalbum
 ============
-Plattenalbum is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library, Plattenalbum loads all tags and covers on demand. So you'll never see any outdated information in the browser. Plattenalbum strongly relies on tags.
+A client for the Music Player Daemon (MPD).
+
+Browse your collection while viewing large album covers. Play your music without managing playlists.</p>
 
 ![ScreenShot](screenshots/main_window.png)
-
-Features
---------
-
-- Display large covers
-- Play songs without double click
-- Lyrics from: https://www.letras.mus.br
-- MPRIS interface (based on mpDris2)
-- Basic queue manipulation (move and delete single tracks)
-
-See: https://github.com/SoongNoonien/mpdevil/wiki/Usage
 
 Package Installation
 --------------------
 
-See:
-https://github.com/SoongNoonien/mpdevil/releases/latest
-
-Ubuntu, Debian, Mint, Raspberry Pi OS:
-- Download the .deb file
-- Open a console
-- Navigate into download dir
-- Run: `sudo apt install ./mpdevil_VERSION.deb`
-
-Arch, Manjaro (see: https://aur.archlinux.org/packages/mpdevil/):
-- Download the PKGBUILD from the AUR
-- Open a console
-- Navigate into download dir
-- Run: `makepkg -sirc`
-- Alternatively install it with an AUR helper
-
-Gentoo (see: https://wiki.gentoo.org/wiki/Custom_repository):
-- Download the .ebuild
-- Place it into your local tree
-- Generate manifest file
-- Run: `emerge mpdevil`
-
 Flatpak:
 
 <a href='https://flathub.org/apps/details/org.mpdevil.mpdevil'><img width='240' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
+
+Arch:
+- https://aur.archlinux.org/packages/mpdevil
+- https://aur.archlinux.org/packages/mpdevil-git
+
+Gentoo (see: https://wiki.gentoo.org/wiki/Custom_repository):
+- Download the .ebuild (https://github.com/SoongNoonien/mpdevil/releases/latest)
+- Place it into your local tree
+- Generate manifest file
+- Run: `emerge mpdevil`
 
 Building
 --------

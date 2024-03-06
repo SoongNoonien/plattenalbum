@@ -1,11 +1,11 @@
 [Desktop Entry]
 Name=Plattenalbum
-GenericName=MPD Client
-Comment=A simple music browser for MPD
+GenericName=Music Browser
+Comment=Browse music with MPD
 Exec=plattenalbum
 Icon=de.wagnermartin.Plattenalbum
 Terminal=false
 Type=Application
 StartupNotify=true
-Categories=Audio;AudioVideo;Player;GTK
+Categories=Audio;AudioVideo;Player;GTK;
 Keywords=Music;Player;

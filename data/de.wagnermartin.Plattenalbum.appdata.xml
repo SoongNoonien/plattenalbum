@@ -5,16 +5,10 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0</project_license>
   <name>Plattenalbum</name>
-  <summary>A simple music browser for MPD</summary>
+  <summary>Browse music with MPD</summary>
   <description>
-    <p>Plattenalbum is a simple music browser for the Music Player Daemon (MPD) which is focused on playing local music without the need of managing playlists. Instead of maintaining a client side database of your music library Plattenalbum loads all tags and covers on demand. So you'll never see any outdated information in the browser. Plattenalbum strongly relies on tags.</p>
-    <ul>
-      <li>Display large covers</li>
-      <li>Play songs without double-click</li>
-      <li>Fetch lyrics</li>
-      <li>MPRIS interface</li>
-      <li>Basic queue manipulation (move and delete single tracks)</li>
-    </ul>
+    <p>A client for the Music Player Daemon (MPD).</p>
+    <p>Browse your collection while viewing large album covers. Play your music without managing playlists.</p>
   </description>
   <releases>
     <release version="1.11.0" date="2023-11-15"/>

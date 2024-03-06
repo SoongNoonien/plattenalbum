@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-06 21:34+0100\n"
-"PO-Revision-Date: 2024-03-06 21:34+0100\n"
+"POT-Creation-Date: 2024-03-06 22:57+0100\n"
+"PO-Revision-Date: 2024-03-06 22:58+0100\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -398,12 +398,12 @@ msgid "Plattenalbum"
 msgstr "Plattenalbum"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
-msgid "MPD Client"
-msgstr "MPD Client"
+msgid "Music Browser"
+msgstr "Musikbrowser"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
-msgid "A simple music browser for MPD"
-msgstr "Ein einfacher Musikbrowser für MPD"
+msgid "Browse music with MPD"
+msgstr "Musik mit MPD durchstöbern"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:12
 msgid "Music;Player;"
@@ -496,6 +496,12 @@ msgstr "Aufräumen"
 #: data/ShortcutsWindow.ui:171
 msgid "Enqueue Album"
 msgstr "Album einreihen"
+
+#~ msgid "MPD Client"
+#~ msgstr "MPD Client"
+
+#~ msgid "A simple music browser for MPD"
+#~ msgstr "Ein einfacher Musikbrowser für MPD"
 
 #~ msgid "Server Stats"
 #~ msgstr "Serverstatistik"

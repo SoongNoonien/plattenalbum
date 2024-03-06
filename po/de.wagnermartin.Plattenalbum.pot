@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-06 21:34+0100\n"
+"POT-Creation-Date: 2024-03-06 22:57+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -395,11 +395,11 @@ msgid "Plattenalbum"
 msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
-msgid "MPD Client"
+msgid "Music Browser"
 msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
-msgid "A simple music browser for MPD"
+msgid "Browse music with MPD"
 msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:12
