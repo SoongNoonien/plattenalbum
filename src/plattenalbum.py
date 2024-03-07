@@ -1890,6 +1890,7 @@ class Browser(Gtk.Box):
 		self._collection_stack.set_visible_child_name("empty-collection")
 
 	def _on_connected_or_updated_db(self, emitter, database_is_empty):
+		self.emit("stop-search")
 		if database_is_empty:
 			self._collection_stack.set_visible_child_name("empty-collection")
 		else:
