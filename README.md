@@ -14,8 +14,8 @@ Flatpak:
 <a href='https://flathub.org/apps/details/org.mpdevil.mpdevil'><img width='240' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
 
 Arch:
-- https://aur.archlinux.org/packages/mpdevil
-- https://aur.archlinux.org/packages/mpdevil-git
+- https://aur.archlinux.org/packages/plattenalbum
+- https://aur.archlinux.org/packages/plattenalbum-git
 
 Gentoo (see: https://wiki.gentoo.org/wiki/Custom_repository):
 - Download the .ebuild (https://github.com/SoongNoonien/plattenalbum/releases/latest)
