@@ -2834,7 +2834,7 @@ class MainWindow(Adw.ApplicationWindow):
 		stats.present()
 
 	def _on_help(self, action, param):
-		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/mpdevil/wiki/Usage").launch(self, None, None, None)
+		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/plattenalbum/wiki/Usage").launch(self, None, None, None)
 
 	def _on_search_started(self, entry):
 		self._search_button.set_active(True)

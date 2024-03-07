@@ -24,8 +24,8 @@
       <caption>Main window</caption>
     </screenshot>
   </screenshots>
-  <url type="homepage">https://github.com/SoongNoonien/mpdevil</url>
-  <url type="bugtracker">https://github.com/SoongNoonien/mpdevil/issues</url>
+  <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
+  <url type="bugtracker">https://github.com/SoongNoonien/plattenalbum/issues</url>
   <content_rating type="oars-1.1" />
   <provides>
     <binary>plattenalbum</binary>
