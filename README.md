@@ -46,9 +46,6 @@ git clone https://github.com/SoongNoonien/plattenalbum.git
 cd plattenalbum
 meson setup builddir --prefix=/usr/local
 sudo ninja -C builddir install
-sudo glib-compile-schemas /usr/local/share/glib-2.0/schemas
-sudo gtk-update-icon-cache
-sudo update-desktop-database
 ```
 
 Translation
