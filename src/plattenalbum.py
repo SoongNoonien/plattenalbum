@@ -47,7 +47,6 @@ bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
 textdomain("de.wagnermartin.Plattenalbum")
 Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource")))
 
-FALLBACK_REGEX=r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$"
 FALLBACK_COVER="media-optical"
 FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
 FALLBACK_MUSIC_DIRECTORY=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
@@ -656,6 +655,7 @@ class Client(MPDClient):
 		self._start_idle_id=None
 		self.music_directory=None
 		self.current_cover=None
+		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 
 	# overloads to use Song class
@@ -786,30 +786,16 @@ class Client(MPDClient):
 	def album_to_playlist(self, albumartist, album, date, mode):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
 
-	def get_cover_path(self, song):
-		path=None
-		song_file=song["file"]
+	def get_cover_path(self, uri):
 		if self.music_directory is not None:
-			regex_str=self._settings.get_string("regex")
-			if regex_str:
-				regex_str=regex_str.replace("%AlbumArtist%", re.escape(song["albumartist"][0]))
-				regex_str=regex_str.replace("%Album%", re.escape(song["album"][0]))
-				try:
-					regex=re.compile(regex_str, flags=re.IGNORECASE)
-				except re.error:
-					print("illegal regex:", regex_str)
-					return None
-			else:
-				regex=re.compile(FALLBACK_REGEX, flags=re.IGNORECASE)
-			song_dir=os.path.join(self.music_directory, os.path.dirname(song_file))
-			if song_dir.lower().endswith(".cue"):
+			song_dir=os.path.join(self.music_directory, os.path.dirname(uri))
+			if uri.lower().endswith(".cue"):
 				song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
 			if os.path.isdir(song_dir):
 				for f in os.listdir(song_dir):
-					if regex.match(f):
-						path=os.path.join(song_dir, f)
-						break
-		return path
+					if self._cover_regex.match(f):
+						return os.path.join(song_dir, f)
+		return None
 
 	def get_cover_binary(self, uri):
 		try:
@@ -821,10 +807,10 @@ class Client(MPDClient):
 				binary=None
 		return binary
 
-	def get_cover(self, song):
-		if (cover_path:=self.get_cover_path(song)) is not None:
+	def get_cover(self, uri):
+		if (cover_path:=self.get_cover_path(uri)) is not None:
 			return FileCover(cover_path)
-		elif (cover_binary:=self.get_cover_binary(song["file"])) is not None:
+		elif (cover_binary:=self.get_cover_binary(uri)) is not None:
 			return BinaryCover(cover_binary)
 		else:
 			return None
@@ -890,7 +876,7 @@ class Client(MPDClient):
 			if "playlist" in diff:
 				self.emitter.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
 			if "songid" in diff:
-				self.current_cover=self.get_cover(self.currentsong())
+				self.current_cover=self.get_cover(self.currentsong()["file"])
 				self.emitter.emit("current-song", status["song"], status["songid"], status["state"])
 			if "elapsed" in diff:
 				self.emitter.emit("elapsed", float(diff["elapsed"]), float(status.get("duration", 0.0)))
@@ -1055,15 +1041,6 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		settings.bind("music-directory", music_directory_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("socket-connection", music_directory_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
 		self.add(music_directory_row)
-
-		regex_row=Adw.EntryRow(title=_("Regex"))
-		regex_row.set_tooltip_text(
-			_("The first image in the same directory as the song file "\
-			"matching this regex will be displayed. %AlbumArtist% and "\
-			"%Album% will be replaced by the corresponding tags of the song.")
-		)
-		settings.bind("regex", regex_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		self.add(regex_row)
 
 		password_row=Adw.PasswordEntryRow(title=_("Password"))
 		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
@@ -1633,10 +1610,10 @@ class AlbumListRow(Gtk.Box):
 			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of an unknown album")])
 		self._date.set_text(album.date)
 		if album.cover is None:
-			self._client.restrict_tagtypes("albumartist", "album")
+			self._client.tagtypes("clear")
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
 			self._client.tagtypes("all")
-			if (cover:=self._client.get_cover(song)) is None:
+			if (cover:=self._client.get_cover(song["file"])) is None:
 				album.cover=lookup_icon(FALLBACK_COVER, 1024)
 			else:
 				album.cover=cover.get_paintable()
@@ -1788,7 +1765,7 @@ class AlbumView(Gtk.Box):
 		self._client.tagtypes("all")
 		self.song_list.append(songs)
 		self.song_list.scroll_to(0, Gtk.ListScrollFlags.NONE, None)
-		if (cover:=self._client.get_cover({"file": songs[0]["file"], "albumartist": albumartist, "album": album})) is None:
+		if (cover:=self._client.get_cover(songs[0]["file"])) is None:
 			self._cover.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
 		else:
 			self._cover.set_paintable(cover.get_paintable())

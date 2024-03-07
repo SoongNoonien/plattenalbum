@@ -38,10 +38,6 @@
 			<default>""</default>
 			<summary>Music library directory</summary>
 		</key>
-		<key type="s" name="regex">
-			<default>""</default>
-			<summary>Cover regex</summary>
-		</key>
 		<key type="b" name="show-stop">
 			<default>true</default>
 			<summary>Show stop button</summary>
