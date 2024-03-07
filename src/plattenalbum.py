@@ -652,7 +652,6 @@ class Client(MPDClient):
 		self._settings=settings
 		self.emitter=EventEmitter()
 		self._last_status={}
-		self._refresh_interval=self._settings.get_int("refresh-interval")
 		self._main_timeout_id=None
 		self._start_idle_id=None
 		self.music_directory=None
@@ -707,7 +706,7 @@ class Client(MPDClient):
 				self.music_directory=self._settings.get_music_directory()
 			if "status" in self.commands():
 				self.emitter.emit("connected", self.stats()["songs"] == "0")
-				self._main_timeout_id=GLib.timeout_add(self._refresh_interval, self._main_loop)
+				self._main_timeout_id=GLib.timeout_add(100, self._main_loop)
 			else:
 				self.disconnect()
 				self.emitter.emit("connection_error")
