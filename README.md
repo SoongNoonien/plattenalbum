@@ -18,10 +18,10 @@ Arch:
 - https://aur.archlinux.org/packages/mpdevil-git
 
 Gentoo (see: https://wiki.gentoo.org/wiki/Custom_repository):
-- Download the .ebuild (https://github.com/SoongNoonien/mpdevil/releases/latest)
+- Download the .ebuild (https://github.com/SoongNoonien/plattenalbum/releases/latest)
 - Place it into your local tree
 - Generate manifest file
-- Run: `emerge mpdevil`
+- Run: `emerge plattenalbum`
 
 Building
 --------

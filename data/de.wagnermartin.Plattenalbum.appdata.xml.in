@@ -14,16 +14,33 @@
     <color type="primary" scheme_preference="light">#ffd199</color>
     <color type="primary" scheme_preference="dark">#a34400</color>
   </branding>
-  <releases>
-    <release version="1.11.0" date="2023-11-15"/>
-  </releases>
-  <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/SoongNoonien/mpdevil/v1.11.0/screenshots/mainwindow_1.11.0.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.0.0/screenshots/main_window.png</image>
       <caption>Main window</caption>
     </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.0.0/screenshots/album_view.png</image>
+      <caption>Album View</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.0.0/screenshots/search.png</image>
+      <caption>Search</caption>
+    </screenshot>
   </screenshots>
+  <releases>
+    <release version="2.0.0" date="2024-03-07">
+      <description>
+        <p>First release using GTK4 and libadwaita</p>
+        <ul>
+          <li>Added automatic cover sizing</li>
+          <li>Greatly improved search</li>
+          <li>Removed mini-player</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+  <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
   <url type="bugtracker">https://github.com/SoongNoonien/plattenalbum/issues</url>
   <content_rating type="oars-1.1" />
