@@ -29,6 +29,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.0.1" date="2024-03-08">
+      <description>
+        <p>Increased flatpak support to only require a minimium set of non-standard privileges.</p>
+      </description>
+    </release>
     <release version="2.0.0" date="2024-03-07">
       <description>
         <p>First release using GTK4 and libadwaita</p>

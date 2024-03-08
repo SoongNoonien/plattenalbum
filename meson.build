@@ -1,4 +1,4 @@
-project('plattenalbum', version: '2.0.0')
+project('plattenalbum', version: '2.0.1')
 
 i18n = import('i18n')
 gnome = import('gnome')
