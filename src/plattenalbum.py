@@ -93,7 +93,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	"""
 	_MPRIS_IFACE="org.mpris.MediaPlayer2"
 	_MPRIS_PLAYER_IFACE="org.mpris.MediaPlayer2.Player"
-	_MPRIS_NAME="org.mpris.MediaPlayer2.Plattenalbum"
+	_MPRIS_NAME="org.mpris.MediaPlayer2.de.wagnermartin.Plattenalbum"
 	_MPRIS_PATH="/org/mpris/MediaPlayer2"
 	_INTERFACES_XML="""
 	<!DOCTYPE node PUBLIC
