@@ -393,7 +393,7 @@ msgstr "verbinden…"
 
 #: src/plattenalbum.py:2959
 msgid "Debug mode"
-msgstr "Debug modus"
+msgstr "Debugmodus"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
