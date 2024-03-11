@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-26 20:43+0100\n"
+"POT-Creation-Date: 2024-03-11 23:19+0100\n"
 "PO-Revision-Date: 2023-01-16 18:43+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -19,452 +19,701 @@ msgstr ""
 "X-Generator: Poedit 3.1.1\n"
 "X-Poedit-Bookmarks: -1,-1,-1,-1,30,-1,-1,-1,-1,-1\n"
 
-#: src/mpdevil.py:502
+#: src/plattenalbum.py:505
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days} ден"
 msgstr[1] "{days} дни"
 
-#: src/mpdevil.py:539
+#: src/plattenalbum.py:542
 #, python-brace-format
 msgid "{channels} channel"
 msgid_plural "{channels} channels"
 msgstr[0] "{channels} канал"
 msgstr[1] "{channels} канали"
 
-#: src/mpdevil.py:1005
-msgid "(restart required)"
-msgstr "(необходим е рестарт)"
-
-#: src/mpdevil.py:1051
-msgid "Use Client-side decoration"
-msgstr "Използвай декорация от Клиентска страна"
-
-#: src/mpdevil.py:1052
-msgid "Show stop button"
-msgstr "Покажи бутон стоп"
-
-#: src/mpdevil.py:1053
-msgid "Show audio format"
-msgstr "Покажи аудио формат"
-
-#: src/mpdevil.py:1054
-msgid "Show lyrics button"
-msgstr "Покажи бутон за лирики"
-
-#: src/mpdevil.py:1055
-msgid "Place playlist at the side"
-msgstr "Постави плейлитът на страни"
-
-#: src/mpdevil.py:1061
-msgid "Album view cover size"
-msgstr "Големина за основна облечка"
-
-#: src/mpdevil.py:1062
-msgid "Action bar icon size"
-msgstr "Големина за иконите на бутоните"
-
-#: src/mpdevil.py:1072
-msgid "Support “MPRIS”"
-msgstr "Поддръжка на “MPRIS”"
-
-#: src/mpdevil.py:1073
-msgid "Sort albums by year"
-msgstr "Сортирай албумите по година"
-
-#: src/mpdevil.py:1074
-msgid "Send notification on title change"
-msgstr "Прати известие при промяна на заглавие"
-
-#: src/mpdevil.py:1075
-msgid "Rewind via previous button"
-msgstr "Пренавий чрез бутон назад"
-
-#: src/mpdevil.py:1076
-msgid "Stop playback on quit"
-msgstr "Прекрати възпроизвеждането при изход"
-
-#: src/mpdevil.py:1103
-msgid "Choose directory"
-msgstr "Избери директория"
-
-#. labels and entries
-#: src/mpdevil.py:1118
-msgid "Connect via Unix domain socket"
-msgstr "Свържи чрез Unix domain socket"
-
-#: src/mpdevil.py:1137
-msgid ""
-"The first image in the same directory as the song file matching this regex "
-"will be displayed. %AlbumArtist% and %Album% will be replaced by the "
-"corresponding tags of the song."
-msgstr ""
-"Ще бъдат показани първата картина в същата директория като съвпадение на "
-"този регулярен израз. %AlbumArtist% и %Album% ще бъдат заместени от "
-"съответстващите тагове от песента."
-
-#: src/mpdevil.py:1142
-msgid "Socket:"
-msgstr "Сокет:"
-
-#: src/mpdevil.py:1144
-msgid "Host:"
-msgstr "Хост:"
-
-#: src/mpdevil.py:1146
-msgid "Password:"
-msgstr "Парола:"
-
-#: src/mpdevil.py:1147
-msgid "Music lib:"
-msgstr "Музикална библиотека:"
-
-#: src/mpdevil.py:1149
-msgid "Cover regex:"
-msgstr "Обложка - регулярен израз:"
-
-#. connect button
-#: src/mpdevil.py:1152 src/mpdevil.py:3155
-msgid "Connect"
-msgstr "Свържи"
-
-#: src/mpdevil.py:1175 src/mpdevil.py:1177 src/mpdevil.py:3156
-#: src/mpdevil.py:3245
-msgid "Preferences"
-msgstr "Предпочитания"
-
-#: src/mpdevil.py:1189 src/mpdevil.py:1199
+#: src/plattenalbum.py:951
 msgid "View"
 msgstr "Поглед"
 
-#: src/mpdevil.py:1190 src/mpdevil.py:1200
+#: src/plattenalbum.py:953
+#, fuzzy
+msgid "Show _stop button"
+msgstr "Покажи бутон стоп"
+
+#: src/plattenalbum.py:954
+#, fuzzy
+msgid "Show audio _format"
+msgstr "Покажи аудио формат"
+
+#: src/plattenalbum.py:963
 msgid "Behavior"
 msgstr "Държане"
 
-#: src/mpdevil.py:1191 src/mpdevil.py:1201
+#: src/plattenalbum.py:965
+#, fuzzy
+msgid "Support “_MPRIS”"
+msgstr "Поддръжка на “MPRIS”"
+
+#: src/plattenalbum.py:965
+#, fuzzy
+msgid "restart required"
+msgstr "(необходим е рестарт)"
+
+#: src/plattenalbum.py:966
+#, fuzzy
+msgid "Sort _albums by year"
+msgstr "Сортирай албумите по година"
+
+#: src/plattenalbum.py:967
+#, fuzzy
+msgid "Send _notification on title change"
+msgstr "Прати известие при промяна на заглавие"
+
+#: src/plattenalbum.py:968
+#, fuzzy
+msgid "_Rewind via previous button"
+msgstr "Пренавий чрез бутон назад"
+
+#: src/plattenalbum.py:969
+#, fuzzy
+msgid "Stop _playback on quit"
+msgstr "Прекрати възпроизвеждането при изход"
+
+#: src/plattenalbum.py:978
+#, fuzzy
+msgid "Socket path"
+msgstr "Сокет:"
+
+#: src/plattenalbum.py:979
+msgid "Pick a File"
+msgstr ""
+
+#: src/plattenalbum.py:998
+#, fuzzy
+msgid "Music library"
+msgstr "Музикална библиотека:"
+
+#: src/plattenalbum.py:999
+msgid "Select a Folder"
+msgstr ""
+
+#: src/plattenalbum.py:1018
 #, fuzzy
 msgid "Connection"
 msgstr "Връзка"
 
-#: src/mpdevil.py:1218
-msgid "Stats"
-msgstr "Статистика"
+#: src/plattenalbum.py:1020
+#, fuzzy
+msgid "Connect via _Unix domain socket"
+msgstr "Свържи чрез Unix domain socket"
 
-#: src/mpdevil.py:1227
-msgid "<b>Protocol:</b>"
+#: src/plattenalbum.py:1030
+msgid "Port"
+msgstr ""
+
+#: src/plattenalbum.py:1035
+#, fuzzy
+msgid "Hostname"
+msgstr "Хост:"
+
+#: src/plattenalbum.py:1045
+#, fuzzy
+msgid "Password"
+msgstr "Парола:"
+
+#. connect button
+#: src/plattenalbum.py:1050 data/ShortcutsWindow.ui:37
+#, fuzzy
+msgid "Reconnect"
+msgstr "Свържи"
+
+#: src/plattenalbum.py:1069 data/ShortcutsWindow.ui:49
+#, fuzzy
+msgid "Server Statistics"
+msgstr "Статистика на сървърът"
+
+#: src/plattenalbum.py:1078
+#, fuzzy
+msgid "Protocol"
 msgstr "<b>Протокол:</b>"
 
-#: src/mpdevil.py:1228
-msgid "<b>Uptime:</b>"
+#: src/plattenalbum.py:1079
+#, fuzzy
+msgid "Uptime"
 msgstr "<b>Време на работа:</b>"
 
-#: src/mpdevil.py:1229
-msgid "<b>Playtime:</b>"
+#: src/plattenalbum.py:1080
+#, fuzzy
+msgid "Playtime"
 msgstr "<b>Време на възпроизвеждане:</b>"
 
-#: src/mpdevil.py:1230
-msgid "<b>Artists:</b>"
-msgstr "<b>Артисти:</b>"
+#: src/plattenalbum.py:1081
+#, fuzzy
+msgid "Artists"
+msgstr "Артист"
 
-#: src/mpdevil.py:1231
-msgid "<b>Albums:</b>"
-msgstr "<b>Албуми:</b>"
+#: src/plattenalbum.py:1082
+#, fuzzy
+msgid "Albums"
+msgstr "Албум"
 
-#: src/mpdevil.py:1232
-msgid "<b>Songs:</b>"
-msgstr "<b>Песни::</b>"
+#: src/plattenalbum.py:1083
+msgid "Songs"
+msgstr ""
 
-#: src/mpdevil.py:1233
-msgid "<b>Total Playtime:</b>"
+#: src/plattenalbum.py:1084
+#, fuzzy
+msgid "Total Playtime"
 msgstr "<b>Цялостно време на възпроизвеждане:</b>"
 
-#: src/mpdevil.py:1234
-msgid "<b>Database Update:</b>"
+#: src/plattenalbum.py:1085
+#, fuzzy
+msgid "Database Update"
 msgstr "<b>Актуализация на базата с данни:</b>"
 
-#: src/mpdevil.py:1301 src/mpdevil.py:2175
-msgid "No"
-msgstr "№"
+#: src/plattenalbum.py:1202 src/plattenalbum.py:1906
+msgid "Context menu"
+msgstr ""
 
-#: src/mpdevil.py:1302 src/mpdevil.py:2176
-msgid "Title"
-msgstr "Заглавие"
+#: src/plattenalbum.py:1224
+msgid "_Append"
+msgstr "_Добави"
 
-#: src/mpdevil.py:1303 src/mpdevil.py:2177
-msgid "Length"
-msgstr "Дължина"
+#: src/plattenalbum.py:1225
+msgid "As _Next"
+msgstr ""
 
-#: src/mpdevil.py:1317 src/mpdevil.py:1339
+#: src/plattenalbum.py:1226
+msgid "_Play"
+msgstr "_Свири"
+
+#: src/plattenalbum.py:1228 src/plattenalbum.py:1924
+#, fuzzy
+msgid "_Show"
+msgstr "Покажи"
+
+#. status page
+#: src/plattenalbum.py:1412
+msgid "No Results Found"
+msgstr ""
+
+#: src/plattenalbum.py:1412
+msgid "Try a different search"
+msgstr ""
+
+#: src/plattenalbum.py:1607 src/plattenalbum.py:1751
+#, python-brace-format
+msgid "Album cover of {album}"
+msgstr ""
+
+#: src/plattenalbum.py:1610 src/plattenalbum.py:1754
+msgid "Album cover of an unknown album"
+msgstr ""
+
+#: src/plattenalbum.py:1675
+#, python-brace-format
+msgid "Albums of {artist}"
+msgstr ""
+
+#: src/plattenalbum.py:1709
 msgid "Append"
 msgstr "Добави"
 
-#: src/mpdevil.py:1318 src/mpdevil.py:1340 src/mpdevil.py:2668
-#: src/mpdevil.py:2701
+#. widgets
+#: src/plattenalbum.py:1710 src/plattenalbum.py:2301 src/plattenalbum.py:2322
 #, fuzzy
 msgid "Play"
 msgstr "Свири"
 
-#: src/mpdevil.py:1341 src/mpdevil.py:2197
-msgid "Show"
-msgstr "Покажи"
-
-#: src/mpdevil.py:1432
-#, python-brace-format
-msgid "{hits} hit"
-msgid_plural "{hits} hits"
-msgstr[0] "{hits} попадение"
-msgstr[1] "{hits} попадения"
-
-#: src/mpdevil.py:1517
-msgid "all tags"
-msgstr "всички тагове"
-
-#: src/mpdevil.py:1652
-msgid "all genres"
-msgstr "всички жанрове"
-
-#: src/mpdevil.py:1675
-msgid "all artists"
-msgstr "всички артисти"
-
-#: src/mpdevil.py:2041
+#: src/plattenalbum.py:1761
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
 msgstr[0] "{number} песен ({duration})"
 msgstr[1] "{number} песни ({duration})"
 
-#: src/mpdevil.py:2196
+#. status page
+#: src/plattenalbum.py:1826
+msgid "Collection is Empty"
+msgstr ""
+
+#: src/plattenalbum.py:1923
 #, fuzzy
-msgid "Remove"
+msgid "_Remove"
 msgstr "Премахни избраната песен"
 
-#: src/mpdevil.py:2199
+#: src/plattenalbum.py:1926
 #, fuzzy
-#| msgid "Enqueue"
-msgid "Enqueue Album"
+msgid "_Enqueue Album"
 msgstr "На опашката"
 
-#: src/mpdevil.py:2200
-msgid "Tidy"
+#: src/plattenalbum.py:1927
+#, fuzzy
+msgid "_Tidy"
 msgstr "Спретнато"
 
-#: src/mpdevil.py:2202
-msgid "Clear"
+#: src/plattenalbum.py:1929
+#, fuzzy
+msgid "_Clear"
 msgstr "Изчисти"
 
-#: src/mpdevil.py:2375
-msgid "Scroll to current song"
-msgstr "Превъртане до моментната песен"
+#. widgets
+#. TODO scroll to song
+#: src/plattenalbum.py:2103
+#, fuzzy
+msgid "Playlist is Empty"
+msgstr "Плейлисти"
 
-#: src/mpdevil.py:2493
+#. status pages
+#: src/plattenalbum.py:2172
+#, fuzzy
+msgid "No Lyrics Found"
+msgstr "лириките не са намерени"
+
+#: src/plattenalbum.py:2175
+#, fuzzy
+msgid "Connection Error"
+msgstr "грешка при свързване"
+
+#: src/plattenalbum.py:2175
+msgid "Check your network connection"
+msgstr ""
+
+#: src/plattenalbum.py:2228
+#, fuzzy, python-brace-format
+msgid "Lyrics of {song}"
+msgstr "лириките не са намерени"
+
+#: src/plattenalbum.py:2229
 msgid "searching…"
 msgstr "търсене…"
 
-#: src/mpdevil.py:2498
-msgid "connection error"
-msgstr "грешка при свързване"
-
-#: src/mpdevil.py:2500
-msgid "lyrics not found"
-msgstr "лириките не са намерени"
-
-#: src/mpdevil.py:2612
-msgid "Lyrics"
+#: src/plattenalbum.py:2236 src/plattenalbum.py:2241
+#, fuzzy
+msgid "Lyrics view"
 msgstr "Лирики"
 
-#: src/mpdevil.py:2670 data/ShortcutsWindow.ui:105
+#: src/plattenalbum.py:2246
+#, fuzzy
+msgid "Current album cover"
+msgstr "Обратно в моментния албум"
+
+#: src/plattenalbum.py:2302 data/ShortcutsWindow.ui:89
 msgid "Stop"
 msgstr "Спри"
 
-#: src/mpdevil.py:2674 data/ShortcutsWindow.ui:126
-msgid "Previous title"
+#: src/plattenalbum.py:2304 data/ShortcutsWindow.ui:101
+#, fuzzy
+msgid "Previous"
 msgstr "Предишно заглавие"
 
-#: src/mpdevil.py:2677 data/ShortcutsWindow.ui:119
-msgid "Next title"
-msgstr "Следващо заглавие"
+#: src/plattenalbum.py:2305 data/ShortcutsWindow.ui:95
+msgid "Next"
+msgstr ""
 
-#: src/mpdevil.py:2698
+#: src/plattenalbum.py:2319
 #, fuzzy
 msgid "Pause"
 msgstr "Пауза"
 
-#: src/mpdevil.py:2901
-msgid "Repeat mode"
+#: src/plattenalbum.py:2338
+msgid "Progress bar"
+msgstr ""
+
+#: src/plattenalbum.py:2529
+#, fuzzy
+msgid "Playback Menu"
+msgstr "Възпроизвеждане"
+
+#: src/plattenalbum.py:2533
+#, fuzzy
+msgid "_Repeat Mode"
 msgstr "Повтарящ режим"
 
-#: src/mpdevil.py:2902
-msgid "Random mode"
+#: src/plattenalbum.py:2534
+#, fuzzy
+msgid "R_andom Mode"
 msgstr "Случаен режим"
 
-#: src/mpdevil.py:2903
-msgid "Single mode"
+#: src/plattenalbum.py:2535
+#, fuzzy
+msgid "_Single Mode"
 msgstr "Единичен режим"
 
-#: src/mpdevil.py:2904
-msgid "Consume mode"
+#: src/plattenalbum.py:2536
+msgid "_Pause After Song"
+msgstr ""
+
+#: src/plattenalbum.py:2537
+#, fuzzy
+msgid "_Consume Mode"
 msgstr "Консумиращ режим"
 
-#: src/mpdevil.py:3125
-msgid "Updating Database…"
-msgstr "Актуализиране на базата с данни…"
+#: src/plattenalbum.py:2693
+msgid "Not connected to “Music Player Daemon”"
+msgstr ""
 
-#: src/mpdevil.py:3173
-#, python-brace-format
-msgid "Connection to “{socket}” failed"
-msgstr "Свързването със  “{socket}” се провали"
+#: src/plattenalbum.py:2694 data/ShortcutsWindow.ui:19
+msgid "Preferences"
+msgstr "Предпочитания"
 
-#: src/mpdevil.py:3175
-#, python-brace-format
-msgid "Connection to “{host}:{port}” failed"
-msgstr "Свързването със “{host}:{port}” се провали"
+#: src/plattenalbum.py:2695
+msgid "Database is being updated"
+msgstr ""
 
-#: src/mpdevil.py:3229
+#: src/plattenalbum.py:2696
+#, fuzzy
+msgid "Database updated"
+msgstr "<b>Актуализация на базата с данни:</b>"
+
+#: src/plattenalbum.py:2708
+#, fuzzy
+msgid "_Preferences"
+msgstr "Предпочитания"
+
+#: src/plattenalbum.py:2709
+#, fuzzy
+msgid "_Keyboard Shortcuts"
+msgstr "Преки пътища на клавиатурата"
+
+#: src/plattenalbum.py:2710
+#, fuzzy
+msgid "_Help"
+msgstr "Помощ"
+
+#: src/plattenalbum.py:2711
+msgid "_About Plattenalbum"
+msgstr ""
+
+#: src/plattenalbum.py:2713
+#, fuzzy
+msgid "_Reconnect"
+msgstr "Свържи"
+
+#: src/plattenalbum.py:2714
+#, fuzzy
+msgid "_Update Database"
+msgstr "Актуализирай базата с данни"
+
+#: src/plattenalbum.py:2715
+#, fuzzy
+msgid "_Server Statistics"
+msgstr "Статистика на сървърът"
+
+#: src/plattenalbum.py:2717
+#, fuzzy
+msgid "_Lyrics"
+msgstr "Лирики"
+
+#. menu button / popover
+#: src/plattenalbum.py:2722 data/ShortcutsWindow.ui:31
+#, fuzzy
+msgid "Main Menu"
+msgstr "Меню"
+
+#. search
+#: src/plattenalbum.py:2725 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
 msgid "Search"
 msgstr "Търси"
 
-#: src/mpdevil.py:3232
-msgid "Back"
-msgstr "Назад"
+#: src/plattenalbum.py:2726 src/plattenalbum.py:2727
+msgid "Search collection"
+msgstr ""
 
-#: src/mpdevil.py:3246
-msgid "Keyboard Shortcuts"
-msgstr "Преки пътища на клавиатурата"
-
-#: src/mpdevil.py:3247
-msgid "Help"
-msgstr "Помощ"
-
-#: src/mpdevil.py:3248
-msgid "About mpdevil"
-msgstr "За mpdevil"
-
-#: src/mpdevil.py:3250
-msgid "Update Database"
-msgstr "Актуализирай базата с данни"
-
-#: src/mpdevil.py:3251
-msgid "Server Stats"
-msgstr "Статистика на сървърът"
-
-#: src/mpdevil.py:3253
-msgid "Mini Player"
-msgstr "Мини Плеър"
-
-#: src/mpdevil.py:3254
-msgid "Genre Filter"
-msgstr "Филтър на Жанрове"
-
-#: src/mpdevil.py:3263
-msgid "Menu"
-msgstr "Меню"
-
-#: src/mpdevil.py:3437 src/mpdevil.py:3439
+#: src/plattenalbum.py:2910
 msgid "connecting…"
 msgstr "свързване…"
 
-#: src/mpdevil.py:3477
+#: src/plattenalbum.py:2936
 msgid "Debug mode"
 msgstr "Debug режим"
 
-#: data/org.mpdevil.mpdevil.desktop.in:3
-msgid "mpdevil"
-msgstr "mpdevil"
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.desktop.in:3
+msgid "Plattenalbum"
+msgstr ""
 
-#: data/org.mpdevil.mpdevil.desktop.in:4
-msgid "MPD Client"
-msgstr "MPD Клиент"
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.desktop.in:5
+msgid "Browse music with MPD"
+msgstr ""
 
-#: data/org.mpdevil.mpdevil.desktop.in:5 data/AboutDialog.ui:7
-msgid "A simple music browser for MPD"
-msgstr "Опростен музикален браузър за MPD"
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+msgid "A client for the Music Player Daemon (MPD)."
+msgstr ""
 
-#: data/ShortcutsWindow.ui:12
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+msgid ""
+"Browse your collection while viewing large album covers. Play your music "
+"without managing playlists."
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
+msgid "Main window"
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
+#, fuzzy
+msgid "Album View"
+msgstr "Албум"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
+msgid ""
+"Increased flatpak support to only require a minimium set of non-standard "
+"privileges."
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
+msgid "First release using GTK4 and libadwaita"
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:41
+msgid "Added automatic cover sizing"
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:42
+msgid "Greatly improved search"
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:43
+#, fuzzy
+msgid "Removed mini-player"
+msgstr "Превключи Мини Плеър"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:56
+msgid "Martin Wagner"
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:4
+msgid "Music Browser"
+msgstr ""
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:12
+#, fuzzy
+msgid "Music;Player;"
+msgstr "Мини Плеър"
+
+#: data/ShortcutsWindow.ui:10
 msgid "General"
 msgstr "Основно"
 
-#: data/ShortcutsWindow.ui:16
-msgid "Open online help"
+#: data/ShortcutsWindow.ui:13
+#, fuzzy
+msgid "Online Help"
 msgstr "Отвори онлайн помощ"
 
-#: data/ShortcutsWindow.ui:23
-msgid "Open shortcuts window"
-msgstr "Отвори прозорец за преки пътища"
+#: data/ShortcutsWindow.ui:25
+#, fuzzy
+msgid "Shortcuts"
+msgstr "Преки пътища на клавиатурата"
 
-#: data/ShortcutsWindow.ui:30
-msgid "Open menu"
-msgstr "Отвори меню"
-
-#: data/ShortcutsWindow.ui:37
-msgid "Update database"
+#: data/ShortcutsWindow.ui:43
+msgid "Update Database"
 msgstr "Актуализирай базата с данни"
 
-#: data/ShortcutsWindow.ui:44
-msgid "Clear playlist"
-msgstr "Изчисти плейлист"
-
-#: data/ShortcutsWindow.ui:51
+#: data/ShortcutsWindow.ui:55
 msgid "Quit"
 msgstr "Излез"
 
-#: data/ShortcutsWindow.ui:60
+#: data/ShortcutsWindow.ui:63
 msgid "Window"
 msgstr "Прозорец"
 
-#: data/ShortcutsWindow.ui:64
-msgid "Toggle mini player"
-msgstr "Превключи Мини Плеър"
-
-#: data/ShortcutsWindow.ui:71
-msgid "Toggle genre filter"
-msgstr "Превключи Филтър на Жанрове"
-
-#: data/ShortcutsWindow.ui:78
-msgid "Toggle lyrics"
+#: data/ShortcutsWindow.ui:66
+#, fuzzy
+msgid "Toggle Lyrics"
 msgstr "Превключи лириките"
 
-#: data/ShortcutsWindow.ui:85
-msgid "Toggle search"
+#: data/ShortcutsWindow.ui:72
+#, fuzzy
+msgid "Toggle Search"
 msgstr "Превключи търсенето"
 
-#: data/ShortcutsWindow.ui:94
+#: data/ShortcutsWindow.ui:80
 msgid "Playback"
 msgstr "Възпроизвеждане"
 
-#: data/ShortcutsWindow.ui:98
+#: data/ShortcutsWindow.ui:83
 #, fuzzy
 msgid "Play/Pause"
 msgstr "Пусни/Пауза"
 
-#: data/ShortcutsWindow.ui:112
-msgid "Stop after current title"
-msgstr "Спри след моментното заглавие"
-
-#: data/ShortcutsWindow.ui:133
-msgid "Seek forward"
+#: data/ShortcutsWindow.ui:107
+#, fuzzy
+msgid "Seek Forward"
 msgstr "Превърти напред"
 
-#: data/ShortcutsWindow.ui:140
-msgid "Seek backward"
+#: data/ShortcutsWindow.ui:113
+#, fuzzy
+msgid "Seek Backward"
 msgstr "Превърти назад"
 
-#: data/ShortcutsWindow.ui:147
-msgid "Toggle repeat mode"
+#: data/ShortcutsWindow.ui:121
+#, fuzzy
+msgid "Playback Options"
+msgstr "Възпроизвеждане"
+
+#: data/ShortcutsWindow.ui:124
+#, fuzzy
+msgid "Toggle Repeat Mode"
 msgstr "Превключи повтарящ режим"
 
-#: data/ShortcutsWindow.ui:154
-msgid "Toggle random mode"
+#: data/ShortcutsWindow.ui:130
+#, fuzzy
+msgid "Toggle Random Mode"
 msgstr "Превключи случаен режим"
 
-#: data/ShortcutsWindow.ui:161
-msgid "Toggle single mode"
+#: data/ShortcutsWindow.ui:136
+#, fuzzy
+msgid "Toggle Single Mode"
 msgstr "Превключи единичен режим"
 
-#: data/ShortcutsWindow.ui:168
-msgid "Toggle consume mode"
+#: data/ShortcutsWindow.ui:142
+msgid "Pause After Song"
+msgstr ""
+
+#: data/ShortcutsWindow.ui:148
+#, fuzzy
+msgid "Toggle Consume Mode"
 msgstr "Превключи консумиращ режим"
+
+#: data/ShortcutsWindow.ui:156
+msgid "Playlist"
+msgstr "Плейлист"
+
+#: data/ShortcutsWindow.ui:159
+msgid "Clear"
+msgstr "Изчисти"
+
+#: data/ShortcutsWindow.ui:165
+msgid "Tidy"
+msgstr "Спретнато"
+
+#: data/ShortcutsWindow.ui:171
+#, fuzzy
+msgid "Enqueue Album"
+msgstr "На опашката"
+
+#~ msgid "Use Client-side decoration"
+#~ msgstr "Използвай декорация от Клиентска страна"
+
+#~ msgid "Show lyrics button"
+#~ msgstr "Покажи бутон за лирики"
+
+#~ msgid "Place playlist at the side"
+#~ msgstr "Постави плейлитът на страни"
+
+#~ msgid "Album view cover size"
+#~ msgstr "Големина за основна облечка"
+
+#~ msgid "Action bar icon size"
+#~ msgstr "Големина за иконите на бутоните"
+
+#~ msgid "Choose directory"
+#~ msgstr "Избери директория"
+
+#~ msgid ""
+#~ "The first image in the same directory as the song file matching this "
+#~ "regex will be displayed. %AlbumArtist% and %Album% will be replaced by "
+#~ "the corresponding tags of the song."
+#~ msgstr ""
+#~ "Ще бъдат показани първата картина в същата директория като съвпадение на "
+#~ "този регулярен израз. %AlbumArtist% и %Album% ще бъдат заместени от "
+#~ "съответстващите тагове от песента."
+
+#~ msgid "Cover regex:"
+#~ msgstr "Обложка - регулярен израз:"
+
+#~ msgid "Stats"
+#~ msgstr "Статистика"
+
+#~ msgid "<b>Artists:</b>"
+#~ msgstr "<b>Артисти:</b>"
+
+#~ msgid "<b>Albums:</b>"
+#~ msgstr "<b>Албуми:</b>"
+
+#~ msgid "<b>Songs:</b>"
+#~ msgstr "<b>Песни::</b>"
+
+#~ msgid "No"
+#~ msgstr "№"
+
+#~ msgid "Title"
+#~ msgstr "Заглавие"
+
+#~ msgid "Length"
+#~ msgstr "Дължина"
+
+#, python-brace-format
+#~ msgid "{hits} hit"
+#~ msgid_plural "{hits} hits"
+#~ msgstr[0] "{hits} попадение"
+#~ msgstr[1] "{hits} попадения"
+
+#~ msgid "all tags"
+#~ msgstr "всички тагове"
+
+#~ msgid "all genres"
+#~ msgstr "всички жанрове"
+
+#~ msgid "all artists"
+#~ msgstr "всички артисти"
+
+#~ msgid "Scroll to current song"
+#~ msgstr "Превъртане до моментната песен"
+
+#~ msgid "Next title"
+#~ msgstr "Следващо заглавие"
+
+#~ msgid "Updating Database…"
+#~ msgstr "Актуализиране на базата с данни…"
+
+#, python-brace-format
+#~ msgid "Connection to “{socket}” failed"
+#~ msgstr "Свързването със  “{socket}” се провали"
+
+#, python-brace-format
+#~ msgid "Connection to “{host}:{port}” failed"
+#~ msgstr "Свързването със “{host}:{port}” се провали"
+
+#~ msgid "Back"
+#~ msgstr "Назад"
+
+#~ msgid "About mpdevil"
+#~ msgstr "За mpdevil"
+
+#~ msgid "Genre Filter"
+#~ msgstr "Филтър на Жанрове"
+
+#~ msgid "mpdevil"
+#~ msgstr "mpdevil"
+
+#~ msgid "MPD Client"
+#~ msgstr "MPD Клиент"
+
+#~ msgid "A simple music browser for MPD"
+#~ msgstr "Опростен музикален браузър за MPD"
+
+#~ msgid "Open shortcuts window"
+#~ msgstr "Отвори прозорец за преки пътища"
+
+#~ msgid "Open menu"
+#~ msgstr "Отвори меню"
+
+#~ msgid "Update database"
+#~ msgstr "Актуализирай базата с данни"
+
+#~ msgid "Clear playlist"
+#~ msgstr "Изчисти плейлист"
+
+#~ msgid "Toggle genre filter"
+#~ msgstr "Превключи Филтър на Жанрове"
+
+#~ msgid "Stop after current title"
+#~ msgstr "Спри след моментното заглавие"
 
 #~ msgid "Play selected albums and titles immediately"
 #~ msgstr "Възпроизведи избраните албуми и заглавия веднага"
@@ -483,12 +732,6 @@ msgstr "Превключи консумиращ режим"
 
 #~ msgid "Directly play all titles"
 #~ msgstr "Директно възпроизведи всички заглавия"
-
-#~ msgid "Back to current album"
-#~ msgstr "Обратно в моментния албум"
-
-#~ msgid "Playlist"
-#~ msgstr "Плейлист"
 
 #, fuzzy
 #~ msgid "Show information"
@@ -525,9 +768,6 @@ msgstr "Превключи консумиращ режим"
 
 #~ msgid "Delete"
 #~ msgstr "Изтриване"
-
-#~ msgid "Playlists"
-#~ msgstr "Плейлисти"
 
 #~ msgid "Cycle through profiles"
 #~ msgstr "Превключи между профилите"
@@ -568,23 +808,11 @@ msgstr "Превключи консумиращ режим"
 #~ msgid "Disc"
 #~ msgstr "Диск"
 
-#~ msgid "Artist"
-#~ msgstr "Артист"
-
-#~ msgid "Album"
-#~ msgstr "Албум"
-
 #~ msgid "Year"
 #~ msgstr "Година"
 
 #~ msgid "Genre"
 #~ msgstr "Жанр"
-
-#~ msgid "_Append"
-#~ msgstr "_Добави"
-
-#~ msgid "_Play"
-#~ msgstr "_Свири"
 
 #~ msgid "_Enqueue"
 #~ msgstr "_На опашката"
