@@ -1264,7 +1264,7 @@ class SongListRow(Gtk.Box):
 
 class SongList(Gtk.ListView):
 	def __init__(self):
-		super().__init__(single_click_activate=True, tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
 		self.set_model(SelectionModel(Song))
 
 		# factory
@@ -1303,16 +1303,20 @@ class SongList(Gtk.ListView):
 	def get_focus_song(self):
 		return self.get_model().get_item(self.get_focus_position())
 
-	def get_position_at(self, x, y):
+	def get_position(self, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if item is self:
 			return None
 		return item.get_first_child().get_property("position")
 
+	def get_song(self, position):
+		return self.get_model().get_item(position)
+
 class BrowserSongList(SongList):
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
+		self._activate_on_release=False
 
 		# menu
 		self._menu=SongMenu(client)
@@ -1332,6 +1336,8 @@ class BrowserSongList(SongList):
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
+		long_press_controller=Gtk.GestureLongPress(touch_only=True)
+		self.add_controller(long_press_controller)
 		drag_source=Gtk.DragSource()
 		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
 		self.add_controller(drag_source)
@@ -1339,6 +1345,9 @@ class BrowserSongList(SongList):
 		# connect
 		self.connect("activate", self._on_activate)
 		button_controller.connect("pressed", self._on_button_pressed)
+		button_controller.connect("stopped", self._on_button_stopped)
+		button_controller.connect("released", self._on_button_released)
+		long_press_controller.connect("pressed", self._on_long_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
 
 	def clear(self):
@@ -1352,20 +1361,31 @@ class BrowserSongList(SongList):
 		self._client.file_to_playlist(self.get_model().get_item(pos)["file"], "play")
 
 	def _on_button_pressed(self, controller, n_press, x, y):
-		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is not self:
-			row=item.get_first_child()
-			song=self.get_model().get_item(row.get_property("position"))
-			if controller.get_current_button() == 2 and n_press == 1:
-				self._client.file_to_playlist(song["file"], "append")
+		if (position:=self.get_position(x,y)) is not None:
+			if controller.get_current_button() == 1 and n_press == 1:
+				self._activate_on_release=True
+			elif controller.get_current_button() == 2 and n_press == 1:
+				self._client.file_to_playlist(self.get_song(position)["file"], "append")
 			elif controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(song["file"], x, y)
+				self._menu.open(self.get_song(position)["file"], x, y)
+
+	def _on_button_stopped(self, controller):
+		self._activate_on_release=False
+
+	def _on_button_released(self, controller, n_press, x, y):
+		if self._activate_on_release and (position:=self.get_position(x,y)) is not None:
+			self._client.file_to_playlist(self.get_song(position)["file"], "play")
+		self._activate_on_release=False
+
+	def _on_long_pressed(self, controller, x, y):
+		if (position:=self.get_position(x,y)) is not None:
+			self._menu.open(self.get_song(position)["file"], x, y)
 
 	def _on_menu(self, action, state):
 		self._menu.open(self.get_focus_song()["file"], *self.get_focus_popup_point())
 
 	def _on_drag_prepare(self, drag_source, x, y):
-		if (position:=self.get_position_at(x,y)) is not None:
+		if (position:=self.get_position(x,y)) is not None:
 			return Gdk.ContentProvider.new_for_value(self.get_model().get_item(position))
 
 ###########
@@ -1397,6 +1417,7 @@ class SearchView(Gtk.Stack):
 
 		# song list
 		song_list=SongList()
+		song_list.set_single_click_activate(True)
 		self._song_model=song_list.get_model()
 
 		# split view
@@ -1950,6 +1971,7 @@ class PlaylistView(SongList):
 		super().__init__()
 		self._client=client
 		self._playlist_version=None
+		self._activate_on_release=False
 
 		# menu
 		self._menu=PlaylistMenu(client)
@@ -1973,6 +1995,8 @@ class PlaylistView(SongList):
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
+		long_press_controller=Gtk.GestureLongPress(touch_only=True)
+		self.add_controller(long_press_controller)
 		drag_source=Gtk.DragSource()
 		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
 		drag_source.set_actions(Gdk.DragAction.MOVE)
@@ -1985,6 +2009,9 @@ class PlaylistView(SongList):
 		# connect
 		self.connect("activate", self._on_activate)
 		button_controller.connect("pressed", self._on_button_pressed)
+		button_controller.connect("stopped", self._on_button_stopped)
+		button_controller.connect("released", self._on_button_released)
+		long_press_controller.connect("pressed", self._on_long_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
 		drop_target.connect("drop", self._on_drop)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
@@ -2009,15 +2036,30 @@ class PlaylistView(SongList):
 			self.get_model().select(int(song))
 
 	def _on_button_pressed(self, controller, n_press, x, y):
-		if (position:=self.get_position_at(x,y)) is None:
+		if (position:=self.get_position(x,y)) is None:
 			if controller.get_current_button() == 3 and n_press == 1:
 				self._menu.open(None, None, x, y)
 		else:
-			if controller.get_current_button() == 2 and n_press == 1:
+			if controller.get_current_button() == 1 and n_press == 1:
+				self._activate_on_release=True
+			elif controller.get_current_button() == 2 and n_press == 1:
 				self._delete(position)
 			elif controller.get_current_button() == 3 and n_press == 1:
-				song=self.get_model().get_item(position)
-				self._menu.open(song["file"], position, x, y)
+				self._menu.open(self.get_song(position)["file"], position, x, y)
+
+	def _on_button_stopped(self, controller):
+		self._activate_on_release=False
+
+	def _on_button_released(self, controller, n_press, x, y):
+		if self._activate_on_release and (position:=self.get_position(x,y)) is not None:
+			self._client.play(position)
+		self._activate_on_release=False
+
+	def _on_long_pressed(self, controller, x, y):
+		if (position:=self.get_position(x,y)) is None:
+			self._menu.open(None, None, x, y)
+		else:
+			self._menu.open(self.get_song(position)["file"], position, x, y)
 
 	def _on_activate(self, listview, pos):
 		self._client.play(pos)
@@ -2049,7 +2091,7 @@ class PlaylistView(SongList):
 		self._delete(self.get_focus_position())
 
 	def _on_drag_prepare(self, drag_source, x, y):
-		if (position:=self.get_position_at(x,y)) is not None:
+		if (position:=self.get_position(x,y)) is not None:
 			return Gdk.ContentProvider.new_for_value(position)
 
 	def _point_in_upper_half(self, x, y, widget):
