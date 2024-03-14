@@ -1427,8 +1427,7 @@ class SearchView(Gtk.Stack):
 
 	def search(self, search_text, artists):
 		self.clear()
-		keywords=list(filter(None, search_text.split(" ")))
-		if keywords:
+		if (keywords:=search_text.split()):
 			self._client.restrict_tagtypes("track", "title", "artist", "albumartist", "album", "date")
 			expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in keywords))
 			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
