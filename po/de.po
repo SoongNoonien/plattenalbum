@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-03-14 19:20+0100\n"
-"PO-Revision-Date: 2024-03-14 19:23+0100\n"
+"PO-Revision-Date: 2024-03-14 22:48+0100\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -375,37 +375,39 @@ msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
 msgid "Main window"
-msgstr ""
+msgstr "Hauptfenster"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
 msgid "Album View"
-msgstr ""
+msgstr "Albumansicht"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
 msgid ""
 "Increased flatpak support to only require a minimium set of non-standard "
 "privileges."
 msgstr ""
+"Flatpak-Unterstützung verbessert, sodass weniger Berechtigungen notwendig "
+"sind."
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
 msgid "First release using GTK4 and libadwaita"
-msgstr ""
+msgstr "Erste Veröffentlichung mit GTK4 und libadwaita"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:41
 msgid "Added automatic cover sizing"
-msgstr ""
+msgstr "Automatische Cover-Größenänderung hinzugefügt"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:42
 msgid "Greatly improved search"
-msgstr ""
+msgstr "Suche stark verbessert"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:43
 msgid "Removed mini-player"
-msgstr ""
+msgstr "Miniplayer entfernt"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:56
 msgid "Martin Wagner"
-msgstr ""
+msgstr "Martin Wagner"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
