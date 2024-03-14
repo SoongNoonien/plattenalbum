@@ -13,16 +13,12 @@
 			<default>650</default>
 			<summary>Default height of window</summary>
 		</key>
-		<key type="b" name="socket-connection">
-			<default>true</default>
-			<summary>Connect via Unix domain socket</summary>
-		</key>
-		<key type="s" name="socket">
-			<default>""</default>
-			<summary>Unix domain socket</summary>
+		<key type="b" name="remote-connection">
+			<default>false</default>
+			<summary>Connect to remote server</summary>
 		</key>
 		<key type="s" name="host">
-			<default>"localhost"</default>
+			<default>""</default>
 			<summary>Hostname or IP address</summary>
 		</key>
 		<key type="i" name="port">
@@ -33,10 +29,6 @@
 		<key type="s" name="password">
 			<default>""</default>
 			<summary>Password</summary>
-		</key>
-		<key type="s" name="music-directory">
-			<default>""</default>
-			<summary>Music library directory</summary>
 		</key>
 		<key type="b" name="show-stop">
 			<default>true</default>
@@ -57,10 +49,6 @@
 		<key type="b" name="stop-on-quit">
 			<default>false</default>
 			<summary>Stop playback on quit</summary>
-		</key>
-		<key type="b" name="mpris">
-			<default>true</default>
-			<summary>Provide MPRIS</summary>
 		</key>
 		<key type="b" name="rewind-mode">
 			<default>false</default>

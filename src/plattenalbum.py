@@ -48,8 +48,6 @@ textdomain("de.wagnermartin.Plattenalbum")
 Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource")))
 
 FALLBACK_COVER="media-optical"
-FALLBACK_SOCKET=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
-FALLBACK_MUSIC_DIRECTORY=GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_MUSIC)
 
 ############################
 # decorators and functions #
@@ -633,9 +631,10 @@ class Client(MPDClient):
 		self._last_status={}
 		self._main_timeout_id=None
 		self._start_idle_id=None
-		self.music_directory=None
+		self._music_directory=None
 		self.current_cover=None
 		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
+		self._socket_path=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 
 	# overloads to use Song class
@@ -664,10 +663,10 @@ class Client(MPDClient):
 	def start(self):
 		self.emitter.emit("connecting")
 		def callback():
-			if self._settings.get_boolean("socket-connection"):
-				args=(self._settings.get_socket(), None)
-			else:
+			if self._settings.get_boolean("remote-connection"):
 				args=(self._settings.get_string("host"), self._settings.get_int("port"))
+			else:
+				args=(self._socket_path, None)
 			try:
 				self.connect(*args)
 				if self._settings.get_string("password"):
@@ -677,13 +676,13 @@ class Client(MPDClient):
 				self._start_idle_id=None
 				return False
 			# connect successful
-			if self._settings.get_boolean("socket-connection"):
+			if self._settings.get_boolean("remote-connection"):
+				self._music_directory=None
+			else:
 				if "config" in self.commands():
-					self.music_directory=self.config()
+					self._music_directory=self.config()
 				else:
 					print("No permission to get music directory.")
-			else:
-				self.music_directory=self._settings.get_music_directory()
 			if "status" in self.commands():
 				self.emitter.emit("connected", self.stats()["songs"] == "0")
 				self._main_timeout_id=GLib.timeout_add(100, self._main_loop)
@@ -767,8 +766,8 @@ class Client(MPDClient):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
 
 	def get_cover_path(self, uri):
-		if self.music_directory is not None:
-			song_dir=os.path.join(self.music_directory, os.path.dirname(uri))
+		if self._music_directory is not None:
+			song_dir=os.path.join(self._music_directory, os.path.dirname(uri))
 			if uri.lower().endswith(".cue"):
 				song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
 			if os.path.isdir(song_dir):
@@ -796,8 +795,8 @@ class Client(MPDClient):
 			return None
 
 	def get_absolute_path(self, uri):
-		if self.music_directory is not None:
-			path=re.sub(r"(.*\.cue)\/track\d+$", r"\1", os.path.join(self.music_directory, uri), flags=re.IGNORECASE)
+		if self._music_directory is not None:
+			path=re.sub(r"(.*\.cue)\/track\d+$", r"\1", os.path.join(self._music_directory, uri), flags=re.IGNORECASE)
 			if os.path.isfile(path):
 				return path
 			else:
@@ -894,7 +893,7 @@ class Client(MPDClient):
 			self.disconnect()
 			self.emitter.emit("connection_error")
 			self._main_timeout_id=None
-			self.music_directory=None
+			self._music_directory=None
 			self.current_cover=None
 			return False
 		return True
@@ -909,18 +908,6 @@ class Settings(Gio.Settings):
 	cursor_watch=GObject.Property(type=bool, default=False)
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
-
-	def get_socket(self):
-		socket=self.get_string("socket")
-		if not socket:
-			socket=FALLBACK_SOCKET
-		return socket
-
-	def get_music_directory(self):
-		music_directory=self.get_string("music-directory")
-		if not music_directory:
-			music_directory=FALLBACK_MUSIC_DIRECTORY
-		return music_directory
 
 ###################
 # settings dialog #
@@ -942,10 +929,9 @@ class BehaviorSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
-			(_("Support “_MPRIS”"), "mpris", _("restart required")),
 			(_("Sort _albums by year"), "sort-albums-by-year", ""),
 			(_("Send _notification on title change"), "send-notify", ""),
-			(_("_Rewind via previous button"), "rewind-mode", ""),
+			(_("Re_wind via previous button"), "rewind-mode", ""),
 			(_("Stop _playback on quit"), "stop-on-quit", ""),
 		)
 		for title, key, subtitle in toggle_data:
@@ -953,91 +939,39 @@ class BehaviorSettings(Adw.PreferencesGroup):
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
-class SocketRow(Adw.EntryRow):
-	def __init__(self, parent):
-		super().__init__(title=_("Socket path"))
-		button=Gtk.Button(icon_name="document-open-symbolic", tooltip_text=_("Pick a File"), has_frame=False, valign=Gtk.Align.CENTER)
-		button.connect("clicked", self._on_button_clicked, parent)
-		self.add_suffix(button)
-
-	def _on_button_clicked(self, widget, parent):
-		dialog=Gtk.FileDialog()
-		file=self.get_text()
-		if not file:
-			file=FALLBACK_SOCKET
-		dialog.set_initial_file(Gio.File.new_for_path(file))
-		def callback(source_object, result):
-			try:
-				self.set_text(dialog.open_finish(result).get_path())
-			except GLib.GError:
-				pass
-		dialog.open(parent, None, callback)
-
-class MusicDirectoryRow(Adw.EntryRow):
-	def __init__(self, parent):
-		super().__init__(title=_("Music library"))
-		button=Gtk.Button(icon_name="folder-open-symbolic", tooltip_text=_("Select a Folder"), has_frame=False, valign=Gtk.Align.CENTER)
-		button.connect("clicked", self._on_button_clicked, parent)
-		self.add_suffix(button)
-
-	def _on_button_clicked(self, widget, parent):
-		dialog=Gtk.FileDialog()
-		folder=self.get_text()
-		if not folder:
-			folder=FALLBACK_MUSIC_DIRECTORY
-		dialog.set_initial_folder(Gio.File.new_for_path(folder))
-		def callback(source_object, result):
-			try:
-				self.set_text(dialog.select_folder_finish(result).get_path())
-			except GLib.GError:
-				pass
-		dialog.select_folder(parent, None, callback)
-
 class ConnectionSettings(Adw.PreferencesGroup):
 	def __init__(self, client, settings, parent):
 		super().__init__(title=_("Connection"))
+		remote_row=Adw.ExpanderRow(title=_("_Connect to remote server"), use_underline=True, show_enable_switch=True)
+		settings.bind("remote-connection", remote_row, "enable-expansion", Gio.SettingsBindFlags.DEFAULT)
+		self.add(remote_row)
 
-		socket_connect_row=Adw.SwitchRow(title=_("Connect via _Unix domain socket"), use_underline=True)
-		settings.bind("socket-connection", socket_connect_row, "active", Gio.SettingsBindFlags.DEFAULT)
-		self.add(socket_connect_row)
-
-		socket_row=SocketRow(parent)
-		settings.bind("socket", socket_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", socket_row, "visible", Gio.SettingsBindFlags.GET)
-		self.add(socket_row)
+		hostname_row=Adw.EntryRow(title=_("Host name"))
+		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		remote_row.add_row(hostname_row)
 
 		port_row=Adw.SpinRow.new_with_range(0, 65535, 1)
 		port_row.set_title(_("Port"))
 		settings.bind("port", port_row, "value", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", port_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
-		self.add(port_row)
-
-		hostname_row=Adw.EntryRow(title=_("Hostname"))
-		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", hostname_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
-		self.add(hostname_row)
-
-		music_directory_row=MusicDirectoryRow(parent)
-		settings.bind("music-directory", music_directory_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("socket-connection", music_directory_row, "visible", Gio.SettingsBindFlags.GET|Gio.SettingsBindFlags.INVERT_BOOLEAN)
-		self.add(music_directory_row)
+		remote_row.add_row(port_row)
 
 		password_row=Adw.PasswordEntryRow(title=_("Password"))
 		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		self.add(password_row)
 
 		# connect button
-		reconnect_button=Gtk.Button(child=Adw.ButtonContent(icon_name="view-refresh-symbolic", label=_("Reconnect")), has_frame=False)
+		reconnect_button_content=Adw.ButtonContent(icon_name="view-refresh-symbolic", label=_("_Reconnect"), use_underline=True)
+		reconnect_button=Gtk.Button(child=reconnect_button_content, has_frame=False)
 		reconnect_button.connect("clicked", lambda *args: client.reconnect())
 		self.set_header_suffix(reconnect_button)
 
 class SettingsDialog(Adw.PreferencesWindow):
 	def __init__(self, parent, client, settings):
-		super().__init__(transient_for=parent)
+		super().__init__(transient_for=parent, search_enabled=False)
 		page=Adw.PreferencesPage()
+		page.add(ConnectionSettings(client, settings, parent))
 		page.add(ViewSettings(settings))
 		page.add(BehaviorSettings(settings))
-		page.add(ConnectionSettings(client, settings, parent))
 		self.add(page)
 
 #################
@@ -2965,8 +2899,7 @@ class Plattenalbum(Adw.Application):
 		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 		self._window.open()
 		# MPRIS
-		if self._settings.get_boolean("mpris"):
-			dbus_service=MPRISInterface(self, self._window, self._client)
+		dbus_service=MPRISInterface(self, self._window, self._client)
 		# actions
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
