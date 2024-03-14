@@ -707,6 +707,8 @@ class Client(MPDClient):
 	def disconnect(self):
 		super().disconnect()
 		self._last_status={}
+		self._music_directory=None
+		self.current_cover=None
 		self.emitter.emit("disconnected")
 
 	def connected(self):
@@ -893,8 +895,6 @@ class Client(MPDClient):
 			self.disconnect()
 			self.emitter.emit("connection_error")
 			self._main_timeout_id=None
-			self._music_directory=None
-			self.current_cover=None
 			return False
 		return True
 
