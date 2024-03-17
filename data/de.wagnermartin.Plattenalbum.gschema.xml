@@ -54,5 +54,9 @@
 			<default>false</default>
 			<summary>Classic previous button behavior</summary>
 		</key>
+		<key type="b" name="mpris">
+			<default>true</default>
+			<summary>Provide MPRIS</summary>
+		</key>
 	</schema>
 </schemalist>

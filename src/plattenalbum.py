@@ -929,6 +929,7 @@ class BehaviorSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
+			(_("Support “_MPRIS”"), "mpris", _("restart required")),
 			(_("Sort _albums by year"), "sort-albums-by-year", ""),
 			(_("Send _notification on title change"), "send-notify", ""),
 			(_("Re_wind via previous button"), "rewind-mode", ""),
@@ -2899,7 +2900,8 @@ class Plattenalbum(Adw.Application):
 		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 		self._window.open()
 		# MPRIS
-		dbus_service=MPRISInterface(self, self._window, self._client)
+		if self._settings.get_boolean("mpris"):
+			dbus_service=MPRISInterface(self, self._window, self._client)
 		# actions
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
