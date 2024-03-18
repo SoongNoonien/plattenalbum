@@ -150,13 +150,17 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		</interface>
 	</node>
 	"""
-
-	def __init__(self, application, window, client):
+	def __init__(self, application, window, client, settings):
 		self._application=application
 		self._window=window
 		self._client=client
+		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
+		self._node_info=Gio.DBusNodeInfo.new_for_xml(self._INTERFACES_XML)
 		self._metadata={}
 		self._tmp_cover_file,_=Gio.File.new_tmp(None)
+		self._handlers=[]
+		self._object_ids=[]
+		self._name_id=None
 
 		# MPRIS property mappings
 		self._prop_mapping={
@@ -186,24 +190,23 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				"CanControl": (GLib.Variant("b", True), None)},
 		}
 
-		# start
-		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
-		Gio.bus_own_name_on_connection(self._bus, self._MPRIS_NAME, Gio.BusNameOwnerFlags.NONE, None, None)
-		self._node_info=Gio.DBusNodeInfo.new_for_xml(self._INTERFACES_XML)
-		for interface in self._node_info.interfaces:
-			self._bus.register_object(self._MPRIS_PATH, interface, self._handle_method_call, None, None)
-
 		# connect
 		self._application.connect("shutdown", lambda *args: self._tmp_cover_file.delete(None))
-		self._client.emitter.connect("state", self._on_state_changed)
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("volume", self._on_volume_changed)
-		self._client.emitter.connect("repeat", self._on_loop_changed)
-		self._client.emitter.connect("single", self._on_loop_changed)
-		self._client.emitter.connect("random", self._on_random_changed)
-		self._client.emitter.connect("connection_error", self._on_connection_error)
-		self._client.emitter.connect("connected", self._on_connected)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._handlers.append(self._client.emitter.connect("state", self._on_state_changed))
+		self._handlers.append(self._client.emitter.connect("current-song", self._on_song_changed))
+		self._handlers.append(self._client.emitter.connect("volume", self._on_volume_changed))
+		self._handlers.append(self._client.emitter.connect("repeat", self._on_loop_changed))
+		self._handlers.append(self._client.emitter.connect("single", self._on_loop_changed))
+		self._handlers.append(self._client.emitter.connect("random", self._on_random_changed))
+		self._handlers.append(self._client.emitter.connect("connected", self._on_connected))
+		self._handlers.append(self._client.emitter.connect("disconnected", self._on_disconnected))
+		for handler in self._handlers:
+			self._client.emitter.handler_block(handler)
+
+		# enable/disable
+		settings.connect("changed::mpris", self._on_mpris_changed)
+		if settings.get_boolean("mpris"):
+			self._enable()
 
 	def _handle_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
 		args=list(parameters.unpack())
@@ -443,16 +446,36 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _on_random_changed(self, *args):
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Shuffle")
 
+	def _enable(self):
+		self._name_id=Gio.bus_own_name_on_connection(self._bus, self._MPRIS_NAME, Gio.BusNameOwnerFlags.NONE, None, None)
+		for interface in self._node_info.interfaces:
+			self._object_ids.append(self._bus.register_object(self._MPRIS_PATH, interface, self._handle_method_call, None, None))
+		for handler in self._handlers:
+			self._client.emitter.handler_unblock(handler)
+
+	def _disable(self):
+		for object_id in self._object_ids:
+			self._bus.unregister_object(object_id)
+		self._object_ids=[]
+		Gio.bus_unown_name(self._name_id)
+		self._name_id=None
+		for handler in self._handlers:
+			self._client.emitter.handler_block(handler)
+
+	def _on_mpris_changed(self, settings, key):
+		if settings.get_boolean(key):
+			self._enable()
+			self._update_metadata()
+			for p in ("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle"):
+				self._update_property(self._MPRIS_PLAYER_IFACE, p)
+		else:
+			self._disable()
+
 	def _on_connected(self, *args):
 		for p in ("CanPlay","CanPause","CanSeek"):
 			self._update_property(self._MPRIS_PLAYER_IFACE, p)
 
 	def _on_disconnected(self, *args):
-		self._metadata={}
-		self._tmp_cover_file.replace_contents(b"", None, False, Gio.FileCreateFlags.NONE, None)
-		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
-
-	def _on_connection_error(self, *args):
 		self._metadata={}
 		self._tmp_cover_file.replace_contents(b"", None, False, Gio.FileCreateFlags.NONE, None)
 		for p in ("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle","CanPlay","CanPause","CanSeek"):
@@ -929,7 +952,7 @@ class BehaviorSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
-			(_("Support “_MPRIS”"), "mpris", _("restart required")),
+			(_("Support “_MPRIS”"), "mpris", ""),
 			(_("Sort _albums by year"), "sort-albums-by-year", ""),
 			(_("Send _notification on title change"), "send-notify", ""),
 			(_("Re_wind via previous button"), "rewind-mode", ""),
@@ -2900,8 +2923,7 @@ class Plattenalbum(Adw.Application):
 		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 		self._window.open()
 		# MPRIS
-		if self._settings.get_boolean("mpris"):
-			dbus_service=MPRISInterface(self, self._window, self._client)
+		dbus_service=MPRISInterface(self, self._window, self._client, self._settings)
 		# actions
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
