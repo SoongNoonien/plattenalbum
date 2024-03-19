@@ -12,6 +12,7 @@
     "--share=network",
     "--filesystem=xdg-music:ro",
     "--filesystem=xdg-run/mpd",
+    "--filesystem=/run/mpd",
     "--talk-name=org.freedesktop.FileManager1"
   ],
   "modules": [
