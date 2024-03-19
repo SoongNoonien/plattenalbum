@@ -686,33 +686,43 @@ class Client(MPDClient):
 	def start(self):
 		self.emitter.emit("connecting")
 		def callback():
+			# connect
 			if self._settings.get_boolean("remote-connection"):
-				args=(self._settings.get_string("host"), self._settings.get_int("port"))
+				try:
+					self.connect(self._settings.get_string("host"), self._settings.get_int("port"))
+				except:
+					self.emitter.emit("connection_error")
+					self._start_idle_id=None
+					return False
 			else:
-				args=(self._socket_path, None)
-			try:
-				self.connect(*args)
-				if self._settings.get_string("password"):
-					self.password(self._settings.get_string("password"))
-			except:
-				self.emitter.emit("connection_error")
-				self._start_idle_id=None
-				return False
+				try:
+					self.connect(self._socket_path, None)
+				except:
+					try:
+						self.connect("/run/mpd/socket", None)
+					except:
+						self.emitter.emit("connection_error")
+						self._start_idle_id=None
+						return False
+			# set password
+			if password:=self._settings.get_string("password"):
+				try:
+					self.password(password)
+				except:
+					self.emitter.emit("connection_error")
+					self._start_idle_id=None
+					return False
 			# connect successful
 			if self._settings.get_boolean("remote-connection"):
 				self._music_directory=None
-			else:
-				if "config" in self.commands():
-					self._music_directory=self.config()
-				else:
-					print("No permission to get music directory.")
+			elif "config" in self.commands():
+				self._music_directory=self.config()
 			if "status" in self.commands():
 				self.emitter.emit("connected", self.stats()["songs"] == "0")
 				self._main_timeout_id=GLib.timeout_add(100, self._main_loop)
 			else:
 				self.disconnect()
 				self.emitter.emit("connection_error")
-				print("No read permission, check your mpd config.")
 			self._start_idle_id=None
 			return False
 		self._start_idle_id=GLib.idle_add(callback)
