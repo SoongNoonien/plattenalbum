@@ -11,7 +11,7 @@ Package Installation
 
 Flatpak:
 
-<a href='https://flathub.org/apps/details/org.mpdevil.mpdevil'><img width='240' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
+<a href='https://flathub.org/apps/details/de.wagnermartin.Plattenalbum'><img width='240' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
 
 Arch:
 - https://aur.archlinux.org/packages/plattenalbum
