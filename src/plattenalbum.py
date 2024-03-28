@@ -2863,10 +2863,6 @@ class MainWindow(Adw.ApplicationWindow):
 					notify=Gio.Notification()
 					notify.set_title(title)
 					notify.set_body(album)
-					if isinstance(self._client.current_cover, FileCover):
-						notify.set_icon(Gio.FileIcon.new(Gio.File.new_for_path(self._client.current_cover)))
-					elif isinstance(self._client.current_cover, BinaryCover):
-						notify.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(self._client.current_cover)))
 					self.get_application().send_notification("title-change", notify)
 				else:
 					self.get_application().withdraw_notification("title-change")
