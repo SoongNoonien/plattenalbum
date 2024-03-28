@@ -2853,16 +2853,19 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
-			album=song.get_album_with_date()
-			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
-			self.set_title(title)
-			self._title.set_title(title)
-			self._title.set_subtitle(album)
+			window_title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
+			self.set_title(window_title)
+			self._title.set_title(window_title)
+			self._title.set_subtitle(song.get_album_with_date())
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and state == "play":
 					notify=Gio.Notification()
-					notify.set_title(title)
-					notify.set_body(album)
+					notify.set_title(_("Next Title is Playing"))
+					if artist:=song["artist"]:
+						body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
+					else:
+						body=_("Now playing “{title}”").format(title=song["title"][0])
+					notify.set_body(body)
 					self.get_application().send_notification("title-change", notify)
 				else:
 					self.get_application().withdraw_notification("title-change")
