@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-17 22:37+0100\n"
-"PO-Revision-Date: 2024-03-29 17:04+0900\n"
+"POT-Creation-Date: 2024-03-28 17:28+0100\n"
+"PO-Revision-Date: 2024-03-29 19:04+0900\n"
 "Last-Translator: Gnuey56 <gnuey56@proton.me>\n"
 "Language-Team: \n"
 "Language: ja\n"
@@ -19,341 +19,351 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Poedit 3.4.2\n"
 
-#: src/plattenalbum.py:483
+#: src/plattenalbum.py:506
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days}日"
 
-#: src/plattenalbum.py:520
+#: src/plattenalbum.py:543
 #, python-brace-format
 msgid "{channels} channel"
 msgid_plural "{channels} channels"
 msgstr[0] "{channels} チャンネル"
 
-#: src/plattenalbum.py:918
+#: src/plattenalbum.py:951
 msgid "View"
 msgstr "表示"
 
-#: src/plattenalbum.py:920
+#: src/plattenalbum.py:953
 msgid "Show _stop button"
 msgstr "停止ボタンを表示する (_S)"
 
-#: src/plattenalbum.py:921
+#: src/plattenalbum.py:954
 msgid "Show audio _format"
 msgstr "オーディオフォーマットを表示する (_F)"
 
-#: src/plattenalbum.py:930
+#: src/plattenalbum.py:963
 msgid "Behavior"
 msgstr "振る舞い"
 
-#: src/plattenalbum.py:932
+#: src/plattenalbum.py:965
 msgid "Support “_MPRIS”"
 msgstr "“MPRIS” をサポートする (_M)"
 
-#: src/plattenalbum.py:932
-msgid "restart required"
-msgstr "再起動が必要です"
-
-#: src/plattenalbum.py:933
+#: src/plattenalbum.py:966
 msgid "Sort _albums by year"
 msgstr "アルバムを年順で並び替える (_A)"
 
-#: src/plattenalbum.py:934
+#: src/plattenalbum.py:967
 msgid "Send _notification on title change"
 msgstr "タイトルが変わったときに通知を送る (_N)"
 
-#: src/plattenalbum.py:935
+#: src/plattenalbum.py:968
 msgid "Re_wind via previous button"
 msgstr "「前の曲に戻る」ボタンで巻き戻しを行う (_W)"
 
-#: src/plattenalbum.py:936
+#: src/plattenalbum.py:969
 msgid "Stop _playback on quit"
 msgstr "アプリ終了と同時に再生を止める (_P)"
 
-#: src/plattenalbum.py:945
+#: src/plattenalbum.py:978
 msgid "Connection"
 msgstr "接続"
 
-#: src/plattenalbum.py:946
+#: src/plattenalbum.py:979
 msgid "_Connect to remote server"
 msgstr "リモートサーバーへ接続する (_C)"
 
-#: src/plattenalbum.py:950
+#: src/plattenalbum.py:983
 msgid "Host name"
 msgstr "ホスト名"
 
-#: src/plattenalbum.py:955
+#: src/plattenalbum.py:988
 msgid "Port"
 msgstr "ポート"
 
-#: src/plattenalbum.py:959
+#: src/plattenalbum.py:992
 msgid "Password"
 msgstr "パスワード"
 
 #. connect button
-#: src/plattenalbum.py:964 src/plattenalbum.py:2669
+#: src/plattenalbum.py:997 src/plattenalbum.py:2698
 msgid "_Reconnect"
 msgstr "再接続 (_R)"
 
-#: src/plattenalbum.py:984 data/ShortcutsWindow.ui:49
+#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:49
 msgid "Server Statistics"
 msgstr "サーバー統計情報"
 
-#: src/plattenalbum.py:993
+#: src/plattenalbum.py:1025
 msgid "Protocol"
 msgstr "プロトコル"
 
-#: src/plattenalbum.py:994
+#: src/plattenalbum.py:1026
 msgid "Uptime"
 msgstr "動作時間"
 
-#: src/plattenalbum.py:995
+#: src/plattenalbum.py:1027
 msgid "Playtime"
 msgstr "再生時間"
 
-#: src/plattenalbum.py:996
+#: src/plattenalbum.py:1028
 msgid "Artists"
 msgstr "アーティスト"
 
-#: src/plattenalbum.py:997
+#: src/plattenalbum.py:1029
 msgid "Albums"
 msgstr "アルバム"
 
-#: src/plattenalbum.py:998
+#: src/plattenalbum.py:1030
 msgid "Songs"
 msgstr "曲"
 
-#: src/plattenalbum.py:999
+#: src/plattenalbum.py:1031
 msgid "Total Playtime"
 msgstr "合計再生時間"
 
-#: src/plattenalbum.py:1000
+#: src/plattenalbum.py:1032
 msgid "Database Update"
 msgstr "データベース更新時"
 
-#: src/plattenalbum.py:1117 src/plattenalbum.py:1841
+#: src/plattenalbum.py:1146 src/plattenalbum.py:1870
 msgid "Context menu"
 msgstr "コンテキストメニュー"
 
-#: src/plattenalbum.py:1139
+#: src/plattenalbum.py:1168
 msgid "_Append"
 msgstr "キューに追加 (_A)"
 
-#: src/plattenalbum.py:1140
+#: src/plattenalbum.py:1169
 msgid "As _Next"
 msgstr "次に再生 (_N)"
 
-#: src/plattenalbum.py:1141
+#: src/plattenalbum.py:1170
 msgid "_Play"
 msgstr "再生 (_P)"
 
-#: src/plattenalbum.py:1143 src/plattenalbum.py:1859
+#: src/plattenalbum.py:1172 src/plattenalbum.py:1888
 msgid "_Show"
 msgstr "表示 (_S)"
 
 #. status page
-#: src/plattenalbum.py:1348
+#: src/plattenalbum.py:1377
 msgid "No Results Found"
 msgstr "見つかりませんでした"
 
-#: src/plattenalbum.py:1348
+#: src/plattenalbum.py:1377
 msgid "Try a different search"
 msgstr "別の検索を試してみてください"
 
-#: src/plattenalbum.py:1542 src/plattenalbum.py:1686
+#: src/plattenalbum.py:1571 src/plattenalbum.py:1715
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "{album} アルバムカバー"
 
-#: src/plattenalbum.py:1545 src/plattenalbum.py:1689
+#: src/plattenalbum.py:1574 src/plattenalbum.py:1718
 msgid "Album cover of an unknown album"
 msgstr "不明のアルバムのアルバムカバー"
 
-#: src/plattenalbum.py:1610
+#: src/plattenalbum.py:1639
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "{artist} のアルバム"
 
-#: src/plattenalbum.py:1644
+#: src/plattenalbum.py:1673
 msgid "Append"
 msgstr "キューに追加"
 
 #. widgets
-#: src/plattenalbum.py:1645 src/plattenalbum.py:2257 src/plattenalbum.py:2278
+#: src/plattenalbum.py:1674 src/plattenalbum.py:2286 src/plattenalbum.py:2307
 msgid "Play"
 msgstr "再生"
 
-#: src/plattenalbum.py:1696
+#: src/plattenalbum.py:1725
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
 msgstr[0] "{number}曲 ({duration})"
 
 #. status page
-#: src/plattenalbum.py:1761
+#: src/plattenalbum.py:1790
 msgid "Collection is Empty"
 msgstr "コレクションが空です"
 
-#: src/plattenalbum.py:1858
+#: src/plattenalbum.py:1887
 msgid "_Remove"
 msgstr "削除 (_R)"
 
-#: src/plattenalbum.py:1861
+#: src/plattenalbum.py:1890
 msgid "_Enqueue Album"
 msgstr "アルバムを追加 (_E)"
 
-#: src/plattenalbum.py:1862
+#: src/plattenalbum.py:1891
 msgid "_Tidy"
 msgstr "キューを整頓 (_T)"
 
-#: src/plattenalbum.py:1864
+#: src/plattenalbum.py:1893
 msgid "_Clear"
 msgstr "クリア (_C)"
 
 #. widgets
 #. TODO scroll to song
-#: src/plattenalbum.py:2059
+#: src/plattenalbum.py:2088
 msgid "Playlist is Empty"
 msgstr "プレイリストが空です"
 
 #. status pages
-#: src/plattenalbum.py:2128
+#: src/plattenalbum.py:2157
 msgid "No Lyrics Found"
 msgstr "歌詞が見つかりませんでした"
 
-#: src/plattenalbum.py:2131
+#: src/plattenalbum.py:2160
 msgid "Connection Error"
 msgstr "接続エラー"
 
-#: src/plattenalbum.py:2131
+#: src/plattenalbum.py:2160
 msgid "Check your network connection"
 msgstr "ネットワーク接続を確認してください"
 
-#: src/plattenalbum.py:2184
+#: src/plattenalbum.py:2213
 #, python-brace-format
 msgid "Lyrics of {song}"
 msgstr "{song} の歌詞"
 
-#: src/plattenalbum.py:2185
+#: src/plattenalbum.py:2214
 msgid "searching…"
 msgstr "検索中…"
 
-#: src/plattenalbum.py:2192 src/plattenalbum.py:2197
+#: src/plattenalbum.py:2221 src/plattenalbum.py:2226
 msgid "Lyrics view"
 msgstr "歌詞の表示"
 
-#: src/plattenalbum.py:2202
+#: src/plattenalbum.py:2231
 msgid "Current album cover"
 msgstr "現在のアルバムカバー"
 
-#: src/plattenalbum.py:2258 data/ShortcutsWindow.ui:89
+#: src/plattenalbum.py:2287 data/ShortcutsWindow.ui:89
 msgid "Stop"
 msgstr "停止"
 
-#: src/plattenalbum.py:2260 data/ShortcutsWindow.ui:101
+#: src/plattenalbum.py:2289 data/ShortcutsWindow.ui:101
 msgid "Previous"
 msgstr "前の曲に戻る"
 
-#: src/plattenalbum.py:2261 data/ShortcutsWindow.ui:95
+#: src/plattenalbum.py:2290 data/ShortcutsWindow.ui:95
 msgid "Next"
 msgstr "次の曲へ進む"
 
-#: src/plattenalbum.py:2275
+#: src/plattenalbum.py:2304
 msgid "Pause"
 msgstr "一時停止"
 
-#: src/plattenalbum.py:2294
+#: src/plattenalbum.py:2323
 msgid "Progress bar"
 msgstr "再生バー"
 
-#: src/plattenalbum.py:2485
+#: src/plattenalbum.py:2514
 msgid "Playback Menu"
 msgstr "再生メニュー"
 
-#: src/plattenalbum.py:2489
+#: src/plattenalbum.py:2518
 msgid "_Repeat Mode"
 msgstr "リピートモード (_R)"
 
-#: src/plattenalbum.py:2490
+#: src/plattenalbum.py:2519
 msgid "R_andom Mode"
 msgstr "ランダムモード (_A)"
 
-#: src/plattenalbum.py:2491
+#: src/plattenalbum.py:2520
 msgid "_Single Mode"
 msgstr "シングルモード (_S)"
 
-#: src/plattenalbum.py:2492
+#: src/plattenalbum.py:2521
 msgid "_Pause After Song"
 msgstr "曲の再生後に一時停止する (_P)"
 
-#: src/plattenalbum.py:2493
+#: src/plattenalbum.py:2522
 msgid "_Consume Mode"
 msgstr "消費モード (_C)"
 
-#: src/plattenalbum.py:2649
+#: src/plattenalbum.py:2678
 msgid "Not connected to “Music Player Daemon”"
 msgstr "“Music Player Daemon” と接続されていません"
 
-#: src/plattenalbum.py:2650 data/ShortcutsWindow.ui:19
+#: src/plattenalbum.py:2679 data/ShortcutsWindow.ui:19
 msgid "Preferences"
 msgstr "設定"
 
-#: src/plattenalbum.py:2651
+#: src/plattenalbum.py:2680
 msgid "Database is being updated"
 msgstr "データベースを更新しています"
 
-#: src/plattenalbum.py:2652
+#: src/plattenalbum.py:2681
 msgid "Database updated"
 msgstr "データベースを更新しました"
 
-#: src/plattenalbum.py:2664
+#: src/plattenalbum.py:2693
 msgid "_Preferences"
 msgstr "設定 (_P)"
 
-#: src/plattenalbum.py:2665
+#: src/plattenalbum.py:2694
 msgid "_Keyboard Shortcuts"
 msgstr "キーボード・ショートカット (_K)"
 
-#: src/plattenalbum.py:2666
+#: src/plattenalbum.py:2695
 msgid "_Help"
 msgstr "ヘルプ (_H)"
 
-#: src/plattenalbum.py:2667
+#: src/plattenalbum.py:2696
 msgid "_About Plattenalbum"
 msgstr "Plattenalbum について (_A)"
 
-#: src/plattenalbum.py:2670
+#: src/plattenalbum.py:2699
 msgid "_Update Database"
 msgstr "データベースを更新 (_U)"
 
-#: src/plattenalbum.py:2671
+#: src/plattenalbum.py:2700
 msgid "_Server Statistics"
 msgstr "サーバーの統計 (_S)"
 
-#: src/plattenalbum.py:2673
+#: src/plattenalbum.py:2702
 msgid "_Lyrics"
 msgstr "歌詞 (_L)"
 
 #. menu button / popover
-#: src/plattenalbum.py:2678 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:2707 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
 msgstr "メインメニュー"
 
 #. search
-#: src/plattenalbum.py:2681 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
+#: src/plattenalbum.py:2710 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
 msgid "Search"
 msgstr "検索"
 
-#: src/plattenalbum.py:2682 src/plattenalbum.py:2683
+#: src/plattenalbum.py:2711 src/plattenalbum.py:2712
 msgid "Search collection"
 msgstr "コレクションを検索"
 
-#: src/plattenalbum.py:2866
+#: src/plattenalbum.py:2863
+msgid "Next Title is Playing"
+msgstr "次のタイトルを再生中"
+
+#: src/plattenalbum.py:2865
+#, python-brace-format
+msgid "Now playing “{title}” by “{artist}”"
+msgstr "“{title}” by “{artist}” を再生中"
+
+#: src/plattenalbum.py:2867
+#, python-brace-format
+msgid "Now playing “{title}”"
+msgstr "“{title}” を再生中"
+
+#: src/plattenalbum.py:2894
 msgid "connecting…"
 msgstr "接続中…"
 
-#: src/plattenalbum.py:2892
+#: src/plattenalbum.py:2920
 msgid "Debug mode"
 msgstr "デバッグモード"
 
@@ -513,3 +523,6 @@ msgstr "キューを整頓"
 #: data/ShortcutsWindow.ui:171
 msgid "Enqueue Album"
 msgstr "アルバムを追加"
+
+#~ msgid "restart required"
+#~ msgstr "再起動が必要です"
