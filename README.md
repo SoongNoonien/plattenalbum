@@ -33,7 +33,7 @@ Build dependencies:
 
 Dependencies:
 - GTK4 >=4.12.0
-- libadwaita >=1.4.0
+- libadwaita >=1.5.0
 - Python3
 
 Python modules:

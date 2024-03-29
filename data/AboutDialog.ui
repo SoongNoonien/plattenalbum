@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-<object class="AdwAboutWindow" id="about_dialog">
+<object class="AdwAboutDialog" id="about_dialog">
 <property name="application-icon">de.wagnermartin.Plattenalbum</property>
 <property name="application-name">Plattenalbum</property>
 <property name="copyright">Copyright © 2020-2024 Martin Wagner</property>

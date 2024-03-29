@@ -974,7 +974,7 @@ class BehaviorSettings(Adw.PreferencesGroup):
 			self.add(row)
 
 class ConnectionSettings(Adw.PreferencesGroup):
-	def __init__(self, client, settings, parent):
+	def __init__(self, client, settings):
 		super().__init__(title=_("Connection"))
 		remote_row=Adw.ExpanderRow(title=_("_Connect to remote server"), use_underline=True, show_enable_switch=True)
 		settings.bind("remote-connection", remote_row, "enable-expansion", Gio.SettingsBindFlags.DEFAULT)
@@ -999,11 +999,11 @@ class ConnectionSettings(Adw.PreferencesGroup):
 		reconnect_button.connect("clicked", lambda *args: client.reconnect())
 		self.set_header_suffix(reconnect_button)
 
-class SettingsDialog(Adw.PreferencesWindow):
-	def __init__(self, parent, client, settings):
-		super().__init__(transient_for=parent, search_enabled=False)
+class SettingsDialog(Adw.PreferencesDialog):
+	def __init__(self, client, settings):
+		super().__init__()
 		page=Adw.PreferencesPage()
-		page.add(ConnectionSettings(client, settings, parent))
+		page.add(ConnectionSettings(client, settings))
 		page.add(ViewSettings(settings))
 		page.add(BehaviorSettings(settings))
 		self.add(page)
@@ -1012,10 +1012,9 @@ class SettingsDialog(Adw.PreferencesWindow):
 # other dialogs #
 #################
 
-class ServerStats(Adw.Window):
-	def __init__(self, parent, client, settings):
-		super().__init__(title=_("Server Statistics"), modal=True, transient_for=parent, destroy_with_parent=True,
-			default_width=360, width_request=360, height_request=294)
+class ServerStats(Adw.Dialog):
+	def __init__(self, client, settings):
+		super().__init__(title=_("Server Statistics"), content_width=360, width_request=360, height_request=294)
 
 		# list box
 		list_box=Gtk.ListBox(valign=Gtk.Align.START)
@@ -1042,15 +1041,12 @@ class ServerStats(Adw.Window):
 			row.add_css_class("property")
 			list_box.append(row)
 
-		# shortcuts
-		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Escape, 0), Gtk.NamedAction.new("window.close")))
-
 		# packing
 		clamp=Adw.Clamp(child=list_box, margin_top=18, margin_bottom=18, margin_start=18, margin_end=18)
 		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
 		toolbar_view=Adw.ToolbarView(content=scroll)
 		toolbar_view.add_top_bar(Adw.HeaderBar())
-		self.set_content(toolbar_view)
+		self.set_child(toolbar_view)
 
 ###########################
 # general purpose widgets #
@@ -2812,15 +2808,15 @@ class MainWindow(Adw.ApplicationWindow):
 		self._search_button.emit("clicked")
 
 	def _on_settings(self, action, param):
-		settings=SettingsDialog(self, self._client, self._settings)
-		settings.present()
+		settings=SettingsDialog(self._client, self._settings)
+		settings.present(self)
 
 	def _on_reconnect(self, action, param):
 		self._client.reconnect()
 
 	def _on_stats(self, action, param):
-		stats=ServerStats(self, self._client, self._settings)
-		stats.present()
+		stats=ServerStats(self._client, self._settings)
+		stats.present(self)
 
 	def _on_help(self, action, param):
 		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/plattenalbum/wiki/Usage").launch(self, None, None, None)
@@ -2857,20 +2853,19 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
-			album=song.get_album_with_date()
-			title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
-			self.set_title(title)
-			self._title.set_title(title)
-			self._title.set_subtitle(album)
+			window_title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
+			self.set_title(window_title)
+			self._title.set_title(window_title)
+			self._title.set_subtitle(song.get_album_with_date())
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and state == "play":
 					notify=Gio.Notification()
-					notify.set_title(title)
-					notify.set_body(album)
-					if isinstance(self._client.current_cover, FileCover):
-						notify.set_icon(Gio.FileIcon.new(Gio.File.new_for_path(self._client.current_cover)))
-					elif isinstance(self._client.current_cover, BinaryCover):
-						notify.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(self._client.current_cover)))
+					notify.set_title(_("Next Title is Playing"))
+					if artist:=song["artist"]:
+						body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
+					else:
+						body=_("Now playing “{title}”").format(title=song["title"][0])
+					notify.set_body(body)
 					self.get_application().send_notification("title-change", notify)
 				else:
 					self.get_application().withdraw_notification("title-change")
@@ -2981,8 +2976,7 @@ class Plattenalbum(Adw.Application):
 		builder=Gtk.Builder()
 		builder.add_from_resource("/de/wagnermartin/Plattenalbum/AboutDialog.ui")
 		dialog=builder.get_object("about_dialog")
-		dialog.set_transient_for(self._window)
-		dialog.present()
+		dialog.present(self._window)
 
 	def _on_quit(self, *args):
 		self.quit()
