@@ -157,7 +157,6 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
 		self._node_info=Gio.DBusNodeInfo.new_for_xml(self._INTERFACES_XML)
 		self._metadata={}
-		self._tmp_cover_file,_=Gio.File.new_tmp(None)
 		self._handlers=[]
 		self._object_ids=[]
 		self._name_id=None
@@ -191,7 +190,6 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		}
 
 		# connect
-		self._application.connect("shutdown", lambda *args: self._tmp_cover_file.delete(None))
 		self._handlers.append(self._client.emitter.connect("state", self._on_state_changed))
 		self._handlers.append(self._client.emitter.connect("current-song", self._on_song_changed))
 		self._handlers.append(self._client.emitter.connect("volume", self._on_volume_changed))
@@ -393,7 +391,6 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		"""
 		song=self._client.currentsong()
 		self._metadata={}
-		self._tmp_cover_file.replace_contents(b"", None, False, Gio.FileCreateFlags.NONE, None)
 		for tag, xesam_tag in (("album","album"),("title","title"),("date","contentCreated")):
 			if tag in song:
 				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("s", song[tag][0])
@@ -415,9 +412,6 @@ class MPRISInterface:  # TODO emit Seeked if needed
 					self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
 				if isinstance(self._client.current_cover, FileCover):
 					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(self._client.current_cover).get_uri())
-				elif isinstance(self._client.current_cover, BinaryCover):
-					self._tmp_cover_file.replace_contents(self._client.current_cover, None, False, Gio.FileCreateFlags.NONE, None)
-					self._metadata["mpris:artUrl"]=GLib.Variant("s", self._tmp_cover_file.get_uri())
 
 	def _update_property(self, interface_name, prop):
 		getter, setter=self._prop_mapping[interface_name][prop]
@@ -477,7 +471,6 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	def _on_disconnected(self, *args):
 		self._metadata={}
-		self._tmp_cover_file.replace_contents(b"", None, False, Gio.FileCreateFlags.NONE, None)
 		for p in ("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle","CanPlay","CanPause","CanSeek"):
 			self._update_property(self._MPRIS_PLAYER_IFACE, p)
 
