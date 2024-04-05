@@ -2730,7 +2730,7 @@ class MainWindow(Adw.ApplicationWindow):
 		# status page
 		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Not Connected"))
 		status_page.set_description(_("To use Plattenalbum an instance of the “Music Player Daemon” "\
-			"needs to be setup and running on this or another device in the network"))
+			"needs to be set up and running on this or another device in the network"))
 		reconnect_button=Gtk.Button(label=_("_Reconnect"), use_underline=True, action_name="win.reconnect")
 		reconnect_button.set_css_classes(["suggested-action", "pill"])
 		settings_button=Gtk.Button(label=_("_Preferences"), use_underline=True, action_name="win.settings")
