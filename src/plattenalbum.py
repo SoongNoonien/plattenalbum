@@ -2668,8 +2668,6 @@ class MainWindow(Adw.ApplicationWindow):
 		audio=AudioFormat(self._client, self._settings)
 		volume_button=VolumeButton(self._client, self._settings)
 		self._playback_menu_button=PlaybackMenuButton()
-		self._connection_banner=Adw.Banner(title=_("Not connected to “Music Player Daemon”"),
-			button_label=_("Preferences"), action_name="win.settings")
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
@@ -2729,10 +2727,22 @@ class MainWindow(Adw.ApplicationWindow):
 		overlay_split_view.set_content(self._browser)
 		overlay_split_view.set_sidebar(sidebar)
 
-		# banner box
-		banner_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		banner_box.append(self._connection_banner)
-		banner_box.append(overlay_split_view)
+		# status page
+		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Not Connected"))
+		status_page.set_description(_("To use Plattenalbum an instance of the “Music Player Daemon” "\
+			"needs to be setup and running on this or another device in the network"))
+		reconnect_button=Gtk.Button(label=_("_Reconnect"), use_underline=True, action_name="win.reconnect")
+		reconnect_button.set_css_classes(["suggested-action", "pill"])
+		settings_button=Gtk.Button(label=_("_Preferences"), use_underline=True, action_name="win.settings")
+		settings_button.add_css_class("pill")
+		button_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER, spacing=12)
+		button_box.append(reconnect_button)
+		button_box.append(settings_button)
+		status_page.set_child(button_box)
+
+		self._status_page_stack=Gtk.Stack()
+		self._status_page_stack.add_named(overlay_split_view, "content")
+		self._status_page_stack.add_named(status_page, "status-page")
 
 		# action bar
 		self._action_bar=Gtk.Box()
@@ -2744,10 +2754,10 @@ class MainWindow(Adw.ApplicationWindow):
 		self._action_bar.append(self._playback_menu_button)
 
 		# toolbar view
-		toolbar_view=Adw.ToolbarView(top_bar_style=Adw.ToolbarStyle.RAISED_BORDER, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
-		toolbar_view.add_top_bar(header_bar)
-		toolbar_view.add_bottom_bar(self._action_bar)
-		toolbar_view.set_content(banner_box)
+		self._toolbar_view=Adw.ToolbarView(top_bar_style=Adw.ToolbarStyle.RAISED_BORDER, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
+		self._toolbar_view.add_top_bar(header_bar)
+		self._toolbar_view.add_bottom_bar(self._action_bar)
+		self._toolbar_view.set_content(self._status_page_stack)
 
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
@@ -2771,7 +2781,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.emitter.connect("updated-db", self._on_updated_db)
 
 		# packing
-		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
+		self._toast_overlay=Adw.ToastOverlay(child=self._toolbar_view)
 		self.set_content(self._toast_overlay)
 
 	def open(self):
@@ -2868,7 +2878,10 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_connected(self, *args):
 		self._clear_title()
-		self._connection_banner.set_revealed(False)
+		self._status_page_stack.set_visible_child_name("content")
+		self._toolbar_view.set_reveal_bottom_bars(True)
+		self._toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED_BORDER)
+		self._search_button.set_visible(True)
 		for action in ("stats","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
@@ -2888,7 +2901,10 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_connection_error(self, *args):
 		self._clear_title()
-		self._connection_banner.set_revealed(True)
+		self._status_page_stack.set_visible_child_name("status-page")
+		self._toolbar_view.set_reveal_bottom_bars(False)
+		self._toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
+		self._search_button.set_visible(False)
 
 	def _on_updating_db(self, *args):
 		self._toast_overlay.add_toast(self._updating_toast)
