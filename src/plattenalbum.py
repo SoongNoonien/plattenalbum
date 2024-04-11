@@ -2543,12 +2543,6 @@ class VolumeButton(Gtk.VolumeButton):
 			self.set_value(volume)
 		self.handler_unblock(self._changed)
 
-	def _on_button_toggled(self, button, out_id):
-		if button.get_property("active"):
-			self._client.enableoutput(out_id)
-		else:
-			self._client.disableoutput(out_id)
-
 	def _on_disconnected(self, *args):
 		self._refresh(None, -1)
 
