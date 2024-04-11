@@ -2502,49 +2502,72 @@ class AudioFormat(Gtk.Box):
 		self._file_type_label.set_text("")
 		self._format_label.set_text("")
 
-class PlaybackMenuButton(Gtk.MenuButton):
-	def __init__(self):
-		super().__init__(tooltip_text=_("Playback Menu"), icon_name="view-more-symbolic", direction=Gtk.ArrowType.UP)
-
-		# menu model
-		menu=Gio.Menu()
-		menu.append(_("_Repeat Mode"), "mpd.repeat")
-		menu.append(_("R_andom Mode"), "mpd.random")
-		menu.append(_("_Single Mode"), "mpd.single")
-		menu.append(_("_Pause After Song"), "mpd.single-oneshot")
-		menu.append(_("_Consume Mode"), "mpd.consume")
-		self.set_menu_model(menu)
-
-class VolumeButton(Gtk.VolumeButton):
-	def __init__(self, client, settings):
-		super().__init__(use_symbolic=True)
+class VolumeControl(Gtk.Box):
+	def __init__(self, client):
+		super().__init__(orientation=Gtk.Orientation.HORIZONTAL, margin_start=12, margin_end=3)
 		self._client=client
-		self._adj=self.get_adjustment()
-		self._adj.set_step_increment(5)
-		self._adj.set_page_increment(10)
-		self._adj.set_upper(0)  # do not allow volume change by user when MPD has not yet reported volume (no output enabled/avail)
-		self.get_popup().set_position(Gtk.PositionType.TOP)
+
+		# adjustment
+		scale=Gtk.Scale(hexpand=True)
+		scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Volume control")])
+		self._adjustment=scale.get_adjustment()
+		self._adjustment.configure(0, 0, 100, 5, 5, 0)
 
 		# connect
-		self._changed=self.connect("value-changed", self._set_volume)
+		scale.connect("change-value", self._on_change_value)
 		self._client.emitter.connect("volume", self._refresh)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
 
-	def _set_volume(self, widget, value):
-		self._client.setvol(str(int(value)))
+		# packing
+		self.append(Gtk.Image(icon_name="audio-speakers-symbolic"))
+		self.append(scale)
+
+	def _on_change_value(self, scale, scroll, value):
+		self._client.setvol(str(int(max(min(value, 100), 0))))
 
 	def _refresh(self, emitter, volume):
-		self.handler_block(self._changed)
-		if volume < 0:
-			self.set_value(0)
-			self._adj.set_upper(0)
-		else:
-			self._adj.set_upper(100)
-			self.set_value(volume)
-		self.handler_unblock(self._changed)
+		self._adjustment.set_value(max(volume, 0))
+
+class PlaybackMenuButton(Gtk.MenuButton):
+	def __init__(self, client):
+		super().__init__(tooltip_text=_("Playback Menu"), icon_name="view-more-symbolic", direction=Gtk.ArrowType.UP)
+		self._volume_visible=False
+
+		# volume
+		self._volume_control=VolumeControl(client)
+		self._volume_item=Gio.MenuItem()
+		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
+
+		# menu model
+		self._menu=Gio.Menu()
+		subsection=Gio.Menu()
+		subsection.append(_("_Repeat Mode"), "mpd.repeat")
+		subsection.append(_("R_andom Mode"), "mpd.random")
+		subsection.append(_("_Single Mode"), "mpd.single")
+		subsection.append(_("_Pause After Song"), "mpd.single-oneshot")
+		subsection.append(_("_Consume Mode"), "mpd.consume")
+		self._menu.append_section(None, subsection)
+
+		# popover menu
+		self._popover_menu=Gtk.PopoverMenu.new_from_model(self._menu)
+		self.set_popover(self._popover_menu)
+
+		# connect
+		client.emitter.connect("volume", self._on_volume_changed)
+		client.emitter.connect("disconnected", self._on_disconnected)
+
+	def _on_volume_changed(self, emitter, volume):
+		if volume < 0 and self._volume_visible:
+			self._menu.remove(0)
+			self._volume_visible=False
+		elif volume > 0 and not self._volume_visible:
+			self._menu.prepend_item(self._volume_item)
+			self._popover_menu.add_child(self._volume_control, "volume")
+			self._volume_visible=True
 
 	def _on_disconnected(self, *args):
-		self._refresh(None, -1)
+		if self._volume_visible:
+			self._menu.remove(0)
+			self._volume_visible=False
 
 ###################
 # MPD gio actions #
@@ -2660,8 +2683,7 @@ class MainWindow(Adw.ApplicationWindow):
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		audio=AudioFormat(self._client, self._settings)
-		volume_button=VolumeButton(self._client, self._settings)
-		self._playback_menu_button=PlaybackMenuButton()
+		self._playback_menu_button=PlaybackMenuButton(self._client)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
@@ -2744,7 +2766,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._action_bar.append(playback_control)
 		self._action_bar.append(seek_bar)
 		self._action_bar.append(audio)
-		self._action_bar.append(volume_button)
 		self._action_bar.append(self._playback_menu_button)
 
 		# toolbar view
