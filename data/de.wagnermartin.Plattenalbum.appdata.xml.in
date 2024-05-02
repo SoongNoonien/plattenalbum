@@ -29,6 +29,17 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.1.0" date="2024-05-02">
+      <description>
+        <p>Updated to libadwaita 1.5</p>
+        <ul>
+          <li>Reworked settings</li>
+          <li>Reworked notifications</li>
+          <li>New initial status page</li>
+          <li>Bugfixes and translation updates</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.1" date="2024-03-08">
       <description>
         <p>Increased flatpak support to only require a minimum set of non-standard privileges.</p>
