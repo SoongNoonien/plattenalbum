@@ -711,7 +711,7 @@ class Client(MPDClient):
 			elif "config" in self.commands():
 				self._music_directory=self.config()
 			if "status" in self.commands():
-				self.emitter.emit("connected", self.stats()["songs"] == "0")
+				self.emitter.emit("connected", self._database_is_empty())
 				self._main_timeout_id=GLib.timeout_add(100, self._main_loop)
 			else:
 				self.disconnect()
@@ -874,6 +874,9 @@ class Client(MPDClient):
 			self.tagtypes("enable", tag)
 		self.command_list_end()
 
+	def _database_is_empty(self):
+		return self.stats().get("songs", "0") == "0"
+
 	def _main_loop(self, *args):
 		try:
 			status=self.status()
@@ -911,7 +914,7 @@ class Client(MPDClient):
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
 				elif "updating_db" == key:
-					self.emitter.emit("updated-db", self.stats()["songs"] == "0")
+					self.emitter.emit("updated-db", self._database_is_empty())
 				elif "bitrate" == key:
 					self.emitter.emit("bitrate", None)
 				elif "audio" == key:
