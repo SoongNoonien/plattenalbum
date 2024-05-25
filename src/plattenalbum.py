@@ -706,11 +706,15 @@ class Client(MPDClient):
 					self._start_idle_id=None
 					return False
 			# connect successful
+			commands=self.commands()
 			if self._settings.get_boolean("remote-connection"):
 				self._music_directory=None
-			elif "config" in self.commands():
+			elif "config" in commands:
 				self._music_directory=self.config()
-			if "status" in self.commands():
+			if "outputs" in commands and "enableoutput" in commands:
+				if len(self.outputs()) == 1:
+					self.enableoutput(0)
+			if "status" in commands:
 				self.emitter.emit("connected", self._database_is_empty())
 				self._main_timeout_id=GLib.timeout_add(100, self._main_loop)
 			else:
