@@ -2032,7 +2032,8 @@ class PlaylistView(SongList):
 				self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 				adj=self.get_vadjustment()
 				value=adj.get_upper()*selected/self.get_model().get_n_items()-self.get_parent().get_height()*0.3
-				adj.set_value(value)
+				if value >= adj.get_value():
+					adj.set_value(value)
 		else:
 			self._autoscroll=True
 
