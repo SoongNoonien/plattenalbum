@@ -1915,6 +1915,7 @@ class PlaylistView(SongList):
 		self._client=client
 		self._playlist_version=None
 		self._activate_on_release=False
+		self._autoscroll=True
 
 		# menu
 		self._menu=PlaylistMenu(client)
@@ -1995,6 +1996,7 @@ class PlaylistView(SongList):
 
 	def _on_button_released(self, controller, n_press, x, y):
 		if self._activate_on_release and (position:=self.get_position(x,y)) is not None:
+			self._autoscroll=False
 			self._client.play(position)
 		self._activate_on_release=False
 
@@ -2005,6 +2007,7 @@ class PlaylistView(SongList):
 			self._menu.open(self.get_song(position)["file"], position, x, y)
 
 	def _on_activate(self, listview, pos):
+		self._autoscroll=False
 		self._client.play(pos)
 
 	def _on_playlist_changed(self, emitter, version, length, song_pos):
@@ -2024,11 +2027,14 @@ class PlaylistView(SongList):
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		self._refresh_selection(song)
-		if (selected:=self.get_model().get_selected()) is not None:
-			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
-			adj=self.get_vadjustment()
-			value=adj.get_upper()*selected/self.get_model().get_n_items()-self.get_parent().get_height()*0.3
-			adj.set_value(value)
+		if self._autoscroll:
+			if (selected:=self.get_model().get_selected()) is not None:
+				self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+				adj=self.get_vadjustment()
+				value=adj.get_upper()*selected/self.get_model().get_n_items()-self.get_parent().get_height()*0.3
+				adj.set_value(value)
+		else:
+			self._autoscroll=True
 
 	def _on_menu(self, action, state):
 		self._menu.open(self.get_focus_song()["file"], self.get_focus_position(), *self.get_focus_popup_point())
