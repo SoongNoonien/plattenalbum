@@ -2569,7 +2569,7 @@ class PlaybackMenuButton(Gtk.MenuButton):
 		if volume < 0 and self._volume_visible:
 			self._menu.remove(0)
 			self._volume_visible=False
-		elif volume > 0 and not self._volume_visible:
+		elif volume >= 0 and not self._volume_visible:
 			self._menu.prepend_item(self._volume_item)
 			self._popover_menu.add_child(self._volume_control, "volume")
 			self._volume_visible=True
