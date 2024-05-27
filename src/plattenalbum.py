@@ -2026,6 +2026,9 @@ class PlaylistView(SongList):
 		self._refresh_selection(song)
 		if (selected:=self.get_model().get_selected()) is not None:
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+			adj=self.get_vadjustment()
+			value=adj.get_upper()*selected/self.get_model().get_n_items()-self.get_parent().get_height()*0.3
+			adj.set_value(value)
 
 	def _on_menu(self, action, state):
 		self._menu.open(self.get_focus_song()["file"], self.get_focus_position(), *self.get_focus_popup_point())
