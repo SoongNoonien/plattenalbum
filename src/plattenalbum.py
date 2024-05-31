@@ -2028,7 +2028,7 @@ class PlaylistView(SongList):
 	def _on_song_changed(self, emitter, song, songid, state):
 		self._refresh_selection(song)
 		if self._autoscroll:
-			if (selected:=self.get_model().get_selected()) is not None:
+			if (selected:=self.get_model().get_selected()) is not None and state == "play":
 				self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 				adj=self.get_vadjustment()
 				value=adj.get_upper()*selected/self.get_model().get_n_items()-self.get_parent().get_height()*0.3
@@ -2094,9 +2094,18 @@ class PlaylistWindow(Gtk.Stack):
 		self._client=client
 
 		# widgets
-		scroll=Gtk.ScrolledWindow(child=PlaylistView(self._client), hexpand=True, vexpand=True)  # TODO scroll to song
+		self._playlist_view=PlaylistView(self._client)
+		self._scroll=Gtk.ScrolledWindow(child=self._playlist_view, hexpand=True, vexpand=True)
+		self._adj=self._scroll.get_vadjustment()
 		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
 		status_page.add_css_class("compact")
+
+		# scroll button
+		overlay=Gtk.Overlay(child=self._scroll)
+		self._scroll_button=Gtk.Button(css_classes=["osd", "circular"], tooltip_text=_("Scroll to Current Song"))
+		self._scroll_button_revealer=Gtk.Revealer(
+			child=self._scroll_button, transition_duration=0, margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER)
+		overlay.add_overlay(self._scroll_button_revealer)
 
 		# event controller
 		drop_target=Gtk.DropTarget()
@@ -2106,12 +2115,15 @@ class PlaylistWindow(Gtk.Stack):
 
 		# connect
 		drop_target.connect("drop", self._on_drop)
+		self._scroll_button.connect("clicked", self._on_scroll_button_clicked)
+		self._adj.connect("value-changed", self._update_scroll_button_visibility)
+		self._playlist_view.get_model().connect("selection-changed", self._update_scroll_button_visibility)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connection-error", self._on_connection_error)
 
 		# packing
-		self.add_named(scroll, "playlist")
+		self.add_named(overlay, "playlist")
 		self.add_named(status_page, "empty-playlist")
 
 	def _on_drop(self, drop_target, value, x, y):
@@ -2125,6 +2137,28 @@ class PlaylistWindow(Gtk.Stack):
 			self.set_visible_child_name("playlist")
 		else:
 			self.set_visible_child_name("empty-playlist")
+
+	def _on_scroll_button_clicked(self, *args):
+		if (selected:=self._playlist_view.get_model().get_selected()) is not None:
+			self._playlist_view.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+		self._scroll_button_revealer.set_reveal_child(False)
+
+	def _update_scroll_button_visibility(self, *args):
+		if (selected:=self._playlist_view.get_model().get_selected()) is None:
+			self._scroll_button_revealer.set_reveal_child(False)
+		else:
+			row_height=self._adj.get_upper()/self._playlist_view.get_model().get_n_items()
+			value=self._adj.get_upper()*selected/self._playlist_view.get_model().get_n_items()+1/2*row_height
+			if self._adj.get_value() > value:
+				self._scroll_button.set_icon_name("go-up-symbolic")
+				self._scroll_button_revealer.set_valign(Gtk.Align.START)
+				self._scroll_button_revealer.set_reveal_child(True)
+			elif self._adj.get_value() < value-self._scroll.get_height():
+				self._scroll_button.set_icon_name("go-down-symbolic")
+				self._scroll_button_revealer.set_valign(Gtk.Align.END)
+				self._scroll_button_revealer.set_reveal_child(True)
+			else:
+				self._scroll_button_revealer.set_reveal_child(False)
 
 	def _on_disconnected(self, *args):
 		self.set_visible_child_name("playlist")
