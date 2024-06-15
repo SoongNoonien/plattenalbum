@@ -2104,10 +2104,9 @@ class PlaylistWindow(Gtk.Stack):
 
 		# scroll button
 		overlay=Gtk.Overlay(child=self._scroll)
-		self._scroll_button=Gtk.Button(css_classes=["osd", "circular"], tooltip_text=_("Scroll to Current Song"))
-		self._scroll_button_revealer=Gtk.Revealer(
-			child=self._scroll_button, transition_duration=0, margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER)
-		overlay.add_overlay(self._scroll_button_revealer)
+		self._scroll_button=Gtk.Button(css_classes=["osd", "circular"], tooltip_text=_("Scroll to Current Song"),
+			margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER, visible=False)
+		overlay.add_overlay(self._scroll_button)
 
 		# event controller
 		drop_target=Gtk.DropTarget()
@@ -2143,24 +2142,24 @@ class PlaylistWindow(Gtk.Stack):
 	def _on_scroll_button_clicked(self, *args):
 		if (selected:=self._playlist_view.get_model().get_selected()) is not None:
 			self._playlist_view.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
-		self._scroll_button_revealer.set_reveal_child(False)
+		self._scroll_button.set_visible(False)
 
 	def _update_scroll_button_visibility(self, *args):
 		if (selected:=self._playlist_view.get_model().get_selected()) is None:
-			self._scroll_button_revealer.set_reveal_child(False)
+			self._scroll_button.set_visible(False)
 		else:
 			row_height=self._adj.get_upper()/self._playlist_view.get_model().get_n_items()
 			value=self._adj.get_upper()*selected/self._playlist_view.get_model().get_n_items()+1/2*row_height
 			if self._adj.get_value() > value:
 				self._scroll_button.set_icon_name("go-up-symbolic")
-				self._scroll_button_revealer.set_valign(Gtk.Align.START)
-				self._scroll_button_revealer.set_reveal_child(True)
+				self._scroll_button.set_valign(Gtk.Align.START)
+				self._scroll_button.set_visible(True)
 			elif self._adj.get_value() < value-self._scroll.get_height():
 				self._scroll_button.set_icon_name("go-down-symbolic")
-				self._scroll_button_revealer.set_valign(Gtk.Align.END)
-				self._scroll_button_revealer.set_reveal_child(True)
+				self._scroll_button.set_valign(Gtk.Align.END)
+				self._scroll_button.set_visible(True)
 			else:
-				self._scroll_button_revealer.set_reveal_child(False)
+				self._scroll_button.set_visible(False)
 
 	def _on_disconnected(self, *args):
 		self.set_visible_child_name("playlist")
