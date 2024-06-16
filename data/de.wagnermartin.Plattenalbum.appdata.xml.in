@@ -29,6 +29,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.1.1" date="2024-06-16">
+      <description>
+        <p>Improved autoscrolling in the playlist and added Hindi and Russian translations.</p>
+      </description>
+    </release>
     <release version="2.1.0" date="2024-05-02">
       <description>
         <p>Updated to libadwaita 1.5</p>
