@@ -1336,6 +1336,21 @@ class BrowserSongList(SongList):
 # browser #
 ###########
 
+class SearchSongRow(Gtk.Box):
+	def __init__(self, song):
+		super().__init__()
+		self.song=song
+
+		# labels
+		title_label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
+		title_label.set_markup(song.get_markup())
+		length_label=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
+		length_label.set_text(str(song["duration"]))
+
+		# packing
+		self.append(title_label)
+		self.append(length_label)
+
 class SearchView(Gtk.Stack):
 	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 			"song-selected": (GObject.SignalFlags.RUN_FIRST, None, (Song,))}
@@ -1344,49 +1359,40 @@ class SearchView(Gtk.Stack):
 		self._client=client
 
 		# artist list
-		artist_list=Gtk.ListView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["rich-list"])
-		self._artist_model=SelectionModel(Artist)
-		artist_list.set_model(self._artist_model)
-
-		# factory
-		def setup(factory, item):
-			label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
-			item.set_child(label)
-		def bind(factory, item):
-			item.get_child().set_text(item.get_item().name)
-		factory=Gtk.SignalListItemFactory()
-		factory.connect("setup", setup)
-		factory.connect("bind", bind)
-		artist_list.set_factory(factory)
+		self._artist_list=Gtk.ListBox(activate_on_single_click=True, selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._artist_list.add_css_class("rich-list")
+		self._artist_list.add_css_class("boxed-list")
 
 		# song list
-		song_list=SongList()
-		song_list.set_single_click_activate(True)
-		self._song_model=song_list.get_model()
+		self._song_list=Gtk.ListBox(activate_on_single_click=True, selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._song_list.add_css_class("rich-list")
+		self._song_list.add_css_class("boxed-list")
 
-		# split view
-		sidebar=Gtk.Box()
-		sidebar.add_css_class("view")
-		sidebar.append(Gtk.ScrolledWindow(child=artist_list, hexpand=True))
-		sidebar.append(Gtk.Separator())
-		clamp=Adw.ClampScrollable(child=song_list)
-		clamp.add_css_class("view")
-		self._overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=Gtk.ScrolledWindow(child=clamp, vexpand=True))
+		# boxes
+		self._artist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		self._artist_box.append(Gtk.Label(label=_("Artists"), xalign=0, css_classes=["heading"]))
+		self._artist_box.append(self._artist_list)
+		song_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		song_box.append(Gtk.Label(label=_("Songs"), xalign=0, css_classes=["heading"]))
+		song_box.append(self._song_list)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+		box.append(self._artist_box)
+		box.append(song_box)
 
 		# status page
 		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results Found"), description=_("Try a different search"))
 
 		# connect
-		artist_list.connect("activate", self._on_artist_activate)
-		song_list.connect("activate", self._on_song_activate)
+		self._artist_list.connect("row-activated", self._on_artist_activate)
+		self._song_list.connect("row-activated", self._on_song_activate)
 
 		# packing
-		self.add_named(self._overlay_split_view, "results")
+		self.add_named(Gtk.ScrolledWindow(child=Adw.Clamp(child=box)), "results")
 		self.add_named(status_page, "no-results")
 
 	def clear(self):
-		self._artist_model.clear()
-		self._song_model.clear()
+		self._artist_list.remove_all()
+		self._song_list.remove_all()
 		self.set_visible_child_name("results")
 
 	def search(self, search_text, artists):
@@ -1396,21 +1402,25 @@ class SearchView(Gtk.Stack):
 			expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in keywords))
 			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
 			self._client.tagtypes("all")
-			self._song_model.append(songs)
+			for song in songs:
+				row=SearchSongRow(song)
+				self._song_list.append(row)
 			if songs:
 				artists=filter(lambda x: all(keyword.casefold() in x.name.casefold() for keyword in keywords), artists)
-				self._artist_model.append(itertools.islice(artists, 20))  # TODO adjust number of results
-				self._overlay_split_view.set_collapsed(not self._artist_model.get_n_items())
+				for artist in itertools.islice(artists, 20):  # TODO adjust number of results
+					label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, label=artist.name)
+					self._artist_list.append(label)
+				self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
 			else:  # if no songs were found there also won't be any artists matching the keywords
 				self.set_visible_child_name("no-results")
 		else:
 			self.set_visible_child_name("no-results")
 
-	def _on_artist_activate(self, list_view, pos):
-		self.emit("artist-selected", self._artist_model.get_item(pos).name)
+	def _on_artist_activate(self, list_box, row):
+		self.emit("artist-selected", row.get_child().get_label())
 
-	def _on_song_activate(self, list_view, pos):
-		self.emit("song-selected", self._song_model.get_item(pos))
+	def _on_song_activate(self, list_box, row):
+		self.emit("song-selected", row.get_child().song)
 
 class Artist(GObject.Object):
 	def __init__(self, name):
@@ -1794,10 +1804,10 @@ class Browser(Gtk.Box):
 		self._collection_stack=Gtk.Stack()
 		self._collection_stack.add_named(overlay_split_view, "browser")
 		self._collection_stack.add_named(status_page, "empty-collection")
+		self._collection_stack.add_css_class("view")
 		self._main_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
 		self._main_stack.add_named(self._collection_stack, "collection")
 		self._main_stack.add_named(self._search_window, "search")
-		self._main_stack.add_css_class("view")
 
 		# connect
 		self._album_list.connect("album-selected", self._on_album_selected)
