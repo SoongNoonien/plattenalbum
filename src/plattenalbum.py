@@ -1452,7 +1452,7 @@ class ArtistSelectionModel(SelectionModel):  # TODO
 
 class ArtistList(Gtk.ListView):
 	def __init__(self, client):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["rich-list"])
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["navigation-sidebar"])
 		self._client=client
 
 		# factory
@@ -1785,16 +1785,25 @@ class Browser(Gtk.Box):
 		album_page=Adw.NavigationPage(child=self._album_view, title="Album View", tag="album_view")  # TODO title
 		self._navigation_view.add(album_page)
 
-		# breakpoint bin
-		breakpoint_bin=BreakpointBin(self._album_list)
-		breakpoint_bin.set_child(self._navigation_view)
+		# album list breakpoint bin
+		album_list_breakpoint_bin=BreakpointBin(self._album_list)
+		album_list_breakpoint_bin.set_child(self._navigation_view)
 
 		# split view
-		sidebar=Gtk.Box()
-		sidebar.add_css_class("view")
-		sidebar.append(artist_window)
-		sidebar.append(Gtk.Separator())
-		overlay_split_view=Adw.OverlaySplitView(sidebar=sidebar, content=breakpoint_bin)
+		self._overlay_split_view=Adw.OverlaySplitView(sidebar=artist_window, content=album_list_breakpoint_bin)
+		sidebar_button=Gtk.ToggleButton(icon_name="sidebar-show-symbolic", tooltip_text=_("Artists"))
+		sidebar_button.bind_property("active", self._overlay_split_view, "show-sidebar", GObject.BindingFlags.BIDIRECTIONAL)
+		self.sidebar_button_revealer=Gtk.Revealer(reveal_child=True, visible=False, transition_type=Gtk.RevealerTransitionType.CROSSFADE)
+		self.sidebar_button_revealer.set_child(sidebar_button)
+
+		# breakpoint bin
+		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=336)  # TODO height_request
+		break_point=Adw.Breakpoint()
+		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
+		break_point.add_setter(self._overlay_split_view, "collapsed", True)
+		break_point.add_setter(self.sidebar_button_revealer, "visible", True)
+		breakpoint_bin.add_breakpoint(break_point)
+		breakpoint_bin.set_child(self._overlay_split_view)
 
 		# status page
 		status_page=Adw.StatusPage(title=_("Collection is Empty"), icon_name="folder-music-symbolic")
@@ -1802,9 +1811,8 @@ class Browser(Gtk.Box):
 		# stacks
 		# TODO names
 		self._collection_stack=Gtk.Stack()
-		self._collection_stack.add_named(overlay_split_view, "browser")
+		self._collection_stack.add_named(breakpoint_bin, "browser")
 		self._collection_stack.add_named(status_page, "empty-collection")
-		self._collection_stack.add_css_class("view")
 		self._main_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
 		self._main_stack.add_named(self._collection_stack, "collection")
 		self._main_stack.add_named(self._search_window, "search")
@@ -1813,7 +1821,7 @@ class Browser(Gtk.Box):
 		self._album_list.connect("album-selected", self._on_album_selected)
 		self._album_view.connect("close", lambda *args: self._navigation_view.pop_to_tag("album_list"))
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
-		self._artist_list.artist_selection_model.connect("reselected", lambda *args: self._navigation_view.pop_to_tag("album_list"))
+		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
 		self._artist_list.artist_selection_model.connect("clear", self._album_list.clear)
 		self._search_window.connect("artist-selected", self._on_search_artist_selected)
 		self._search_window.connect("song-selected", self._on_search_song_selected)
@@ -1827,15 +1835,24 @@ class Browser(Gtk.Box):
 
 	def search(self, search_text):
 		if search_text:
+			self.sidebar_button_revealer.set_reveal_child(False)
 			self._main_stack.set_visible_child_name("search")
 			self._search_window.search(search_text, self._artist_list.artist_selection_model)
 		else:
+			self.sidebar_button_revealer.set_reveal_child(True)
 			self._main_stack.set_visible_child_name("collection")
 			self._search_window.clear()
 
 	def _on_artist_selected(self, model, position):
+		if self._overlay_split_view.get_collapsed():
+			self._overlay_split_view.set_show_sidebar(False)
 		self._navigation_view.pop_to_tag("album_list")
 		self._album_list.display(model.get_artist(position))
+
+	def _on_artist_reselected(self, model):
+		if self._overlay_split_view.get_collapsed():
+			self._overlay_split_view.set_show_sidebar(False)
+		self._navigation_view.pop_to_tag("album_list")
 
 	def _on_album_selected(self, widget, *tags):
 		self._album_view.display(*tags)
@@ -2727,7 +2744,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 ###############
 class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
-		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=480, width_request=800, **kwargs)
+		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=480, width_request=620, **kwargs)
 		self.set_default_icon_name("de.wagnermartin.Plattenalbum")
 		self._client=client
 		self._settings=settings
@@ -2788,6 +2805,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._title_stack.add_named(Adw.Clamp(child=self._search_entry, maximum_size=400), "search-entry")
 		header_bar=Adw.HeaderBar(title_widget=self._title_stack)
 		header_bar.pack_start(self._search_button)
+		header_bar.pack_start(self._browser.sidebar_button_revealer)
 		header_bar.pack_end(self._menu_button)
 
 		# sidebar
