@@ -2767,7 +2767,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
 		# actions
-		simple_actions_data=("settings","reconnect","stats","help","toggle-search")
+		simple_actions_data=("settings","reconnect","stats","help","toggle-search","toggle-artists")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2904,6 +2904,11 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_toggle_search(self, action, param):
 		self._search_button.emit("clicked")
+
+	def _on_toggle_artists(self, action, param):
+		revealer=self._browser.sidebar_button_revealer
+		if revealer.get_visible() and revealer.get_reveal_child():
+			revealer.get_child().emit("clicked")
 
 	def _on_settings(self, action, param):
 		settings=SettingsDialog(self._client, self._settings)
@@ -3044,7 +3049,8 @@ class Plattenalbum(Adw.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.toggle-search", ["<Control>f"]),("win.reconnect", ["<Shift>F5"]),("win.stats", ["<Control>i"]),
+			("win.toggle-search", ["<Control>f"]),("win.toggle-artists", ["F9"]),("win.reconnect", ["<Shift>F5"]),
+			("win.stats", ["<Control>i"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
 			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
