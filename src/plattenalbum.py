@@ -2908,6 +2908,7 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_toggle_artists(self, action, param):
 		revealer=self._browser.sidebar_button_revealer
 		if revealer.get_visible() and revealer.get_reveal_child():
+			revealer.get_child().grab_focus()
 			revealer.get_child().emit("clicked")
 
 	def _on_settings(self, action, param):
