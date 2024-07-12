@@ -2767,7 +2767,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
 		# actions
-		simple_actions_data=("settings","reconnect","stats","help","toggle-search","toggle-artists")
+		simple_actions_data=("close", "settings","reconnect","stats","help","toggle-search","toggle-artists")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2911,6 +2911,12 @@ class MainWindow(Adw.ApplicationWindow):
 			revealer.get_child().grab_focus()
 			revealer.get_child().emit("clicked")
 
+	def _on_close(self, action, param):
+		if (dialog:=self.get_visible_dialog()) is None:
+			self.close()
+		else:
+			dialog.close()
+
 	def _on_settings(self, action, param):
 		settings=SettingsDialog(self._client, self._settings)
 		settings.present(self)
@@ -3051,7 +3057,7 @@ class Plattenalbum(Adw.Application):
 			("app.quit", ["<Control>q"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
 			("win.toggle-search", ["<Control>f"]),("win.toggle-artists", ["F9"]),("win.reconnect", ["<Shift>F5"]),
-			("win.stats", ["<Control>i"]),
+			("win.stats", ["<Control>i"]),("win.close", ["<Control>w"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
 			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
