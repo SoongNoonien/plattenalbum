@@ -2528,7 +2528,7 @@ class SeekBar(Gtk.Box):
 
 class AudioFormat(Gtk.Box):
 	def __init__(self, client, settings):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, margin_end=3)
 		self._client=client
 		settings.bind("show-audio-format", self, "visible", Gio.SettingsBindFlags.GET)
 
@@ -2606,9 +2606,9 @@ class VolumeControl(Gtk.Box):
 	def _refresh(self, emitter, volume):
 		self._adjustment.set_value(max(volume, 0))
 
-class PlaybackMenuButton(Gtk.MenuButton):
+class MainMenuButton(Gtk.MenuButton):
 	def __init__(self, client):
-		super().__init__(tooltip_text=_("Playback Menu"), icon_name="view-more-symbolic", direction=Gtk.ArrowType.UP)
+		super().__init__(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True)
 		self._volume_visible=False
 
 		# volume
@@ -2617,17 +2617,31 @@ class PlaybackMenuButton(Gtk.MenuButton):
 		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
 
 		# menu model
-		self._menu=Gio.Menu()
-		subsection=Gio.Menu()
-		subsection.append(_("_Repeat Mode"), "mpd.repeat")
-		subsection.append(_("R_andom Mode"), "mpd.random")
-		subsection.append(_("_Single Mode"), "mpd.single")
-		subsection.append(_("_Pause After Song"), "mpd.single-oneshot")
-		subsection.append(_("_Consume Mode"), "mpd.consume")
-		self._menu.append_section(None, subsection)
+		app_section=Gio.Menu()
+		app_section.append(_("_Preferences"), "win.settings")
+		app_section.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
+		app_section.append(_("_Help"), "win.help")
+		app_section.append(_("_About Plattenalbum"), "app.about")
+		mpd_section=Gio.Menu()
+		mpd_section.append(_("_Reconnect"), "win.reconnect")
+		mpd_section.append(_("_Update Database"), "mpd.update")
+		mpd_section.append(_("_Server Statistics"), "win.stats")
+		playback_section=Gio.Menu()
+		playback_section.append(_("_Repeat Mode"), "mpd.repeat")
+		playback_section.append(_("R_andom Mode"), "mpd.random")
+		playback_section.append(_("_Single Mode"), "mpd.single")
+		playback_section.append(_("_Pause After Song"), "mpd.single-oneshot")
+		playback_section.append(_("_Consume Mode"), "mpd.consume")
+		self._playback_submenu=Gio.Menu()
+		self._playback_submenu.append_section(None, playback_section)
+		menu=Gio.Menu()
+		menu.append(_("_Lyrics"), "win.toggle-lyrics")
+		menu.append_submenu(_("Play_back"), self._playback_submenu)
+		menu.append_section(None, mpd_section)
+		menu.append_section(None, app_section)
 
 		# popover menu
-		self._popover_menu=Gtk.PopoverMenu.new_from_model(self._menu)
+		self._popover_menu=Gtk.PopoverMenu.new_from_model(menu)
 		self.set_popover(self._popover_menu)
 
 		# connect
@@ -2636,16 +2650,16 @@ class PlaybackMenuButton(Gtk.MenuButton):
 
 	def _on_volume_changed(self, emitter, volume):
 		if volume < 0 and self._volume_visible:
-			self._menu.remove(0)
+			self._playback_submenu.remove(0)
 			self._volume_visible=False
 		elif volume >= 0 and not self._volume_visible:
-			self._menu.prepend_item(self._volume_item)
+			self._playback_submenu.prepend_item(self._volume_item)
 			self._popover_menu.add_child(self._volume_control, "volume")
 			self._volume_visible=True
 
 	def _on_disconnected(self, *args):
 		if self._volume_visible:
-			self._menu.remove(0)
+			self._playback_submenu.remove(0)
 			self._volume_visible=False
 
 ###################
@@ -2762,7 +2776,7 @@ class MainWindow(Adw.ApplicationWindow):
 		playback_control=PlaybackControl(self._client, self._settings)
 		seek_bar=SeekBar(self._client)
 		audio=AudioFormat(self._client, self._settings)
-		self._playback_menu_button=PlaybackMenuButton(self._client)
+		main_menu_button=MainMenuButton(self._client)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
@@ -2773,24 +2787,6 @@ class MainWindow(Adw.ApplicationWindow):
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
 		self.add_action(Gio.PropertyAction.new("toggle-lyrics", cover_lyrics_window, "show-lyrics"))
-
-		# menu
-		subsection=Gio.Menu()
-		subsection.append(_("_Preferences"), "win.settings")
-		subsection.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
-		subsection.append(_("_Help"), "win.help")
-		subsection.append(_("_About Plattenalbum"), "app.about")
-		mpd_subsection=Gio.Menu()
-		mpd_subsection.append(_("_Reconnect"), "win.reconnect")
-		mpd_subsection.append(_("_Update Database"), "mpd.update")
-		mpd_subsection.append(_("_Server Statistics"), "win.stats")
-		menu=Gio.Menu()
-		menu.append(_("_Lyrics"), "win.toggle-lyrics")
-		menu.append_section(None, mpd_subsection)
-		menu.append_section(None, subsection)
-
-		# menu button / popover
-		self._menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), menu_model=menu, primary=True)
 
 		# search
 		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
@@ -2806,7 +2802,7 @@ class MainWindow(Adw.ApplicationWindow):
 		header_bar=Adw.HeaderBar(title_widget=self._title_stack)
 		header_bar.pack_start(self._search_button)
 		header_bar.pack_start(self._browser.sidebar_button_revealer)
-		header_bar.pack_end(self._menu_button)
+		header_bar.pack_end(main_menu_button)
 
 		# sidebar
 		cover_playlist_box.append(cover_lyrics_window)
@@ -2846,7 +2842,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._action_bar.append(playback_control)
 		self._action_bar.append(seek_bar)
 		self._action_bar.append(audio)
-		self._action_bar.append(self._playback_menu_button)
 
 		# toolbar view
 		self._toolbar_view=Adw.ToolbarView(top_bar_style=Adw.ToolbarStyle.RAISED_BORDER, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
