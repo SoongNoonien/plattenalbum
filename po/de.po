@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-13 13:59+0200\n"
-"PO-Revision-Date: 2024-07-13 14:00+0200\n"
+"POT-Creation-Date: 2024-07-13 14:10+0200\n"
+"PO-Revision-Date: 2024-07-13 14:11+0200\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -93,7 +93,7 @@ msgstr "Passwort"
 msgid "_Reconnect"
 msgstr "_Neu verbinden"
 
-#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:49
+#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:55
 msgid "Server Statistics"
 msgstr "Serverstatistik"
 
@@ -247,15 +247,15 @@ msgstr "Liedtextansicht"
 msgid "Current album cover"
 msgstr "Aktuelles Albumcover"
 
-#: src/plattenalbum.py:2359 data/ShortcutsWindow.ui:89
+#: src/plattenalbum.py:2359 data/ShortcutsWindow.ui:101
 msgid "Stop"
 msgstr "Stopp"
 
-#: src/plattenalbum.py:2361 data/ShortcutsWindow.ui:101
+#: src/plattenalbum.py:2361 data/ShortcutsWindow.ui:113
 msgid "Previous"
 msgstr "Vorheriges"
 
-#: src/plattenalbum.py:2362 data/ShortcutsWindow.ui:95
+#: src/plattenalbum.py:2362 data/ShortcutsWindow.ui:107
 msgid "Next"
 msgstr "Nächstes"
 
@@ -491,82 +491,90 @@ msgid "Shortcuts"
 msgstr "Tastenkürzel"
 
 #: data/ShortcutsWindow.ui:37
+msgid "Sidebar"
+msgstr "Seitenleiste"
+
+#: data/ShortcutsWindow.ui:43
 msgid "Reconnect"
 msgstr "Neu verbinden"
 
-#: data/ShortcutsWindow.ui:43
+#: data/ShortcutsWindow.ui:49
 msgid "Update Database"
 msgstr "Datenbank aktualisieren"
 
-#: data/ShortcutsWindow.ui:55
+#: data/ShortcutsWindow.ui:61
+msgid "Close"
+msgstr "Schließen"
+
+#: data/ShortcutsWindow.ui:67
 msgid "Quit"
 msgstr "Beenden"
 
-#: data/ShortcutsWindow.ui:63
+#: data/ShortcutsWindow.ui:75
 msgid "Window"
 msgstr "Fenster"
 
-#: data/ShortcutsWindow.ui:66
+#: data/ShortcutsWindow.ui:78
 msgid "Toggle Lyrics"
 msgstr "Liedtext ein-/ausblenden"
 
-#: data/ShortcutsWindow.ui:72
+#: data/ShortcutsWindow.ui:84
 msgid "Toggle Search"
 msgstr "Suche ein-/ausblenden"
 
-#: data/ShortcutsWindow.ui:80
+#: data/ShortcutsWindow.ui:92
 msgid "Playback"
 msgstr "Wiedergabe"
 
-#: data/ShortcutsWindow.ui:83
+#: data/ShortcutsWindow.ui:95
 msgid "Play/Pause"
 msgstr "Wiedergabe/Pause"
 
-#: data/ShortcutsWindow.ui:107
+#: data/ShortcutsWindow.ui:119
 msgid "Seek Forward"
 msgstr "Vorspulen"
 
-#: data/ShortcutsWindow.ui:113
+#: data/ShortcutsWindow.ui:125
 msgid "Seek Backward"
 msgstr "Zurückspulen"
 
-#: data/ShortcutsWindow.ui:121
+#: data/ShortcutsWindow.ui:133
 msgid "Playback Options"
 msgstr "Wiedergabeoptionen"
 
-#: data/ShortcutsWindow.ui:124
+#: data/ShortcutsWindow.ui:136
 msgid "Toggle Repeat Mode"
 msgstr "Dauerschleife ein-/ausschalten"
 
-#: data/ShortcutsWindow.ui:130
+#: data/ShortcutsWindow.ui:142
 msgid "Toggle Random Mode"
 msgstr "Zufallsmodus ein-/ausschalten"
 
-#: data/ShortcutsWindow.ui:136
+#: data/ShortcutsWindow.ui:148
 msgid "Toggle Single Mode"
 msgstr "Einzelmodus ein-/ausschalten"
 
-#: data/ShortcutsWindow.ui:142
+#: data/ShortcutsWindow.ui:154
 msgid "Pause After Song"
 msgstr "Pausieren nach Lied"
 
-#: data/ShortcutsWindow.ui:148
+#: data/ShortcutsWindow.ui:160
 msgid "Toggle Consume Mode"
 msgstr "Verbrauchsmodus ein-/ausschalten"
 
-#: data/ShortcutsWindow.ui:156
+#: data/ShortcutsWindow.ui:168
 msgid "Playlist"
 msgstr "Wiedergabeliste"
 
-#: data/ShortcutsWindow.ui:159
+#: data/ShortcutsWindow.ui:171
 msgid "Clear"
 msgstr "Leeren"
 
-#: data/ShortcutsWindow.ui:165
+#: data/ShortcutsWindow.ui:177
 msgid "Tidy"
 msgstr "Aufräumen"
 
-#: data/ShortcutsWindow.ui:171
+#: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "Album einreihen"
 
