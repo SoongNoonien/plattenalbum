@@ -2832,6 +2832,7 @@ class MainWindow(Adw.ApplicationWindow):
 		button_box.append(settings_button)
 		status_page.set_child(button_box)
 
+		# stack
 		self._status_page_stack=Gtk.Stack()
 		self._status_page_stack.add_named(overlay_split_view, "content")
 		self._status_page_stack.add_named(status_page, "status-page")
