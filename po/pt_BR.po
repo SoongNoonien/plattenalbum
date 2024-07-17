@@ -1,0 +1,582 @@
+# Brazilian Portuguese translation for plattenalbum.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
+# Tiago Lucas Flach <tiagolucas9830@gemil.com>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: de.wagnermartin.Plattenalbum\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-13 14:10+0200\n"
+"PO-Revision-Date: 2024-07-17 17:10-0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.4.4\n"
+
+#: src/plattenalbum.py:499
+#, python-brace-format
+msgid "{days} day"
+msgid_plural "{days} days"
+msgstr[0] "{days} dia"
+msgstr[1] "{days} dias"
+
+#: src/plattenalbum.py:536
+#, python-brace-format
+msgid "{channels} channel"
+msgid_plural "{channels} channels"
+msgstr[0] "{channels} canal"
+msgstr[1] "{channels} canais"
+
+#: src/plattenalbum.py:951
+msgid "View"
+msgstr "Visualizar"
+
+#: src/plattenalbum.py:953
+msgid "Show _stop button"
+msgstr "Mostrar botão _parar"
+
+#: src/plattenalbum.py:954
+msgid "Show audio _format"
+msgstr "Mostrar _formato de áudio"
+
+#: src/plattenalbum.py:963
+msgid "Behavior"
+msgstr "Comportamento"
+
+#: src/plattenalbum.py:965
+#, fuzzy
+msgid "Support “_MPRIS”"
+msgstr "Apoio “_MPRIS”"
+
+#: src/plattenalbum.py:966
+msgid "Sort _albums by year"
+msgstr "Ordenar _álbuns por ano"
+
+#: src/plattenalbum.py:967
+msgid "Send _notification on title change"
+msgstr "Enviar _notificação sobre mudança de título"
+
+#: src/plattenalbum.py:968
+msgid "Re_wind via previous button"
+msgstr "Botão _retroceder para anterior"
+
+#: src/plattenalbum.py:969
+msgid "Stop _playback on quit"
+msgstr "Parar _playback ao sair"
+
+#: src/plattenalbum.py:978
+msgid "Connection"
+msgstr "Conexão"
+
+#: src/plattenalbum.py:979
+msgid "_Connect to remote server"
+msgstr "_Conectar ao servidor remoto"
+
+#: src/plattenalbum.py:983
+#, fuzzy
+msgid "Host name"
+msgstr "Hostname"
+
+#: src/plattenalbum.py:988
+msgid "Port"
+msgstr "Porta"
+
+#: src/plattenalbum.py:992
+msgid "Password"
+msgstr "Senha"
+
+#. connect button
+#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2826
+msgid "_Reconnect"
+msgstr "_Reconectar"
+
+#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:55
+msgid "Server Statistics"
+msgstr "Estatísticas do servidor"
+
+#: src/plattenalbum.py:1025
+msgid "Protocol"
+msgstr "Protocolo"
+
+#: src/plattenalbum.py:1026
+msgid "Uptime"
+msgstr "Tempo de atividade"
+
+#: src/plattenalbum.py:1027
+msgid "Playtime"
+msgstr "Tempo de Reprodução"
+
+#: src/plattenalbum.py:1028 src/plattenalbum.py:1373 src/plattenalbum.py:1794
+msgid "Artists"
+msgstr "Artistas"
+
+#: src/plattenalbum.py:1029
+msgid "Albums"
+msgstr "Álbuns"
+
+#: src/plattenalbum.py:1030 src/plattenalbum.py:1376
+msgid "Songs"
+msgstr "Músicas"
+
+#: src/plattenalbum.py:1031
+msgid "Total Playtime"
+msgstr "Tempo Total de Reprodução"
+
+#: src/plattenalbum.py:1032
+msgid "Database Update"
+msgstr "Atualização do Banco de Dados"
+
+#: src/plattenalbum.py:1146 src/plattenalbum.py:1897
+msgid "Context menu"
+msgstr "Menu de contexto"
+
+#: src/plattenalbum.py:1168
+msgid "_Append"
+msgstr "_Acrescentar"
+
+#: src/plattenalbum.py:1169
+msgid "As _Next"
+msgstr "Como _Próxima"
+
+#: src/plattenalbum.py:1170
+msgid "_Play"
+msgstr "_Play"
+
+#: src/plattenalbum.py:1172 src/plattenalbum.py:1915
+msgid "_Show"
+msgstr "_Mostrar"
+
+#. status page
+#: src/plattenalbum.py:1383
+msgid "No Results Found"
+msgstr "Nenhum Resultado Encontrado"
+
+#: src/plattenalbum.py:1383
+msgid "Try a different search"
+msgstr "Tente uma pesquisa diferente"
+
+#: src/plattenalbum.py:1581 src/plattenalbum.py:1725
+#, python-brace-format
+msgid "Album cover of {album}"
+msgstr "Capa do álbum {album}"
+
+#: src/plattenalbum.py:1584 src/plattenalbum.py:1728
+msgid "Album cover of an unknown album"
+msgstr "Capa de um álbum desconhecido"
+
+#: src/plattenalbum.py:1649
+#, python-brace-format
+msgid "Albums of {artist}"
+msgstr "Álbuns de {artist}"
+
+#: src/plattenalbum.py:1683
+msgid "Append"
+msgstr "Acrescentar"
+
+#. widgets
+#: src/plattenalbum.py:1684 src/plattenalbum.py:2358 src/plattenalbum.py:2379
+msgid "Play"
+msgstr "Play"
+
+#: src/plattenalbum.py:1735
+#, python-brace-format
+msgid "{number} song ({duration})"
+msgid_plural "{number} songs ({duration})"
+msgstr[0] "{number} música ({duration})"
+msgstr[1] "{number} músicas ({duration})"
+
+#. status page
+#: src/plattenalbum.py:1809
+msgid "Collection is Empty"
+msgstr "A Coleção está Vazia"
+
+#: src/plattenalbum.py:1914
+msgid "_Remove"
+msgstr "_Remover"
+
+#: src/plattenalbum.py:1917
+msgid "_Enqueue Album"
+msgstr "_Enfileirar Álbum"
+
+#: src/plattenalbum.py:1918
+msgid "_Tidy"
+msgstr "_Limpo"
+
+#: src/plattenalbum.py:1920
+msgid "_Clear"
+msgstr "_Limpar"
+
+#: src/plattenalbum.py:2129
+msgid "Playlist is Empty"
+msgstr "A lista de reprodução está vazia"
+
+#: src/plattenalbum.py:2134
+msgid "Scroll to Current Song"
+msgstr "Role até a Música Atual"
+
+#. status pages
+#: src/plattenalbum.py:2229
+msgid "No Lyrics Found"
+msgstr "Nenhuma Letra Encontrada"
+
+#: src/plattenalbum.py:2232
+msgid "Connection Error"
+msgstr "Erro de Conexão"
+
+#: src/plattenalbum.py:2232
+msgid "Check your network connection"
+msgstr "Verifique sua conexão de rede"
+
+#: src/plattenalbum.py:2285
+#, python-brace-format
+msgid "Lyrics of {song}"
+msgstr "Letra de {song}"
+
+#: src/plattenalbum.py:2286
+msgid "searching…"
+msgstr "procurando…"
+
+#: src/plattenalbum.py:2293 src/plattenalbum.py:2298
+msgid "Lyrics view"
+msgstr "Ver Letras"
+
+#: src/plattenalbum.py:2303
+msgid "Current album cover"
+msgstr "Capa do álbum atual"
+
+#: src/plattenalbum.py:2359 data/ShortcutsWindow.ui:101
+msgid "Stop"
+msgstr "Parar"
+
+#: src/plattenalbum.py:2361 data/ShortcutsWindow.ui:113
+msgid "Previous"
+msgstr "Anterior"
+
+#: src/plattenalbum.py:2362 data/ShortcutsWindow.ui:107
+msgid "Next"
+msgstr "Próxima"
+
+#: src/plattenalbum.py:2376
+msgid "Pause"
+msgstr "Pause"
+
+#: src/plattenalbum.py:2395
+msgid "Progress bar"
+msgstr "Barra de Progresso"
+
+#: src/plattenalbum.py:2591
+msgid "Volume control"
+msgstr "Controle de volume"
+
+#: src/plattenalbum.py:2611 data/ShortcutsWindow.ui:31
+msgid "Main Menu"
+msgstr "Menu Principal"
+
+#: src/plattenalbum.py:2621 src/plattenalbum.py:2828
+msgid "_Preferences"
+msgstr "_Preferências"
+
+#: src/plattenalbum.py:2622
+msgid "_Keyboard Shortcuts"
+msgstr "_Atalhos do Teclado"
+
+#: src/plattenalbum.py:2623
+msgid "_Help"
+msgstr "_Ajuda"
+
+#: src/plattenalbum.py:2624
+msgid "_About Plattenalbum"
+msgstr "_Sobre o Plattenalbum"
+
+#: src/plattenalbum.py:2627
+msgid "_Update Database"
+msgstr "_Atualizar Banco de Dados"
+
+#: src/plattenalbum.py:2628
+msgid "_Server Statistics"
+msgstr "_Estatísticas do Servidor"
+
+#: src/plattenalbum.py:2630
+msgid "_Repeat Mode"
+msgstr "_Modo de Repetição"
+
+#: src/plattenalbum.py:2631
+msgid "R_andom Mode"
+msgstr "_Modo Aleatório"
+
+#: src/plattenalbum.py:2632
+msgid "_Single Mode"
+msgstr "_Modo Único"
+
+#: src/plattenalbum.py:2633
+msgid "_Pause After Song"
+msgstr "_Pausa Após a Música"
+
+#: src/plattenalbum.py:2634
+msgid "_Consume Mode"
+msgstr "_Modo de Consumo"
+
+#: src/plattenalbum.py:2638
+msgid "_Lyrics"
+msgstr "_Letra da música"
+
+#: src/plattenalbum.py:2639
+#, fuzzy
+msgid "Play_back"
+msgstr "_Reprodução"
+
+#: src/plattenalbum.py:2780
+msgid "Database is being updated"
+msgstr "O banco de dados está sendo atualizado"
+
+#: src/plattenalbum.py:2781
+msgid "Database updated"
+msgstr "Banco de dados atualizado"
+
+#. search
+#: src/plattenalbum.py:2792 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
+msgid "Search"
+msgstr "Procurar"
+
+#: src/plattenalbum.py:2793 src/plattenalbum.py:2794
+msgid "Search collection"
+msgstr "Procurar coleção"
+
+#. status page
+#: src/plattenalbum.py:2823
+msgid "Not Connected"
+msgstr "Não conectado"
+
+#: src/plattenalbum.py:2824
+msgid ""
+"To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
+"up and running on this or another device in the network"
+msgstr ""
+"Para usar o Plattenalbum, uma instância do “Music Player Daemon” precisa ser "
+"configurada e executada neste ou em outro dispositivo na rede"
+
+#: src/plattenalbum.py:2968
+msgid "Next Title is Playing"
+msgstr "O Próximo Título está Sendo Reproduzido"
+
+#: src/plattenalbum.py:2970
+#, python-brace-format
+msgid "Now playing “{title}” by “{artist}”"
+msgstr "Agora tocando “{title}” de “{artist}”"
+
+#: src/plattenalbum.py:2972
+#, python-brace-format
+msgid "Now playing “{title}”"
+msgstr "Agora reproduzindo “{title}”"
+
+#: src/plattenalbum.py:3002
+msgid "connecting…"
+msgstr "conectando…"
+
+#: src/plattenalbum.py:3031
+msgid "Debug mode"
+msgstr "Modo de depuração"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.desktop.in:3
+msgid "Plattenalbum"
+msgstr "Plattenalbum"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.desktop.in:5
+msgid "Browse music with MPD"
+msgstr "Procure músicas com MPD"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+msgid "A client for the Music Player Daemon (MPD)."
+msgstr "Um cliente para o Music Player Daemon (MPD)."
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+msgid ""
+"Browse your collection while viewing large album covers. Play your music "
+"without managing playlists."
+msgstr ""
+"Navegue pela sua coleção enquanto visualiza capas de álbuns grandes. Toque "
+"sua música sem gerenciar playlists."
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
+msgid "Main window"
+msgstr "Janela principal"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
+msgid "Album View"
+msgstr "Visualização do Álbum"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
+msgid ""
+"Improved autoscrolling in the playlist and added Hindi and Russian "
+"translations."
+msgstr ""
+"Rolagem automática aprimorada na lista de reprodução e traduções adicionadas "
+"para hindi e russo."
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
+msgid "Updated to libadwaita 1.5"
+msgstr "Atualizado para libadwaita 1.5"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:41
+msgid "Reworked settings"
+msgstr "Configurações reformuladas"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:42
+msgid "Reworked notifications"
+msgstr "Notificações reformuladas"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:43
+msgid "New initial status page"
+msgstr "Nova página de status inicial"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:44
+msgid "Bugfixes and translation updates"
+msgstr "Correções de bugs e atualizações de tradução"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:50
+msgid ""
+"Increased flatpak support to only require a minimum set of non-standard "
+"privileges."
+msgstr ""
+"Aumento do suporte a flatpak para exigir apenas um conjunto mínimo de "
+"privilégios não padrão."
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:55
+msgid "First release using GTK4 and libadwaita"
+msgstr "Primeira versão usando GTK4 e libadwaita"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:57
+msgid "Added automatic cover sizing"
+msgstr "Adicionado dimensionamento automático de capa"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:58
+msgid "Greatly improved search"
+msgstr "Pesquisa muito aprimorada"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:59
+msgid "Removed mini-player"
+msgstr "Miniplayer removido"
+
+#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:72
+msgid "Martin Wagner"
+msgstr "Martin Wagner"
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:4
+msgid "Music Browser"
+msgstr "Navegador de Música"
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:12
+msgid "Music;Player;"
+msgstr "Música;Reprodutor de música;"
+
+#: data/ShortcutsWindow.ui:10
+msgid "General"
+msgstr "Geral"
+
+#: data/ShortcutsWindow.ui:13
+msgid "Online Help"
+msgstr "Ajuda online"
+
+#: data/ShortcutsWindow.ui:19
+msgid "Preferences"
+msgstr "Preferências"
+
+#: data/ShortcutsWindow.ui:25
+msgid "Shortcuts"
+msgstr "Atalhos"
+
+#: data/ShortcutsWindow.ui:37
+msgid "Sidebar"
+msgstr "Barra Lateral"
+
+#: data/ShortcutsWindow.ui:43
+msgid "Reconnect"
+msgstr "Reconectar"
+
+#: data/ShortcutsWindow.ui:49
+msgid "Update Database"
+msgstr "Atualizar Banco de Dados"
+
+#: data/ShortcutsWindow.ui:61
+msgid "Close"
+msgstr "Fechar"
+
+#: data/ShortcutsWindow.ui:67
+msgid "Quit"
+msgstr "Sair"
+
+#: data/ShortcutsWindow.ui:75
+msgid "Window"
+msgstr "Janela"
+
+#: data/ShortcutsWindow.ui:78
+msgid "Toggle Lyrics"
+msgstr "Alternar Letras"
+
+#: data/ShortcutsWindow.ui:84
+msgid "Toggle Search"
+msgstr "Alternar Pesquisa"
+
+#: data/ShortcutsWindow.ui:92
+msgid "Playback"
+msgstr "Parar _reprodução ao sair"
+
+#: data/ShortcutsWindow.ui:95
+msgid "Play/Pause"
+msgstr "Play/Pause"
+
+#: data/ShortcutsWindow.ui:119
+msgid "Seek Forward"
+msgstr "Procure para frente"
+
+#: data/ShortcutsWindow.ui:125
+msgid "Seek Backward"
+msgstr "Procurar para trás"
+
+#: data/ShortcutsWindow.ui:133
+msgid "Playback Options"
+msgstr "Opções de Reprodução"
+
+#: data/ShortcutsWindow.ui:136
+msgid "Toggle Repeat Mode"
+msgstr "Alternar Modo de Repetição"
+
+#: data/ShortcutsWindow.ui:142
+msgid "Toggle Random Mode"
+msgstr "Alternar Modo Aleatório"
+
+#: data/ShortcutsWindow.ui:148
+msgid "Toggle Single Mode"
+msgstr "Alternar Modo Único"
+
+#: data/ShortcutsWindow.ui:154
+msgid "Pause After Song"
+msgstr "Pausa Após a Música"
+
+#: data/ShortcutsWindow.ui:160
+msgid "Toggle Consume Mode"
+msgstr "Alternar Modo de Consumo"
+
+#: data/ShortcutsWindow.ui:168
+msgid "Playlist"
+msgstr "Lista de Reprodução"
+
+#: data/ShortcutsWindow.ui:171
+msgid "Clear"
+msgstr "Limpar"
+
+#: data/ShortcutsWindow.ui:177
+msgid "Tidy"
+msgstr "Limpo"
+
+#: data/ShortcutsWindow.ui:183
+msgid "Enqueue Album"
+msgstr "Enfileirar Álbum"
