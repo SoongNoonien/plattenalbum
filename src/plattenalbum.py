@@ -2794,14 +2794,18 @@ class MainWindow(Adw.ApplicationWindow):
 		self._search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
 		self._search_entry.set_key_capture_widget(self)  # type to search
 
+		# left button box
+		self._left_button_box=Gtk.Box(spacing=6)
+		self._left_button_box.append(self._search_button)
+		self._left_button_box.append(self._browser.sidebar_button_revealer)
+
 		# header bar
 		self._title=Adw.WindowTitle()
 		self._title_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, hexpand=True, hhomogeneous=False)
 		self._title_stack.add_named(self._title, "title")
 		self._title_stack.add_named(Adw.Clamp(child=self._search_entry, maximum_size=400), "search-entry")
 		header_bar=Adw.HeaderBar(title_widget=self._title_stack)
-		header_bar.pack_start(self._search_button)
-		header_bar.pack_start(self._browser.sidebar_button_revealer)
+		header_bar.pack_start(self._left_button_box)
 		header_bar.pack_end(main_menu_button)
 
 		# sidebar
@@ -2984,7 +2988,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._status_page_stack.set_visible_child_name("content")
 		self._toolbar_view.set_reveal_bottom_bars(True)
 		self._toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED_BORDER)
-		self._search_button.set_visible(True)
+		self._left_button_box.set_visible(True)
 		for action in ("stats","toggle-search"):
 			self.lookup_action(action).set_enabled(True)
 		self._search_button.set_sensitive(True)
@@ -3007,7 +3011,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._status_page_stack.set_visible_child_name("status-page")
 		self._toolbar_view.set_reveal_bottom_bars(False)
 		self._toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
-		self._search_button.set_visible(False)
+		self._left_button_box.set_visible(False)
 
 	def _on_updating_db(self, *args):
 		self._toast_overlay.add_toast(self._updating_toast)
