@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: plattenalbum\n"
 "Report-Msgid-Bugs-To: https://github.com/SoongNoonien/plattenalbum/issues\n"
 "POT-Creation-Date: 2024-07-13 14:10+0200\n"
-"PO-Revision-Date: 2024-07-17 10:44+0530\n"
+"PO-Revision-Date: 2024-07-17 10:52+0530\n"
 "Last-Translator: Scrambled777 <weblate.scrambled777@simplelogin.com>\n"
 "Language-Team: Hindi <indlinux-hindi@lists.sourceforge.net>\n"
 "Language: hi\n"
@@ -354,8 +354,8 @@ msgid ""
 "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
 "up and running on this or another device in the network"
 msgstr ""
-"Plattenalbum का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में "
-"इस या किसी अन्य उपकरण पर स्थापित और चलाने की आवश्यकता है"
+"प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या "
+"किसी अन्य उपकरण पर स्थापित और चलाने की आवश्यकता है"
 
 #: src/plattenalbum.py:2968
 msgid "Next Title is Playing"
@@ -382,16 +382,16 @@ msgstr "डिबग मोड"
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
-msgstr "Plattenalbum"
+msgstr "प्लैटेनएल्बम"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Browse music with MPD"
-msgstr "MPD के साथ संगीत देखें"
+msgstr "एमपीडी के साथ संगीत देखें"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
-msgstr "म्यूजिक प्लेयर डेमॉन (MPD) के लिए क्लाइंट।"
+msgstr "म्यूजिक प्लेयर डेमॉन (एमपीडी) के लिए क्लाइंट।"
 
 #: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
 msgid ""
