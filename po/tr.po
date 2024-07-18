@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"POT-Creation-Date: 2024-07-18 14:11+0200\n"
 "PO-Revision-Date: 2024-07-18 11:12+0200\n"
 "Last-Translator: Oğuz Ersen <oguz@ersen.moe>\n"
 "Language-Team: Turkish <tr>\n"
@@ -387,8 +387,8 @@ msgstr "Plattenalbum"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
-msgid "Browse music with MPD"
-msgstr "MPD ile müziklere göz atın"
+msgid "Connect to your music"
+msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
@@ -521,6 +521,9 @@ msgstr "Düzenle"
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "Albümü sıraya al"
+
+#~ msgid "Browse music with MPD"
+#~ msgstr "MPD ile müziklere göz atın"
 
 #~ msgid "Playback Menu"
 #~ msgstr "Oynatım Menüsü"

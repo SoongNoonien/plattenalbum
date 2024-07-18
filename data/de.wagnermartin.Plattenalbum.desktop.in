@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Plattenalbum
 GenericName=Music Browser
-Comment=Browse music with MPD
+Comment=Connect to your music
 Exec=plattenalbum
 Icon=de.wagnermartin.Plattenalbum
 Terminal=false

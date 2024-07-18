@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"POT-Creation-Date: 2024-07-18 14:11+0200\n"
 "PO-Revision-Date: 2024-07-18 11:06+0200\n"
 "Last-Translator: Scrambled777 <weblate.scrambled777@simplelogin.com>\n"
 "Language-Team: Hindi <indlinux-hindi@lists.sourceforge.net>\n"
@@ -336,7 +336,8 @@ msgid "Database updated"
 msgstr "डाटाबेस अद्यतित"
 
 #. search
-#: src/plattenalbum.py:2792 data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+#: src/plattenalbum.py:2792
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr "खोजें"
 
@@ -351,11 +352,11 @@ msgstr "जुड़े नहीं हैं"
 
 #: src/plattenalbum.py:2828
 msgid ""
-"To use Plattenalbum an instance of the “Music Player Daemon” needs to be set up and running "
-"on this or another device in the network"
+"To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
+"up and running on this or another device in the network"
 msgstr ""
-"प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या किसी अन्य उपकरण "
-"पर स्थापित और चलाने की आवश्यकता है"
+"प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या "
+"किसी अन्य उपकरण पर स्थापित और चलाने की आवश्यकता है"
 
 #: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
@@ -386,8 +387,8 @@ msgstr "प्लैटेनएल्बम"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
-msgid "Browse music with MPD"
-msgstr "एमपीडी के साथ संगीत देखें"
+msgid "Connect to your music"
+msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
@@ -395,9 +396,10 @@ msgstr "म्यूजिक प्लेयर डेमॉन (एमपी�
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
-"Browse your collection while viewing large album covers. Play your music without managing "
-"playlists."
-msgstr "बड़े एल्बम कवरों के साथ अपना संग्रह देखें। प्लेलिस्ट प्रबंधित किए बिना अपना संगीत चलाएं।"
+"Browse your collection while viewing large album covers. Play your music "
+"without managing playlists."
+msgstr ""
+"बड़े एल्बम कवरों के साथ अपना संग्रह देखें। प्लेलिस्ट प्रबंधित किए बिना अपना संगीत चलाएं।"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
@@ -519,8 +521,14 @@ msgstr "संवारें"
 msgid "Enqueue Album"
 msgstr "एल्बम कतारबद्ध करें"
 
-#~ msgid "Improved autoscrolling in the playlist and added Hindi and Russian translations."
-#~ msgstr "प्लेलिस्ट में ऑटो स्क्रॉलिंग में सुधार किया गया तथा हिंदी और रूसी अनुवाद भी जोड़े गए।"
+#~ msgid "Browse music with MPD"
+#~ msgstr "एमपीडी के साथ संगीत देखें"
+
+#~ msgid ""
+#~ "Improved autoscrolling in the playlist and added Hindi and Russian "
+#~ "translations."
+#~ msgstr ""
+#~ "प्लेलिस्ट में ऑटो स्क्रॉलिंग में सुधार किया गया तथा हिंदी और रूसी अनुवाद भी जोड़े गए।"
 
 #~ msgid "Updated to libadwaita 1.5"
 #~ msgstr "libadwaita 1.5 तक अद्यतित"
@@ -537,8 +545,11 @@ msgstr "एल्बम कतारबद्ध करें"
 #~ msgid "Bugfixes and translation updates"
 #~ msgstr "बग समाधान और अनुवाद अद्यतन"
 
-#~ msgid "Increased flatpak support to only require a minimum set of non-standard privileges."
-#~ msgstr "केवल गैर-मानक विशेषाधिकारों के न्यूनतम समूह की आवश्यकता के लिए flatpak समर्थन बढ़ाया।"
+#~ msgid ""
+#~ "Increased flatpak support to only require a minimum set of non-standard "
+#~ "privileges."
+#~ msgstr ""
+#~ "केवल गैर-मानक विशेषाधिकारों के न्यूनतम समूह की आवश्यकता के लिए flatpak समर्थन बढ़ाया।"
 
 #~ msgid "First release using GTK4 and libadwaita"
 #~ msgstr "GTK4 और libadwaita का उपयोग करते हुए पहली रिलीज़"

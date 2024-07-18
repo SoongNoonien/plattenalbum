@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"POT-Creation-Date: 2024-07-18 14:11+0200\n"
 "PO-Revision-Date: 2024-07-18 11:07+0200\n"
 "Last-Translator: Gnuey56 <gnuey56@proton.me>\n"
 "Language-Team: \n"
@@ -385,8 +385,8 @@ msgstr "Plattenalbum"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
-msgid "Browse music with MPD"
-msgstr "MPD で音楽をブラウズ"
+msgid "Connect to your music"
+msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
@@ -519,6 +519,9 @@ msgstr "キューを整頓"
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "アルバムを追加"
+
+#~ msgid "Browse music with MPD"
+#~ msgstr "MPD で音楽をブラウズ"
 
 #~ msgid "Playback Menu"
 #~ msgstr "再生メニュー"

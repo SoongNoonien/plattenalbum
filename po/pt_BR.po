@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"POT-Creation-Date: 2024-07-18 14:11+0200\n"
 "PO-Revision-Date: 2024-07-18 11:11+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -388,8 +388,8 @@ msgstr "Plattenalbum"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
-msgid "Browse music with MPD"
-msgstr "Procure músicas com MPD"
+msgid "Connect to your music"
+msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
@@ -522,6 +522,9 @@ msgstr "Limpo"
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "Enfileirar Álbum"
+
+#~ msgid "Browse music with MPD"
+#~ msgstr "Procure músicas com MPD"
 
 #~ msgid ""
 #~ "Improved autoscrolling in the playlist and added Hindi and Russian "
