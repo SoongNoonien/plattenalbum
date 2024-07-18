@@ -61,6 +61,13 @@
       </description>
     </release>
   </releases>
+  <requires>
+    <display_length compare="ge">620</display_length>
+  </requires>
+  <recommends>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </recommends>
   <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
   <url type="bugtracker">https://github.com/SoongNoonien/plattenalbum/issues</url>
