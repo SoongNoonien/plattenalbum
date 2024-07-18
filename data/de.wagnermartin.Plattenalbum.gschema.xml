@@ -31,7 +31,7 @@
 			<summary>Password</summary>
 		</key>
 		<key type="b" name="show-audio-format">
-			<default>true</default>
+			<default>false</default>
 			<summary>Show audio format</summary>
 		</key>
 		<key type="b" name="send-notify">
