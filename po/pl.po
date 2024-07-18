@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 10:46+0200\n"
+"POT-Creation-Date: 2024-07-18 11:04+0200\n"
 "PO-Revision-Date: 2023-01-19 12:52+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -41,12 +41,12 @@ msgstr "Widok"
 
 #: src/plattenalbum.py:953
 #, fuzzy
-msgid "Show _stop button"
+msgid "Show _Stop Button"
 msgstr "Pokaż przycisk „stop”"
 
 #: src/plattenalbum.py:954
 #, fuzzy
-msgid "Show audio _format"
+msgid "Show Audio _Format"
 msgstr "Pokaż format audio"
 
 #: src/plattenalbum.py:963
@@ -60,22 +60,22 @@ msgstr "Wspieraj „MPRIS”"
 
 #: src/plattenalbum.py:966
 #, fuzzy
-msgid "Sort _albums by year"
+msgid "Sort _Albums by Year"
 msgstr "Sortuj albumy według roku"
 
 #: src/plattenalbum.py:967
 #, fuzzy
-msgid "Send _notification on title change"
+msgid "Send _Notification on Title Change"
 msgstr "Wysyłaj powiadomienie przy zmianie utworu"
 
 #: src/plattenalbum.py:968
 #, fuzzy
-msgid "Re_wind via previous button"
+msgid "Re_wind via Previous Button"
 msgstr "Przewijaj w tył za pomocą przycisku „poprzedni”"
 
 #: src/plattenalbum.py:969
 #, fuzzy
-msgid "Stop _playback on quit"
+msgid "Stop _Playback on Quit"
 msgstr "Zatrzymaj odtwarzanie przy wyjściu"
 
 #: src/plattenalbum.py:978
@@ -83,12 +83,12 @@ msgid "Connection"
 msgstr "Połączenie"
 
 #: src/plattenalbum.py:979
-msgid "_Connect to remote server"
+msgid "_Connect to Remote Server"
 msgstr ""
 
 #: src/plattenalbum.py:983
 #, fuzzy
-msgid "Host name"
+msgid "Host Name"
 msgstr "Host:"
 
 #: src/plattenalbum.py:988

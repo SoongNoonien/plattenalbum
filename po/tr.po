@@ -8,15 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 10:46+0200\n"
-"PO-Revision-Date: 2024-06-30 22:14+0300\n"
+"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"PO-Revision-Date: 2024-07-18 11:12+0200\n"
 "Last-Translator: Oğuz Ersen <oguz@ersen.moe>\n"
 "Language-Team: Turkish <tr>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.4.4\n"
 
 #: src/plattenalbum.py:499
 #, python-brace-format
@@ -35,11 +36,11 @@ msgid "View"
 msgstr "Gürünüm"
 
 #: src/plattenalbum.py:953
-msgid "Show _stop button"
+msgid "Show _Stop Button"
 msgstr "_Durdur düğmesini göster"
 
 #: src/plattenalbum.py:954
-msgid "Show audio _format"
+msgid "Show Audio _Format"
 msgstr "Ses _biçimini göster"
 
 #: src/plattenalbum.py:963
@@ -51,19 +52,19 @@ msgid "Support “_MPRIS”"
 msgstr "“_MPRIS” destekle"
 
 #: src/plattenalbum.py:966
-msgid "Sort _albums by year"
+msgid "Sort _Albums by Year"
 msgstr "_Albümleri yıla göre sırala"
 
 #: src/plattenalbum.py:967
-msgid "Send _notification on title change"
+msgid "Send _Notification on Title Change"
 msgstr "Şarkı değişikliğinde _bildirim gönder"
 
 #: src/plattenalbum.py:968
-msgid "Re_wind via previous button"
+msgid "Re_wind via Previous Button"
 msgstr "Önceki düğmesi ile geri _sar"
 
 #: src/plattenalbum.py:969
-msgid "Stop _playback on quit"
+msgid "Stop _Playback on Quit"
 msgstr "Çıkışta _oynatmayı durdur"
 
 #: src/plattenalbum.py:978
@@ -71,11 +72,11 @@ msgid "Connection"
 msgstr "Bağlantı"
 
 #: src/plattenalbum.py:979
-msgid "_Connect to remote server"
+msgid "_Connect to Remote Server"
 msgstr "Uzak sunucuya _bağlan"
 
 #: src/plattenalbum.py:983
-msgid "Host name"
+msgid "Host Name"
 msgstr "Ana makine adı"
 
 #: src/plattenalbum.py:988
@@ -92,6 +93,7 @@ msgid "_Reconnect"
 msgstr "_Yeniden bağlan"
 
 #: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:55
+#, fuzzy
 msgid "Server Statistics"
 msgstr "Sunucu İstatistikler,"
 

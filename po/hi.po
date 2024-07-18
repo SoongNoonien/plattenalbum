@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 10:46+0200\n"
-"PO-Revision-Date: 2024-07-17 10:52+0530\n"
+"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"PO-Revision-Date: 2024-07-18 11:06+0200\n"
 "Last-Translator: Scrambled777 <weblate.scrambled777@simplelogin.com>\n"
 "Language-Team: Hindi <indlinux-hindi@lists.sourceforge.net>\n"
 "Language: hi\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Gtranslator 46.1\n"
+"X-Generator: Poedit 3.4.4\n"
 
 #: src/plattenalbum.py:499
 #, python-brace-format
@@ -37,11 +37,11 @@ msgid "View"
 msgstr "देखें"
 
 #: src/plattenalbum.py:953
-msgid "Show _stop button"
+msgid "Show _Stop Button"
 msgstr "'रोकें' बटन दिखाएं (_s)"
 
 #: src/plattenalbum.py:954
-msgid "Show audio _format"
+msgid "Show Audio _Format"
 msgstr "ऑडियो प्रारूप दिखाएं (_f)"
 
 #: src/plattenalbum.py:963
@@ -53,19 +53,19 @@ msgid "Support “_MPRIS”"
 msgstr "“_MPRIS” समर्थन"
 
 #: src/plattenalbum.py:966
-msgid "Sort _albums by year"
+msgid "Sort _Albums by Year"
 msgstr "एल्बमों को वर्ष द्वारा छांटे (_a)"
 
 #: src/plattenalbum.py:967
-msgid "Send _notification on title change"
+msgid "Send _Notification on Title Change"
 msgstr "शीर्षक परिवर्तन पर अधिसूचना भेजें (_n)"
 
 #: src/plattenalbum.py:968
-msgid "Re_wind via previous button"
+msgid "Re_wind via Previous Button"
 msgstr "पिछले बटन द्वारा रिवाइंड (_w)"
 
 #: src/plattenalbum.py:969
-msgid "Stop _playback on quit"
+msgid "Stop _Playback on Quit"
 msgstr "बंद करने पर प्लेबैक रोकें (_p)"
 
 #: src/plattenalbum.py:978
@@ -73,11 +73,11 @@ msgid "Connection"
 msgstr "कनेक्शन"
 
 #: src/plattenalbum.py:979
-msgid "_Connect to remote server"
+msgid "_Connect to Remote Server"
 msgstr "रिमोट सर्वर से जुड़ें (_C)"
 
 #: src/plattenalbum.py:983
-msgid "Host name"
+msgid "Host Name"
 msgstr "होस्ट नाम"
 
 #: src/plattenalbum.py:988
@@ -336,8 +336,7 @@ msgid "Database updated"
 msgstr "डाटाबेस अद्यतित"
 
 #. search
-#: src/plattenalbum.py:2792
-#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+#: src/plattenalbum.py:2792 data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr "खोजें"
 
@@ -352,11 +351,11 @@ msgstr "जुड़े नहीं हैं"
 
 #: src/plattenalbum.py:2828
 msgid ""
-"To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
-"up and running on this or another device in the network"
+"To use Plattenalbum an instance of the “Music Player Daemon” needs to be set up and running "
+"on this or another device in the network"
 msgstr ""
-"प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या "
-"किसी अन्य उपकरण पर स्थापित और चलाने की आवश्यकता है"
+"प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या किसी अन्य उपकरण "
+"पर स्थापित और चलाने की आवश्यकता है"
 
 #: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
@@ -396,10 +395,9 @@ msgstr "म्यूजिक प्लेयर डेमॉन (एमपी�
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
-"Browse your collection while viewing large album covers. Play your music "
-"without managing playlists."
-msgstr ""
-"बड़े एल्बम कवरों के साथ अपना संग्रह देखें। प्लेलिस्ट प्रबंधित किए बिना अपना संगीत चलाएं।"
+"Browse your collection while viewing large album covers. Play your music without managing "
+"playlists."
+msgstr "बड़े एल्बम कवरों के साथ अपना संग्रह देखें। प्लेलिस्ट प्रबंधित किए बिना अपना संगीत चलाएं।"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
@@ -521,11 +519,8 @@ msgstr "संवारें"
 msgid "Enqueue Album"
 msgstr "एल्बम कतारबद्ध करें"
 
-#~ msgid ""
-#~ "Improved autoscrolling in the playlist and added Hindi and Russian "
-#~ "translations."
-#~ msgstr ""
-#~ "प्लेलिस्ट में ऑटो स्क्रॉलिंग में सुधार किया गया तथा हिंदी और रूसी अनुवाद भी जोड़े गए।"
+#~ msgid "Improved autoscrolling in the playlist and added Hindi and Russian translations."
+#~ msgstr "प्लेलिस्ट में ऑटो स्क्रॉलिंग में सुधार किया गया तथा हिंदी और रूसी अनुवाद भी जोड़े गए।"
 
 #~ msgid "Updated to libadwaita 1.5"
 #~ msgstr "libadwaita 1.5 तक अद्यतित"
@@ -542,11 +537,8 @@ msgstr "एल्बम कतारबद्ध करें"
 #~ msgid "Bugfixes and translation updates"
 #~ msgstr "बग समाधान और अनुवाद अद्यतन"
 
-#~ msgid ""
-#~ "Increased flatpak support to only require a minimum set of non-standard "
-#~ "privileges."
-#~ msgstr ""
-#~ "केवल गैर-मानक विशेषाधिकारों के न्यूनतम समूह की आवश्यकता के लिए flatpak समर्थन बढ़ाया।"
+#~ msgid "Increased flatpak support to only require a minimum set of non-standard privileges."
+#~ msgstr "केवल गैर-मानक विशेषाधिकारों के न्यूनतम समूह की आवश्यकता के लिए flatpak समर्थन बढ़ाया।"
 
 #~ msgid "First release using GTK4 and libadwaita"
 #~ msgstr "GTK4 और libadwaita का उपयोग करते हुए पहली रिलीज़"

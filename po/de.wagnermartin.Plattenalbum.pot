@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 10:46+0200\n"
+"POT-Creation-Date: 2024-07-18 11:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,11 +37,11 @@ msgid "View"
 msgstr ""
 
 #: src/plattenalbum.py:953
-msgid "Show _stop button"
+msgid "Show _Stop Button"
 msgstr ""
 
 #: src/plattenalbum.py:954
-msgid "Show audio _format"
+msgid "Show Audio _Format"
 msgstr ""
 
 #: src/plattenalbum.py:963
@@ -53,19 +53,19 @@ msgid "Support “_MPRIS”"
 msgstr ""
 
 #: src/plattenalbum.py:966
-msgid "Sort _albums by year"
+msgid "Sort _Albums by Year"
 msgstr ""
 
 #: src/plattenalbum.py:967
-msgid "Send _notification on title change"
+msgid "Send _Notification on Title Change"
 msgstr ""
 
 #: src/plattenalbum.py:968
-msgid "Re_wind via previous button"
+msgid "Re_wind via Previous Button"
 msgstr ""
 
 #: src/plattenalbum.py:969
-msgid "Stop _playback on quit"
+msgid "Stop _Playback on Quit"
 msgstr ""
 
 #: src/plattenalbum.py:978
@@ -73,11 +73,11 @@ msgid "Connection"
 msgstr ""
 
 #: src/plattenalbum.py:979
-msgid "_Connect to remote server"
+msgid "_Connect to Remote Server"
 msgstr ""
 
 #: src/plattenalbum.py:983
-msgid "Host name"
+msgid "Host Name"
 msgstr ""
 
 #: src/plattenalbum.py:988

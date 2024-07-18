@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 10:46+0200\n"
-"PO-Revision-Date: 2024-07-17 17:10-0300\n"
+"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"PO-Revision-Date: 2024-07-18 11:11+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: pt_BR\n"
@@ -38,11 +38,11 @@ msgid "View"
 msgstr "Visualizar"
 
 #: src/plattenalbum.py:953
-msgid "Show _stop button"
+msgid "Show _Stop Button"
 msgstr "Mostrar botão _parar"
 
 #: src/plattenalbum.py:954
-msgid "Show audio _format"
+msgid "Show Audio _Format"
 msgstr "Mostrar _formato de áudio"
 
 #: src/plattenalbum.py:963
@@ -50,24 +50,23 @@ msgid "Behavior"
 msgstr "Comportamento"
 
 #: src/plattenalbum.py:965
-#, fuzzy
 msgid "Support “_MPRIS”"
 msgstr "Apoio “_MPRIS”"
 
 #: src/plattenalbum.py:966
-msgid "Sort _albums by year"
+msgid "Sort _Albums by Year"
 msgstr "Ordenar _álbuns por ano"
 
 #: src/plattenalbum.py:967
-msgid "Send _notification on title change"
+msgid "Send _Notification on Title Change"
 msgstr "Enviar _notificação sobre mudança de título"
 
 #: src/plattenalbum.py:968
-msgid "Re_wind via previous button"
+msgid "Re_wind via Previous Button"
 msgstr "Botão _retroceder para anterior"
 
 #: src/plattenalbum.py:969
-msgid "Stop _playback on quit"
+msgid "Stop _Playback on Quit"
 msgstr "Parar _playback ao sair"
 
 #: src/plattenalbum.py:978
@@ -75,12 +74,11 @@ msgid "Connection"
 msgstr "Conexão"
 
 #: src/plattenalbum.py:979
-msgid "_Connect to remote server"
+msgid "_Connect to Remote Server"
 msgstr "_Conectar ao servidor remoto"
 
 #: src/plattenalbum.py:983
-#, fuzzy
-msgid "Host name"
+msgid "Host Name"
 msgstr "Hostname"
 
 #: src/plattenalbum.py:988
@@ -327,7 +325,6 @@ msgid "_Lyrics"
 msgstr "_Letra da música"
 
 #: src/plattenalbum.py:2639
-#, fuzzy
 msgid "Play_back"
 msgstr "_Reprodução"
 

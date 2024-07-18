@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 10:46+0200\n"
-"PO-Revision-Date: 2024-06-12 00:00+0300\n"
+"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"PO-Revision-Date: 2024-07-18 11:10+0200\n"
 "Last-Translator: Alexander Froloff <alexander.froloff@mxc.ru>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.4.4\n"
 
 #: src/plattenalbum.py:499
 #, python-brace-format
@@ -40,11 +40,11 @@ msgid "View"
 msgstr "Вид"
 
 #: src/plattenalbum.py:953
-msgid "Show _stop button"
+msgid "Show _Stop Button"
 msgstr "Показывать кнопку «Стоп»"
 
 #: src/plattenalbum.py:954
-msgid "Show audio _format"
+msgid "Show Audio _Format"
 msgstr "Показывать формат аудио"
 
 #: src/plattenalbum.py:963
@@ -56,19 +56,19 @@ msgid "Support “_MPRIS”"
 msgstr "Поддержка MPRIS"
 
 #: src/plattenalbum.py:966
-msgid "Sort _albums by year"
+msgid "Sort _Albums by Year"
 msgstr "Сортировать альбомы по дате"
 
 #: src/plattenalbum.py:967
-msgid "Send _notification on title change"
+msgid "Send _Notification on Title Change"
 msgstr "Уведомление при смене трека"
 
 #: src/plattenalbum.py:968
-msgid "Re_wind via previous button"
+msgid "Re_wind via Previous Button"
 msgstr "Перемотка кнопкой «Предыдущий»"
 
 #: src/plattenalbum.py:969
-msgid "Stop _playback on quit"
+msgid "Stop _Playback on Quit"
 msgstr "Остановить воспроизведение при выходе"
 
 #: src/plattenalbum.py:978
@@ -76,11 +76,11 @@ msgid "Connection"
 msgstr "Подключение"
 
 #: src/plattenalbum.py:979
-msgid "_Connect to remote server"
+msgid "_Connect to Remote Server"
 msgstr "Подключиться к удалённому серверу"
 
 #: src/plattenalbum.py:983
-msgid "Host name"
+msgid "Host Name"
 msgstr "Имя хоста"
 
 #: src/plattenalbum.py:988
@@ -328,7 +328,6 @@ msgid "_Lyrics"
 msgstr "Текст песни"
 
 #: src/plattenalbum.py:2639
-#, fuzzy
 msgid "Play_back"
 msgstr "Воспроизведение"
 

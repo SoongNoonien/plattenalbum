@@ -950,8 +950,8 @@ class ViewSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("View"))
 		toggle_data=(
-			(_("Show _stop button"), "show-stop", ""),
-			(_("Show audio _format"), "show-audio-format", ""),
+			(_("Show _Stop Button"), "show-stop", ""),
+			(_("Show Audio _Format"), "show-audio-format", ""),
 		)
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
@@ -963,10 +963,10 @@ class BehaviorSettings(Adw.PreferencesGroup):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
 			(_("Support “_MPRIS”"), "mpris", ""),
-			(_("Sort _albums by year"), "sort-albums-by-year", ""),
-			(_("Send _notification on title change"), "send-notify", ""),
-			(_("Re_wind via previous button"), "rewind-mode", ""),
-			(_("Stop _playback on quit"), "stop-on-quit", ""),
+			(_("Sort _Albums by Year"), "sort-albums-by-year", ""),
+			(_("Send _Notification on Title Change"), "send-notify", ""),
+			(_("Re_wind via Previous Button"), "rewind-mode", ""),
+			(_("Stop _Playback on Quit"), "stop-on-quit", ""),
 		)
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
@@ -976,11 +976,11 @@ class BehaviorSettings(Adw.PreferencesGroup):
 class ConnectionSettings(Adw.PreferencesGroup):
 	def __init__(self, client, settings):
 		super().__init__(title=_("Connection"))
-		remote_row=Adw.ExpanderRow(title=_("_Connect to remote server"), use_underline=True, show_enable_switch=True)
+		remote_row=Adw.ExpanderRow(title=_("_Connect to Remote Server"), use_underline=True, show_enable_switch=True)
 		settings.bind("remote-connection", remote_row, "enable-expansion", Gio.SettingsBindFlags.DEFAULT)
 		self.add(remote_row)
 
-		hostname_row=Adw.EntryRow(title=_("Host name"))
+		hostname_row=Adw.EntryRow(title=_("Host Name"))
 		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		remote_row.add_row(hostname_row)
 

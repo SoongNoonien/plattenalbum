@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 10:46+0200\n"
-"PO-Revision-Date: 2024-03-10 01:02+0100\n"
+"POT-Creation-Date: 2024-07-18 11:04+0200\n"
+"PO-Revision-Date: 2024-07-18 11:08+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.4.4\n"
 
 #: src/plattenalbum.py:499
 #, python-brace-format
@@ -38,11 +38,11 @@ msgid "View"
 msgstr "Weergave"
 
 #: src/plattenalbum.py:953
-msgid "Show _stop button"
+msgid "Show _Stop Button"
 msgstr "Toon _stop knop"
 
 #: src/plattenalbum.py:954
-msgid "Show audio _format"
+msgid "Show Audio _Format"
 msgstr "Toon audio_formaat"
 
 #: src/plattenalbum.py:963
@@ -54,20 +54,19 @@ msgid "Support “_MPRIS”"
 msgstr "Ondersteuning voor “_MPRIS”"
 
 #: src/plattenalbum.py:966
-msgid "Sort _albums by year"
+msgid "Sort _Albums by Year"
 msgstr "Sorteer albums op _jaar"
 
 #: src/plattenalbum.py:967
-msgid "Send _notification on title change"
+msgid "Send _Notification on Title Change"
 msgstr "Verstuur _notificatie na titelwisseling"
 
 #: src/plattenalbum.py:968
-#, fuzzy
-msgid "Re_wind via previous button"
+msgid "Re_wind via Previous Button"
 msgstr "_Terugspoelen via vorige knop"
 
 #: src/plattenalbum.py:969
-msgid "Stop _playback on quit"
+msgid "Stop _Playback on Quit"
 msgstr "Stop met _afspelen na afsluiten"
 
 #: src/plattenalbum.py:978
@@ -75,12 +74,11 @@ msgid "Connection"
 msgstr "Verbinding"
 
 #: src/plattenalbum.py:979
-msgid "_Connect to remote server"
+msgid "_Connect to Remote Server"
 msgstr ""
 
 #: src/plattenalbum.py:983
-#, fuzzy
-msgid "Host name"
+msgid "Host Name"
 msgstr "Hostnaam"
 
 #: src/plattenalbum.py:988
