@@ -8,8 +8,8 @@ i18n.merge_file(
 )
 
 i18n.merge_file(
-        input: 'de.wagnermartin.Plattenalbum.appdata.xml.in',
-       output: 'de.wagnermartin.Plattenalbum.appdata.xml',
+        input: 'de.wagnermartin.Plattenalbum.metainfo.xml.in',
+       output: 'de.wagnermartin.Plattenalbum.metainfo.xml',
        po_dir: '../po',
       install: true,
   install_dir: join_paths(get_option('datadir'), 'metainfo')
