@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-13 14:10+0200\n"
+"POT-Creation-Date: 2024-07-18 10:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -89,7 +89,7 @@ msgid "Password"
 msgstr ""
 
 #. connect button
-#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2826
+#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2830
 msgid "_Reconnect"
 msgstr ""
 
@@ -275,7 +275,7 @@ msgstr ""
 msgid "Main Menu"
 msgstr ""
 
-#: src/plattenalbum.py:2621 src/plattenalbum.py:2828
+#: src/plattenalbum.py:2621 src/plattenalbum.py:2832
 msgid "_Preferences"
 msgstr ""
 
@@ -336,7 +336,8 @@ msgid "Database updated"
 msgstr ""
 
 #. search
-#: src/plattenalbum.py:2792 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
+#: src/plattenalbum.py:2792
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr ""
 
@@ -345,116 +346,64 @@ msgid "Search collection"
 msgstr ""
 
 #. status page
-#: src/plattenalbum.py:2823
+#: src/plattenalbum.py:2827
 msgid "Not Connected"
 msgstr ""
 
-#: src/plattenalbum.py:2824
+#: src/plattenalbum.py:2828
 msgid ""
 "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
 "up and running on this or another device in the network"
 msgstr ""
 
-#: src/plattenalbum.py:2968
+#: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
 msgstr ""
 
-#: src/plattenalbum.py:2970
+#: src/plattenalbum.py:2975
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr ""
 
-#: src/plattenalbum.py:2972
+#: src/plattenalbum.py:2977
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr ""
 
-#: src/plattenalbum.py:3002
+#: src/plattenalbum.py:3007
 msgid "connecting…"
 msgstr ""
 
-#: src/plattenalbum.py:3031
+#: src/plattenalbum.py:3036
 msgid "Debug mode"
 msgstr ""
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr ""
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Browse music with MPD"
 msgstr ""
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
 msgstr ""
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
 msgstr ""
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
 msgstr ""
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
 msgid "Album View"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
-msgid ""
-"Improved autoscrolling in the playlist and added Hindi and Russian "
-"translations."
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
-msgid "Updated to libadwaita 1.5"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:41
-msgid "Reworked settings"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:42
-msgid "Reworked notifications"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:43
-msgid "New initial status page"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:44
-msgid "Bugfixes and translation updates"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:50
-msgid ""
-"Increased flatpak support to only require a minimum set of non-standard "
-"privileges."
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:55
-msgid "First release using GTK4 and libadwaita"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:57
-msgid "Added automatic cover sizing"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:58
-msgid "Greatly improved search"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:59
-msgid "Removed mini-player"
-msgstr ""
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:72
-msgid "Martin Wagner"
 msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4

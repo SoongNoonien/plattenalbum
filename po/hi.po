@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: plattenalbum\n"
-"Report-Msgid-Bugs-To: https://github.com/SoongNoonien/plattenalbum/issues\n"
-"POT-Creation-Date: 2024-07-13 14:10+0200\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-18 10:46+0200\n"
 "PO-Revision-Date: 2024-07-17 10:52+0530\n"
 "Last-Translator: Scrambled777 <weblate.scrambled777@simplelogin.com>\n"
 "Language-Team: Hindi <indlinux-hindi@lists.sourceforge.net>\n"
@@ -89,7 +89,7 @@ msgid "Password"
 msgstr "पासवर्ड"
 
 #. connect button
-#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2826
+#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2830
 msgid "_Reconnect"
 msgstr "पुनः जुड़ें (_R)"
 
@@ -275,7 +275,7 @@ msgstr "ध्वनि नियंत्रण"
 msgid "Main Menu"
 msgstr "मुख्य मेनू"
 
-#: src/plattenalbum.py:2621 src/plattenalbum.py:2828
+#: src/plattenalbum.py:2621 src/plattenalbum.py:2832
 msgid "_Preferences"
 msgstr "प्राथमिकताएं (_P)"
 
@@ -336,7 +336,8 @@ msgid "Database updated"
 msgstr "डाटाबेस अद्यतित"
 
 #. search
-#: src/plattenalbum.py:2792 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
+#: src/plattenalbum.py:2792
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr "खोजें"
 
@@ -345,11 +346,11 @@ msgid "Search collection"
 msgstr "संग्रह खोजें"
 
 #. status page
-#: src/plattenalbum.py:2823
+#: src/plattenalbum.py:2827
 msgid "Not Connected"
 msgstr "जुड़े नहीं हैं"
 
-#: src/plattenalbum.py:2824
+#: src/plattenalbum.py:2828
 msgid ""
 "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
 "up and running on this or another device in the network"
@@ -357,109 +358,56 @@ msgstr ""
 "प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या "
 "किसी अन्य उपकरण पर स्थापित और चलाने की आवश्यकता है"
 
-#: src/plattenalbum.py:2968
+#: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
 msgstr "अगला शीर्षक बज रहा है"
 
-#: src/plattenalbum.py:2970
+#: src/plattenalbum.py:2975
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "अब “{artist}” द्वारा “{title}” बज रहा है"
 
-#: src/plattenalbum.py:2972
+#: src/plattenalbum.py:2977
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "अभी “{title}” बज रहा है"
 
-#: src/plattenalbum.py:3002
+#: src/plattenalbum.py:3007
 msgid "connecting…"
 msgstr "जुड़ रहा है…"
 
-#: src/plattenalbum.py:3031
+#: src/plattenalbum.py:3036
 msgid "Debug mode"
 msgstr "डिबग मोड"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr "प्लैटेनएल्बम"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Browse music with MPD"
 msgstr "एमपीडी के साथ संगीत देखें"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
 msgstr "म्यूजिक प्लेयर डेमॉन (एमपीडी) के लिए क्लाइंट।"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
 msgstr ""
 "बड़े एल्बम कवरों के साथ अपना संग्रह देखें। प्लेलिस्ट प्रबंधित किए बिना अपना संगीत चलाएं।"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
 msgstr "मुख्य विंडो"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
 msgid "Album View"
 msgstr "एल्बम दृश्य"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
-msgid ""
-"Improved autoscrolling in the playlist and added Hindi and Russian "
-"translations."
-msgstr "प्लेलिस्ट में ऑटो स्क्रॉलिंग में सुधार किया गया तथा हिंदी और रूसी अनुवाद भी जोड़े गए।"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
-msgid "Updated to libadwaita 1.5"
-msgstr "libadwaita 1.5 तक अद्यतित"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:41
-msgid "Reworked settings"
-msgstr "सेटिंग में सुधार"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:42
-msgid "Reworked notifications"
-msgstr "अधिसूचनाओं में सुधार"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:43
-msgid "New initial status page"
-msgstr "नया आरंभिक स्थिति पृष्ठ"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:44
-msgid "Bugfixes and translation updates"
-msgstr "बग समाधान और अनुवाद अद्यतन"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:50
-msgid ""
-"Increased flatpak support to only require a minimum set of non-standard "
-"privileges."
-msgstr ""
-"केवल गैर-मानक विशेषाधिकारों के न्यूनतम समूह की आवश्यकता के लिए flatpak समर्थन बढ़ाया।"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:55
-msgid "First release using GTK4 and libadwaita"
-msgstr "GTK4 और libadwaita का उपयोग करते हुए पहली रिलीज़"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:57
-msgid "Added automatic cover sizing"
-msgstr "स्वचालित कवर आमापान जोड़ा गया"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:58
-msgid "Greatly improved search"
-msgstr "खोज में बहुत सुधार किया"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:59
-msgid "Removed mini-player"
-msgstr "लघु-वादक हटाया गया"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:72
-msgid "Martin Wagner"
-msgstr "मार्टिन वैगनर"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
@@ -572,3 +520,45 @@ msgstr "संवारें"
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "एल्बम कतारबद्ध करें"
+
+#~ msgid ""
+#~ "Improved autoscrolling in the playlist and added Hindi and Russian "
+#~ "translations."
+#~ msgstr ""
+#~ "प्लेलिस्ट में ऑटो स्क्रॉलिंग में सुधार किया गया तथा हिंदी और रूसी अनुवाद भी जोड़े गए।"
+
+#~ msgid "Updated to libadwaita 1.5"
+#~ msgstr "libadwaita 1.5 तक अद्यतित"
+
+#~ msgid "Reworked settings"
+#~ msgstr "सेटिंग में सुधार"
+
+#~ msgid "Reworked notifications"
+#~ msgstr "अधिसूचनाओं में सुधार"
+
+#~ msgid "New initial status page"
+#~ msgstr "नया आरंभिक स्थिति पृष्ठ"
+
+#~ msgid "Bugfixes and translation updates"
+#~ msgstr "बग समाधान और अनुवाद अद्यतन"
+
+#~ msgid ""
+#~ "Increased flatpak support to only require a minimum set of non-standard "
+#~ "privileges."
+#~ msgstr ""
+#~ "केवल गैर-मानक विशेषाधिकारों के न्यूनतम समूह की आवश्यकता के लिए flatpak समर्थन बढ़ाया।"
+
+#~ msgid "First release using GTK4 and libadwaita"
+#~ msgstr "GTK4 और libadwaita का उपयोग करते हुए पहली रिलीज़"
+
+#~ msgid "Added automatic cover sizing"
+#~ msgstr "स्वचालित कवर आमापान जोड़ा गया"
+
+#~ msgid "Greatly improved search"
+#~ msgstr "खोज में बहुत सुधार किया"
+
+#~ msgid "Removed mini-player"
+#~ msgstr "लघु-वादक हटाया गया"
+
+#~ msgid "Martin Wagner"
+#~ msgstr "मार्टिन वैगनर"

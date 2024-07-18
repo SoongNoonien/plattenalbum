@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-16 12:14+0200\n"
+"POT-Creation-Date: 2024-07-18 10:46+0200\n"
 "PO-Revision-Date: 2024-06-30 22:14+0300\n"
 "Last-Translator: Oğuz Ersen <oguz@ersen.moe>\n"
 "Language-Team: Turkish <tr>\n"
@@ -87,11 +87,11 @@ msgid "Password"
 msgstr "Parola"
 
 #. connect button
-#: src/plattenalbum.py:997 src/plattenalbum.py:2757 src/plattenalbum.py:2802
+#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2830
 msgid "_Reconnect"
 msgstr "_Yeniden bağlan"
 
-#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:49
+#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:55
 msgid "Server Statistics"
 msgstr "Sunucu İstatistikler,"
 
@@ -107,7 +107,7 @@ msgstr "Çalışma Süresi"
 msgid "Playtime"
 msgstr "Oynatma Süresi"
 
-#: src/plattenalbum.py:1028
+#: src/plattenalbum.py:1028 src/plattenalbum.py:1373 src/plattenalbum.py:1794
 msgid "Artists"
 msgstr "Sanatçılar"
 
@@ -115,7 +115,7 @@ msgstr "Sanatçılar"
 msgid "Albums"
 msgstr "Albümler"
 
-#: src/plattenalbum.py:1030
+#: src/plattenalbum.py:1030 src/plattenalbum.py:1376
 msgid "Songs"
 msgstr "Şarkılar"
 
@@ -127,7 +127,7 @@ msgstr "Toplam Oynatma Süresi"
 msgid "Database Update"
 msgstr "Veri Tabanı Güncellemesi"
 
-#: src/plattenalbum.py:1146 src/plattenalbum.py:1870
+#: src/plattenalbum.py:1146 src/plattenalbum.py:1897
 msgid "Context menu"
 msgstr "İçerik menüsü"
 
@@ -143,211 +143,212 @@ msgstr "_Sonraki Olarak"
 msgid "_Play"
 msgstr "_Oynat"
 
-#: src/plattenalbum.py:1172 src/plattenalbum.py:1888
+#: src/plattenalbum.py:1172 src/plattenalbum.py:1915
 msgid "_Show"
 msgstr "_Göster"
 
 #. status page
-#: src/plattenalbum.py:1377
+#: src/plattenalbum.py:1383
 msgid "No Results Found"
 msgstr "Sonuç Bulunamadı"
 
-#: src/plattenalbum.py:1377
+#: src/plattenalbum.py:1383
 msgid "Try a different search"
 msgstr "Farklı bir arama deneyin"
 
-#: src/plattenalbum.py:1571 src/plattenalbum.py:1715
+#: src/plattenalbum.py:1581 src/plattenalbum.py:1725
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "{album} albümünün kapağı"
 
-#: src/plattenalbum.py:1574 src/plattenalbum.py:1718
+#: src/plattenalbum.py:1584 src/plattenalbum.py:1728
 msgid "Album cover of an unknown album"
 msgstr "Bilinmeyen albümün kapağı"
 
-#: src/plattenalbum.py:1639
+#: src/plattenalbum.py:1649
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "{artist} albümleri"
 
-#: src/plattenalbum.py:1673
+#: src/plattenalbum.py:1683
 msgid "Append"
 msgstr "Sona ekle"
 
 #. widgets
-#: src/plattenalbum.py:1674 src/plattenalbum.py:2331 src/plattenalbum.py:2352
+#: src/plattenalbum.py:1684 src/plattenalbum.py:2358 src/plattenalbum.py:2379
 msgid "Play"
 msgstr "Oynat"
 
-#: src/plattenalbum.py:1725
+#: src/plattenalbum.py:1735
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
 msgstr[0] "{number} şarkı ({duration})"
 
 #. status page
-#: src/plattenalbum.py:1790
+#: src/plattenalbum.py:1809
 msgid "Collection is Empty"
 msgstr "Koleksiyon Boş"
 
-#: src/plattenalbum.py:1887
+#: src/plattenalbum.py:1914
 msgid "_Remove"
 msgstr "_Kaldır"
 
-#: src/plattenalbum.py:1890
+#: src/plattenalbum.py:1917
 msgid "_Enqueue Album"
 msgstr "Albümü _Sıraya Al"
 
-#: src/plattenalbum.py:1891
+#: src/plattenalbum.py:1918
 msgid "_Tidy"
 msgstr "_Düzenle"
 
-#: src/plattenalbum.py:1893
+#: src/plattenalbum.py:1920
 msgid "_Clear"
 msgstr "_Temizle"
 
-#: src/plattenalbum.py:2102
+#: src/plattenalbum.py:2129
 msgid "Playlist is Empty"
 msgstr "Oynatma Listesi Boş"
 
-#: src/plattenalbum.py:2107
+#: src/plattenalbum.py:2134
 msgid "Scroll to Current Song"
 msgstr "Geçerli Şarkıya Kaydır"
 
 #. status pages
-#: src/plattenalbum.py:2202
+#: src/plattenalbum.py:2229
 msgid "No Lyrics Found"
 msgstr "Şarkı Sözleri Bulunamadı"
 
-#: src/plattenalbum.py:2205
+#: src/plattenalbum.py:2232
 msgid "Connection Error"
 msgstr "Bağlantı Hatası"
 
-#: src/plattenalbum.py:2205
+#: src/plattenalbum.py:2232
 msgid "Check your network connection"
 msgstr "Ağ bağlantınızı gözden geçirin"
 
-#: src/plattenalbum.py:2258
+#: src/plattenalbum.py:2285
 #, python-brace-format
 msgid "Lyrics of {song}"
 msgstr "{song} şarkı sözleri"
 
-#: src/plattenalbum.py:2259
+#: src/plattenalbum.py:2286
 msgid "searching…"
 msgstr "aranıyor…"
 
-#: src/plattenalbum.py:2266 src/plattenalbum.py:2271
+#: src/plattenalbum.py:2293 src/plattenalbum.py:2298
 msgid "Lyrics view"
 msgstr "Şarkı sözleri görünümü"
 
-#: src/plattenalbum.py:2276
+#: src/plattenalbum.py:2303
 msgid "Current album cover"
 msgstr "Şu anki albüm kapağı"
 
-#: src/plattenalbum.py:2332 data/ShortcutsWindow.ui:89
+#: src/plattenalbum.py:2359 data/ShortcutsWindow.ui:101
 msgid "Stop"
 msgstr "Durdur"
 
-#: src/plattenalbum.py:2334 data/ShortcutsWindow.ui:101
+#: src/plattenalbum.py:2361 data/ShortcutsWindow.ui:113
 msgid "Previous"
 msgstr "Önceki"
 
-#: src/plattenalbum.py:2335 data/ShortcutsWindow.ui:95
+#: src/plattenalbum.py:2362 data/ShortcutsWindow.ui:107
 msgid "Next"
 msgstr "Sonraki"
 
-#: src/plattenalbum.py:2349
+#: src/plattenalbum.py:2376
 msgid "Pause"
 msgstr "Duraklat"
 
-#: src/plattenalbum.py:2368
+#: src/plattenalbum.py:2395
 msgid "Progress bar"
 msgstr "İlerleme çubuğu"
 
-#: src/plattenalbum.py:2564
+#: src/plattenalbum.py:2591
 msgid "Volume control"
 msgstr "Ses denetimi"
 
-#: src/plattenalbum.py:2584
-msgid "Playback Menu"
-msgstr "Oynatım Menüsü"
-
-#: src/plattenalbum.py:2595
-msgid "_Repeat Mode"
-msgstr "_Tekrar Modu"
-
-#: src/plattenalbum.py:2596
-msgid "R_andom Mode"
-msgstr "_Rastgele Modu"
-
-#: src/plattenalbum.py:2597
-msgid "_Single Mode"
-msgstr "Te_kli Modu"
-
-#: src/plattenalbum.py:2598
-msgid "_Pause After Song"
-msgstr "Şarkıdan Sonra _Duraklat"
-
-#: src/plattenalbum.py:2599
-msgid "_Consume Mode"
-msgstr "Tüketi_m Modu"
-
-#: src/plattenalbum.py:2739
-msgid "Database is being updated"
-msgstr "Veri tabanı güncelleniyor"
-
-#: src/plattenalbum.py:2740
-msgid "Database updated"
-msgstr "Veri tabanı güncellendi"
-
-#: src/plattenalbum.py:2752 src/plattenalbum.py:2804
-msgid "_Preferences"
-msgstr "_Tercihler"
-
-#: src/plattenalbum.py:2753
-msgid "_Keyboard Shortcuts"
-msgstr "_Klavye Kısayolları"
-
-#: src/plattenalbum.py:2754
-msgid "_Help"
-msgstr "_Yardım"
-
-#: src/plattenalbum.py:2755
-msgid "_About Plattenalbum"
-msgstr "Plattenalbum _Hakkında"
-
-#: src/plattenalbum.py:2758
-msgid "_Update Database"
-msgstr "Veri Tabanını _Güncelle"
-
-#: src/plattenalbum.py:2759
-msgid "_Server Statistics"
-msgstr "_Sunucu İstatistikleri"
-
-#: src/plattenalbum.py:2761
-msgid "_Lyrics"
-msgstr "Şarkı Söz_leri"
-
-#. menu button / popover
-#: src/plattenalbum.py:2766 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:2611 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
 msgstr "Ana Menü"
 
+#: src/plattenalbum.py:2621 src/plattenalbum.py:2832
+msgid "_Preferences"
+msgstr "_Tercihler"
+
+#: src/plattenalbum.py:2622
+msgid "_Keyboard Shortcuts"
+msgstr "_Klavye Kısayolları"
+
+#: src/plattenalbum.py:2623
+msgid "_Help"
+msgstr "_Yardım"
+
+#: src/plattenalbum.py:2624
+msgid "_About Plattenalbum"
+msgstr "Plattenalbum _Hakkında"
+
+#: src/plattenalbum.py:2627
+msgid "_Update Database"
+msgstr "Veri Tabanını _Güncelle"
+
+#: src/plattenalbum.py:2628
+msgid "_Server Statistics"
+msgstr "_Sunucu İstatistikleri"
+
+#: src/plattenalbum.py:2630
+msgid "_Repeat Mode"
+msgstr "_Tekrar Modu"
+
+#: src/plattenalbum.py:2631
+msgid "R_andom Mode"
+msgstr "_Rastgele Modu"
+
+#: src/plattenalbum.py:2632
+msgid "_Single Mode"
+msgstr "Te_kli Modu"
+
+#: src/plattenalbum.py:2633
+msgid "_Pause After Song"
+msgstr "Şarkıdan Sonra _Duraklat"
+
+#: src/plattenalbum.py:2634
+msgid "_Consume Mode"
+msgstr "Tüketi_m Modu"
+
+#: src/plattenalbum.py:2638
+msgid "_Lyrics"
+msgstr "Şarkı Söz_leri"
+
+#: src/plattenalbum.py:2639
+#, fuzzy
+msgid "Play_back"
+msgstr "Oynatım"
+
+#: src/plattenalbum.py:2780
+msgid "Database is being updated"
+msgstr "Veri tabanı güncelleniyor"
+
+#: src/plattenalbum.py:2781
+msgid "Database updated"
+msgstr "Veri tabanı güncellendi"
+
 #. search
-#: src/plattenalbum.py:2769 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
+#: src/plattenalbum.py:2792
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr "Ara"
 
-#: src/plattenalbum.py:2770 src/plattenalbum.py:2771
+#: src/plattenalbum.py:2793 src/plattenalbum.py:2794
 msgid "Search collection"
 msgstr "Koleksiyonu ara"
 
 #. status page
-#: src/plattenalbum.py:2799
+#: src/plattenalbum.py:2827
 msgid "Not Connected"
 msgstr "Bağlı Değil"
 
-#: src/plattenalbum.py:2800
+#: src/plattenalbum.py:2828
 msgid ""
 "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
 "up and running on this or another device in the network"
@@ -355,43 +356,43 @@ msgstr ""
 "Plattenalbum kullanmak için “Music Player Daemon” programının bu aygıtta "
 "veya ağdaki başka bir aygıtta kurulu ve çalışıyor olması gerekir"
 
-#: src/plattenalbum.py:2933
+#: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
 msgstr "Sonraki Şarkı Oynatılıyor"
 
-#: src/plattenalbum.py:2935
+#: src/plattenalbum.py:2975
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "“{title}” / “{artist}” oynatılıyor"
 
-#: src/plattenalbum.py:2937
+#: src/plattenalbum.py:2977
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "“{title}” oynatılıyor"
 
-#: src/plattenalbum.py:2967
+#: src/plattenalbum.py:3007
 msgid "connecting…"
 msgstr "bağlanıyor…"
 
-#: src/plattenalbum.py:2996
+#: src/plattenalbum.py:3036
 msgid "Debug mode"
 msgstr "Hata ayıklama modu"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr "Plattenalbum"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Browse music with MPD"
 msgstr "MPD ile müziklere göz atın"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
 msgstr "Music Player Daemon (MPD) için bir istemci."
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
@@ -399,69 +400,13 @@ msgstr ""
 "Büyük albüm kapaklarını görüntülerken koleksiyonunuza göz atın. Oynatma "
 "listelerini yönetmeden müziğinizi dinleyin."
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
 msgstr "Ana pencere"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
 msgid "Album View"
 msgstr "Albüm Görünümü"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
-msgid ""
-"Improved autoscrolling in the playlist and added Hindi and Russian "
-"translations."
-msgstr ""
-"Oynatma listesinde otomatik kaydırma iyileştirildi ve Hintçe ve Rusça "
-"çeviriler eklendi."
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
-msgid "Updated to libadwaita 1.5"
-msgstr "libadwaita 1.5 sürümüne güncellendi"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:41
-msgid "Reworked settings"
-msgstr "Ayarlar yeniden düzenlendi"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:42
-msgid "Reworked notifications"
-msgstr "Bildirimler yeniden düzenlendi"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:43
-msgid "New initial status page"
-msgstr "Yeni başlangıç durumu sayfası"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:44
-msgid "Bugfixes and translation updates"
-msgstr "Hata düzeltmeleri ve çeviri güncellemeleri"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:50
-msgid ""
-"Increased flatpak support to only require a minimum set of non-standard "
-"privileges."
-msgstr ""
-"Flatpak desteği yalnızca en az düzeyde standart dışı ayrıcalıklar "
-"gerektirecek şekilde artırıldı."
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:55
-msgid "First release using GTK4 and libadwaita"
-msgstr "GTK4 ve libadwaita kullanan ilk sürüm"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:57
-msgid "Added automatic cover sizing"
-msgstr "Otomatik kapak boyutlandırma eklendi"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:58
-msgid "Greatly improved search"
-msgstr "Arama büyük ölçüde iyileştirildi"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:59
-msgid "Removed mini-player"
-msgstr "Küçük oynatıcı kaldırıldı"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:72
-msgid "Martin Wagner"
-msgstr "Martin Wagner"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
@@ -488,84 +433,139 @@ msgid "Shortcuts"
 msgstr "Kısayollar"
 
 #: data/ShortcutsWindow.ui:37
+msgid "Sidebar"
+msgstr ""
+
+#: data/ShortcutsWindow.ui:43
 msgid "Reconnect"
 msgstr "Yeniden Bağlan"
 
-#: data/ShortcutsWindow.ui:43
+#: data/ShortcutsWindow.ui:49
 msgid "Update Database"
 msgstr "Veri Tabanını Güncelle"
 
-#: data/ShortcutsWindow.ui:55
+#: data/ShortcutsWindow.ui:61
+msgid "Close"
+msgstr ""
+
+#: data/ShortcutsWindow.ui:67
 msgid "Quit"
 msgstr "Çıkış"
 
-#: data/ShortcutsWindow.ui:63
+#: data/ShortcutsWindow.ui:75
 msgid "Window"
 msgstr "Pencere"
 
-#: data/ShortcutsWindow.ui:66
+#: data/ShortcutsWindow.ui:78
 msgid "Toggle Lyrics"
 msgstr "Şarkı Sözlerini Aç/Kapat"
 
-#: data/ShortcutsWindow.ui:72
+#: data/ShortcutsWindow.ui:84
 msgid "Toggle Search"
 msgstr "Aramayı Aç/Kapat"
 
-#: data/ShortcutsWindow.ui:80
+#: data/ShortcutsWindow.ui:92
 msgid "Playback"
 msgstr "Oynatım"
 
-#: data/ShortcutsWindow.ui:83
+#: data/ShortcutsWindow.ui:95
 msgid "Play/Pause"
 msgstr "Oynat/Duraklat"
 
-#: data/ShortcutsWindow.ui:107
+#: data/ShortcutsWindow.ui:119
 msgid "Seek Forward"
 msgstr "İleri Sar"
 
-#: data/ShortcutsWindow.ui:113
+#: data/ShortcutsWindow.ui:125
 msgid "Seek Backward"
 msgstr "Geri Sar"
 
-#: data/ShortcutsWindow.ui:121
+#: data/ShortcutsWindow.ui:133
 msgid "Playback Options"
 msgstr "Oynatım Seçenekleri"
 
-#: data/ShortcutsWindow.ui:124
+#: data/ShortcutsWindow.ui:136
 msgid "Toggle Repeat Mode"
 msgstr "Tekrar Modunu Aç/Kapat"
 
-#: data/ShortcutsWindow.ui:130
+#: data/ShortcutsWindow.ui:142
 msgid "Toggle Random Mode"
 msgstr "Rastgele Modunu Aç/Kapat"
 
-#: data/ShortcutsWindow.ui:136
+#: data/ShortcutsWindow.ui:148
 msgid "Toggle Single Mode"
 msgstr "Tekli Modunu Aç/Kapat"
 
-#: data/ShortcutsWindow.ui:142
+#: data/ShortcutsWindow.ui:154
 msgid "Pause After Song"
 msgstr "Şarkıdan Sonra Duraklat"
 
-#: data/ShortcutsWindow.ui:148
+#: data/ShortcutsWindow.ui:160
 msgid "Toggle Consume Mode"
 msgstr "Tüketim Modunu Aç/Kapat"
 
-#: data/ShortcutsWindow.ui:156
+#: data/ShortcutsWindow.ui:168
 msgid "Playlist"
 msgstr "Oynatma listesi"
 
-#: data/ShortcutsWindow.ui:159
+#: data/ShortcutsWindow.ui:171
 msgid "Clear"
 msgstr "Temizle"
 
-#: data/ShortcutsWindow.ui:165
+#: data/ShortcutsWindow.ui:177
 msgid "Tidy"
 msgstr "Düzenle"
 
-#: data/ShortcutsWindow.ui:171
+#: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "Albümü sıraya al"
+
+#~ msgid "Playback Menu"
+#~ msgstr "Oynatım Menüsü"
+
+#~ msgid ""
+#~ "Improved autoscrolling in the playlist and added Hindi and Russian "
+#~ "translations."
+#~ msgstr ""
+#~ "Oynatma listesinde otomatik kaydırma iyileştirildi ve Hintçe ve Rusça "
+#~ "çeviriler eklendi."
+
+#~ msgid "Updated to libadwaita 1.5"
+#~ msgstr "libadwaita 1.5 sürümüne güncellendi"
+
+#~ msgid "Reworked settings"
+#~ msgstr "Ayarlar yeniden düzenlendi"
+
+#~ msgid "Reworked notifications"
+#~ msgstr "Bildirimler yeniden düzenlendi"
+
+#~ msgid "New initial status page"
+#~ msgstr "Yeni başlangıç durumu sayfası"
+
+#~ msgid "Bugfixes and translation updates"
+#~ msgstr "Hata düzeltmeleri ve çeviri güncellemeleri"
+
+#~ msgid ""
+#~ "Increased flatpak support to only require a minimum set of non-standard "
+#~ "privileges."
+#~ msgstr ""
+#~ "Flatpak desteği yalnızca en az düzeyde standart dışı ayrıcalıklar "
+#~ "gerektirecek şekilde artırıldı."
+
+#~ msgid "First release using GTK4 and libadwaita"
+#~ msgstr "GTK4 ve libadwaita kullanan ilk sürüm"
+
+#~ msgid "Added automatic cover sizing"
+#~ msgstr "Otomatik kapak boyutlandırma eklendi"
+
+#~ msgid "Greatly improved search"
+#~ msgstr "Arama büyük ölçüde iyileştirildi"
+
+#~ msgid "Removed mini-player"
+#~ msgstr "Küçük oynatıcı kaldırıldı"
+
+#~ msgid "Martin Wagner"
+#~ msgstr "Martin Wagner"
 
 #~ msgid "restart required"
 #~ msgstr "yeniden başlatma gerekli"

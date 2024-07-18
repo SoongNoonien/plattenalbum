@@ -30,12 +30,12 @@
   </screenshots>
   <releases>
     <release version="2.1.1" date="2024-06-16">
-      <description>
+      <description translate="no">
         <p>Improved autoscrolling in the playlist and added Hindi and Russian translations.</p>
       </description>
     </release>
     <release version="2.1.0" date="2024-05-02">
-      <description>
+      <description translate="no">
         <p>Updated to libadwaita 1.5</p>
         <ul>
           <li>Reworked settings</li>
@@ -46,12 +46,12 @@
       </description>
     </release>
     <release version="2.0.1" date="2024-03-08">
-      <description>
+      <description translate="no">
         <p>Increased flatpak support to only require a minimum set of non-standard privileges.</p>
       </description>
     </release>
     <release version="2.0.0" date="2024-03-07">
-      <description>
+      <description translate="no">
         <p>First release using GTK4 and libadwaita</p>
         <ul>
           <li>Added automatic cover sizing</li>
@@ -76,7 +76,7 @@
     <binary>plattenalbum</binary>
   </provides>
   <developer id="wagnermartin.de">
-    <name>Martin Wagner</name>
+    <name translate="no">Martin Wagner</name>
   </developer>
   <update_contact>martin.wagner.dev@gmail.com</update_contact>
 </component>

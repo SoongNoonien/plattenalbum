@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-28 17:28+0100\n"
+"POT-Creation-Date: 2024-07-18 10:46+0200\n"
 "PO-Revision-Date: 2024-03-29 19:04+0900\n"
 "Last-Translator: Gnuey56 <gnuey56@proton.me>\n"
 "Language-Team: \n"
@@ -19,13 +19,13 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Poedit 3.4.2\n"
 
-#: src/plattenalbum.py:506
+#: src/plattenalbum.py:499
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days}日"
 
-#: src/plattenalbum.py:543
+#: src/plattenalbum.py:536
 #, python-brace-format
 msgid "{channels} channel"
 msgid_plural "{channels} channels"
@@ -88,11 +88,11 @@ msgid "Password"
 msgstr "パスワード"
 
 #. connect button
-#: src/plattenalbum.py:997 src/plattenalbum.py:2698
+#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2830
 msgid "_Reconnect"
 msgstr "再接続 (_R)"
 
-#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:49
+#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:55
 msgid "Server Statistics"
 msgstr "サーバー統計情報"
 
@@ -108,7 +108,7 @@ msgstr "動作時間"
 msgid "Playtime"
 msgstr "再生時間"
 
-#: src/plattenalbum.py:1028
+#: src/plattenalbum.py:1028 src/plattenalbum.py:1373 src/plattenalbum.py:1794
 msgid "Artists"
 msgstr "アーティスト"
 
@@ -116,7 +116,7 @@ msgstr "アーティスト"
 msgid "Albums"
 msgstr "アルバム"
 
-#: src/plattenalbum.py:1030
+#: src/plattenalbum.py:1030 src/plattenalbum.py:1376
 msgid "Songs"
 msgstr "曲"
 
@@ -128,7 +128,7 @@ msgstr "合計再生時間"
 msgid "Database Update"
 msgstr "データベース更新時"
 
-#: src/plattenalbum.py:1146 src/plattenalbum.py:1870
+#: src/plattenalbum.py:1146 src/plattenalbum.py:1897
 msgid "Context menu"
 msgstr "コンテキストメニュー"
 
@@ -144,244 +144,255 @@ msgstr "次に再生 (_N)"
 msgid "_Play"
 msgstr "再生 (_P)"
 
-#: src/plattenalbum.py:1172 src/plattenalbum.py:1888
+#: src/plattenalbum.py:1172 src/plattenalbum.py:1915
 msgid "_Show"
 msgstr "表示 (_S)"
 
 #. status page
-#: src/plattenalbum.py:1377
+#: src/plattenalbum.py:1383
 msgid "No Results Found"
 msgstr "見つかりませんでした"
 
-#: src/plattenalbum.py:1377
+#: src/plattenalbum.py:1383
 msgid "Try a different search"
 msgstr "別の検索を試してみてください"
 
-#: src/plattenalbum.py:1571 src/plattenalbum.py:1715
+#: src/plattenalbum.py:1581 src/plattenalbum.py:1725
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "{album} アルバムカバー"
 
-#: src/plattenalbum.py:1574 src/plattenalbum.py:1718
+#: src/plattenalbum.py:1584 src/plattenalbum.py:1728
 msgid "Album cover of an unknown album"
 msgstr "不明のアルバムのアルバムカバー"
 
-#: src/plattenalbum.py:1639
+#: src/plattenalbum.py:1649
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "{artist} のアルバム"
 
-#: src/plattenalbum.py:1673
+#: src/plattenalbum.py:1683
 msgid "Append"
 msgstr "キューに追加"
 
 #. widgets
-#: src/plattenalbum.py:1674 src/plattenalbum.py:2286 src/plattenalbum.py:2307
+#: src/plattenalbum.py:1684 src/plattenalbum.py:2358 src/plattenalbum.py:2379
 msgid "Play"
 msgstr "再生"
 
-#: src/plattenalbum.py:1725
+#: src/plattenalbum.py:1735
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
 msgstr[0] "{number}曲 ({duration})"
 
 #. status page
-#: src/plattenalbum.py:1790
+#: src/plattenalbum.py:1809
 msgid "Collection is Empty"
 msgstr "コレクションが空です"
 
-#: src/plattenalbum.py:1887
+#: src/plattenalbum.py:1914
 msgid "_Remove"
 msgstr "削除 (_R)"
 
-#: src/plattenalbum.py:1890
+#: src/plattenalbum.py:1917
 msgid "_Enqueue Album"
 msgstr "アルバムを追加 (_E)"
 
-#: src/plattenalbum.py:1891
+#: src/plattenalbum.py:1918
 msgid "_Tidy"
 msgstr "キューを整頓 (_T)"
 
-#: src/plattenalbum.py:1893
+#: src/plattenalbum.py:1920
 msgid "_Clear"
 msgstr "クリア (_C)"
 
-#. widgets
-#. TODO scroll to song
-#: src/plattenalbum.py:2088
+#: src/plattenalbum.py:2129
 msgid "Playlist is Empty"
 msgstr "プレイリストが空です"
 
+#: src/plattenalbum.py:2134
+msgid "Scroll to Current Song"
+msgstr ""
+
 #. status pages
-#: src/plattenalbum.py:2157
+#: src/plattenalbum.py:2229
 msgid "No Lyrics Found"
 msgstr "歌詞が見つかりませんでした"
 
-#: src/plattenalbum.py:2160
+#: src/plattenalbum.py:2232
 msgid "Connection Error"
 msgstr "接続エラー"
 
-#: src/plattenalbum.py:2160
+#: src/plattenalbum.py:2232
 msgid "Check your network connection"
 msgstr "ネットワーク接続を確認してください"
 
-#: src/plattenalbum.py:2213
+#: src/plattenalbum.py:2285
 #, python-brace-format
 msgid "Lyrics of {song}"
 msgstr "{song} の歌詞"
 
-#: src/plattenalbum.py:2214
+#: src/plattenalbum.py:2286
 msgid "searching…"
 msgstr "検索中…"
 
-#: src/plattenalbum.py:2221 src/plattenalbum.py:2226
+#: src/plattenalbum.py:2293 src/plattenalbum.py:2298
 msgid "Lyrics view"
 msgstr "歌詞の表示"
 
-#: src/plattenalbum.py:2231
+#: src/plattenalbum.py:2303
 msgid "Current album cover"
 msgstr "現在のアルバムカバー"
 
-#: src/plattenalbum.py:2287 data/ShortcutsWindow.ui:89
+#: src/plattenalbum.py:2359 data/ShortcutsWindow.ui:101
 msgid "Stop"
 msgstr "停止"
 
-#: src/plattenalbum.py:2289 data/ShortcutsWindow.ui:101
+#: src/plattenalbum.py:2361 data/ShortcutsWindow.ui:113
 msgid "Previous"
 msgstr "前の曲に戻る"
 
-#: src/plattenalbum.py:2290 data/ShortcutsWindow.ui:95
+#: src/plattenalbum.py:2362 data/ShortcutsWindow.ui:107
 msgid "Next"
 msgstr "次の曲へ進む"
 
-#: src/plattenalbum.py:2304
+#: src/plattenalbum.py:2376
 msgid "Pause"
 msgstr "一時停止"
 
-#: src/plattenalbum.py:2323
+#: src/plattenalbum.py:2395
 msgid "Progress bar"
 msgstr "再生バー"
 
-#: src/plattenalbum.py:2514
-msgid "Playback Menu"
-msgstr "再生メニュー"
+#: src/plattenalbum.py:2591
+msgid "Volume control"
+msgstr ""
 
-#: src/plattenalbum.py:2518
-msgid "_Repeat Mode"
-msgstr "リピートモード (_R)"
-
-#: src/plattenalbum.py:2519
-msgid "R_andom Mode"
-msgstr "ランダムモード (_A)"
-
-#: src/plattenalbum.py:2520
-msgid "_Single Mode"
-msgstr "シングルモード (_S)"
-
-#: src/plattenalbum.py:2521
-msgid "_Pause After Song"
-msgstr "曲の再生後に一時停止する (_P)"
-
-#: src/plattenalbum.py:2522
-msgid "_Consume Mode"
-msgstr "消費モード (_C)"
-
-#: src/plattenalbum.py:2678
-msgid "Not connected to “Music Player Daemon”"
-msgstr "“Music Player Daemon” と接続されていません"
-
-#: src/plattenalbum.py:2679 data/ShortcutsWindow.ui:19
-msgid "Preferences"
-msgstr "設定"
-
-#: src/plattenalbum.py:2680
-msgid "Database is being updated"
-msgstr "データベースを更新しています"
-
-#: src/plattenalbum.py:2681
-msgid "Database updated"
-msgstr "データベースを更新しました"
-
-#: src/plattenalbum.py:2693
-msgid "_Preferences"
-msgstr "設定 (_P)"
-
-#: src/plattenalbum.py:2694
-msgid "_Keyboard Shortcuts"
-msgstr "キーボード・ショートカット (_K)"
-
-#: src/plattenalbum.py:2695
-msgid "_Help"
-msgstr "ヘルプ (_H)"
-
-#: src/plattenalbum.py:2696
-msgid "_About Plattenalbum"
-msgstr "Plattenalbum について (_A)"
-
-#: src/plattenalbum.py:2699
-msgid "_Update Database"
-msgstr "データベースを更新 (_U)"
-
-#: src/plattenalbum.py:2700
-msgid "_Server Statistics"
-msgstr "サーバーの統計 (_S)"
-
-#: src/plattenalbum.py:2702
-msgid "_Lyrics"
-msgstr "歌詞 (_L)"
-
-#. menu button / popover
-#: src/plattenalbum.py:2707 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:2611 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
 msgstr "メインメニュー"
 
+#: src/plattenalbum.py:2621 src/plattenalbum.py:2832
+msgid "_Preferences"
+msgstr "設定 (_P)"
+
+#: src/plattenalbum.py:2622
+msgid "_Keyboard Shortcuts"
+msgstr "キーボード・ショートカット (_K)"
+
+#: src/plattenalbum.py:2623
+msgid "_Help"
+msgstr "ヘルプ (_H)"
+
+#: src/plattenalbum.py:2624
+msgid "_About Plattenalbum"
+msgstr "Plattenalbum について (_A)"
+
+#: src/plattenalbum.py:2627
+msgid "_Update Database"
+msgstr "データベースを更新 (_U)"
+
+#: src/plattenalbum.py:2628
+msgid "_Server Statistics"
+msgstr "サーバーの統計 (_S)"
+
+#: src/plattenalbum.py:2630
+msgid "_Repeat Mode"
+msgstr "リピートモード (_R)"
+
+#: src/plattenalbum.py:2631
+msgid "R_andom Mode"
+msgstr "ランダムモード (_A)"
+
+#: src/plattenalbum.py:2632
+msgid "_Single Mode"
+msgstr "シングルモード (_S)"
+
+#: src/plattenalbum.py:2633
+msgid "_Pause After Song"
+msgstr "曲の再生後に一時停止する (_P)"
+
+#: src/plattenalbum.py:2634
+msgid "_Consume Mode"
+msgstr "消費モード (_C)"
+
+#: src/plattenalbum.py:2638
+msgid "_Lyrics"
+msgstr "歌詞 (_L)"
+
+#: src/plattenalbum.py:2639
+#, fuzzy
+msgid "Play_back"
+msgstr "再生"
+
+#: src/plattenalbum.py:2780
+msgid "Database is being updated"
+msgstr "データベースを更新しています"
+
+#: src/plattenalbum.py:2781
+msgid "Database updated"
+msgstr "データベースを更新しました"
+
 #. search
-#: src/plattenalbum.py:2710 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
+#: src/plattenalbum.py:2792
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr "検索"
 
-#: src/plattenalbum.py:2711 src/plattenalbum.py:2712
+#: src/plattenalbum.py:2793 src/plattenalbum.py:2794
 msgid "Search collection"
 msgstr "コレクションを検索"
 
-#: src/plattenalbum.py:2863
+#. status page
+#: src/plattenalbum.py:2827
+#, fuzzy
+msgid "Not Connected"
+msgstr "接続"
+
+#: src/plattenalbum.py:2828
+msgid ""
+"To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
+"up and running on this or another device in the network"
+msgstr ""
+
+#: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
 msgstr "次のタイトルを再生中"
 
-#: src/plattenalbum.py:2865
+#: src/plattenalbum.py:2975
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "“{title}” by “{artist}” を再生中"
 
-#: src/plattenalbum.py:2867
+#: src/plattenalbum.py:2977
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "“{title}” を再生中"
 
-#: src/plattenalbum.py:2894
+#: src/plattenalbum.py:3007
 msgid "connecting…"
 msgstr "接続中…"
 
-#: src/plattenalbum.py:2920
+#: src/plattenalbum.py:3036
 msgid "Debug mode"
 msgstr "デバッグモード"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr "Plattenalbum"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Browse music with MPD"
 msgstr "MPD で音楽をブラウズ"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
 msgstr "Music Player Daemon (MPD) のクライアント。"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
@@ -389,40 +400,13 @@ msgstr ""
 "大きなアルバムカバーを見ながら曲のコレクションをブラウズ。プレイリストを管理"
 "することなく音楽を再生。"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
 msgstr "メインウィンドウ"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
 msgid "Album View"
 msgstr "アルバムの表示"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
-msgid ""
-"Increased flatpak support to only require a minimum set of non-standard "
-"privileges."
-msgstr ""
-"最小限の標準外権限のみを要求するように Flatpak サポートを強化しました。"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
-msgid "First release using GTK4 and libadwaita"
-msgstr "GTK4 と libadwaita をする最初のリリース"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:41
-msgid "Added automatic cover sizing"
-msgstr "カバーサイズを自動調節する機能を追加"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:42
-msgid "Greatly improved search"
-msgstr "検索を大幅に改善"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:43
-msgid "Removed mini-player"
-msgstr "ミニプレイヤーを削除"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:56
-msgid "Martin Wagner"
-msgstr "Martin Wagner"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
@@ -440,89 +424,128 @@ msgstr "一般"
 msgid "Online Help"
 msgstr "オンラインヘルプ"
 
+#: data/ShortcutsWindow.ui:19
+msgid "Preferences"
+msgstr "設定"
+
 #: data/ShortcutsWindow.ui:25
 msgid "Shortcuts"
 msgstr "ショートカット"
 
 #: data/ShortcutsWindow.ui:37
+msgid "Sidebar"
+msgstr ""
+
+#: data/ShortcutsWindow.ui:43
 msgid "Reconnect"
 msgstr "再接続"
 
-#: data/ShortcutsWindow.ui:43
+#: data/ShortcutsWindow.ui:49
 msgid "Update Database"
 msgstr "データベースを更新"
 
-#: data/ShortcutsWindow.ui:55
+#: data/ShortcutsWindow.ui:61
+msgid "Close"
+msgstr ""
+
+#: data/ShortcutsWindow.ui:67
 msgid "Quit"
 msgstr "終了"
 
-#: data/ShortcutsWindow.ui:63
+#: data/ShortcutsWindow.ui:75
 msgid "Window"
 msgstr "ウィンドウ"
 
-#: data/ShortcutsWindow.ui:66
+#: data/ShortcutsWindow.ui:78
 msgid "Toggle Lyrics"
 msgstr "歌詞を切り替え"
 
-#: data/ShortcutsWindow.ui:72
+#: data/ShortcutsWindow.ui:84
 msgid "Toggle Search"
 msgstr "検索を切り替え"
 
-#: data/ShortcutsWindow.ui:80
+#: data/ShortcutsWindow.ui:92
 msgid "Playback"
 msgstr "再生"
 
-#: data/ShortcutsWindow.ui:83
+#: data/ShortcutsWindow.ui:95
 msgid "Play/Pause"
 msgstr "再生／一時停止"
 
-#: data/ShortcutsWindow.ui:107
+#: data/ShortcutsWindow.ui:119
 msgid "Seek Forward"
 msgstr "進む"
 
-#: data/ShortcutsWindow.ui:113
+#: data/ShortcutsWindow.ui:125
 msgid "Seek Backward"
 msgstr "戻る"
 
-#: data/ShortcutsWindow.ui:121
+#: data/ShortcutsWindow.ui:133
 msgid "Playback Options"
 msgstr "再生オプション"
 
-#: data/ShortcutsWindow.ui:124
+#: data/ShortcutsWindow.ui:136
 msgid "Toggle Repeat Mode"
 msgstr "リピートモードを切り替え"
 
-#: data/ShortcutsWindow.ui:130
+#: data/ShortcutsWindow.ui:142
 msgid "Toggle Random Mode"
 msgstr "ランダムモードを切り替え"
 
-#: data/ShortcutsWindow.ui:136
+#: data/ShortcutsWindow.ui:148
 msgid "Toggle Single Mode"
 msgstr "シングルモードを切り替え"
 
-#: data/ShortcutsWindow.ui:142
+#: data/ShortcutsWindow.ui:154
 msgid "Pause After Song"
 msgstr "曲の再生後に一時停止する"
 
-#: data/ShortcutsWindow.ui:148
+#: data/ShortcutsWindow.ui:160
 msgid "Toggle Consume Mode"
 msgstr "消費モードを切り替え"
 
-#: data/ShortcutsWindow.ui:156
+#: data/ShortcutsWindow.ui:168
 msgid "Playlist"
 msgstr "プレイリスト"
 
-#: data/ShortcutsWindow.ui:159
+#: data/ShortcutsWindow.ui:171
 msgid "Clear"
 msgstr "クリア"
 
-#: data/ShortcutsWindow.ui:165
+#: data/ShortcutsWindow.ui:177
 msgid "Tidy"
 msgstr "キューを整頓"
 
-#: data/ShortcutsWindow.ui:171
+#: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "アルバムを追加"
+
+#~ msgid "Playback Menu"
+#~ msgstr "再生メニュー"
+
+#~ msgid "Not connected to “Music Player Daemon”"
+#~ msgstr "“Music Player Daemon” と接続されていません"
+
+#~ msgid ""
+#~ "Increased flatpak support to only require a minimum set of non-standard "
+#~ "privileges."
+#~ msgstr ""
+#~ "最小限の標準外権限のみを要求するように Flatpak サポートを強化しました。"
+
+#~ msgid "First release using GTK4 and libadwaita"
+#~ msgstr "GTK4 と libadwaita をする最初のリリース"
+
+#~ msgid "Added automatic cover sizing"
+#~ msgstr "カバーサイズを自動調節する機能を追加"
+
+#~ msgid "Greatly improved search"
+#~ msgstr "検索を大幅に改善"
+
+#~ msgid "Removed mini-player"
+#~ msgstr "ミニプレイヤーを削除"
+
+#~ msgid "Martin Wagner"
+#~ msgstr "Martin Wagner"
 
 #~ msgid "restart required"
 #~ msgstr "再起動が必要です"

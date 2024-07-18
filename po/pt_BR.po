@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-13 14:10+0200\n"
+"POT-Creation-Date: 2024-07-18 10:46+0200\n"
 "PO-Revision-Date: 2024-07-17 17:10-0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -92,7 +92,7 @@ msgid "Password"
 msgstr "Senha"
 
 #. connect button
-#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2826
+#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2830
 msgid "_Reconnect"
 msgstr "_Reconectar"
 
@@ -278,7 +278,7 @@ msgstr "Controle de volume"
 msgid "Main Menu"
 msgstr "Menu Principal"
 
-#: src/plattenalbum.py:2621 src/plattenalbum.py:2828
+#: src/plattenalbum.py:2621 src/plattenalbum.py:2832
 msgid "_Preferences"
 msgstr "_Preferências"
 
@@ -340,7 +340,8 @@ msgid "Database updated"
 msgstr "Banco de dados atualizado"
 
 #. search
-#: src/plattenalbum.py:2792 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
+#: src/plattenalbum.py:2792
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr "Procurar"
 
@@ -349,11 +350,11 @@ msgid "Search collection"
 msgstr "Procurar coleção"
 
 #. status page
-#: src/plattenalbum.py:2823
+#: src/plattenalbum.py:2827
 msgid "Not Connected"
 msgstr "Não conectado"
 
-#: src/plattenalbum.py:2824
+#: src/plattenalbum.py:2828
 msgid ""
 "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
 "up and running on this or another device in the network"
@@ -361,43 +362,43 @@ msgstr ""
 "Para usar o Plattenalbum, uma instância do “Music Player Daemon” precisa ser "
 "configurada e executada neste ou em outro dispositivo na rede"
 
-#: src/plattenalbum.py:2968
+#: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
 msgstr "O Próximo Título está Sendo Reproduzido"
 
-#: src/plattenalbum.py:2970
+#: src/plattenalbum.py:2975
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "Agora tocando “{title}” de “{artist}”"
 
-#: src/plattenalbum.py:2972
+#: src/plattenalbum.py:2977
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "Agora reproduzindo “{title}”"
 
-#: src/plattenalbum.py:3002
+#: src/plattenalbum.py:3007
 msgid "connecting…"
 msgstr "conectando…"
 
-#: src/plattenalbum.py:3031
+#: src/plattenalbum.py:3036
 msgid "Debug mode"
 msgstr "Modo de depuração"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr "Plattenalbum"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Browse music with MPD"
 msgstr "Procure músicas com MPD"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
 msgstr "Um cliente para o Music Player Daemon (MPD)."
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
@@ -405,69 +406,13 @@ msgstr ""
 "Navegue pela sua coleção enquanto visualiza capas de álbuns grandes. Toque "
 "sua música sem gerenciar playlists."
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
 msgstr "Janela principal"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
 msgid "Album View"
 msgstr "Visualização do Álbum"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
-msgid ""
-"Improved autoscrolling in the playlist and added Hindi and Russian "
-"translations."
-msgstr ""
-"Rolagem automática aprimorada na lista de reprodução e traduções adicionadas "
-"para hindi e russo."
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
-msgid "Updated to libadwaita 1.5"
-msgstr "Atualizado para libadwaita 1.5"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:41
-msgid "Reworked settings"
-msgstr "Configurações reformuladas"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:42
-msgid "Reworked notifications"
-msgstr "Notificações reformuladas"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:43
-msgid "New initial status page"
-msgstr "Nova página de status inicial"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:44
-msgid "Bugfixes and translation updates"
-msgstr "Correções de bugs e atualizações de tradução"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:50
-msgid ""
-"Increased flatpak support to only require a minimum set of non-standard "
-"privileges."
-msgstr ""
-"Aumento do suporte a flatpak para exigir apenas um conjunto mínimo de "
-"privilégios não padrão."
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:55
-msgid "First release using GTK4 and libadwaita"
-msgstr "Primeira versão usando GTK4 e libadwaita"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:57
-msgid "Added automatic cover sizing"
-msgstr "Adicionado dimensionamento automático de capa"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:58
-msgid "Greatly improved search"
-msgstr "Pesquisa muito aprimorada"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:59
-msgid "Removed mini-player"
-msgstr "Miniplayer removido"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:72
-msgid "Martin Wagner"
-msgstr "Martin Wagner"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
@@ -580,3 +525,47 @@ msgstr "Limpo"
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "Enfileirar Álbum"
+
+#~ msgid ""
+#~ "Improved autoscrolling in the playlist and added Hindi and Russian "
+#~ "translations."
+#~ msgstr ""
+#~ "Rolagem automática aprimorada na lista de reprodução e traduções "
+#~ "adicionadas para hindi e russo."
+
+#~ msgid "Updated to libadwaita 1.5"
+#~ msgstr "Atualizado para libadwaita 1.5"
+
+#~ msgid "Reworked settings"
+#~ msgstr "Configurações reformuladas"
+
+#~ msgid "Reworked notifications"
+#~ msgstr "Notificações reformuladas"
+
+#~ msgid "New initial status page"
+#~ msgstr "Nova página de status inicial"
+
+#~ msgid "Bugfixes and translation updates"
+#~ msgstr "Correções de bugs e atualizações de tradução"
+
+#~ msgid ""
+#~ "Increased flatpak support to only require a minimum set of non-standard "
+#~ "privileges."
+#~ msgstr ""
+#~ "Aumento do suporte a flatpak para exigir apenas um conjunto mínimo de "
+#~ "privilégios não padrão."
+
+#~ msgid "First release using GTK4 and libadwaita"
+#~ msgstr "Primeira versão usando GTK4 e libadwaita"
+
+#~ msgid "Added automatic cover sizing"
+#~ msgstr "Adicionado dimensionamento automático de capa"
+
+#~ msgid "Greatly improved search"
+#~ msgstr "Pesquisa muito aprimorada"
+
+#~ msgid "Removed mini-player"
+#~ msgstr "Miniplayer removido"
+
+#~ msgid "Martin Wagner"
+#~ msgstr "Martin Wagner"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-02 16:33+0200\n"
+"POT-Creation-Date: 2024-07-18 10:46+0200\n"
 "PO-Revision-Date: 2024-06-12 00:00+0300\n"
 "Last-Translator: Alexander Froloff <alexander.froloff@mxc.ru>\n"
 "Language-Team: \n"
@@ -35,156 +35,156 @@ msgstr[0] "{channels} канал"
 msgstr[1] "{channels} канала"
 msgstr[2] "{channels} каналов"
 
-#: src/plattenalbum.py:947
+#: src/plattenalbum.py:951
 msgid "View"
 msgstr "Вид"
 
-#: src/plattenalbum.py:949
+#: src/plattenalbum.py:953
 msgid "Show _stop button"
 msgstr "Показывать кнопку «Стоп»"
 
-#: src/plattenalbum.py:950
+#: src/plattenalbum.py:954
 msgid "Show audio _format"
 msgstr "Показывать формат аудио"
 
-#: src/plattenalbum.py:959
+#: src/plattenalbum.py:963
 msgid "Behavior"
 msgstr "Поведение"
 
-#: src/plattenalbum.py:961
+#: src/plattenalbum.py:965
 msgid "Support “_MPRIS”"
 msgstr "Поддержка MPRIS"
 
-#: src/plattenalbum.py:962
+#: src/plattenalbum.py:966
 msgid "Sort _albums by year"
 msgstr "Сортировать альбомы по дате"
 
-#: src/plattenalbum.py:963
+#: src/plattenalbum.py:967
 msgid "Send _notification on title change"
 msgstr "Уведомление при смене трека"
 
-#: src/plattenalbum.py:964
+#: src/plattenalbum.py:968
 msgid "Re_wind via previous button"
 msgstr "Перемотка кнопкой «Предыдущий»"
 
-#: src/plattenalbum.py:965
+#: src/plattenalbum.py:969
 msgid "Stop _playback on quit"
 msgstr "Остановить воспроизведение при выходе"
 
-#: src/plattenalbum.py:974
+#: src/plattenalbum.py:978
 msgid "Connection"
 msgstr "Подключение"
 
-#: src/plattenalbum.py:975
+#: src/plattenalbum.py:979
 msgid "_Connect to remote server"
 msgstr "Подключиться к удалённому серверу"
 
-#: src/plattenalbum.py:979
+#: src/plattenalbum.py:983
 msgid "Host name"
 msgstr "Имя хоста"
 
-#: src/plattenalbum.py:984
+#: src/plattenalbum.py:988
 msgid "Port"
 msgstr "Порт"
 
-#: src/plattenalbum.py:988
+#: src/plattenalbum.py:992
 msgid "Password"
 msgstr "Пароль"
 
 #. connect button
-#: src/plattenalbum.py:993 src/plattenalbum.py:2708 src/plattenalbum.py:2753
+#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2830
 msgid "_Reconnect"
 msgstr "Переподключиться"
 
-#: src/plattenalbum.py:1013 data/ShortcutsWindow.ui:49
+#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:55
 msgid "Server Statistics"
 msgstr "Статистика сервера"
 
-#: src/plattenalbum.py:1021
+#: src/plattenalbum.py:1025
 msgid "Protocol"
 msgstr "Протокол"
 
-#: src/plattenalbum.py:1022
+#: src/plattenalbum.py:1026
 msgid "Uptime"
 msgstr "Время работы"
 
-#: src/plattenalbum.py:1023
+#: src/plattenalbum.py:1027
 msgid "Playtime"
 msgstr "Время проигрывания"
 
-#: src/plattenalbum.py:1024
+#: src/plattenalbum.py:1028 src/plattenalbum.py:1373 src/plattenalbum.py:1794
 msgid "Artists"
 msgstr "Исполнители"
 
-#: src/plattenalbum.py:1025
+#: src/plattenalbum.py:1029
 msgid "Albums"
 msgstr "Альбомы"
 
-#: src/plattenalbum.py:1026
+#: src/plattenalbum.py:1030 src/plattenalbum.py:1376
 msgid "Songs"
 msgstr "Песни"
 
-#: src/plattenalbum.py:1027
+#: src/plattenalbum.py:1031
 msgid "Total Playtime"
 msgstr "Время проигрывания всей коллекции"
 
-#: src/plattenalbum.py:1028
+#: src/plattenalbum.py:1032
 msgid "Database Update"
 msgstr "Актуальность базы данных"
 
-#: src/plattenalbum.py:1142 src/plattenalbum.py:1866
+#: src/plattenalbum.py:1146 src/plattenalbum.py:1897
 msgid "Context menu"
 msgstr "Контекстное меню"
 
-#: src/plattenalbum.py:1164
+#: src/plattenalbum.py:1168
 msgid "_Append"
 msgstr "Добавить"
 
-#: src/plattenalbum.py:1165
+#: src/plattenalbum.py:1169
 msgid "As _Next"
 msgstr "Воспроизвести следующим"
 
-#: src/plattenalbum.py:1166
+#: src/plattenalbum.py:1170
 msgid "_Play"
 msgstr "Воспроизвести"
 
-#: src/plattenalbum.py:1168 src/plattenalbum.py:1884
+#: src/plattenalbum.py:1172 src/plattenalbum.py:1915
 msgid "_Show"
 msgstr "Показать"
 
 #. status page
-#: src/plattenalbum.py:1373
+#: src/plattenalbum.py:1383
 msgid "No Results Found"
 msgstr "Не найдено"
 
-#: src/plattenalbum.py:1373
+#: src/plattenalbum.py:1383
 msgid "Try a different search"
 msgstr "Попробовать снова"
 
-#: src/plattenalbum.py:1567 src/plattenalbum.py:1711
+#: src/plattenalbum.py:1581 src/plattenalbum.py:1725
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "Обложка {album}"
 
-#: src/plattenalbum.py:1570 src/plattenalbum.py:1714
+#: src/plattenalbum.py:1584 src/plattenalbum.py:1728
 msgid "Album cover of an unknown album"
 msgstr "Обложка неизвестного альбома"
 
-#: src/plattenalbum.py:1635
+#: src/plattenalbum.py:1649
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "Альбомы {artist}"
 
-#: src/plattenalbum.py:1669
+#: src/plattenalbum.py:1683
 msgid "Append"
 msgstr "Добавить"
 
 #. widgets
-#: src/plattenalbum.py:1670 src/plattenalbum.py:2282 src/plattenalbum.py:2303
+#: src/plattenalbum.py:1684 src/plattenalbum.py:2358 src/plattenalbum.py:2379
 msgid "Play"
 msgstr "Воспроизвести"
 
-#: src/plattenalbum.py:1721
+#: src/plattenalbum.py:1735
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
@@ -193,166 +193,169 @@ msgstr[1] "{number} трека ({duration})"
 msgstr[2] "{number} треков ({duration})"
 
 #. status page
-#: src/plattenalbum.py:1786
+#: src/plattenalbum.py:1809
 msgid "Collection is Empty"
 msgstr "Фонотека пуста"
 
-#: src/plattenalbum.py:1883
+#: src/plattenalbum.py:1914
 msgid "_Remove"
 msgstr "Удалить"
 
-#: src/plattenalbum.py:1886
+#: src/plattenalbum.py:1917
 msgid "_Enqueue Album"
 msgstr "Поставить альбом в очередь"
 
-#: src/plattenalbum.py:1887
+#: src/plattenalbum.py:1918
 msgid "_Tidy"
 msgstr "Аккуратно"
 
-#: src/plattenalbum.py:1889
+#: src/plattenalbum.py:1920
 msgid "_Clear"
 msgstr "Очистить"
 
-#. widgets
-#. TODO scroll to song
-#: src/plattenalbum.py:2084
+#: src/plattenalbum.py:2129
 msgid "Playlist is Empty"
 msgstr "Плейлист пуст"
 
+#: src/plattenalbum.py:2134
+msgid "Scroll to Current Song"
+msgstr ""
+
 #. status pages
-#: src/plattenalbum.py:2153
+#: src/plattenalbum.py:2229
 msgid "No Lyrics Found"
 msgstr "Текст песни не найден"
 
-#: src/plattenalbum.py:2156
+#: src/plattenalbum.py:2232
 msgid "Connection Error"
 msgstr "Ошибка подключения"
 
-#: src/plattenalbum.py:2156
+#: src/plattenalbum.py:2232
 msgid "Check your network connection"
 msgstr "Проверьте настройки сети"
 
-#: src/plattenalbum.py:2209
+#: src/plattenalbum.py:2285
 #, python-brace-format
 msgid "Lyrics of {song}"
 msgstr "Текст {song}"
 
-#: src/plattenalbum.py:2210
+#: src/plattenalbum.py:2286
 msgid "searching…"
 msgstr "поиск…"
 
-#: src/plattenalbum.py:2217 src/plattenalbum.py:2222
+#: src/plattenalbum.py:2293 src/plattenalbum.py:2298
 msgid "Lyrics view"
 msgstr "Просмотр текста"
 
-#: src/plattenalbum.py:2227
+#: src/plattenalbum.py:2303
 msgid "Current album cover"
 msgstr "Обложка текущего альбома"
 
-#: src/plattenalbum.py:2283 data/ShortcutsWindow.ui:89
+#: src/plattenalbum.py:2359 data/ShortcutsWindow.ui:101
 msgid "Stop"
 msgstr "Останов"
 
-#: src/plattenalbum.py:2285 data/ShortcutsWindow.ui:101
+#: src/plattenalbum.py:2361 data/ShortcutsWindow.ui:113
 msgid "Previous"
 msgstr "Предыдущий"
 
-#: src/plattenalbum.py:2286 data/ShortcutsWindow.ui:95
+#: src/plattenalbum.py:2362 data/ShortcutsWindow.ui:107
 msgid "Next"
 msgstr "Следующий"
 
-#: src/plattenalbum.py:2300
+#: src/plattenalbum.py:2376
 msgid "Pause"
 msgstr "Пауза"
 
-#: src/plattenalbum.py:2319
+#: src/plattenalbum.py:2395
 msgid "Progress bar"
 msgstr "Индикатор"
 
-#: src/plattenalbum.py:2515
+#: src/plattenalbum.py:2591
 msgid "Volume control"
 msgstr "Громкость"
 
-#: src/plattenalbum.py:2535
-msgid "Playback Menu"
-msgstr "Меню воспроизведения"
-
-#: src/plattenalbum.py:2546
-msgid "_Repeat Mode"
-msgstr "Повтор"
-
-#: src/plattenalbum.py:2547
-msgid "R_andom Mode"
-msgstr "Случайно"
-
-#: src/plattenalbum.py:2548
-msgid "_Single Mode"
-msgstr "Один трек"
-
-#: src/plattenalbum.py:2549
-msgid "_Pause After Song"
-msgstr "Пауза после текущего трека"
-
-#: src/plattenalbum.py:2550
-msgid "_Consume Mode"
-msgstr "Поглощение"
-
-#: src/plattenalbum.py:2690
-msgid "Database is being updated"
-msgstr "Обновление базы данных"
-
-#: src/plattenalbum.py:2691
-msgid "Database updated"
-msgstr "База данных обновлена"
-
-#: src/plattenalbum.py:2703 src/plattenalbum.py:2755
-msgid "_Preferences"
-msgstr "Настройки"
-
-#: src/plattenalbum.py:2704
-msgid "_Keyboard Shortcuts"
-msgstr "Горячие клавиши"
-
-#: src/plattenalbum.py:2705
-msgid "_Help"
-msgstr "Помощь"
-
-#: src/plattenalbum.py:2706
-msgid "_About Plattenalbum"
-msgstr "О программе"
-
-#: src/plattenalbum.py:2709
-msgid "_Update Database"
-msgstr "Обновить базу данных"
-
-#: src/plattenalbum.py:2710
-msgid "_Server Statistics"
-msgstr "Статистика сервера"
-
-#: src/plattenalbum.py:2712
-msgid "_Lyrics"
-msgstr "Текст песни"
-
-#. menu button / popover
-#: src/plattenalbum.py:2717 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:2611 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
 msgstr "Меню"
 
+#: src/plattenalbum.py:2621 src/plattenalbum.py:2832
+msgid "_Preferences"
+msgstr "Настройки"
+
+#: src/plattenalbum.py:2622
+msgid "_Keyboard Shortcuts"
+msgstr "Горячие клавиши"
+
+#: src/plattenalbum.py:2623
+msgid "_Help"
+msgstr "Помощь"
+
+#: src/plattenalbum.py:2624
+msgid "_About Plattenalbum"
+msgstr "О программе"
+
+#: src/plattenalbum.py:2627
+msgid "_Update Database"
+msgstr "Обновить базу данных"
+
+#: src/plattenalbum.py:2628
+msgid "_Server Statistics"
+msgstr "Статистика сервера"
+
+#: src/plattenalbum.py:2630
+msgid "_Repeat Mode"
+msgstr "Повтор"
+
+#: src/plattenalbum.py:2631
+msgid "R_andom Mode"
+msgstr "Случайно"
+
+#: src/plattenalbum.py:2632
+msgid "_Single Mode"
+msgstr "Один трек"
+
+#: src/plattenalbum.py:2633
+msgid "_Pause After Song"
+msgstr "Пауза после текущего трека"
+
+#: src/plattenalbum.py:2634
+msgid "_Consume Mode"
+msgstr "Поглощение"
+
+#: src/plattenalbum.py:2638
+msgid "_Lyrics"
+msgstr "Текст песни"
+
+#: src/plattenalbum.py:2639
+#, fuzzy
+msgid "Play_back"
+msgstr "Воспроизведение"
+
+#: src/plattenalbum.py:2780
+msgid "Database is being updated"
+msgstr "Обновление базы данных"
+
+#: src/plattenalbum.py:2781
+msgid "Database updated"
+msgstr "База данных обновлена"
+
 #. search
-#: src/plattenalbum.py:2720 data/de.wagnermartin.Plattenalbum.appdata.xml.in:28
+#: src/plattenalbum.py:2792
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr "Поиск"
 
-#: src/plattenalbum.py:2721 src/plattenalbum.py:2722
+#: src/plattenalbum.py:2793 src/plattenalbum.py:2794
 msgid "Search collection"
 msgstr "Поиск в коллекции"
 
 #. status page
-#: src/plattenalbum.py:2750
+#: src/plattenalbum.py:2827
 msgid "Not Connected"
 msgstr "Не подключен"
 
-#: src/plattenalbum.py:2751
+#: src/plattenalbum.py:2828
 msgid ""
 "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
 "up and running on this or another device in the network"
@@ -360,43 +363,43 @@ msgstr ""
 "Для использования Plattenalbum необходимо настроить и запустить MPD на этом "
 "или ином устройстве в сети"
 
-#: src/plattenalbum.py:2884
+#: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
 msgstr "Воспроизводится следующий"
 
-#: src/plattenalbum.py:2886
+#: src/plattenalbum.py:2975
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "Играет «{title}» в исполнении {artist}"
 
-#: src/plattenalbum.py:2888
+#: src/plattenalbum.py:2977
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "Играет «{title}»"
 
-#: src/plattenalbum.py:2918
+#: src/plattenalbum.py:3007
 msgid "connecting…"
 msgstr "подключение…"
 
-#: src/plattenalbum.py:2947
+#: src/plattenalbum.py:3036
 msgid "Debug mode"
 msgstr "Отладка"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr "Plattenalbum"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Browse music with MPD"
 msgstr "Управляйте своей фонотекой с помощью MPD"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:10
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
 msgstr "Клиент для Music Player Daemon (MPD)"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:11
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
@@ -404,61 +407,13 @@ msgstr ""
 "Управляйте фонотекой, просматривая большие обложки альбомов. Слушайте "
 "музыку, не управляя плейлистами."
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:20
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
 msgstr "Основное окно"
 
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:24
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
 msgid "Album View"
 msgstr "Просмотр альбома"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:34
-msgid "Updated to libadwaita 1.5"
-msgstr "Обновлено до libadwaita 1.5"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:36
-msgid "Reworked settings"
-msgstr "Переработанные настройки"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:37
-msgid "Reworked notifications"
-msgstr "Переработанные уведомления"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:38
-msgid "New initial status page"
-msgstr "Новая страница статуса"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:39
-msgid "Bugfixes and translation updates"
-msgstr "Исправления и обновления перевода"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:45
-msgid ""
-"Increased flatpak support to only require a minimum set of non-standard "
-"privileges."
-msgstr ""
-"Расширена поддержка FlatPak: теперь требуется только минимальный набор "
-"нестандартных привилегий."
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:50
-msgid "First release using GTK4 and libadwaita"
-msgstr "Первый релиз на GTK4 и libadwaita"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:52
-msgid "Added automatic cover sizing"
-msgstr "Добавлен авторазмер обложки"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:53
-msgid "Greatly improved search"
-msgstr "Значительно улучшен поиск"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:54
-msgid "Removed mini-player"
-msgstr "Удалён мини-проигрыватель"
-
-#: data/de.wagnermartin.Plattenalbum.appdata.xml.in:67
-msgid "Martin Wagner"
-msgstr "Martin Wagner"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
@@ -485,81 +440,129 @@ msgid "Shortcuts"
 msgstr "Горячие клавиши"
 
 #: data/ShortcutsWindow.ui:37
+msgid "Sidebar"
+msgstr ""
+
+#: data/ShortcutsWindow.ui:43
 msgid "Reconnect"
 msgstr "Переподключение"
 
-#: data/ShortcutsWindow.ui:43
+#: data/ShortcutsWindow.ui:49
 msgid "Update Database"
 msgstr "Обновить базу данных"
 
-#: data/ShortcutsWindow.ui:55
+#: data/ShortcutsWindow.ui:61
+msgid "Close"
+msgstr ""
+
+#: data/ShortcutsWindow.ui:67
 msgid "Quit"
 msgstr "Выход"
 
-#: data/ShortcutsWindow.ui:63
+#: data/ShortcutsWindow.ui:75
 msgid "Window"
 msgstr "Окно"
 
-#: data/ShortcutsWindow.ui:66
+#: data/ShortcutsWindow.ui:78
 msgid "Toggle Lyrics"
 msgstr "Текст песни"
 
-#: data/ShortcutsWindow.ui:72
+#: data/ShortcutsWindow.ui:84
 msgid "Toggle Search"
 msgstr "Поиск"
 
-#: data/ShortcutsWindow.ui:80
+#: data/ShortcutsWindow.ui:92
 msgid "Playback"
 msgstr "Воспроизведение"
 
-#: data/ShortcutsWindow.ui:83
+#: data/ShortcutsWindow.ui:95
 msgid "Play/Pause"
 msgstr "Воспроизведение/Пауза"
 
-#: data/ShortcutsWindow.ui:107
+#: data/ShortcutsWindow.ui:119
 msgid "Seek Forward"
 msgstr "Поиск вперёд"
 
-#: data/ShortcutsWindow.ui:113
+#: data/ShortcutsWindow.ui:125
 msgid "Seek Backward"
 msgstr "Поиск назад"
 
-#: data/ShortcutsWindow.ui:121
+#: data/ShortcutsWindow.ui:133
 msgid "Playback Options"
 msgstr "Настройки воспроизведения"
 
-#: data/ShortcutsWindow.ui:124
+#: data/ShortcutsWindow.ui:136
 msgid "Toggle Repeat Mode"
 msgstr "Повтор"
 
-#: data/ShortcutsWindow.ui:130
+#: data/ShortcutsWindow.ui:142
 msgid "Toggle Random Mode"
 msgstr "Случайный"
 
-#: data/ShortcutsWindow.ui:136
+#: data/ShortcutsWindow.ui:148
 msgid "Toggle Single Mode"
 msgstr "Простой режим"
 
-#: data/ShortcutsWindow.ui:142
+#: data/ShortcutsWindow.ui:154
 msgid "Pause After Song"
 msgstr "Пауза после текущего трека"
 
-#: data/ShortcutsWindow.ui:148
+#: data/ShortcutsWindow.ui:160
 msgid "Toggle Consume Mode"
 msgstr "Поглощение"
 
-#: data/ShortcutsWindow.ui:156
+#: data/ShortcutsWindow.ui:168
 msgid "Playlist"
 msgstr "Плейлист"
 
-#: data/ShortcutsWindow.ui:159
+#: data/ShortcutsWindow.ui:171
 msgid "Clear"
 msgstr "Очистить"
 
-#: data/ShortcutsWindow.ui:165
+#: data/ShortcutsWindow.ui:177
 msgid "Tidy"
 msgstr "Аккуратно"
 
-#: data/ShortcutsWindow.ui:171
+#: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "Поставить альбом в очередь"
+
+#~ msgid "Playback Menu"
+#~ msgstr "Меню воспроизведения"
+
+#~ msgid "Updated to libadwaita 1.5"
+#~ msgstr "Обновлено до libadwaita 1.5"
+
+#~ msgid "Reworked settings"
+#~ msgstr "Переработанные настройки"
+
+#~ msgid "Reworked notifications"
+#~ msgstr "Переработанные уведомления"
+
+#~ msgid "New initial status page"
+#~ msgstr "Новая страница статуса"
+
+#~ msgid "Bugfixes and translation updates"
+#~ msgstr "Исправления и обновления перевода"
+
+#~ msgid ""
+#~ "Increased flatpak support to only require a minimum set of non-standard "
+#~ "privileges."
+#~ msgstr ""
+#~ "Расширена поддержка FlatPak: теперь требуется только минимальный набор "
+#~ "нестандартных привилегий."
+
+#~ msgid "First release using GTK4 and libadwaita"
+#~ msgstr "Первый релиз на GTK4 и libadwaita"
+
+#~ msgid "Added automatic cover sizing"
+#~ msgstr "Добавлен авторазмер обложки"
+
+#~ msgid "Greatly improved search"
+#~ msgstr "Значительно улучшен поиск"
+
+#~ msgid "Removed mini-player"
+#~ msgstr "Удалён мини-проигрыватель"
+
+#~ msgid "Martin Wagner"
+#~ msgstr "Martin Wagner"
