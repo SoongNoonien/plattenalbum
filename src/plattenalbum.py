@@ -961,10 +961,10 @@ class BehaviorSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
-			(_("Support “_MPRIS”"), "mpris", ""),
 			(_("Send _Notification on Title Change"), "send-notify", ""),
 			(_("Re_wind via Previous Button"), "rewind-mode", ""),
 			(_("Stop _Playback on Quit"), "stop-on-quit", ""),
+			(_("Support “_MPRIS”"), "mpris", _("Disable if “MPRIS” is supported by another client")),
 		)
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)

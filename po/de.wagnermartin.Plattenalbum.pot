@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 14:11+0200\n"
+"POT-Creation-Date: 2024-07-18 18:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,151 +37,147 @@ msgid "View"
 msgstr ""
 
 #: src/plattenalbum.py:953
-msgid "Show _Stop Button"
-msgstr ""
-
-#: src/plattenalbum.py:954
 msgid "Show Audio _Format"
 msgstr ""
 
-#: src/plattenalbum.py:963
+#: src/plattenalbum.py:962
 msgid "Behavior"
 msgstr ""
 
-#: src/plattenalbum.py:965
-msgid "Support “_MPRIS”"
-msgstr ""
-
-#: src/plattenalbum.py:966
-msgid "Sort _Albums by Year"
-msgstr ""
-
-#: src/plattenalbum.py:967
+#: src/plattenalbum.py:964
 msgid "Send _Notification on Title Change"
 msgstr ""
 
-#: src/plattenalbum.py:968
+#: src/plattenalbum.py:965
 msgid "Re_wind via Previous Button"
 msgstr ""
 
-#: src/plattenalbum.py:969
+#: src/plattenalbum.py:966
 msgid "Stop _Playback on Quit"
 msgstr ""
 
-#: src/plattenalbum.py:978
+#: src/plattenalbum.py:967
+msgid "Support “_MPRIS”"
+msgstr ""
+
+#: src/plattenalbum.py:967
+msgid "Disable if “MPRIS” is supported by another client"
+msgstr ""
+
+#: src/plattenalbum.py:976
 msgid "Connection"
 msgstr ""
 
-#: src/plattenalbum.py:979
+#: src/plattenalbum.py:977
 msgid "_Connect to Remote Server"
 msgstr ""
 
-#: src/plattenalbum.py:983
+#: src/plattenalbum.py:981
 msgid "Host Name"
 msgstr ""
 
-#: src/plattenalbum.py:988
+#: src/plattenalbum.py:986
 msgid "Port"
 msgstr ""
 
-#: src/plattenalbum.py:992
+#: src/plattenalbum.py:990
 msgid "Password"
 msgstr ""
 
 #. connect button
-#: src/plattenalbum.py:997 src/plattenalbum.py:2626 src/plattenalbum.py:2830
+#: src/plattenalbum.py:995 src/plattenalbum.py:2606 src/plattenalbum.py:2810
 msgid "_Reconnect"
 msgstr ""
 
-#: src/plattenalbum.py:1017 data/ShortcutsWindow.ui:55
+#: src/plattenalbum.py:1015 data/ShortcutsWindow.ui:55
 msgid "Server Statistics"
 msgstr ""
 
-#: src/plattenalbum.py:1025
+#: src/plattenalbum.py:1023
 msgid "Protocol"
 msgstr ""
 
-#: src/plattenalbum.py:1026
+#: src/plattenalbum.py:1024
 msgid "Uptime"
 msgstr ""
 
-#: src/plattenalbum.py:1027
+#: src/plattenalbum.py:1025
 msgid "Playtime"
 msgstr ""
 
-#: src/plattenalbum.py:1028 src/plattenalbum.py:1373 src/plattenalbum.py:1794
+#: src/plattenalbum.py:1026 src/plattenalbum.py:1366 src/plattenalbum.py:1777
 msgid "Artists"
 msgstr ""
 
-#: src/plattenalbum.py:1029
+#: src/plattenalbum.py:1027
 msgid "Albums"
 msgstr ""
 
-#: src/plattenalbum.py:1030 src/plattenalbum.py:1376
+#: src/plattenalbum.py:1028 src/plattenalbum.py:1369
 msgid "Songs"
 msgstr ""
 
-#: src/plattenalbum.py:1031
+#: src/plattenalbum.py:1029
 msgid "Total Playtime"
 msgstr ""
 
-#: src/plattenalbum.py:1032
+#: src/plattenalbum.py:1030
 msgid "Database Update"
 msgstr ""
 
-#: src/plattenalbum.py:1146 src/plattenalbum.py:1897
+#: src/plattenalbum.py:1139 src/plattenalbum.py:1880
 msgid "Context menu"
 msgstr ""
 
-#: src/plattenalbum.py:1168
+#: src/plattenalbum.py:1161
 msgid "_Append"
 msgstr ""
 
-#: src/plattenalbum.py:1169
+#: src/plattenalbum.py:1162
 msgid "As _Next"
 msgstr ""
 
-#: src/plattenalbum.py:1170
+#: src/plattenalbum.py:1163
 msgid "_Play"
 msgstr ""
 
-#: src/plattenalbum.py:1172 src/plattenalbum.py:1915
+#: src/plattenalbum.py:1165 src/plattenalbum.py:1898
 msgid "_Show"
 msgstr ""
 
 #. status page
-#: src/plattenalbum.py:1383
+#: src/plattenalbum.py:1376
 msgid "No Results Found"
 msgstr ""
 
-#: src/plattenalbum.py:1383
+#: src/plattenalbum.py:1376
 msgid "Try a different search"
 msgstr ""
 
-#: src/plattenalbum.py:1581 src/plattenalbum.py:1725
+#: src/plattenalbum.py:1574 src/plattenalbum.py:1708
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr ""
 
-#: src/plattenalbum.py:1584 src/plattenalbum.py:1728
+#: src/plattenalbum.py:1577 src/plattenalbum.py:1711
 msgid "Album cover of an unknown album"
 msgstr ""
 
-#: src/plattenalbum.py:1649
+#: src/plattenalbum.py:1635
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr ""
 
-#: src/plattenalbum.py:1683
+#: src/plattenalbum.py:1666
 msgid "Append"
 msgstr ""
 
 #. widgets
-#: src/plattenalbum.py:1684 src/plattenalbum.py:2358 src/plattenalbum.py:2379
+#: src/plattenalbum.py:1667 src/plattenalbum.py:2341 src/plattenalbum.py:2359
 msgid "Play"
 msgstr ""
 
-#: src/plattenalbum.py:1735
+#: src/plattenalbum.py:1718
 #, python-brace-format
 msgid "{number} song ({duration})"
 msgid_plural "{number} songs ({duration})"
@@ -189,192 +185,188 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. status page
-#: src/plattenalbum.py:1809
+#: src/plattenalbum.py:1792
 msgid "Collection is Empty"
 msgstr ""
 
-#: src/plattenalbum.py:1914
+#: src/plattenalbum.py:1897
 msgid "_Remove"
 msgstr ""
 
-#: src/plattenalbum.py:1917
+#: src/plattenalbum.py:1900
 msgid "_Enqueue Album"
 msgstr ""
 
-#: src/plattenalbum.py:1918
+#: src/plattenalbum.py:1901
 msgid "_Tidy"
 msgstr ""
 
-#: src/plattenalbum.py:1920
+#: src/plattenalbum.py:1903
 msgid "_Clear"
 msgstr ""
 
-#: src/plattenalbum.py:2129
+#: src/plattenalbum.py:2112
 msgid "Playlist is Empty"
 msgstr ""
 
-#: src/plattenalbum.py:2134
+#: src/plattenalbum.py:2117
 msgid "Scroll to Current Song"
 msgstr ""
 
 #. status pages
-#: src/plattenalbum.py:2229
+#: src/plattenalbum.py:2212
 msgid "No Lyrics Found"
 msgstr ""
 
-#: src/plattenalbum.py:2232
+#: src/plattenalbum.py:2215
 msgid "Connection Error"
 msgstr ""
 
-#: src/plattenalbum.py:2232
+#: src/plattenalbum.py:2215
 msgid "Check your network connection"
 msgstr ""
 
-#: src/plattenalbum.py:2285
+#: src/plattenalbum.py:2268
 #, python-brace-format
 msgid "Lyrics of {song}"
 msgstr ""
 
-#: src/plattenalbum.py:2286
+#: src/plattenalbum.py:2269
 msgid "searching…"
 msgstr ""
 
-#: src/plattenalbum.py:2293 src/plattenalbum.py:2298
+#: src/plattenalbum.py:2276 src/plattenalbum.py:2281
 msgid "Lyrics view"
 msgstr ""
 
-#: src/plattenalbum.py:2303
+#: src/plattenalbum.py:2286
 msgid "Current album cover"
 msgstr ""
 
-#: src/plattenalbum.py:2359 data/ShortcutsWindow.ui:101
-msgid "Stop"
-msgstr ""
-
-#: src/plattenalbum.py:2361 data/ShortcutsWindow.ui:113
+#: src/plattenalbum.py:2342 data/ShortcutsWindow.ui:113
 msgid "Previous"
 msgstr ""
 
-#: src/plattenalbum.py:2362 data/ShortcutsWindow.ui:107
+#: src/plattenalbum.py:2343 data/ShortcutsWindow.ui:107
 msgid "Next"
 msgstr ""
 
-#: src/plattenalbum.py:2376
+#: src/plattenalbum.py:2356
 msgid "Pause"
 msgstr ""
 
-#: src/plattenalbum.py:2395
+#: src/plattenalbum.py:2375
 msgid "Progress bar"
 msgstr ""
 
-#: src/plattenalbum.py:2591
+#: src/plattenalbum.py:2571
 msgid "Volume control"
 msgstr ""
 
-#: src/plattenalbum.py:2611 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:2591 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
 msgstr ""
 
-#: src/plattenalbum.py:2621 src/plattenalbum.py:2832
+#: src/plattenalbum.py:2601 src/plattenalbum.py:2812
 msgid "_Preferences"
 msgstr ""
 
-#: src/plattenalbum.py:2622
+#: src/plattenalbum.py:2602
 msgid "_Keyboard Shortcuts"
 msgstr ""
 
-#: src/plattenalbum.py:2623
+#: src/plattenalbum.py:2603
 msgid "_Help"
 msgstr ""
 
-#: src/plattenalbum.py:2624
+#: src/plattenalbum.py:2604
 msgid "_About Plattenalbum"
 msgstr ""
 
-#: src/plattenalbum.py:2627
+#: src/plattenalbum.py:2607
 msgid "_Update Database"
 msgstr ""
 
-#: src/plattenalbum.py:2628
+#: src/plattenalbum.py:2608
 msgid "_Server Statistics"
 msgstr ""
 
-#: src/plattenalbum.py:2630
+#: src/plattenalbum.py:2610
 msgid "_Repeat Mode"
 msgstr ""
 
-#: src/plattenalbum.py:2631
+#: src/plattenalbum.py:2611
 msgid "R_andom Mode"
 msgstr ""
 
-#: src/plattenalbum.py:2632
+#: src/plattenalbum.py:2612
 msgid "_Single Mode"
 msgstr ""
 
-#: src/plattenalbum.py:2633
+#: src/plattenalbum.py:2613
 msgid "_Pause After Song"
 msgstr ""
 
-#: src/plattenalbum.py:2634
+#: src/plattenalbum.py:2614
 msgid "_Consume Mode"
 msgstr ""
 
-#: src/plattenalbum.py:2638
+#: src/plattenalbum.py:2618
 msgid "_Lyrics"
 msgstr ""
 
-#: src/plattenalbum.py:2639
+#: src/plattenalbum.py:2619
 msgid "Play_back"
 msgstr ""
 
-#: src/plattenalbum.py:2780
+#: src/plattenalbum.py:2760
 msgid "Database is being updated"
 msgstr ""
 
-#: src/plattenalbum.py:2781
+#: src/plattenalbum.py:2761
 msgid "Database updated"
 msgstr ""
 
 #. search
-#: src/plattenalbum.py:2792
+#: src/plattenalbum.py:2772
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr ""
 
-#: src/plattenalbum.py:2793 src/plattenalbum.py:2794
+#: src/plattenalbum.py:2773 src/plattenalbum.py:2774
 msgid "Search collection"
 msgstr ""
 
 #. status page
-#: src/plattenalbum.py:2827
+#: src/plattenalbum.py:2807
 msgid "Not Connected"
 msgstr ""
 
-#: src/plattenalbum.py:2828
+#: src/plattenalbum.py:2808
 msgid ""
 "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
 "up and running on this or another device in the network"
 msgstr ""
 
-#: src/plattenalbum.py:2973
+#: src/plattenalbum.py:2953
 msgid "Next Title is Playing"
 msgstr ""
 
-#: src/plattenalbum.py:2975
+#: src/plattenalbum.py:2955
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr ""
 
-#: src/plattenalbum.py:2977
+#: src/plattenalbum.py:2957
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr ""
 
-#: src/plattenalbum.py:3007
+#: src/plattenalbum.py:2987
 msgid "connecting…"
 msgstr ""
 
-#: src/plattenalbum.py:3036
+#: src/plattenalbum.py:3016
 msgid "Debug mode"
 msgstr ""
 
@@ -468,6 +460,10 @@ msgstr ""
 
 #: data/ShortcutsWindow.ui:95
 msgid "Play/Pause"
+msgstr ""
+
+#: data/ShortcutsWindow.ui:101
+msgid "Stop"
 msgstr ""
 
 #: data/ShortcutsWindow.ui:119
