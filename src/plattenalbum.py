@@ -950,7 +950,6 @@ class ViewSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("View"))
 		toggle_data=(
-			(_("Show _Stop Button"), "show-stop", ""),
 			(_("Show Audio _Format"), "show-audio-format", ""),
 		)
 		for title, key, subtitle in toggle_data:
@@ -963,7 +962,6 @@ class BehaviorSettings(Adw.PreferencesGroup):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
 			(_("Support “_MPRIS”"), "mpris", ""),
-			(_("Sort _Albums by Year"), "sort-albums-by-year", ""),
 			(_("Send _Notification on Title Change"), "send-notify", ""),
 			(_("Re_wind via Previous Button"), "rewind-mode", ""),
 			(_("Stop _Playback on Quit"), "stop-on-quit", ""),
@@ -1092,11 +1090,6 @@ class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
 		n=self.get_n_items()
 		self.data.extend(data)
 		self.items_changed(n, 0, self.get_n_items())
-
-	def sort(self, **kwargs):
-		self.unselect()
-		self.data.sort(**kwargs)
-		self.items_changed(0, self.get_n_items(), self.get_n_items())
 
 	def get_selected(self):
 		return self._selected
@@ -1618,7 +1611,6 @@ class AlbumList(Gtk.GridView):
 
 		# connect
 		self.connect("activate", self._on_activate)
-		self._settings.connect("changed::sort-albums-by-year", self._sort_settings)
 
 	def clear(self, *args):
 		self._selection_model.clear()
@@ -1633,12 +1625,6 @@ class AlbumList(Gtk.GridView):
 			else:
 				yield Album(artist, tmp["album"], tmp["album"], tmp["date"])
 
-	def _sort_settings(self, *args):
-		if self._settings.get_boolean("sort-albums-by-year"):
-			self._selection_model.sort(key=lambda item: item.date)
-		else:
-			self._selection_model.sort(key=lambda item: locale.strxfrm(item.sortname))
-
 	def display(self, artist):
 		self._settings.set_property("cursor-watch", True)
 		self._selection_model.clear()
@@ -1647,10 +1633,7 @@ class AlbumList(Gtk.GridView):
 		while main.pending():
 			main.iteration()
 		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist)])
-		if self._settings.get_boolean("sort-albums-by-year"):
-			self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
-		else:
-			self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: locale.strxfrm(item.sortname)))
+		self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
 		self._settings.set_property("cursor-watch", False)
 
 	def select(self, name, date):
@@ -2356,8 +2339,6 @@ class PlaybackControl(Gtk.Box):
 
 		# widgets
 		self._play_button=Gtk.Button(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
-		stop_button=Gtk.Button(icon_name="media-playback-stop-symbolic", tooltip_text=_("Stop"), action_name="mpd.stop")
-		settings.bind("show-stop", stop_button, "visible", Gio.SettingsBindFlags.GET)
 		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
 		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
 
@@ -2367,7 +2348,6 @@ class PlaybackControl(Gtk.Box):
 		# packing
 		self.append(prev_button)
 		self.append(self._play_button)
-		self.append(stop_button)
 		self.append(next_button)
 
 	def _on_state(self, emitter, state):

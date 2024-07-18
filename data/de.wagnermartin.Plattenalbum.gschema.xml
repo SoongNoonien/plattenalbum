@@ -30,17 +30,9 @@
 			<default>""</default>
 			<summary>Password</summary>
 		</key>
-		<key type="b" name="show-stop">
-			<default>true</default>
-			<summary>Show stop button</summary>
-		</key>
 		<key type="b" name="show-audio-format">
 			<default>true</default>
 			<summary>Show audio format</summary>
-		</key>
-		<key type="b" name="sort-albums-by-year">
-			<default>true</default>
-			<summary>Sort albums by year</summary>
 		</key>
 		<key type="b" name="send-notify">
 			<default>false</default>
