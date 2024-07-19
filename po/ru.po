@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-07-18 14:11+0200\n"
-"PO-Revision-Date: 2024-07-18 11:10+0200\n"
+"PO-Revision-Date: 2024-07-19 13:08+0300\n"
 "Last-Translator: Alexander Froloff <alexander.froloff@mxc.ru>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #: src/plattenalbum.py:499
 #, python-brace-format
@@ -219,7 +219,7 @@ msgstr "Плейлист пуст"
 
 #: src/plattenalbum.py:2134
 msgid "Scroll to Current Song"
-msgstr ""
+msgstr "Показать текущий трек"
 
 #. status pages
 #: src/plattenalbum.py:2229
@@ -392,7 +392,7 @@ msgstr "Plattenalbum"
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Connect to your music"
-msgstr ""
+msgstr "Слушайте музыку"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
@@ -440,7 +440,7 @@ msgstr "Горячие клавиши"
 
 #: data/ShortcutsWindow.ui:37
 msgid "Sidebar"
-msgstr ""
+msgstr "Боковая панель"
 
 #: data/ShortcutsWindow.ui:43
 msgid "Reconnect"
@@ -452,7 +452,7 @@ msgstr "Обновить базу данных"
 
 #: data/ShortcutsWindow.ui:61
 msgid "Close"
-msgstr ""
+msgstr "Закрыть"
 
 #: data/ShortcutsWindow.ui:67
 msgid "Quit"
