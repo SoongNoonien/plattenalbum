@@ -6,9 +6,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: plattenalbum\n"
-"Report-Msgid-Bugs-To: \n"
+"Report-Msgid-Bugs-To: https://github.com/SoongNoonien/plattenalbum/issues\n"
 "POT-Creation-Date: 2024-07-18 14:11+0200\n"
-"PO-Revision-Date: 2024-07-18 11:06+0200\n"
+"PO-Revision-Date: 2024-07-25 09:01+0530\n"
 "Last-Translator: Scrambled777 <weblate.scrambled777@simplelogin.com>\n"
 "Language-Team: Hindi <indlinux-hindi@lists.sourceforge.net>\n"
 "Language: hi\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Gtranslator 46.1\n"
 
 #: src/plattenalbum.py:499
 #, python-brace-format
@@ -388,7 +388,7 @@ msgstr "प्लैटेनएल्बम"
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Connect to your music"
-msgstr ""
+msgstr "अपने संगीत से जुड़ें"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
@@ -520,48 +520,3 @@ msgstr "संवारें"
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "एल्बम कतारबद्ध करें"
-
-#~ msgid "Browse music with MPD"
-#~ msgstr "एमपीडी के साथ संगीत देखें"
-
-#~ msgid ""
-#~ "Improved autoscrolling in the playlist and added Hindi and Russian "
-#~ "translations."
-#~ msgstr ""
-#~ "प्लेलिस्ट में ऑटो स्क्रॉलिंग में सुधार किया गया तथा हिंदी और रूसी अनुवाद भी जोड़े गए।"
-
-#~ msgid "Updated to libadwaita 1.5"
-#~ msgstr "libadwaita 1.5 तक अद्यतित"
-
-#~ msgid "Reworked settings"
-#~ msgstr "सेटिंग में सुधार"
-
-#~ msgid "Reworked notifications"
-#~ msgstr "अधिसूचनाओं में सुधार"
-
-#~ msgid "New initial status page"
-#~ msgstr "नया आरंभिक स्थिति पृष्ठ"
-
-#~ msgid "Bugfixes and translation updates"
-#~ msgstr "बग समाधान और अनुवाद अद्यतन"
-
-#~ msgid ""
-#~ "Increased flatpak support to only require a minimum set of non-standard "
-#~ "privileges."
-#~ msgstr ""
-#~ "केवल गैर-मानक विशेषाधिकारों के न्यूनतम समूह की आवश्यकता के लिए flatpak समर्थन बढ़ाया।"
-
-#~ msgid "First release using GTK4 and libadwaita"
-#~ msgstr "GTK4 और libadwaita का उपयोग करते हुए पहली रिलीज़"
-
-#~ msgid "Added automatic cover sizing"
-#~ msgstr "स्वचालित कवर आमापान जोड़ा गया"
-
-#~ msgid "Greatly improved search"
-#~ msgstr "खोज में बहुत सुधार किया"
-
-#~ msgid "Removed mini-player"
-#~ msgstr "लघु-वादक हटाया गया"
-
-#~ msgid "Martin Wagner"
-#~ msgstr "मार्टिन वैगनर"
