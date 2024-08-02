@@ -676,11 +676,11 @@ class Client(MPDClient):
 		self.emitter.emit("updating-db")
 		return job_id
 
-	def start(self):
+	def try_connect(self, remote):
 		self.emitter.emit("connecting")
 		def callback():
 			# connect
-			if self._settings.get_boolean("remote-connection"):
+			if remote:
 				try:
 					self.connect(self._settings.get_string("host"), self._settings.get_int("port"))
 				except:
@@ -702,12 +702,13 @@ class Client(MPDClient):
 				try:
 					self.password(password)
 				except:
+					self.disconnect()
 					self.emitter.emit("connection_error")
 					self._start_idle_id=None
 					return False
-			# connect successful
+			# connected
 			commands=self.commands()
-			if self._settings.get_boolean("remote-connection"):
+			if remote:
 				self._music_directory=None
 			elif "config" in commands:
 				self._music_directory=self.config()
@@ -720,19 +721,11 @@ class Client(MPDClient):
 			else:
 				self.disconnect()
 				self.emitter.emit("connection_error")
+			# connect successful
+			self._settings.set_boolean("remote-connection", remote)
 			self._start_idle_id=None
 			return False
 		self._start_idle_id=GLib.idle_add(callback)
-
-	def reconnect(self):
-		if self._main_timeout_id is not None:
-			GLib.source_remove(self._main_timeout_id)
-			self._main_timeout_id=None
-		if self._start_idle_id is not None:
-			GLib.source_remove(self._start_idle_id)
-			self._start_idle_id=None
-		self.disconnect()
-		self.start()
 
 	def disconnect(self):
 		super().disconnect()
@@ -971,40 +964,90 @@ class BehaviorSettings(Adw.PreferencesGroup):
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
-class ConnectionSettings(Adw.PreferencesGroup):
-	def __init__(self, client, settings):
-		super().__init__(title=_("Connection"))
-		remote_row=Adw.ExpanderRow(title=_("_Connect to Remote Server"), use_underline=True, show_enable_switch=True)
-		settings.bind("remote-connection", remote_row, "enable-expansion", Gio.SettingsBindFlags.DEFAULT)
-		self.add(remote_row)
-
-		hostname_row=Adw.EntryRow(title=_("Host Name"))
-		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		remote_row.add_row(hostname_row)
-
-		port_row=Adw.SpinRow.new_with_range(0, 65535, 1)
-		port_row.set_title(_("Port"))
-		settings.bind("port", port_row, "value", Gio.SettingsBindFlags.DEFAULT)
-		remote_row.add_row(port_row)
-
-		password_row=Adw.PasswordEntryRow(title=_("Password"))
-		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		self.add(password_row)
-
-		# connect button
-		reconnect_button_content=Adw.ButtonContent(icon_name="view-refresh-symbolic", label=_("_Reconnect"), use_underline=True)
-		reconnect_button=Gtk.Button(child=reconnect_button_content, has_frame=False)
-		reconnect_button.connect("clicked", lambda *args: client.reconnect())
-		self.set_header_suffix(reconnect_button)
-
 class SettingsDialog(Adw.PreferencesDialog):
 	def __init__(self, client, settings):
 		super().__init__()
 		page=Adw.PreferencesPage()
-		page.add(ConnectionSettings(client, settings))
 		page.add(ViewSettings(settings))
 		page.add(BehaviorSettings(settings))
 		self.add(page)
+
+################
+# setup dialog #
+################
+
+class ConnectDialog(Adw.Dialog):
+	def __init__(self, title, target):
+		super().__init__(width_request=360, follows_content_size=True, title=title)
+		self._clamp=Adw.Clamp()
+		button=Gtk.Button(label=_("_Connect"), use_underline=True, halign=Gtk.Align.CENTER, action_name="mpd.connect", action_target=target)
+		button.set_css_classes(["pill", "suggested-action"])
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24, margin_top=12, margin_bottom=18, margin_start=18, margin_end=18)
+		box.append(self._clamp)
+		box.append(button)
+		scroll=Gtk.ScrolledWindow(child=box, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+		toolbar_view=Adw.ToolbarView(content=scroll)
+		toolbar_view.add_top_bar(Adw.HeaderBar())
+		self._connection_toast=Adw.Toast(title=_("Connection failed"))
+		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
+		self.set_child(self._toast_overlay)
+		self.set_default_widget(button)
+		self.set_focus(button)
+
+	def set_content(self, widget):
+		self._clamp.set_child(widget)
+
+	def connection_error(self):
+		self._toast_overlay.add_toast(self._connection_toast)
+
+class LocalConnectDialog(ConnectDialog):
+	def __init__(self, settings):
+		super().__init__(_("Local Connection"), GLib.Variant("b", False))
+		list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+		list_box.add_css_class("boxed-list")
+		password_row=Adw.PasswordEntryRow(title=_("Password"))
+		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		list_box.append(password_row)
+		self.set_content(list_box)
+
+class RemoteConnectDialog(ConnectDialog):
+	def __init__(self, settings):
+		super().__init__(_("Remote Connection"), GLib.Variant("b", True))
+		list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+		list_box.add_css_class("boxed-list")
+		hostname_row=Adw.EntryRow(title=_("Host Name"))
+		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		list_box.append(hostname_row)
+		port_row=Adw.SpinRow.new_with_range(0, 65535, 1)
+		port_row.set_title(_("Port"))
+		settings.bind("port", port_row, "value", Gio.SettingsBindFlags.DEFAULT)
+		list_box.append(port_row)
+		password_row=Adw.PasswordEntryRow(title=_("Password"))
+		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
+		list_box.append(password_row)
+		self.set_content(list_box)
+
+class CommandLabel(Gtk.Box):
+	def __init__(self, text):
+		super().__init__(css_classes=["card"])
+		label=Gtk.Label(selectable=True, xalign=0, hexpand=True, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR, css_classes=["monospace"])
+		label.set_margin_start(12)
+		label.set_margin_end(12)
+		label.set_margin_top(9)
+		label.set_margin_bottom(9)
+		label.set_text(text)
+		self.append(label)
+
+class SetupDialog(ConnectDialog):
+	def __init__(self):
+		super().__init__(_("Setup"), GLib.Variant("b", False))
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		box.append(Gtk.Label(label=_("After installing the “Music Player Daemon” (<tt>mpd</tt>) the following two commands"\
+			" will configure and initialize a basic local instance"), use_markup=True, xalign=0, wrap=True))
+		box.append(CommandLabel('cat << EOF > ~/.mpd/mpd.conf\ndb_file\t\t"~/.mpd/database"\nstate_file\t"~/.mpd/state"\n\n'\
+			'audio_output {\n\ttype\t"pulse"\n\tname\t"Music"\n}\nEOF'))
+		box.append(CommandLabel("systemctl --user enable --now mpd.socket"))
+		self.set_content(box)
 
 #################
 # other dialogs #
@@ -2603,7 +2646,7 @@ class MainMenuButton(Gtk.MenuButton):
 		app_section.append(_("_Help"), "win.help")
 		app_section.append(_("_About Plattenalbum"), "app.about")
 		mpd_section=Gio.Menu()
-		mpd_section.append(_("_Reconnect"), "win.reconnect")
+		mpd_section.append(_("_Disconnect"), "mpd.disconnect")
 		mpd_section.append(_("_Update Database"), "mpd.update")
 		mpd_section.append(_("_Server Statistics"), "win.stats")
 		playback_section=Gio.Menu()
@@ -2653,7 +2696,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		# actions
 		self._disable_on_stop_data=["next","prev","seek-forward","seek-backward"]
 		self._disable_no_song=["tidy","enqueue"]
-		self._enable_on_reconnect_data=["toggle-play","stop","clear","update"]
+		self._enable_on_reconnect_data=["toggle-play","stop","clear","update","disconnect"]
 		self._data=self._disable_on_stop_data+self._disable_no_song+self._enable_on_reconnect_data
 		for name in self._data:
 			action=Gio.SimpleAction.new(name, None)
@@ -2667,6 +2710,9 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 			handler=action.connect("notify::state", self._on_mode_change, name)
 			self.add_action(action)
 			self._client.emitter.connect(name, self._update_action, action, handler)
+		self._connect_action=Gio.SimpleAction.new("connect", GLib.VariantType.new("b"))
+		self._connect_action.connect("activate", self._on_connect)
+		self.add_action(self._connect_action)
 
 		# connect
 		self._client.emitter.connect("state", self._on_state)
@@ -2716,6 +2762,12 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		else:
 			getattr(self._client, name)("1" if action.get_state() else "0")
 
+	def _on_disconnect(self, action, param):
+		self._client.disconnect()
+
+	def _on_connect(self, action, param):
+		self._client.try_connect(param.get_boolean())
+
 	def _on_state(self, emitter, state):
 		state_dict={"play": True, "pause": True, "stop": False}
 		for action in self._disable_on_stop_data:
@@ -2726,10 +2778,12 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 			self.lookup_action(action).set_enabled(song is not None)
 
 	def _on_disconnected(self, *args):
+		self._connect_action.set_enabled(True)
 		for action in self._data:
 			self.lookup_action(action).set_enabled(False)
 
 	def _on_connected(self, *args):
+		self._connect_action.set_enabled(False)
 		for action in self._enable_on_reconnect_data:
 			self.lookup_action(action).set_enabled(True)
 
@@ -2761,7 +2815,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
 		# actions
-		simple_actions_data=("close", "settings","reconnect","stats","help","toggle-search","toggle-artists")
+		simple_actions_data=("close", "settings","local-connect","remote-connect","setup","stats","help","toggle-search","toggle-artists")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2804,16 +2858,19 @@ class MainWindow(Adw.ApplicationWindow):
 		overlay_split_view.set_sidebar(sidebar)
 
 		# status page
-		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Not Connected"))
+		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
 		status_page.set_description(_("To use Plattenalbum an instance of the “Music Player Daemon” "\
 			"needs to be set up and running on this or another device in the network"))
-		reconnect_button=Gtk.Button(label=_("_Reconnect"), use_underline=True, action_name="win.reconnect")
-		reconnect_button.set_css_classes(["suggested-action", "pill"])
-		settings_button=Gtk.Button(label=_("_Preferences"), use_underline=True, action_name="win.settings")
-		settings_button.add_css_class("pill")
+		setup_button=Gtk.Button(label=_("_Set Up"), use_underline=True, action_name="win.setup")
+		setup_button.set_css_classes(["suggested-action", "pill"])
+		local_connect_button=Gtk.Button(label=_("Connect _Locally"), use_underline=True, action_name="win.local-connect")
+		local_connect_button.add_css_class("pill")
+		remote_connect_button=Gtk.Button(label=_("Connect _Remotely"), use_underline=True, action_name="win.remote-connect")
+		remote_connect_button.add_css_class("pill")
 		button_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER, spacing=12)
-		button_box.append(reconnect_button)
-		button_box.append(settings_button)
+		button_box.append(setup_button)
+		button_box.append(local_connect_button)
+		button_box.append(remote_connect_button)
 		status_page.set_child(button_box)
 
 		# stack
@@ -2850,7 +2907,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connecting", self._on_connecting)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
 		self._client.emitter.connect("updating-db", self._on_updating_db)
 		self._client.emitter.connect("updated-db", self._on_updated_db)
@@ -2875,7 +2931,7 @@ class MainWindow(Adw.ApplicationWindow):
 		while main.pending():
 			main.iteration()
 		self._settings.bind("maximize", self, "maximized", Gio.SettingsBindFlags.SET)
-		self._client.start()
+		self._client.try_connect(self._settings.get_boolean("remote-connection"))
 
 	def _clear_title(self):
 		self.set_title("Plattenalbum")
@@ -2901,8 +2957,17 @@ class MainWindow(Adw.ApplicationWindow):
 		settings=SettingsDialog(self._client, self._settings)
 		settings.present(self)
 
-	def _on_reconnect(self, action, param):
-		self._client.reconnect()
+	def _on_local_connect(self, action, param):
+		setup=LocalConnectDialog(self._settings)
+		setup.present(self)
+
+	def _on_remote_connect(self, action, param):
+		setup=RemoteConnectDialog(self._settings)
+		setup.present(self)
+
+	def _on_setup(self, action, param):
+		setup=SetupDialog()
+		setup.present(self)
 
 	def _on_stats(self, action, param):
 		stats=ServerStats(self._client, self._settings)
@@ -2964,7 +3029,8 @@ class MainWindow(Adw.ApplicationWindow):
 			self.get_application().withdraw_notification("title-change")
 
 	def _on_connected(self, *args):
-		self._clear_title()
+		if (dialog:=self.get_visible_dialog()) is not None:
+			dialog.close()
 		self._status_page_stack.set_visible_child_name("content")
 		self._toolbar_view.set_reveal_bottom_bars(True)
 		self._toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED_BORDER)
@@ -2983,15 +3049,14 @@ class MainWindow(Adw.ApplicationWindow):
 		self._action_bar.set_sensitive(False)
 		self._updating_toast.dismiss()
 
-	def _on_connecting(self, *args):
-		self._title.set_subtitle(_("connecting…"))
-
 	def _on_connection_error(self, *args):
-		self._clear_title()
 		self._status_page_stack.set_visible_child_name("status-page")
 		self._toolbar_view.set_reveal_bottom_bars(False)
 		self._toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
 		self._left_button_box.set_visible(False)
+		if (dialog:=self.get_visible_dialog()) is not None:
+			if isinstance(dialog, ConnectDialog):
+				dialog.connection_error()
 
 	def _on_updating_db(self, *args):
 		self._toast_overlay.add_toast(self._updating_toast)
@@ -3036,7 +3101,7 @@ class Plattenalbum(Adw.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.toggle-search", ["<Control>f"]),("win.toggle-artists", ["F9"]),("win.reconnect", ["<Shift>F5"]),
+			("win.toggle-search", ["<Control>f"]),("win.toggle-artists", ["F9"]),("mpd.disconnect", ["<Control>d"]),
 			("win.stats", ["<Control>i"]),("win.close", ["<Control>w"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
 			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),

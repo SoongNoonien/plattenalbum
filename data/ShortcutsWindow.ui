@@ -40,8 +40,8 @@
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Reconnect</property>
-			<property name="accelerator">&lt;Shift&gt;F5</property>
+			<property name="title" translatable="yes">Disconnect</property>
+			<property name="accelerator">&lt;Control&gt;d</property>
 			</object>
 		</child>
 		<child>
