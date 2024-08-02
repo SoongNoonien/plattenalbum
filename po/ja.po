@@ -1,7 +1,7 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Japanese translation of Plattenalbum.
+# Copyright (C) 2024 Plattenalbum's COPYRIGHT HOLDER
 # This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Gnuey56 <gnuey56@proton.me>, 2024.
 #
 #, fuzzy
 msgid ""
@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-07-18 14:11+0200\n"
-"PO-Revision-Date: 2024-07-18 11:07+0200\n"
+"PO-Revision-Date: 2024-07-24 16:25+0900\n"
 "Last-Translator: Gnuey56 <gnuey56@proton.me>\n"
 "Language-Team: \n"
 "Language: ja\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #: src/plattenalbum.py:499
 #, python-brace-format
@@ -213,7 +213,7 @@ msgstr "プレイリストが空です"
 
 #: src/plattenalbum.py:2134
 msgid "Scroll to Current Song"
-msgstr ""
+msgstr "現在の曲へスクロール"
 
 #. status pages
 #: src/plattenalbum.py:2229
@@ -267,7 +267,7 @@ msgstr "再生バー"
 
 #: src/plattenalbum.py:2591
 msgid "Volume control"
-msgstr ""
+msgstr "音量調整"
 
 #: src/plattenalbum.py:2611 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
@@ -322,9 +322,8 @@ msgid "_Lyrics"
 msgstr "歌詞 (_L)"
 
 #: src/plattenalbum.py:2639
-#, fuzzy
 msgid "Play_back"
-msgstr "再生"
+msgstr "再生 (_B)"
 
 #: src/plattenalbum.py:2780
 msgid "Database is being updated"
@@ -346,15 +345,16 @@ msgstr "コレクションを検索"
 
 #. status page
 #: src/plattenalbum.py:2827
-#, fuzzy
 msgid "Not Connected"
-msgstr "接続"
+msgstr "接続されていません"
 
 #: src/plattenalbum.py:2828
 msgid ""
 "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
 "up and running on this or another device in the network"
 msgstr ""
+"Plattenalbum を使うには “Music Player Daemon” がこのデバイスまたは他のデバイ"
+"スでセットアップされ、実行されている必要があります"
 
 #: src/plattenalbum.py:2973
 msgid "Next Title is Playing"
@@ -386,7 +386,7 @@ msgstr "Plattenalbum"
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Connect to your music"
-msgstr ""
+msgstr "あなたの音楽へ接続"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
@@ -434,7 +434,7 @@ msgstr "ショートカット"
 
 #: data/ShortcutsWindow.ui:37
 msgid "Sidebar"
-msgstr ""
+msgstr "サイドバー"
 
 #: data/ShortcutsWindow.ui:43
 msgid "Reconnect"
@@ -446,7 +446,7 @@ msgstr "データベースを更新"
 
 #: data/ShortcutsWindow.ui:61
 msgid "Close"
-msgstr ""
+msgstr "閉じる"
 
 #: data/ShortcutsWindow.ui:67
 msgid "Quit"
