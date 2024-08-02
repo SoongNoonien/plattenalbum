@@ -978,7 +978,7 @@ class SettingsDialog(Adw.PreferencesDialog):
 
 class ConnectDialog(Adw.Dialog):
 	def __init__(self, title, target):
-		super().__init__(width_request=360, follows_content_size=True, title=title)
+		super().__init__(title=title, width_request=360, follows_content_size=True)
 		self._clamp=Adw.Clamp()
 		button=Gtk.Button(label=_("_Connect"), use_underline=True, halign=Gtk.Align.CENTER, action_name="mpd.connect", action_target=target)
 		button.set_css_classes(["pill", "suggested-action"])
