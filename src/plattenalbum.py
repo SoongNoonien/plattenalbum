@@ -935,9 +935,9 @@ class Settings(Gio.Settings):
 	def __init__(self):
 		super().__init__(schema=self.BASE_KEY)
 
-###################
-# settings dialog #
-###################
+###########
+# dialogs #
+###########
 
 class ViewSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
@@ -971,10 +971,6 @@ class SettingsDialog(Adw.PreferencesDialog):
 		page.add(ViewSettings(settings))
 		page.add(BehaviorSettings(settings))
 		self.add(page)
-
-################
-# setup dialog #
-################
 
 class ConnectDialog(Adw.Dialog):
 	def __init__(self, title, target):
@@ -1048,10 +1044,6 @@ class SetupDialog(ConnectDialog):
 			'audio_output {\n\ttype\t"pulse"\n\tname\t"Music"\n}\nEOF'))
 		box.append(CommandLabel("systemctl --user enable --now mpd.socket"))
 		self.set_content(box)
-
-#################
-# other dialogs #
-#################
 
 class ServerStats(Adw.Dialog):
 	def __init__(self, client, settings):
