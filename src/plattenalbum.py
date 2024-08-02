@@ -1055,7 +1055,7 @@ class SetupDialog(ConnectDialog):
 
 class ServerStats(Adw.Dialog):
 	def __init__(self, client, settings):
-		super().__init__(title=_("Server Statistics"), content_width=360, width_request=360, height_request=294)
+		super().__init__(title=_("Server Statistics"), width_request=360, follows_content_size=True)
 
 		# list box
 		list_box=Gtk.ListBox(valign=Gtk.Align.START)
