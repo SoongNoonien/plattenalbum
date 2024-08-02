@@ -1083,7 +1083,7 @@ class ServerStats(Adw.Dialog):
 			list_box.append(row)
 
 		# packing
-		clamp=Adw.Clamp(child=list_box, margin_top=18, margin_bottom=18, margin_start=18, margin_end=18)
+		clamp=Adw.Clamp(child=list_box, margin_top=12, margin_bottom=18, margin_start=18, margin_end=18)
 		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
 		toolbar_view=Adw.ToolbarView(content=scroll)
 		toolbar_view.add_top_bar(Adw.HeaderBar())
