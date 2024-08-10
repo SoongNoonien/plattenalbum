@@ -1001,7 +1001,7 @@ class LocalConnectDialog(ConnectDialog):
 		super().__init__(_("Local Connection"), GLib.Variant("b", False))
 		list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
 		list_box.add_css_class("boxed-list")
-		password_row=Adw.PasswordEntryRow(title=_("Password"))
+		password_row=Adw.PasswordEntryRow(title=_("Password (optional)"))
 		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		list_box.append(password_row)
 		self.set_content(list_box)
@@ -1018,7 +1018,7 @@ class RemoteConnectDialog(ConnectDialog):
 		port_row.set_title(_("Port"))
 		settings.bind("port", port_row, "value", Gio.SettingsBindFlags.DEFAULT)
 		list_box.append(port_row)
-		password_row=Adw.PasswordEntryRow(title=_("Password"))
+		password_row=Adw.PasswordEntryRow(title=_("Password (optional)"))
 		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		list_box.append(password_row)
 		self.set_content(list_box)
@@ -1038,8 +1038,8 @@ class SetupDialog(ConnectDialog):
 	def __init__(self):
 		super().__init__(_("Setup"), GLib.Variant("b", False))
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		box.append(Gtk.Label(label=_("After installing the “Music Player Daemon” (<tt>mpd</tt>) the following three commands"\
-			" will configure and initialize a basic local instance"), use_markup=True, xalign=0, wrap=True))
+		box.append(Gtk.Label(label=_("To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package manager, and run the following commands"\
+			" to configure and initialize a basic local instance. After that, Plattenalbum should be able to seamlessly connect to it."), use_markup=True, xalign=0, wrap=True))
 		box.append(CommandLabel("mkdir -p ~/.mpd"))
 		box.append(CommandLabel('cat << EOF > ~/.mpd/mpd.conf\ndb_file\t\t"~/.mpd/database"\nstate_file\t"~/.mpd/state"\n\n'\
 			'audio_output {\n\ttype\t"pulse"\n\tname\t"Music"\n}\nEOF'))
@@ -2852,9 +2852,9 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# status page
 		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
-		status_page.set_description(_("To use Plattenalbum an instance of the “Music Player Daemon” "\
-			"needs to be set up and running on this or another device in the network"))
-		setup_button=Gtk.Button(label=_("_Set Up"), use_underline=True, action_name="win.setup")
+		status_page.set_description(_("To use Plattenalbum, an instance of the “Music Player Daemon” "\
+			"needs to be set up and running on this device or another one on the network"))
+		setup_button=Gtk.Button(label=_("_Set up Instance"), use_underline=True, action_name="win.setup")
 		setup_button.set_css_classes(["suggested-action", "pill"])
 		local_connect_button=Gtk.Button(label=_("Connect _Locally"), use_underline=True, action_name="win.local-connect")
 		local_connect_button.add_css_class("pill")
