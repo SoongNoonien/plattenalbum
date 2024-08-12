@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-11 20:19+0200\n"
-"PO-Revision-Date: 2024-08-11 20:20+0200\n"
+"POT-Creation-Date: 2024-08-12 23:10+0200\n"
+"PO-Revision-Date: 2024-08-12 23:17+0200\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -77,8 +77,8 @@ msgid "Local Connection"
 msgstr "Lokale Verbindung"
 
 #: src/plattenalbum.py:1004 src/plattenalbum.py:1021
-msgid "Password"
-msgstr "Passwort"
+msgid "Password (optional)"
+msgstr "Passwort (optional)"
 
 #: src/plattenalbum.py:1011
 msgid "Remote Connection"
@@ -98,12 +98,15 @@ msgstr "Einrichtung"
 
 #: src/plattenalbum.py:1041
 msgid ""
-"After installing the “Music Player Daemon” (<tt>mpd</tt>) the following "
-"three commands will configure and initialize a basic local instance"
+"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
+"system package manager, and run the following commands to configure and "
+"initialize a basic local instance. After that, Plattenalbum should be able "
+"to seamlessly connect to it."
 msgstr ""
-"Nach dem Installieren des »Music Player Daemon« (<tt>mpd</tt>), "
-"konfigurieren und initialisieren die folgenden drei Befehle eine einfache "
-"lokale Instanz"
+"Um loszulegen, installieren Sie den Music Player Daemon (<tt>mpd</tt>) mit "
+"Ihrem Systempaketmanager und führen die folgenden Befehle aus um eine "
+"einfache lokale Instanz zu konfigurieren und initialisieren. Danach sollte "
+"sich Plattenalbum direkt damit verbinden können."
 
 #: src/plattenalbum.py:1051 data/ShortcutsWindow.ui:55
 msgid "Server Statistics"
@@ -364,16 +367,15 @@ msgstr "Mit Ihrer Musik verbinden"
 
 #: src/plattenalbum.py:2855
 msgid ""
-"To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
-"up and running on this or another device in the network"
+"To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
+"up and running on this device or another one on the network"
 msgstr ""
-"Um Plattenalbum benutzen zu können muss eine Instanz des »Music Player "
-"Daemon« auf diesem oder einem anderen Gerät im Netzwerk eingerichtet sein "
-"und laufen"
+"Um Plattenalbum benutzen zu können muss eine Instanz des Music Player Daemon "
+"auf diesem oder einem anderen Gerät im Netzwerk eingerichtet sein und laufen"
 
 #: src/plattenalbum.py:2857
-msgid "_Set Up"
-msgstr "_Einrichten"
+msgid "_Set up Instance"
+msgstr "_Instanz einrichten"
 
 #: src/plattenalbum.py:2859
 msgid "Connect _Locally"
@@ -381,7 +383,7 @@ msgstr "_Lokal verbinden"
 
 #: src/plattenalbum.py:2861
 msgid "Connect _Remotely"
-msgstr "Ent_fernt verbinden"
+msgstr "_Entfernt verbinden"
 
 #: src/plattenalbum.py:3006
 msgid "Next Title is Playing"
@@ -546,6 +548,12 @@ msgstr "Aufräumen"
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "Album einreihen"
+
+#~ msgid "Password"
+#~ msgstr "Passwort"
+
+#~ msgid "_Set Up"
+#~ msgstr "_Einrichten"
 
 #~ msgid "Not Connected"
 #~ msgstr "Nicht verbunden"
