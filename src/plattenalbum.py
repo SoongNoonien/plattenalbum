@@ -2852,7 +2852,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# status page
 		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
-		status_page.set_description(_("To use Plattenalbum, an instance of the “Music Player Daemon” "\
+		status_page.set_description(_("To use Plattenalbum, an instance of the Music Player Daemon "\
 			"needs to be set up and running on this device or another one on the network"))
 		setup_button=Gtk.Button(label=_("_Set up Instance"), use_underline=True, action_name="win.setup")
 		setup_button.set_css_classes(["suggested-action", "pill"])
