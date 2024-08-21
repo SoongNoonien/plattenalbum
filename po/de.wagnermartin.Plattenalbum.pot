@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-11 20:19+0200\n"
+"POT-Creation-Date: 2024-08-12 23:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -77,7 +77,7 @@ msgid "Local Connection"
 msgstr ""
 
 #: src/plattenalbum.py:1004 src/plattenalbum.py:1021
-msgid "Password"
+msgid "Password (optional)"
 msgstr ""
 
 #: src/plattenalbum.py:1011
@@ -98,8 +98,10 @@ msgstr ""
 
 #: src/plattenalbum.py:1041
 msgid ""
-"After installing the “Music Player Daemon” (<tt>mpd</tt>) the following "
-"three commands will configure and initialize a basic local instance"
+"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
+"system package manager, and run the following commands to configure and "
+"initialize a basic local instance. After that, Plattenalbum should be able "
+"to seamlessly connect to it."
 msgstr ""
 
 #: src/plattenalbum.py:1051 data/ShortcutsWindow.ui:55
@@ -361,12 +363,12 @@ msgstr ""
 
 #: src/plattenalbum.py:2855
 msgid ""
-"To use Plattenalbum an instance of the “Music Player Daemon” needs to be set "
-"up and running on this or another device in the network"
+"To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
+"up and running on this device or another one on the network"
 msgstr ""
 
 #: src/plattenalbum.py:2857
-msgid "_Set Up"
+msgid "_Set up Instance"
 msgstr ""
 
 #: src/plattenalbum.py:2859
