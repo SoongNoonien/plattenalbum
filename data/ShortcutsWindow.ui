@@ -34,12 +34,6 @@
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Sidebar</property>
-			<property name="accelerator">F9</property>
-			</object>
-		</child>
-		<child>
-			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Disconnect</property>
 			<property name="accelerator">&lt;Control&gt;d</property>
 			</object>
