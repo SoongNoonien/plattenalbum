@@ -2725,6 +2725,7 @@ class Player(Adw.Bin):  # TODO audio format
 ###################
 # MPD gio actions #
 ###################
+
 class MPDActionGroup(Gio.SimpleActionGroup):
 	def __init__(self, client):
 		super().__init__()
@@ -2827,6 +2828,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 ###############
 # main window #
 ###############
+
 class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
 		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=480, width_request=620, **kwargs)
@@ -3026,9 +3028,9 @@ class MainWindow(Adw.ApplicationWindow):
 		else:
 			self.set_cursor_from_name(None)
 
-###################
-# Gtk application #
-###################
+###############
+# application #
+###############
 
 class Plattenalbum(Adw.Application):
 	def __init__(self):
