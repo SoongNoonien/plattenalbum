@@ -1387,12 +1387,12 @@ class SearchView(Gtk.Stack):
 		self._client=client
 
 		# artist list
-		self._artist_list=Gtk.ListBox(activate_on_single_click=True, selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
 		self._artist_list.add_css_class("rich-list")
 		self._artist_list.add_css_class("boxed-list")
 
 		# song list
-		self._song_list=Gtk.ListBox(activate_on_single_click=True, selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._song_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
 		self._song_list.add_css_class("rich-list")
 		self._song_list.add_css_class("boxed-list")
 
