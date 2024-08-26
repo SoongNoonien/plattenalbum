@@ -221,8 +221,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	# setter and getter
 	def _get_playback_status(self):
 		if self._client.connected():
-			status=self._client.status()
-			return GLib.Variant("s", {"play": "Playing", "pause": "Paused", "stop": "Stopped"}[status["state"]])
+			return GLib.Variant("s", {"play": "Playing", "pause": "Paused", "stop": "Stopped"}[self._client.status()["state"]])
 		return GLib.Variant("s", "Stopped")
 
 	def _set_loop_status(self, value):
@@ -243,10 +242,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			if status["repeat"] == "1":
 				if status.get("single", "0") == "0":
 					return GLib.Variant("s", "Playlist")
-				else:
-					return GLib.Variant("s", "Track")
-			else:
-				return GLib.Variant("s", "None")
+				return GLib.Variant("s", "Track")
+			return GLib.Variant("s", "None")
 		return GLib.Variant("s", "None")
 
 	def _set_shuffle(self, value):
@@ -258,10 +255,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	def _get_shuffle(self):
 		if self._client.connected():
-			if self._client.status()["random"] == "1":
-				return GLib.Variant("b", True)
-			else:
-				return GLib.Variant("b", False)
+			return GLib.Variant("b", self._client.status()["random"] == "1")
 		return GLib.Variant("b", False)
 
 	def _get_metadata(self):
@@ -279,26 +273,17 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	def _get_position(self):
 		if self._client.connected():
-			status=self._client.status()
-			return GLib.Variant("x", float(status.get("elapsed", 0))*1000000)
+			return GLib.Variant("x", float(self._client.status().get("elapsed", 0))*1000000)
 		return GLib.Variant("x", 0)
 
 	def _get_can_next_prev_seek(self):
 		if self._client.connected():
-			status=self._client.status()
-			if status["state"] == "stop":
-				return GLib.Variant("b", False)
-			else:
-				return GLib.Variant("b", True)
+			return GLib.Variant("b", self._client.status()["state"] != "stop")
 		return GLib.Variant("b", False)
 
 	def _get_can_play_pause(self):
 		if self._client.connected():
-			status=self._client.status()
-			if int(status["playlistlength"]) > 0:
-				return GLib.Variant("b", True)
-			else:
-				return GLib.Variant("b", False)
+			return GLib.Variant("b", int(self._client.status()["playlistlength"]) > 0)
 		return GLib.Variant("b", False)
 
 	# introspect methods
