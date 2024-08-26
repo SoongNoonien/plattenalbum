@@ -516,29 +516,6 @@ class LastModified():
 	def raw(self):
 		return self._date
 
-class Format():
-	def __init__(self, audio_format):
-		self._format=audio_format
-
-	def __str__(self):
-		# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
-		samplerate, bits, channels=self._format.split(":")
-		if bits == "f":
-			bits="32fp"
-		try:
-			int_chan=int(channels)
-		except ValueError:
-			int_chan=0
-		try:
-			freq=locale.str(int(samplerate)/1000)
-		except ValueError:
-			freq=samplerate
-		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=int_chan)
-		return f"{freq} kHz • {bits} bit • {channels}"
-
-	def raw(self):
-		return self._format
-
 class MultiTag(list):
 	def __str__(self):
 		return ", ".join(self)
@@ -554,11 +531,9 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 			pass
 		elif key == "duration":
 			super().__setitem__(key, Duration(value))
-		elif key == "format":
-			super().__setitem__(key, Format(value))
 		elif key == "last-modified":
 			super().__setitem__(key, LastModified(value))
-		elif key in ("range", "file", "pos", "id"):
+		elif key in ("range", "file", "pos", "id", "format"):
 			super().__setitem__(key, value)
 		else:
 			if isinstance(value, list):
@@ -635,7 +610,6 @@ class EventEmitter(GObject.Object):
 		"single": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"single-oneshot": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"audio": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 	}
 
@@ -894,9 +868,8 @@ class Client(MPDClient):
 					self.emitter.emit("bitrate", diff["bitrate"])
 			if "volume" in diff:
 				self.emitter.emit("volume", float(diff["volume"]))
-			for key in ("state", "audio"):
-				if key in diff:
-					self.emitter.emit(key, diff[key])
+			if "state" in diff:
+				self.emitter.emit("state", diff["state"])
 			if "single" in diff:
 				self.emitter.emit("single", diff["single"] == "1")
 				self.emitter.emit("single-oneshot", diff["single"] == "oneshot")
@@ -914,8 +887,6 @@ class Client(MPDClient):
 					self.emitter.emit("updated-db", self._database_is_empty())
 				elif "bitrate" == key:
 					self.emitter.emit("bitrate", None)
-				elif "audio" == key:
-					self.emitter.emit("audio", None)
 			self._last_status=status
 		except (ConnectionError, ConnectionResetError) as e:
 			self.disconnect()
@@ -943,7 +914,7 @@ class ViewSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("View"))
 		toggle_data=(
-			(_("Show Audio _Format"), "show-audio-format", ""),
+			(_("_Show Bit Rate"), "show-bit-rate", ""),
 		)
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
@@ -2385,8 +2356,29 @@ class PlaybackButtons(Gtk.Box):
 			self._play_button.set_property("icon-name", "media-playback-start-symbolic")
 			self._play_button.set_tooltip_text(_("Play"))
 
+class BitRate(Gtk.Label):
+	def __init__(self, client, settings):
+		super().__init__(xalign=1, single_line_mode=True, css_classes=["caption", "numeric", "dim-label"])
+		self._client=client
+		settings.bind("show-bit-rate", self, "visible", Gio.SettingsBindFlags.GET)
+		self._mask=_("{bitrate} kb/s")
+
+		# connect
+		self._client.emitter.connect("bitrate", self._on_bitrate)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+
+	def _on_bitrate(self, emitter, bitrate):
+		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
+		if bitrate is None:
+			self.set_text("")
+		else:
+			self.set_text(self._mask.format(bitrate=bitrate))
+
+	def _on_disconnected(self, *args):
+		self.set_text("")
+
 class PlaybackControls(Gtk.Box):
-	def __init__(self, client):
+	def __init__(self, client, settings):
 		super().__init__(hexpand=True, orientation=Gtk.Orientation.VERTICAL)
 		self.add_css_class("toolbar")
 		self._client=client
@@ -2397,8 +2389,8 @@ class PlaybackControls(Gtk.Box):
 		playback_buttons=PlaybackButtons(client)
 
 		# labels
-		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, css_classes=["numeric"])
-		self._rest=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
+		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
+		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
 
 		# progress bar
 		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True)
@@ -2433,10 +2425,13 @@ class PlaybackControls(Gtk.Box):
 		self._client.emitter.connect("current-song", self._on_song_changed)
 
 		# packing
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box.append(self._rest)
+		box.append(BitRate(client, settings))
 		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
 		center_box.set_center_widget(playback_buttons)
 		center_box.set_start_widget(self._elapsed)
-		center_box.set_end_widget(self._rest)
+		center_box.set_end_widget(box)
 		self.append(self._scale)
 		self.append(center_box)
 
@@ -2540,59 +2535,6 @@ class PlaybackControls(Gtk.Box):
 		self._clear_marks()
 		self._popover.popdown()
 
-class AudioFormat(Gtk.Box):
-	def __init__(self, client, settings):
-		super().__init__(halign=Gtk.Align.CENTER, margin_end=6, margin_start=6)
-		self._client=client
-		settings.bind("show-audio-format", self, "visible", Gio.SettingsBindFlags.GET)
-
-		# labels
-		self._file_type_label=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["caption"])
-		self._separator_label=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["caption"])
-		self._brate_label=Gtk.Label(xalign=1, single_line_mode=True, width_chars=5, css_classes=["caption", "numeric"])
-		self._format_label=Gtk.Label(single_line_mode=True, css_classes=["caption"])
-
-		# connect
-		self._client.emitter.connect("audio", self._on_audio)
-		self._client.emitter.connect("bitrate", self._on_bitrate)
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-
-		# packing
-		self.append(self._brate_label)
-		self.append(self._separator_label)
-		self.append(self._file_type_label)
-		self.append(self._format_label)
-
-	def _on_audio(self, emitter, audio_format):
-		if audio_format is None:
-			self._format_label.set_text("")
-		else:
-			self._format_label.set_text(" • "+str(Format(audio_format)))
-
-	def _on_bitrate(self, emitter, brate):
-		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
-		if brate is None:
-			self._brate_label.set_text("—")
-		else:
-			self._brate_label.set_text(brate)
-
-	def _on_song_changed(self, *args):
-		if (song:=self._client.currentsong()):
-			file_type=song["file"].split(".")[-1].split("/")[0].upper()
-			self._separator_label.set_text(" kb∕s • ")
-			self._file_type_label.set_text(file_type)
-		else:
-			self._file_type_label.set_text("")
-			self._separator_label.set_text(" kb∕s")
-			self._format_label.set_text("")
-
-	def _on_disconnected(self, *args):
-		self._brate_label.set_text("—")
-		self._separator_label.set_text(" kb/s")
-		self._file_type_label.set_text("")
-		self._format_label.set_text("")
-
 class VolumeControl(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.HORIZONTAL, margin_start=12, margin_end=3)
@@ -2668,11 +2610,10 @@ class Player(Adw.Bin):  # TODO audio format
 		self._client=client
 
 		# widgets
-		audio_format=AudioFormat(client, settings)
 		window_handle=Gtk.WindowHandle(child=MainCover(client))
 		self._lyrics_window=LyricsWindow(client)
 		playlist_window=PlaylistWindow(client)
-		playback_controls=PlaybackControls(client)
+		playback_controls=PlaybackControls(client, settings)
 
 		# stack
 		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
@@ -2697,7 +2638,6 @@ class Player(Adw.Bin):  # TODO audio format
 		toolbar_view.add_top_bar(header_bar)
 		toolbar_view.set_content(box)
 		toolbar_view.add_bottom_bar(playback_controls)
-		toolbar_view.add_bottom_bar(audio_format)
 		self.set_child(toolbar_view)
 
 	def _clear_title(self):
