@@ -506,16 +506,6 @@ class Duration():
 	def __float__(self):
 		return self._seconds
 
-class LastModified():
-	def __init__(self, date):
-		self._date=date
-
-	def __str__(self):
-		return GLib.DateTime.new_from_iso8601(self._date).to_local().format("%a %d %B %Y, %H∶%M")
-
-	def raw(self):
-		return self._date
-
 class MultiTag(list):
 	def __str__(self):
 		return ", ".join(self)
@@ -531,9 +521,7 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 			pass
 		elif key == "duration":
 			super().__setitem__(key, Duration(value))
-		elif key == "last-modified":
-			super().__setitem__(key, LastModified(value))
-		elif key in ("range", "file", "pos", "id", "format"):
+		elif key in ("range", "file", "pos", "id", "format", "last-modified"):
 			super().__setitem__(key, value)
 		else:
 			if isinstance(value, list):
