@@ -160,6 +160,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._handlers=[]
 		self._object_ids=[]
 		self._name_id=None
+		self._playback_mapping={"play": "Playing", "pause": "Paused", "stop": "Stopped"}
 
 		# MPRIS property mappings
 		self._prop_mapping={
@@ -197,7 +198,6 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._handlers.append(self._client.emitter.connect("repeat", self._on_loop_changed))
 		self._handlers.append(self._client.emitter.connect("single", self._on_loop_changed))
 		self._handlers.append(self._client.emitter.connect("random", self._on_random_changed))
-		self._handlers.append(self._client.emitter.connect("connected", self._on_connected))
 		self._handlers.append(self._client.emitter.connect("disconnected", self._on_disconnected))
 		for handler in self._handlers:
 			self._client.emitter.handler_block(handler)
@@ -221,7 +221,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	# setter and getter
 	def _get_playback_status(self):
 		if self._client.connected():
-			return GLib.Variant("s", {"play": "Playing", "pause": "Paused", "stop": "Stopped"}[self._client.status()["state"]])
+			return GLib.Variant("s", self._playback_mapping[self._client.status()["state"]])
 		return GLib.Variant("s", "Stopped")
 
 	def _set_loop_status(self, value):
@@ -405,37 +405,44 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				if isinstance(self._client.current_cover, FileCover):
 					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(self._client.current_cover).get_uri())
 
+	def _set_property(self, interface_name, prop, value):
+		self.PropertiesChanged(interface_name, {prop: value}, [])
+
 	def _update_property(self, interface_name, prop):
 		getter, setter=self._prop_mapping[interface_name][prop]
 		if callable(getter):
 			value=getter()
 		else:
 			value=getter
-		self.PropertiesChanged(interface_name, {prop: value}, [])
-		return value
+		self._set_property(interface_name, prop, value)
 
-	def _on_state_changed(self, *args):
-		self._update_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus")
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanGoNext")
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious")
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanSeek")
+	def _on_state_changed(self, emitter, state):
+		value=GLib.Variant("b", state != "stop")
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoNext", value)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious", value)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanSeek", value)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
 
 	def _on_song_changed(self, *args):
 		self._update_metadata()
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
-	def _on_playlist_changed(self, *args):
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanPlay")
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanPause")
+	def _on_playlist_changed(self, emitter, version, length, song_pos):
+		value=GLib.Variant("b", length > 0)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPlay", value)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPause", value)
 
-	def _on_volume_changed(self, *args):
-		self._update_property(self._MPRIS_PLAYER_IFACE, "Volume")
+	def _on_volume_changed(self, emitter, volume):
+		if volume < 0:
+			self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", 0.0))
+		else:
+			self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", volume/100))
 
 	def _on_loop_changed(self, *args):
 		self._update_property(self._MPRIS_PLAYER_IFACE, "LoopStatus")
 
-	def _on_random_changed(self, *args):
-		self._update_property(self._MPRIS_PLAYER_IFACE, "Shuffle")
+	def _on_random_changed(self, emitter, state):
+		self._set_property(self._MPRIS_PLAYER_IFACE, "Shuffle", GLib.Variant("b", state))
 
 	def _enable(self):
 		self._name_id=Gio.bus_own_name_on_connection(self._bus, self._MPRIS_NAME, Gio.BusNameOwnerFlags.NONE, None, None)
@@ -457,19 +464,21 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		if settings.get_boolean(key):
 			self._enable()
 			self._update_metadata()
-			for p in ("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle"):
-				self._update_property(self._MPRIS_PLAYER_IFACE, p)
+			for prop in ("PlaybackStatus", "Metadata", "Volume", "LoopStatus", "CanGoNext",
+					"CanGoPrevious", "CanPlay", "CanPause", "CanSeek", "Shuffle"):
+				self._update_property(self._MPRIS_PLAYER_IFACE, prop)
 		else:
 			self._disable()
 
-	def _on_connected(self, *args):
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanPlay")
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanPause")
-
 	def _on_disconnected(self, *args):
 		self._metadata={}
-		for p in ("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle","CanPlay","CanPause","CanSeek"):
-			self._update_property(self._MPRIS_PLAYER_IFACE, p)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", "Stopped"))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "Metadata", GLib.Variant("a{sv}", self._metadata))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", 0))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "LoopStatus", GLib.Variant("s", "None"))
+		for prop in ("CanGoNext","CanGoPrevious","CanPlay","CanPause","CanSeek","Shuffle"):
+			self._set_property(self._MPRIS_PLAYER_IFACE, prop, GLib.Variant("b", False))
+
 
 ######################
 # MPD client wrapper #
