@@ -181,11 +181,11 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				"Position": (self._get_position, None),
 				"MinimumRate": (GLib.Variant("d", 1.0), None),
 				"MaximumRate": (GLib.Variant("d", 1.0), None),
-				"CanGoNext": (self._get_can_next_prev, None),
-				"CanGoPrevious": (self._get_can_next_prev, None),
-				"CanPlay": (self._get_can_play_pause_seek, None),
-				"CanPause": (self._get_can_play_pause_seek, None),
-				"CanSeek": (self._get_can_play_pause_seek, None),
+				"CanGoNext": (self._get_can_next_prev_seek, None),
+				"CanGoPrevious": (self._get_can_next_prev_seek, None),
+				"CanPlay": (self._get_can_play_pause, None),
+				"CanPause": (self._get_can_play_pause, None),
+				"CanSeek": (self._get_can_next_prev_seek, None),
 				"CanControl": (GLib.Variant("b", True), None)},
 		}
 
@@ -283,7 +283,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			return GLib.Variant("x", float(status.get("elapsed", 0))*1000000)
 		return GLib.Variant("x", 0)
 
-	def _get_can_next_prev(self):
+	def _get_can_next_prev_seek(self):
 		if self._client.connected():
 			status=self._client.status()
 			if status["state"] == "stop":
@@ -292,7 +292,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				return GLib.Variant("b", True)
 		return GLib.Variant("b", False)
 
-	def _get_can_play_pause_seek(self):
+	def _get_can_play_pause(self):
 		if self._client.connected():
 			status=self._client.status()
 			if int(status["playlistlength"]) > 0:
@@ -433,14 +433,15 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._update_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus")
 		self._update_property(self._MPRIS_PLAYER_IFACE, "CanGoNext")
 		self._update_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious")
+		self._update_property(self._MPRIS_PLAYER_IFACE, "CanSeek")
 
 	def _on_song_changed(self, *args):
 		self._update_metadata()
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
 	def _on_playlist_changed(self, *args):
-		for p in ("CanPlay","CanPause","CanSeek"):
-			self._update_property(self._MPRIS_PLAYER_IFACE, p)
+		self._update_property(self._MPRIS_PLAYER_IFACE, "CanPlay")
+		self._update_property(self._MPRIS_PLAYER_IFACE, "CanPause")
 
 	def _on_volume_changed(self, *args):
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Volume")
@@ -477,8 +478,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			self._disable()
 
 	def _on_connected(self, *args):
-		for p in ("CanPlay","CanPause","CanSeek"):
-			self._update_property(self._MPRIS_PLAYER_IFACE, p)
+		self._update_property(self._MPRIS_PLAYER_IFACE, "CanPlay")
+		self._update_property(self._MPRIS_PLAYER_IFACE, "CanPause")
 
 	def _on_disconnected(self, *args):
 		self._metadata={}
