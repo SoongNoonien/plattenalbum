@@ -1237,7 +1237,7 @@ class SongList(Gtk.ListView):
 
 	def get_position(self, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is self:
+		if item is self or item is None:
 			return None
 		return item.get_first_child().get_property("position")
 
