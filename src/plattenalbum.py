@@ -192,6 +192,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		# connect
 		self._handlers.append(self._client.emitter.connect("state", self._on_state_changed))
 		self._handlers.append(self._client.emitter.connect("current-song", self._on_song_changed))
+		self._handlers.append(self._client.emitter.connect("playlist", self._on_playlist_changed))
 		self._handlers.append(self._client.emitter.connect("volume", self._on_volume_changed))
 		self._handlers.append(self._client.emitter.connect("repeat", self._on_loop_changed))
 		self._handlers.append(self._client.emitter.connect("single", self._on_loop_changed))
@@ -292,7 +293,13 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		return GLib.Variant("b", False)
 
 	def _get_can_play_pause_seek(self):
-		return GLib.Variant("b", self._client.connected())
+		if self._client.connected():
+			status=self._client.status()
+			if int(status["playlistlength"]) > 0:
+				return GLib.Variant("b", True)
+			else:
+				return GLib.Variant("b", False)
+		return GLib.Variant("b", False)
 
 	# introspect methods
 	def Introspect(self):
@@ -430,6 +437,10 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _on_song_changed(self, *args):
 		self._update_metadata()
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
+
+	def _on_playlist_changed(self, *args):
+		for p in ("CanPlay","CanPause","CanSeek"):
+			self._update_property(self._MPRIS_PLAYER_IFACE, p)
 
 	def _on_volume_changed(self, *args):
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Volume")
