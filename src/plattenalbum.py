@@ -2616,17 +2616,18 @@ class Player(Adw.Bin):
 		# connect
 		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
 		self._client.emitter.connect("current-song", self._on_song_changed)
+		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 		# packing
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		box.append(self._stack)
 		box.append(playlist_window)
-		toolbar_view=Adw.ToolbarView()
-		toolbar_view.add_top_bar(header_bar)
-		toolbar_view.set_content(box)
-		toolbar_view.add_bottom_bar(playback_controls)
-		self.set_child(toolbar_view)
+		self._toolbar_view=Adw.ToolbarView()
+		self._toolbar_view.add_top_bar(header_bar)
+		self._toolbar_view.set_content(box)
+		self._toolbar_view.add_bottom_bar(playback_controls)
+		self.set_child(self._toolbar_view)
 
 	def _clear_title(self):
 		self._title.set_title("")
@@ -2646,6 +2647,9 @@ class Player(Adw.Bin):
 			self._title.set_subtitle(str(song["artist"]))
 		else:
 			self._clear_title()
+
+	def _on_playlist_changed(self, emitter, version, length, song_pos):
+		self._toolbar_view.set_reveal_bottom_bars(length > 0)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
