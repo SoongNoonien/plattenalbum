@@ -2591,7 +2591,7 @@ class PlayerMenuButton(Gtk.MenuButton):
 			self._playback_section.remove(0)
 			self._volume_visible=False
 
-class Player(Adw.Bin):  # TODO audio format
+class Player(Adw.Bin):
 	show_lyrics=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
