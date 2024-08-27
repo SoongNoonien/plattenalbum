@@ -1046,6 +1046,38 @@ class ServerStats(Adw.Dialog):
 # general purpose widgets #
 ###########################
 
+class SongRow(Gtk.Box):
+	def __init__(self, show_track=True, **kwargs):
+		super().__init__( **kwargs)
+
+		# labels
+		self._track=Gtk.Label(xalign=1, single_line_mode=True, width_chars=3, visible=show_track, css_classes=["numeric"])
+		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
+		self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label"])
+		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
+
+		# packing
+		self.append(self._track)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
+		box.append(self._title)
+		box.append(self._subtitle)
+		self.append(box)
+		self.append(self._length)
+
+	def set_song(self, song):
+		self._track.set_text(song["track"][0])
+		title,subtitle=song.get_markup()
+		self._title.set_markup(title)
+		self._subtitle.set_visible(bool(subtitle))
+		self._subtitle.set_markup(subtitle)
+		self._length.set_text(str(song["duration"]))
+
+	def unset_song(self):
+		self._track.set_text("")
+		self._title.set_text("")
+		self._subtitle.set_text("")
+		self._length.set_text("")
+
 class ListModel(GObject.Object, Gio.ListModel):
 	def __init__(self, item_type):
 		super().__init__()
@@ -1170,37 +1202,10 @@ class SongMenu(Gtk.PopoverMenu):
 		self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
 		self.popup()
 
-class SongListRow(Gtk.Box):
+class SongListRow(SongRow):
 	position=GObject.Property(type=int, default=-1)
 	def __init__(self):
 		super().__init__(can_target=False)  # can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
-
-		# labels
-		self._track=Gtk.Label(xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric"])
-		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
-		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label"])
-		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
-
-		# packing
-		self.append(self._track)
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True)
-		box.append(self._title)
-		box.append(self._subtitle)
-		self.append(box)
-		self.append(self._length)
-
-	def set_song(self, song):
-		self._track.set_text(song["track"][0])
-		title,subtitle=song.get_markup()
-		self._title.set_markup(title)
-		self._subtitle.set_markup(subtitle)
-		self._length.set_text(str(song["duration"]))
-
-	def unset_song(self):
-		self._track.set_text("")
-		self._title.set_text("")
-		self._subtitle.set_text("")
-		self._length.set_text("")
 
 class SongList(Gtk.ListView):
 	def __init__(self):
@@ -1251,34 +1256,6 @@ class SongList(Gtk.ListView):
 
 	def get_song(self, position):
 		return self.get_model().get_item(position)
-
-class SongRow(Gtk.Box):
-	def __init__(self, song):
-		super().__init__()
-		self.song=song
-		title,subtitle=song.get_markup()
-
-		# labels
-		title_label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
-		title_label.set_markup(title)
-		subtitle_label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label"], visible=bool(subtitle))
-		subtitle_label.set_markup(subtitle)
-		length_label=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
-		length_label.set_text(str(song["duration"]))
-
-		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, valign=Gtk.Align.CENTER)
-		box.append(title_label)
-		box.append(subtitle_label)
-		self.append(box)
-		self.append(length_label)
-
-class BrowserSongRow(SongRow):
-	def __init__(self, song):
-		super().__init__(song)
-		track_label=Gtk.Label(xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric"])
-		track_label.set_text(song["track"][0])
-		self.prepend(track_label)
 
 class BrowserSongList(Gtk.ListBox):  # TODO Menu!
 	def __init__(self, client):
@@ -1404,7 +1381,8 @@ class SearchView(Gtk.Stack):
 			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
 			self._client.tagtypes("all")
 			for song in songs:
-				row=SongRow(song)
+				row=SongRow(show_track=False)
+				row.set_song(song)
 				self._song_list.append(row)
 			if songs:
 				self.set_visible_child_name("results")
@@ -1717,7 +1695,8 @@ class AlbumPage(Adw.NavigationPage):
 		else:
 			album_cover.set_from_paintable(cover.get_paintable())
 		for song in songs:
-			row=BrowserSongRow(song)
+			row=SongRow()
+			row.set_song(song)
 			song_list.append(row)
 
 		# scroll to file
