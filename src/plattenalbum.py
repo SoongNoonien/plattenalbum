@@ -554,21 +554,16 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 		else:
 			return None
 
-	def get_album_with_date(self):
-		if "date" in self:
-			return f"{self['album'][0]} ({self['date']})"
-		else:
-			return self["album"][0]
-
 	def get_markup(self):
 		if "artist" in self:
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b> • {GLib.markup_escape_text(str(self['artist']))}"
 		else:
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b>"
-		if "album" in self:
-			return f"{title}\n<small>{GLib.markup_escape_text(self.get_album_with_date())}</small>"
+		subtitle=" • ".join(filter(None, (str(self["album"]), str(self["date"]))))
+		if subtitle:
+			return (title, f"<small>{GLib.markup_escape_text(subtitle)}</small>")
 		else:
-			return f"{title}"
+			return (title, subtitle)
 
 class BinaryCover(bytes):
 	def get_paintable(self):
@@ -1182,22 +1177,29 @@ class SongListRow(Gtk.Box):
 
 		# labels
 		self._track=Gtk.Label(xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric"])
-		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
+		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
+		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label"])
 		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
 
 		# packing
 		self.append(self._track)
-		self.append(self._title)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True)
+		box.append(self._title)
+		box.append(self._subtitle)
+		self.append(box)
 		self.append(self._length)
 
 	def set_song(self, song):
 		self._track.set_text(song["track"][0])
-		self._title.set_markup(song.get_markup())
+		title,subtitle=song.get_markup()
+		self._title.set_markup(title)
+		self._subtitle.set_markup(subtitle)
 		self._length.set_text(str(song["duration"]))
 
 	def unset_song(self):
 		self._track.set_text("")
 		self._title.set_text("")
+		self._subtitle.set_text("")
 		self._length.set_text("")
 
 class SongList(Gtk.ListView):
@@ -1254,15 +1256,21 @@ class SongRow(Gtk.Box):
 	def __init__(self, song):
 		super().__init__()
 		self.song=song
+		title,subtitle=song.get_markup()
 
 		# labels
-		title_label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
-		title_label.set_markup(song.get_markup())
+		title_label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
+		title_label.set_markup(title)
+		subtitle_label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label"], visible=bool(subtitle))
+		subtitle_label.set_markup(subtitle)
 		length_label=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
 		length_label.set_text(str(song["duration"]))
 
 		# packing
-		self.append(title_label)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, valign=Gtk.Align.CENTER)
+		box.append(title_label)
+		box.append(subtitle_label)
+		self.append(box)
 		self.append(length_label)
 
 class BrowserSongRow(SongRow):
@@ -1560,7 +1568,7 @@ class AlbumListRow(Gtk.Box):
 		square_container=SquareContainer(self._cover)
 		square_container.set_valign(Gtk.Align.START)
 		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
-		self._date=Gtk.Label(single_line_mode=True)
+		self._date=Gtk.Label(single_line_mode=True, css_classes=["dim-label", "caption"])
 		self.append(square_container)
 		self.append(self._title)
 		self.append(self._date)
@@ -1700,7 +1708,7 @@ class AlbumPage(Adw.NavigationPage):
 			self.set_title(_("Unknown Album"))
 			window_title.set_title(_("Unknown Album"))
 			album_cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of an unknown album")])
-		window_title.set_subtitle(" • ".join((date, str(Duration(client.count(*tag_filter)["playtime"])))))
+		window_title.set_subtitle(" • ".join(filter(None, (date, str(Duration(client.count(*tag_filter)["playtime"]))))))
 		client.restrict_tagtypes("track", "title", "artist")
 		songs=client.find(*tag_filter)
 		client.tagtypes("all")
