@@ -1257,6 +1257,12 @@ class SongList(Gtk.ListView):
 	def get_song(self, position):
 		return self.get_model().get_item(position)
 
+class BrowserSongRow(SongRow):
+	def __init__(self, song, **kwargs):
+		super().__init__(**kwargs)
+		self.song=song
+		self.set_song(song)
+
 class BrowserSongList(Gtk.ListBox):  # TODO Menu!
 	def __init__(self, client):
 		super().__init__(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
@@ -1381,8 +1387,7 @@ class SearchView(Gtk.Stack):
 			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
 			self._client.tagtypes("all")
 			for song in songs:
-				row=SongRow(show_track=False)
-				row.set_song(song)
+				row=BrowserSongRow(song, show_track=False)
 				self._song_list.append(row)
 			if songs:
 				self.set_visible_child_name("results")
@@ -1695,8 +1700,7 @@ class AlbumPage(Adw.NavigationPage):
 		else:
 			album_cover.set_from_paintable(cover.get_paintable())
 		for song in songs:
-			row=SongRow()
-			row.set_song(song)
+			row=BrowserSongRow(song)
 			song_list.append(row)
 
 		# scroll to file
