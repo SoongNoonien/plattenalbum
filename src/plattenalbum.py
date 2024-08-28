@@ -2879,19 +2879,24 @@ class MainWindow(Adw.ApplicationWindow):
 			dialog.close()
 
 	def _on_settings(self, action, param):
-		SettingsDialog(self._client, self._settings).present(self)
+		if self.get_visible_dialog() is None:
+			SettingsDialog(self._client, self._settings).present(self)
 
 	def _on_local_connect(self, action, param):
-		LocalConnectDialog(self._settings).present(self)
+		if self.get_visible_dialog() is None:
+			LocalConnectDialog(self._settings).present(self)
 
 	def _on_remote_connect(self, action, param):
-		RemoteConnectDialog(self._settings).present(self)
+		if self.get_visible_dialog() is None:
+			RemoteConnectDialog(self._settings).present(self)
 
 	def _on_setup(self, action, param):
-		SetupDialog().present(self)
+		if self.get_visible_dialog() is None:
+			SetupDialog().present(self)
 
 	def _on_stats(self, action, param):
-		ServerStats(self._client, self._settings).present(self)
+		if self.get_visible_dialog() is None:
+			ServerStats(self._client, self._settings).present(self)
 
 	def _on_help(self, action, param):
 		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/plattenalbum/wiki/Usage").launch(self, None, None, None)
