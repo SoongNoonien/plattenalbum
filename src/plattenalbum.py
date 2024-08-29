@@ -1737,6 +1737,7 @@ class MainMenuButton(Gtk.MenuButton):
 		self.set_menu_model(menu)
 
 class Browser(Gtk.Stack):
+	show_search=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
@@ -1746,14 +1747,18 @@ class Browser(Gtk.Stack):
 		self.search_entry=Gtk.SearchEntry(placeholder_text=_("Search collection"), max_width_chars=25)
 		self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
 		search_toolbar_view=Adw.ToolbarView(content=self._search_view)
-		search_toolbar_view.add_top_bar(Adw.HeaderBar(title_widget=self.search_entry))
-		search_page=Adw.NavigationPage(child=search_toolbar_view, title=_("Search"), tag="search")
+		search_header_bar=Adw.HeaderBar(title_widget=self.search_entry)
+		search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
+		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
+		search_header_bar.pack_start(search_button)
+		search_toolbar_view.add_top_bar(search_header_bar)
 
 		# artist list
 		self._artist_list=ArtistList(client)
 		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
-		search_button=Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
 		artist_header_bar=Adw.HeaderBar()
+		search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
+		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
 		artist_header_bar.pack_start(search_button)
 		artist_header_bar.pack_end(MainMenuButton())
 		artist_toolbar_view=Adw.ToolbarView(content=artist_window)
@@ -1787,41 +1792,40 @@ class Browser(Gtk.Stack):
 		status_page_toolbar_view.add_top_bar(status_page_header_bar)
 
 		# navigation view
-		self._navigation_view=Adw.NavigationView()
-		collection_page=Adw.NavigationPage(child=breakpoint_bin, title=_("Collection"), tag="collection")
-		self._navigation_view.add(collection_page)
-		self._navigation_view.add(search_page)
+		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack.add_named(breakpoint_bin, "collection")
+		self._stack.add_named(search_toolbar_view, "search")
 
 		# connect
+		self.connect("notify::show-search", self._on_search_toggled)
 		self._albums_page.connect("album-selected", self._on_album_selected)
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
 		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
 		self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
 		self._search_view.connect("song-selected", self._on_search_song_selected)
-		search_button.connect("clicked", lambda *args: self.toggle_search())
 		self.search_entry.connect("search-started", self._on_search_started)
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
-		self._navigation_view.connect("popped", self._on_popped)
 		client.emitter.connect("disconnected", self._on_disconnected)
 		client.emitter.connect("connection-error", self._on_connection_error)
 		client.emitter.connect("connected", self._on_connected_or_updated_db)
 		client.emitter.connect("updated-db", self._on_connected_or_updated_db)
 
 		# packing
-		self.add_named(self._navigation_view, "browser")
+		self.add_named(self._stack, "browser")
 		self.add_named(status_page_toolbar_view, "empty-collection")
 
-	def toggle_search(self):
-		if self._navigation_view.get_visible_page().get_tag() == "collection":
-			self.search_entry.emit("search-started")
+	def _on_search_toggled(self, *args):
+		if self.get_property("show-search"):
+			self._stack.set_visible_child_name("search")
+			self.search_entry.grab_focus()
 		else:
-			self.search_entry.emit("stop-search")
+			self._stack.set_visible_child_name("collection")
+			self.search_entry.set_text("")
 
 	def _on_search_started(self, entry):
-		self._navigation_view.push_by_tag("search")
-		self.search_entry.grab_focus()
+		self.set_property("show-search", True)
 
 	def _on_search_changed(self, entry):
 		if (search_text:=self.search_entry.get_text()):
@@ -1831,12 +1835,7 @@ class Browser(Gtk.Stack):
 			self._search_view.clear()
 
 	def _on_search_stopped(self, widget):
-		self._navigation_view.pop_to_tag("collection")
-		self.search_entry.set_text("")
-
-	def _on_popped(self, navigation_view, page):
-		if page.get_tag() == "search":
-			self.search_entry.emit("stop-search")
+		self.set_property("show-search", False)
 
 	def _on_artist_selected(self, model, position):
 		if self._navigation_split_view.get_collapsed():
@@ -1854,27 +1853,26 @@ class Browser(Gtk.Stack):
 
 	def _on_search_artist_selected(self, widget, artist):
 		self._artist_list.select(artist)
-		self.search_entry.emit("stop-search")
-		self._navigation_view.pop_to_tag("collection")
+		self.set_property("show-search", False)
 
 	def _on_search_song_selected(self, widget, song):
 		self._artist_list.select(song["albumartist"][0])
 		album_page=AlbumPage(self._client, song["albumartist"][0], song["album"][0], song["date"][0], song["file"])
 		self._album_navigation_view.replace([self._albums_page, album_page])
-		self.search_entry.emit("stop-search")
+		self.set_property("show-search", False)
 		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
 		self.get_root().set_focus_visible(True)
 
 	def _on_disconnected(self, *args):
 		self._album_navigation_view.pop_to_tag("album_list")
 		self.set_visible_child_name("browser")
-		self.search_entry.emit("stop-search")
+		self.set_property("show-search", False)
 
 	def _on_connection_error(self, *args):
 		self.set_visible_child_name("empty-collection")
 
 	def _on_connected_or_updated_db(self, emitter, database_is_empty):
-		self.search_entry.emit("stop-search")
+		self.set_property("show-search", False)
 		if database_is_empty:
 			self.set_visible_child_name("empty-collection")
 		else:
@@ -2771,24 +2769,23 @@ class MainWindow(Adw.ApplicationWindow):
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
-		self._browser=Browser(self._client, self._settings)
+		browser=Browser(self._client, self._settings)
 		player=Player(self._client, self._settings)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
 		# actions
-		simple_actions_data=("close", "settings","local-connect","remote-connect","setup","stats","help","toggle-search")
+		simple_actions_data=("close", "settings","local-connect","remote-connect","setup","stats","help")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
 		self.add_action(Gio.PropertyAction.new("toggle-lyrics", player, "show-lyrics"))
+		self.add_action(Gio.PropertyAction.new("toggle-search", browser, "show-search"))
 
 		# search
-		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search collection"))
-		self._search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
 		# TODO see: https://gitlab.gnome.org/GNOME/gtk/-/issues/6874
-		#self._browser.search_entry.set_key_capture_widget(self)  # type to search
+		#browser.search_entry.set_key_capture_widget(self)  # type to search
 
 		# sidebar
 		sidebar=Gtk.Box()
@@ -2799,7 +2796,7 @@ class MainWindow(Adw.ApplicationWindow):
 		# split view
 		overlay_split_view=Adw.OverlaySplitView(
 			sidebar_position=Gtk.PackType.END, min_sidebar_width=300, max_sidebar_width=500, sidebar_width_fraction=0.30)
-		overlay_split_view.set_content(self._browser)
+		overlay_split_view.set_content(browser)
 		overlay_split_view.set_sidebar(sidebar)
 
 		# status page
@@ -2835,7 +2832,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
-		self._browser.search_entry.add_controller(controller_focus)
+		browser.search_entry.add_controller(controller_focus)
 
 		# connect
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
@@ -2872,9 +2869,6 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _clear_title(self):
 		self.set_title("Plattenalbum")
-
-	def _on_toggle_search(self, action, param):
-		self._browser.toggle_search()
 
 	def _on_close(self, action, param):
 		if (dialog:=self.get_visible_dialog()) is None:
@@ -2934,13 +2928,11 @@ class MainWindow(Adw.ApplicationWindow):
 		if (dialog:=self.get_visible_dialog()) is not None:
 			dialog.close()
 		self._status_page_stack.set_visible_child_name("content")
-		for action in ("stats","toggle-search"):
-			self.lookup_action(action).set_enabled(True)
+		self.lookup_action("stats").set_enabled(True)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
-		for action in ("stats","toggle-search"):
-			self.lookup_action(action).set_enabled(False)
+		self.lookup_action("stats").set_enabled(False)
 		self._updating_toast.dismiss()
 
 	def _on_connection_error(self, *args):
