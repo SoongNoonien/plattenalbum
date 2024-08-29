@@ -1582,10 +1582,10 @@ class AlbumsPage(Adw.NavigationPage):
 		self._client=client
 
 		# grid view
-		self._grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
-		self._grid_view.remove_css_class("view")
+		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
+		self.grid_view.remove_css_class("view")
 		self._selection_model=SelectionModel(Album)
-		self._grid_view.set_model(self._selection_model)
+		self.grid_view.set_model(self._selection_model)
 
 		# factory
 		def setup(factory, item):
@@ -1597,19 +1597,19 @@ class AlbumsPage(Adw.NavigationPage):
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
-		self._grid_view.set_factory(factory)
+		self.grid_view.set_factory(factory)
 
 		# breakpoint bin
 		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=336)  # TODO height_request
 		for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
 			break_point=Adw.Breakpoint()
 			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
-			break_point.add_setter(self._grid_view, "max-columns", columns)
+			break_point.add_setter(self.grid_view, "max-columns", columns)
 			breakpoint_bin.add_breakpoint(break_point)
-		breakpoint_bin.set_child(Gtk.ScrolledWindow(child=self._grid_view, hscrollbar_policy=Gtk.PolicyType.NEVER))
+		breakpoint_bin.set_child(Gtk.ScrolledWindow(child=self.grid_view, hscrollbar_policy=Gtk.PolicyType.NEVER))
 
 		# connect
-		self._grid_view.connect("activate", self._on_activate)
+		self.grid_view.connect("activate", self._on_activate)
 
 		# packing
 		toolbar_view=Adw.ToolbarView(content=breakpoint_bin)
@@ -1854,14 +1854,13 @@ class Browser(Gtk.Stack):
 	def _on_search_artist_selected(self, widget, artist):
 		self._artist_list.select(artist)
 		self.set_property("show-search", False)
+		self._albums_page.grid_view.grab_focus()
 
 	def _on_search_song_selected(self, widget, song):
 		self._artist_list.select(song["albumartist"][0])
 		album_page=AlbumPage(self._client, song["albumartist"][0], song["album"][0], song["date"][0], song["file"])
 		self._album_navigation_view.replace([self._albums_page, album_page])
 		self.set_property("show-search", False)
-		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
-		self.get_root().set_focus_visible(True)
 
 	def _on_disconnected(self, *args):
 		self._album_navigation_view.pop_to_tag("album_list")
