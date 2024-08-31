@@ -2612,6 +2612,7 @@ class Player(Adw.Bin):
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -2647,6 +2648,10 @@ class Player(Adw.Bin):
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
+		self.set_property("show-lyrics", False)
+
+	def _on_connected(self, *args):
+		self.set_property("show-lyrics", False)
 
 ###################
 # MPD gio actions #
