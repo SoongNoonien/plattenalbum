@@ -120,6 +120,12 @@
 			<property name="accelerator">KP_Divide</property>
 			</object>
 		</child>
+		<child>
+			<object class="GtkShortcutsShortcut">
+			<property name="title" translatable="yes">A‐B Loop</property>
+			<property name="accelerator">l</property>
+			</object>
+		</child>
 		</object>
 	</child>
 	<child>

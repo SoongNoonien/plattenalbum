@@ -600,6 +600,7 @@ class EventEmitter(GObject.Object):
 		"single-oneshot": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+		"a-b-loop": (GObject.SignalFlags.RUN_FIRST, None, (float,float)),
 	}
 
 class Client(MPDClient):
@@ -612,6 +613,8 @@ class Client(MPDClient):
 		self._start_idle_id=None
 		self._music_directory=None
 		self.current_cover=None
+		self._first_mark=None
+		self._second_mark=None
 		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
 		self._socket_path=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
@@ -834,6 +837,27 @@ class Client(MPDClient):
 			self.tagtypes("enable", tag)
 		self.command_list_end()
 
+	def a_b_loop(self):
+		value=float(self.status()["elapsed"])
+		if self._first_mark is None:
+			self._first_mark=value
+			self.emitter.emit("a-b-loop", value, -1.0)
+		elif self._second_mark is None:
+			if value < self._first_mark:
+				self._second_mark=self._first_mark
+				self._first_mark=value
+			else:
+				self._second_mark=value
+			self.emitter.emit("a-b-loop", self._first_mark, self._second_mark)
+		else:
+			self._clear_marks()
+
+	def _clear_marks(self):
+		if self._first_mark is not None:
+			self.emitter.emit("a-b-loop", -1.0, -1.0)
+		self._first_mark=None
+		self._second_mark=None
+
 	def _database_is_empty(self):
 		return self.stats().get("songs", "0") == "0"
 
@@ -848,8 +872,13 @@ class Client(MPDClient):
 			if "songid" in diff:
 				self.current_cover=self.get_cover(self.currentsong()["file"])
 				self.emitter.emit("current-song", status["song"], status["songid"], status["state"])
+				self._clear_marks()
 			if "elapsed" in diff:
-				self.emitter.emit("elapsed", float(diff["elapsed"]), float(status.get("duration", 0.0)))
+				elapsed=float(diff["elapsed"])
+				self.emitter.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
+				if self._second_mark is not None:
+					if elapsed > self._second_mark:
+						self.seekcur(self._first_mark)
 			if "bitrate" in diff:
 				if diff["bitrate"] == "0":
 					self.emitter.emit("bitrate", None)
@@ -870,6 +899,7 @@ class Client(MPDClient):
 				if "songid" == key:
 					self.current_cover=None
 					self.emitter.emit("current-song", None, None, status["state"])
+					self._clear_marks()
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
 				elif "updating_db" == key:
@@ -2364,8 +2394,6 @@ class PlaybackControls(Gtk.Box):
 		super().__init__(hexpand=True, orientation=Gtk.Orientation.VERTICAL)
 		self.add_css_class("toolbar")
 		self._client=client
-		self._first_mark=None
-		self._second_mark=None
 
 		# buttons
 		playback_buttons=PlaybackButtons(client)
@@ -2390,17 +2418,12 @@ class PlaybackControls(Gtk.Box):
 		# event controllers
 		controller_motion=Gtk.EventControllerMotion()
 		self._scale.add_controller(controller_motion)
-		elapsed_button1_controller=Gtk.GestureClick(button=1)
-		self._elapsed.add_controller(elapsed_button1_controller)
-		rest_button1_controller=Gtk.GestureClick(button=1)
-		self._rest.add_controller(rest_button1_controller)
+
 
 		# connect
 		self._scale.connect("change-value", self._on_change_value)
 		controller_motion.connect("motion", self._on_pointer_motion)
 		controller_motion.connect("leave", self._on_pointer_leave)
-		elapsed_button1_controller.connect("released", self._on_label_button_released)
-		rest_button1_controller.connect("released", self._on_label_button_released)
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed", self._refresh)
@@ -2426,9 +2449,6 @@ class PlaybackControls(Gtk.Box):
 			self._scale.set_value(elapsed)
 			self._elapsed.set_text(str(Duration(elapsed)))
 			self._rest.set_text(str(Duration(duration-elapsed)))
-			if self._second_mark is not None:
-				if elapsed > self._second_mark:
-					self._client.seekcur(self._first_mark)
 		else:
 			self._disable()
 			self._elapsed.set_text(str(Duration(elapsed)))
@@ -2439,12 +2459,6 @@ class PlaybackControls(Gtk.Box):
 		self._scale.set_range(0, 0)
 		self._elapsed.set_text("")
 		self._rest.set_text("")
-		self._clear_marks()
-
-	def _clear_marks(self, *args):
-		self._first_mark=None
-		self._second_mark=None
-		self._scale.clear_marks()
 
 	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
 		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
@@ -2493,28 +2507,11 @@ class PlaybackControls(Gtk.Box):
 	def _on_pointer_leave(self, *args):
 		self._popover.popdown()
 
-	def _on_label_button_released(self, controller, n_press, x, y):
-		if n_press == 1:
-			value=self._scale.get_value()
-			if self._first_mark is None:
-				self._first_mark=value
-				self._scale.add_mark(value, Gtk.PositionType.BOTTOM, None)
-			elif self._second_mark is None:
-				if value < self._first_mark:
-					self._second_mark=self._first_mark
-					self._first_mark=value
-				else:
-					self._second_mark=value
-				self._scale.add_mark(value, Gtk.PositionType.BOTTOM, None)
-			else:
-				self._clear_marks()
-
 	def _on_state(self, emitter, state):
 		if state == "stop":
 			self._disable()
 
 	def _on_song_changed(self, *args):
-		self._clear_marks()
 		self._popover.popdown()
 
 class VolumeControl(Gtk.Box):
@@ -2663,7 +2660,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client=client
 
 		# actions
-		self._disable_on_stop_data=["next","prev","seek-forward","seek-backward"]
+		self._disable_on_stop_data=["next","prev","seek-forward","seek-backward","a-b-loop"]
 		self._disable_no_song=["tidy","enqueue"]
 		self._enable_on_reconnect_data=["toggle-play","stop","clear","update","disconnect"]
 		self._data=self._disable_on_stop_data+self._disable_no_song+self._enable_on_reconnect_data
@@ -2706,6 +2703,9 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 
 	def _on_seek_backward(self, action, param):
 		self._client.seekcur("-10")
+
+	def _on_a_b_loop(self, action, param):
+		self._client.a_b_loop()
 
 	def _on_tidy(self, action, param):
 		self._client.tidy_playlist()
@@ -2777,6 +2777,7 @@ class MainWindow(Adw.ApplicationWindow):
 		player=Player(self._client, self._settings)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
+		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
 		simple_actions_data=("close", "settings","local-connect","remote-connect","setup","stats","help")
@@ -2789,6 +2790,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# search
 		# TODO see: https://gitlab.gnome.org/GNOME/gtk/-/issues/6874
+		# TODO this is not compatible with the A-B loop shortcut
 		#browser.search_entry.set_key_capture_widget(self)  # type to search
 
 		# sidebar
@@ -2848,6 +2850,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.emitter.connect("connection_error", self._on_connection_error)
 		self._client.emitter.connect("updating-db", self._on_updating_db)
 		self._client.emitter.connect("updated-db", self._on_updated_db)
+		self._client.emitter.connect("a-b-loop", self._on_a_b_loop)
 
 		# packing
 		self._toast_overlay=Adw.ToastOverlay(child=self._status_page_stack)
@@ -2906,8 +2909,10 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_search_entry_focus_event(self, controller, focus):
 		if focus:
 			self.get_application().set_accels_for_action("mpd.toggle-play", [])
+			self.get_application().set_accels_for_action("mpd.a-b-loop", [])
 		else:
 			self.get_application().set_accels_for_action("mpd.toggle-play", ["space"])
+			self.get_application().set_accels_for_action("mpd.a-b-loop", ["l"])
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
@@ -2952,6 +2957,17 @@ class MainWindow(Adw.ApplicationWindow):
 		self._updating_toast.dismiss()
 		self._toast_overlay.add_toast(self._updated_toast)
 
+	def _on_a_b_loop(self, emitter, first_mark, second_mark):
+		if first_mark < 0.0:
+			title=_("Cleared A‐B loop")
+		else:
+			if second_mark < 0.0:
+				title=_("Started A‐B loop at {start}").format(start=Duration(first_mark))
+			else:
+				title=_("Activated A‐B loop from {start} to {end}").format(start=Duration(first_mark), end=Duration(second_mark))
+		self._a_b_loop_toast.set_title(title)
+		self._toast_overlay.add_toast(self._a_b_loop_toast)
+
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
 			self.set_cursor_from_name("progress")
@@ -2994,7 +3010,7 @@ class Plattenalbum(Adw.Application):
 			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
 			("mpd.single-oneshot", ["<Control>p"]),
-			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
+			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),("mpd.a-b-loop", ["l"]),
 			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])
 		)
 		for action, accels in action_accels:
