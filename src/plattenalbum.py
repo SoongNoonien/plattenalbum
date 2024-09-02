@@ -2441,7 +2441,7 @@ class PlaybackControls(Gtk.Box):
 		self.append(center_box)
 
 	def _refresh(self, emitter, elapsed, duration):
-		self._scale.set_sensitive(True)
+		self._scale.set_visible(True)
 		if duration > 0:
 			if elapsed > duration:  # fix display error
 				elapsed=duration
@@ -2455,7 +2455,7 @@ class PlaybackControls(Gtk.Box):
 
 	def _disable(self, *args):
 		self._popover.popdown()
-		self._scale.set_sensitive(False)
+		self._scale.set_visible(False)
 		self._scale.set_range(0, 0)
 		self._elapsed.set_text("")
 		self._rest.set_text("")
