@@ -2240,10 +2240,8 @@ class LetrasParser(HTMLParser):
 			self.text+=data+"\n"
 
 class LyricsWindow(Gtk.Stack):
-	def __init__(self, client):
+	def __init__(self):
 		super().__init__()
-		self._client=client
-		self._displayed_song_file=None
 
 		# status pages
 		no_lyrics_status_page=Adw.StatusPage(icon_name="lyrics-symbolic", title=_("No Lyrics Found"))
@@ -2265,11 +2263,6 @@ class LyricsWindow(Gtk.Stack):
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
 
-		# connect
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._song_changed=self._client.emitter.connect("current-song", self._refresh)
-		self._client.emitter.handler_block(self._song_changed)
-
 		# packing
 		scroll=Gtk.ScrolledWindow(child=self._text_view)
 		self.add_named(scroll, "lyrics")
@@ -2277,13 +2270,15 @@ class LyricsWindow(Gtk.Stack):
 		self.add_named(connection_error_status_page, "connection-error")
 		self.add_named(searching_status_page, "searching")
 
-	def enable(self, *args):
-		self._refresh()
-		self._client.emitter.handler_unblock(self._song_changed)
-		self._text_view.grab_focus()
+	def clear(self):
+		self.set_visible_child_name("no-lyrics")
+		self._text_buffer.set_text("")
+		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
-	def disable(self, *args):
-		self._client.emitter.handler_block(self._song_changed)
+	def display(self, song):
+		self.set_visible_child_name("searching")
+		update_thread=threading.Thread(target=self._display_lyrics, kwargs={"song": song}, daemon=True)
+		update_thread.start()
 
 	def _get_lyrics(self, title, artist):
 		title=urllib.parse.quote_plus(title)
@@ -2299,27 +2294,12 @@ class LyricsWindow(Gtk.Stack):
 		try:
 			text=self._get_lyrics(song["title"][0], song["artist"][0])
 			idle_add(self._text_buffer.set_text, text)
+			idle_add(self._text_view.update_property, [Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
 			idle_add(self.set_visible_child_name, "lyrics")
 		except urllib.error.URLError:
 			idle_add(self.set_visible_child_name, "connection-error")
 		except ValueError:
 			idle_add(self.set_visible_child_name, "no-lyrics")
-
-	def _refresh(self, *args):
-		if self._client.connected() and (song:=self._client.currentsong()):
-			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
-			self.set_visible_child_name("searching")
-			update_thread=threading.Thread(target=self._display_lyrics, kwargs={"song": song}, daemon=True)
-			update_thread.start()
-		else:
-			self.set_visible_child_name("no-lyrics")
-			self._text_buffer.set_text("")
-			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
-
-	def _on_disconnected(self, *args):
-		self.set_visible_child_name("no-lyrics")
-		self._text_buffer.set_text("")
-		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 class MainCover(Gtk.Picture):
 	def __init__(self, client):
@@ -2594,7 +2574,7 @@ class Player(Adw.Bin):
 
 		# widgets
 		window_handle=Gtk.WindowHandle(child=MainCover(client))
-		self._lyrics_window=LyricsWindow(client)
+		self._lyrics_window=LyricsWindow()
 		playlist_window=PlaylistWindow(client)
 		playback_controls=PlaybackControls(client, settings)
 
@@ -2632,17 +2612,22 @@ class Player(Adw.Bin):
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
 			self._stack.set_visible_child_name("lyrics")
-			self._lyrics_window.enable()
+			if self._client.connected() and (song:=self._client.currentsong()):
+				self._lyrics_window.display(song)
 		else:
 			self._stack.set_visible_child_name("cover")
-			self._lyrics_window.disable()
+			self._lyrics_window.clear()
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
 			self._title.set_title(song["title"][0])
 			self._title.set_subtitle(str(song["artist"]))
+			if self.get_property("show-lyrics"):
+				self._lyrics_window.display(song)
 		else:
 			self._clear_title()
+			if self.get_property("show-lyrics"):
+				self._lyrics_window.clear()
 
 	def _on_playlist_changed(self, emitter, version, length, song_pos):
 		self._toolbar_view.set_reveal_bottom_bars(length > 0)
