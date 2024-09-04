@@ -2327,30 +2327,18 @@ class MainCover(Gtk.Picture):
 # player #
 ##########
 
-class PlaybackButtons(Gtk.Box):
+class PlayButton(Gtk.Button):
 	def __init__(self, client):
-		super().__init__(spacing=6)
-
-		# widgets
-		self._play_button=Gtk.Button(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
-		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
-		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
-
-		# connect
+		super().__init__(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
 		client.emitter.connect("state", self._on_state)
-
-		# packing
-		self.append(prev_button)
-		self.append(self._play_button)
-		self.append(next_button)
 
 	def _on_state(self, emitter, state):
 		if state == "play":
-			self._play_button.set_property("icon-name", "media-playback-pause-symbolic")
-			self._play_button.set_tooltip_text(_("Pause"))
+			self.set_property("icon-name", "media-playback-pause-symbolic")
+			self.set_tooltip_text(_("Pause"))
 		else:
-			self._play_button.set_property("icon-name", "media-playback-start-symbolic")
-			self._play_button.set_tooltip_text(_("Play"))
+			self.set_property("icon-name", "media-playback-start-symbolic")
+			self.set_tooltip_text(_("Play"))
 
 class BitRate(Gtk.Label):
 	def __init__(self, client, settings):
@@ -2380,7 +2368,13 @@ class PlaybackControls(Gtk.Box):
 		self._client=client
 
 		# buttons
-		playback_buttons=PlaybackButtons(client)
+		buttons=Gtk.Box(spacing=6)
+		play_button=PlayButton(client)
+		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
+		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
+		buttons.append(prev_button)
+		buttons.append(play_button)
+		buttons.append(next_button)
 
 		# labels
 		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
@@ -2418,7 +2412,7 @@ class PlaybackControls(Gtk.Box):
 		box.append(self._rest)
 		box.append(BitRate(client, settings))
 		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
-		center_box.set_center_widget(playback_buttons)
+		center_box.set_center_widget(buttons)
 		center_box.set_start_widget(self._elapsed)
 		center_box.set_end_widget(box)
 		self.append(self._scale)
