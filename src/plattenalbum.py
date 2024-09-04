@@ -2251,6 +2251,9 @@ class LyricsWindow(Gtk.Stack):
 		connection_error_status_page=Adw.StatusPage(
 			icon_name="network-wired-disconnected-symbolic", title=_("Connection Error"), description=_("Check your network connection"))
 		connection_error_status_page.add_css_class("compact")
+		searching_status_page=Adw.StatusPage(title=_("Searching…"))
+		spinner=Adw.SpinnerPaintable(widget=searching_status_page)
+		searching_status_page.set_paintable(spinner)
 
 		# text view
 		self._text_view=Gtk.TextView(
@@ -2272,6 +2275,7 @@ class LyricsWindow(Gtk.Stack):
 		self.add_named(scroll, "lyrics")
 		self.add_named(no_lyrics_status_page, "no-lyrics")
 		self.add_named(connection_error_status_page, "connection-error")
+		self.add_named(searching_status_page, "searching")
 
 	def enable(self, *args):
 		self._refresh()
@@ -2295,6 +2299,7 @@ class LyricsWindow(Gtk.Stack):
 		try:
 			text=self._get_lyrics(song["title"][0], song["artist"][0])
 			idle_add(self._text_buffer.set_text, text)
+			idle_add(self.set_visible_child_name, "lyrics")
 		except urllib.error.URLError:
 			idle_add(self.set_visible_child_name, "connection-error")
 		except ValueError:
@@ -2303,8 +2308,7 @@ class LyricsWindow(Gtk.Stack):
 	def _refresh(self, *args):
 		if self._client.connected() and (song:=self._client.currentsong()):
 			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
-			self._text_buffer.set_text(_("searching…"))
-			self.set_visible_child_name("lyrics")
+			self.set_visible_child_name("searching")
 			update_thread=threading.Thread(target=self._display_lyrics, kwargs={"song": song}, daemon=True)
 			update_thread.start()
 		else:
