@@ -559,11 +559,7 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b> • {GLib.markup_escape_text(str(self['artist']))}"
 		else:
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b>"
-		subtitle=" • ".join(filter(None, (str(self["album"]), str(self["date"]))))
-		if subtitle:
-			return (title, f"<small>{GLib.markup_escape_text(subtitle)}</small>")
-		else:
-			return (title, subtitle)
+		return (title, " • ".join(filter(None, (str(self["album"]), str(self["date"])))))
 
 class BinaryCover(bytes):
 	def get_paintable(self):
@@ -1083,7 +1079,7 @@ class SongRow(Gtk.Box):
 		# labels
 		self._track=Gtk.Label(xalign=1, single_line_mode=True, width_chars=3, visible=show_track, css_classes=["numeric"])
 		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
-		self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label"])
+		self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label", "caption"])
 		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
 
 		# packing
@@ -1099,7 +1095,7 @@ class SongRow(Gtk.Box):
 		title,subtitle=song.get_markup()
 		self._title.set_markup(title)
 		self._subtitle.set_visible(bool(subtitle))
-		self._subtitle.set_markup(subtitle)
+		self._subtitle.set_text(subtitle)
 		self._length.set_text(str(song["duration"]))
 
 	def unset_song(self):
