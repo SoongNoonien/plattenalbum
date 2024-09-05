@@ -2144,13 +2144,13 @@ class PlaylistWindow(Gtk.Stack):
 
 		# widgets
 		self._playlist_view=PlaylistView(self._client)
-		self._scroll=Gtk.ScrolledWindow(child=self._playlist_view, hexpand=True, vexpand=True)
-		self._adj=self._scroll.get_vadjustment()
+		self.scroll=Gtk.ScrolledWindow(child=self._playlist_view, hexpand=True, vexpand=True)
+		self._adj=self.scroll.get_vadjustment()
 		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
 		status_page.add_css_class("compact")
 
 		# scroll button
-		overlay=Gtk.Overlay(child=self._scroll)
+		overlay=Gtk.Overlay(child=self.scroll)
 		self._scroll_button=Gtk.Button(css_classes=["osd", "circular"], tooltip_text=_("Scroll to Current Song"),
 			margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER, visible=False)
 		overlay.add_overlay(self._scroll_button)
@@ -2201,7 +2201,7 @@ class PlaylistWindow(Gtk.Stack):
 				self._scroll_button.set_icon_name("go-up-symbolic")
 				self._scroll_button.set_valign(Gtk.Align.START)
 				self._scroll_button.set_visible(True)
-			elif self._adj.get_value() < value-self._scroll.get_height():
+			elif self._adj.get_value() < value-self.scroll.get_height():
 				self._scroll_button.set_icon_name("go-down-symbolic")
 				self._scroll_button.set_valign(Gtk.Align.END)
 				self._scroll_button.set_visible(True)
@@ -2562,14 +2562,17 @@ class PlayerMenuButton(Gtk.MenuButton):
 
 class Player(Adw.Bin):
 	show_lyrics=GObject.Property(type=bool, default=False)
+	sheet_mode=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
+		self.add_css_class("view")
 		self._client=client
 
 		# widgets
 		window_handle=Gtk.WindowHandle(child=MainCover(client))
 		self._lyrics_window=LyricsWindow()
 		playlist_window=PlaylistWindow(client)
+		self.bind_property("sheet-mode", playlist_window.scroll, "propagate-natural-height", GObject.BindingFlags.DEFAULT)
 		playback_controls=PlaybackControls(client, settings)
 
 		# stack
@@ -2632,6 +2635,73 @@ class Player(Adw.Bin):
 
 	def _on_connected(self, *args):
 		self.set_property("show-lyrics", False)
+
+##############
+# player bar #
+##############
+
+class ProgressBar(Gtk.ProgressBar):
+	def __init__(self, client):
+		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.FILL)
+		self.add_css_class("osd")
+		client.emitter.connect("state", self._on_state)
+		client.emitter.connect("elapsed", self._on_elapsed)
+
+	def _on_state(self, emitter, state):
+		if state == "stop":
+			self.set_visible(False)
+			self.set_fraction(0.0)
+
+	def _on_elapsed(self, emitter, elapsed, duration):
+		if duration > 0:
+			self.set_visible(True)
+			self.set_fraction(elapsed/duration)
+		else:
+			self.set_visible(False)
+			self.set_fraction(0.0)
+
+class PlayerBar(Gtk.Overlay):
+	def __init__(self, client):
+		super().__init__()
+		self._client=client
+
+		# widgets
+		progress_bar=ProgressBar(client)
+		play_button=PlayButton(client)
+		self._title=Gtk.Label(xalign=0, css_classes=["heading"])
+		self._subtitle=Gtk.Label(xalign=0, css_classes=["dim-label", "caption"])
+
+		# connect
+		self._client.emitter.connect("current-song", self._on_song_changed)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+
+		# packing
+		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True)
+		title_box.append(self._title)
+		title_box.append(self._subtitle)
+		inner_box=Gtk.Box()
+		inner_box.add_css_class("toolbar")
+		inner_box.append(title_box)
+		inner_box.append(play_button)
+		outer_box=Gtk.Box()
+		outer_box.append(MainCover(client))
+		outer_box.append(inner_box)
+		self.add_overlay(progress_bar)
+		self.set_child(outer_box)
+
+	def _clear_title(self):
+		self._title.set_text("")
+		self._subtitle.set_text("")
+
+	def _on_song_changed(self, emitter, song, songid, state):
+		if (song:=self._client.currentsong()):
+			self._title.set_text(song["title"][0])
+			self._subtitle.set_text(str(song["artist"]))
+		else:
+			self._clear_title()
+
+	def _on_disconnected(self, *args):
+		self._clear_title()
 
 ###################
 # MPD gio actions #
@@ -2745,7 +2815,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 
 class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
-		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=480, width_request=620, **kwargs)
+		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=480, width_request=360, **kwargs)
 		self.set_default_icon_name("de.wagnermartin.Plattenalbum")
 		self._client=client
 		self._settings=settings
@@ -2776,17 +2846,37 @@ class MainWindow(Adw.ApplicationWindow):
 		# TODO this is not compatible with the A-B loop shortcut
 		#browser.search_entry.set_key_capture_widget(self)  # type to search
 
-		# sidebar
-		sidebar=Gtk.Box()
-		sidebar.add_css_class("view")
+		# sidebar layout
+		sidebar=Gtk.Box(css_classes=["view"])
 		sidebar.append(Gtk.Separator())
-		sidebar.append(player)
-
-		# split view
+		sidebar.append(Adw.LayoutSlot(id="player"))
 		overlay_split_view=Adw.OverlaySplitView(
 			sidebar_position=Gtk.PackType.END, min_sidebar_width=300, max_sidebar_width=500, sidebar_width_fraction=0.30)
-		overlay_split_view.set_content(browser)
+		overlay_split_view.set_content(Adw.LayoutSlot(id="browser"))
 		overlay_split_view.set_sidebar(sidebar)
+		sidebar_layout=Adw.Layout(content=overlay_split_view, name="sidebar")
+
+		# bottom sheet layout
+		content_bin=Adw.Bin(child=Adw.LayoutSlot(id="browser"))
+		bottom_sheet=Adw.BottomSheet(
+			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client), show_drag_handle=False, full_width=False)
+		bottom_sheet.bind_property("bottom-bar-height", content_bin, "margin-bottom", GObject.BindingFlags.DEFAULT)
+		bottom_sheet_layout=Adw.Layout(content=bottom_sheet, name="bottom-sheet")
+
+		# multi layout view
+		multi_layout_view=Adw.MultiLayoutView()
+		multi_layout_view.add_layout(sidebar_layout)
+		multi_layout_view.add_layout(bottom_sheet_layout)
+		multi_layout_view.set_child("browser", browser)
+		multi_layout_view.set_child("player", player)
+		multi_layout_view.set_layout_name("sidebar")
+
+		# breakpoint
+		break_point=Adw.Breakpoint()
+		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 620sp"))
+		break_point.add_setter(multi_layout_view, "layout-name", "bottom-sheet")
+		break_point.add_setter(player, "sheet-mode", True)
+		self.add_breakpoint(break_point)
 
 		# status page
 		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
@@ -2816,7 +2906,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# stack
 		self._status_page_stack=Gtk.Stack()
-		self._status_page_stack.add_named(overlay_split_view, "content")
+		self._status_page_stack.add_named(multi_layout_view, "content")
 		self._status_page_stack.add_named(status_page_toolbar_view, "status-page")
 
 		# event controller
