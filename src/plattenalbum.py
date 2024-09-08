@@ -2855,7 +2855,7 @@ class MainWindow(Adw.ApplicationWindow):
 		# bottom sheet layout
 		content_bin=Adw.Bin(child=Adw.LayoutSlot(id="browser"))
 		bottom_sheet=Adw.BottomSheet(
-			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client), show_drag_handle=False, full_width=False)
+			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client), show_drag_handle=False)
 		bottom_sheet.bind_property("bottom-bar-height", content_bin, "margin-bottom", GObject.BindingFlags.DEFAULT)
 		bottom_sheet_layout=Adw.Layout(content=bottom_sheet, name="bottom-sheet")
 
