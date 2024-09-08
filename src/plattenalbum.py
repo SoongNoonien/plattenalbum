@@ -1887,6 +1887,8 @@ class Browser(Gtk.Stack):
 		album_page=AlbumPage(self._client, song["albumartist"][0], song["album"][0], song["date"][0], song["file"])
 		self._album_navigation_view.replace([self._albums_page, album_page])
 		self.set_property("show-search", False)
+		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
+		self.get_root().set_focus_visible(True)
 
 	def _on_disconnected(self, *args):
 		self._album_navigation_view.pop_to_tag("album_list")
