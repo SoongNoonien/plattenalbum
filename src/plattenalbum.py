@@ -160,6 +160,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._handlers=[]
 		self._object_ids=[]
 		self._name_id=None
+		self._playback_mapping={"play": "Playing", "pause": "Paused", "stop": "Stopped"}
 
 		# MPRIS property mappings
 		self._prop_mapping={
@@ -181,22 +182,22 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				"Position": (self._get_position, None),
 				"MinimumRate": (GLib.Variant("d", 1.0), None),
 				"MaximumRate": (GLib.Variant("d", 1.0), None),
-				"CanGoNext": (self._get_can_next_prev, None),
-				"CanGoPrevious": (self._get_can_next_prev, None),
-				"CanPlay": (self._get_can_play_pause_seek, None),
-				"CanPause": (self._get_can_play_pause_seek, None),
-				"CanSeek": (self._get_can_play_pause_seek, None),
+				"CanGoNext": (self._get_can_next_prev_seek, None),
+				"CanGoPrevious": (self._get_can_next_prev_seek, None),
+				"CanPlay": (self._get_can_play_pause, None),
+				"CanPause": (self._get_can_play_pause, None),
+				"CanSeek": (self._get_can_next_prev_seek, None),
 				"CanControl": (GLib.Variant("b", True), None)},
 		}
 
 		# connect
 		self._handlers.append(self._client.emitter.connect("state", self._on_state_changed))
 		self._handlers.append(self._client.emitter.connect("current-song", self._on_song_changed))
+		self._handlers.append(self._client.emitter.connect("playlist", self._on_playlist_changed))
 		self._handlers.append(self._client.emitter.connect("volume", self._on_volume_changed))
 		self._handlers.append(self._client.emitter.connect("repeat", self._on_loop_changed))
 		self._handlers.append(self._client.emitter.connect("single", self._on_loop_changed))
 		self._handlers.append(self._client.emitter.connect("random", self._on_random_changed))
-		self._handlers.append(self._client.emitter.connect("connected", self._on_connected))
 		self._handlers.append(self._client.emitter.connect("disconnected", self._on_disconnected))
 		for handler in self._handlers:
 			self._client.emitter.handler_block(handler)
@@ -220,8 +221,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	# setter and getter
 	def _get_playback_status(self):
 		if self._client.connected():
-			status=self._client.status()
-			return GLib.Variant("s", {"play": "Playing", "pause": "Paused", "stop": "Stopped"}[status["state"]])
+			return GLib.Variant("s", self._playback_mapping[self._client.status()["state"]])
 		return GLib.Variant("s", "Stopped")
 
 	def _set_loop_status(self, value):
@@ -242,10 +242,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			if status["repeat"] == "1":
 				if status.get("single", "0") == "0":
 					return GLib.Variant("s", "Playlist")
-				else:
-					return GLib.Variant("s", "Track")
-			else:
-				return GLib.Variant("s", "None")
+				return GLib.Variant("s", "Track")
+			return GLib.Variant("s", "None")
 		return GLib.Variant("s", "None")
 
 	def _set_shuffle(self, value):
@@ -257,10 +255,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	def _get_shuffle(self):
 		if self._client.connected():
-			if self._client.status()["random"] == "1":
-				return GLib.Variant("b", True)
-			else:
-				return GLib.Variant("b", False)
+			return GLib.Variant("b", self._client.status()["random"] == "1")
 		return GLib.Variant("b", False)
 
 	def _get_metadata(self):
@@ -278,21 +273,18 @@ class MPRISInterface:  # TODO emit Seeked if needed
 
 	def _get_position(self):
 		if self._client.connected():
-			status=self._client.status()
-			return GLib.Variant("x", float(status.get("elapsed", 0))*1000000)
+			return GLib.Variant("x", float(self._client.status().get("elapsed", 0))*1000000)
 		return GLib.Variant("x", 0)
 
-	def _get_can_next_prev(self):
+	def _get_can_next_prev_seek(self):
 		if self._client.connected():
-			status=self._client.status()
-			if status["state"] == "stop":
-				return GLib.Variant("b", False)
-			else:
-				return GLib.Variant("b", True)
+			return GLib.Variant("b", self._client.status()["state"] != "stop")
 		return GLib.Variant("b", False)
 
-	def _get_can_play_pause_seek(self):
-		return GLib.Variant("b", self._client.connected())
+	def _get_can_play_pause(self):
+		if self._client.connected():
+			return GLib.Variant("b", int(self._client.status()["playlistlength"]) > 0)
+		return GLib.Variant("b", False)
 
 	# introspect methods
 	def Introspect(self):
@@ -413,32 +405,44 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				if isinstance(self._client.current_cover, FileCover):
 					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(self._client.current_cover).get_uri())
 
+	def _set_property(self, interface_name, prop, value):
+		self.PropertiesChanged(interface_name, {prop: value}, [])
+
 	def _update_property(self, interface_name, prop):
 		getter, setter=self._prop_mapping[interface_name][prop]
 		if callable(getter):
 			value=getter()
 		else:
 			value=getter
-		self.PropertiesChanged(interface_name, {prop: value}, [])
-		return value
+		self._set_property(interface_name, prop, value)
 
-	def _on_state_changed(self, *args):
-		self._update_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus")
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanGoNext")
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious")
+	def _on_state_changed(self, emitter, state):
+		value=GLib.Variant("b", state != "stop")
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoNext", value)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious", value)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanSeek", value)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
 
 	def _on_song_changed(self, *args):
 		self._update_metadata()
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
-	def _on_volume_changed(self, *args):
-		self._update_property(self._MPRIS_PLAYER_IFACE, "Volume")
+	def _on_playlist_changed(self, emitter, version, length, song_pos):
+		value=GLib.Variant("b", length > 0)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPlay", value)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPause", value)
+
+	def _on_volume_changed(self, emitter, volume):
+		if volume < 0:
+			self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", 0.0))
+		else:
+			self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", volume/100))
 
 	def _on_loop_changed(self, *args):
 		self._update_property(self._MPRIS_PLAYER_IFACE, "LoopStatus")
 
-	def _on_random_changed(self, *args):
-		self._update_property(self._MPRIS_PLAYER_IFACE, "Shuffle")
+	def _on_random_changed(self, emitter, state):
+		self._set_property(self._MPRIS_PLAYER_IFACE, "Shuffle", GLib.Variant("b", state))
 
 	def _enable(self):
 		self._name_id=Gio.bus_own_name_on_connection(self._bus, self._MPRIS_NAME, Gio.BusNameOwnerFlags.NONE, None, None)
@@ -460,19 +464,21 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		if settings.get_boolean(key):
 			self._enable()
 			self._update_metadata()
-			for p in ("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle"):
-				self._update_property(self._MPRIS_PLAYER_IFACE, p)
+			for prop in ("PlaybackStatus", "Metadata", "Volume", "LoopStatus", "CanGoNext",
+					"CanGoPrevious", "CanPlay", "CanPause", "CanSeek", "Shuffle"):
+				self._update_property(self._MPRIS_PLAYER_IFACE, prop)
 		else:
 			self._disable()
 
-	def _on_connected(self, *args):
-		for p in ("CanPlay","CanPause","CanSeek"):
-			self._update_property(self._MPRIS_PLAYER_IFACE, p)
-
 	def _on_disconnected(self, *args):
 		self._metadata={}
-		for p in ("PlaybackStatus","CanGoNext","CanGoPrevious","Metadata","Volume","LoopStatus","Shuffle","CanPlay","CanPause","CanSeek"):
-			self._update_property(self._MPRIS_PLAYER_IFACE, p)
+		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", "Stopped"))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "Metadata", GLib.Variant("a{sv}", self._metadata))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", 0))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "LoopStatus", GLib.Variant("s", "None"))
+		for prop in ("CanGoNext","CanGoPrevious","CanPlay","CanPause","CanSeek","Shuffle"):
+			self._set_property(self._MPRIS_PLAYER_IFACE, prop, GLib.Variant("b", False))
+
 
 ######################
 # MPD client wrapper #
@@ -506,39 +512,6 @@ class Duration():
 	def __float__(self):
 		return self._seconds
 
-class LastModified():
-	def __init__(self, date):
-		self._date=date
-
-	def __str__(self):
-		return GLib.DateTime.new_from_iso8601(self._date).to_local().format("%a %d %B %Y, %H∶%M")
-
-	def raw(self):
-		return self._date
-
-class Format():
-	def __init__(self, audio_format):
-		self._format=audio_format
-
-	def __str__(self):
-		# see: https://www.musicpd.org/doc/html/user.html#audio-output-format
-		samplerate, bits, channels=self._format.split(":")
-		if bits == "f":
-			bits="32fp"
-		try:
-			int_chan=int(channels)
-		except ValueError:
-			int_chan=0
-		try:
-			freq=locale.str(int(samplerate)/1000)
-		except ValueError:
-			freq=samplerate
-		channels=ngettext("{channels} channel", "{channels} channels", int_chan).format(channels=int_chan)
-		return f"{freq} kHz • {bits} bit • {channels}"
-
-	def raw(self):
-		return self._format
-
 class MultiTag(list):
 	def __str__(self):
 		return ", ".join(self)
@@ -554,11 +527,7 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 			pass
 		elif key == "duration":
 			super().__setitem__(key, Duration(value))
-		elif key == "format":
-			super().__setitem__(key, Format(value))
-		elif key == "last-modified":
-			super().__setitem__(key, LastModified(value))
-		elif key in ("range", "file", "pos", "id"):
+		elif key in ("range", "file", "pos", "id", "format", "last-modified"):
 			super().__setitem__(key, value)
 		else:
 			if isinstance(value, list):
@@ -585,21 +554,12 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 		else:
 			return None
 
-	def get_album_with_date(self):
-		if "date" in self:
-			return f"{self['album'][0]} ({self['date']})"
-		else:
-			return self["album"][0]
-
 	def get_markup(self):
 		if "artist" in self:
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b> • {GLib.markup_escape_text(str(self['artist']))}"
 		else:
 			title=f"<b>{GLib.markup_escape_text(self['title'][0])}</b>"
-		if "album" in self:
-			return f"{title}\n<small>{GLib.markup_escape_text(self.get_album_with_date())}</small>"
-		else:
-			return f"{title}"
+		return (title, " • ".join(filter(None, (str(self["album"]), str(self["date"])))))
 
 class BinaryCover(bytes):
 	def get_paintable(self):
@@ -635,8 +595,8 @@ class EventEmitter(GObject.Object):
 		"single": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"single-oneshot": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"audio": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+		"a-b-loop": (GObject.SignalFlags.RUN_FIRST, None, (float,float)),
 	}
 
 class Client(MPDClient):
@@ -649,6 +609,8 @@ class Client(MPDClient):
 		self._start_idle_id=None
 		self._music_directory=None
 		self.current_cover=None
+		self._first_mark=None
+		self._second_mark=None
 		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
 		self._socket_path=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
@@ -871,6 +833,27 @@ class Client(MPDClient):
 			self.tagtypes("enable", tag)
 		self.command_list_end()
 
+	def a_b_loop(self):
+		value=float(self.status()["elapsed"])
+		if self._first_mark is None:
+			self._first_mark=value
+			self.emitter.emit("a-b-loop", value, -1.0)
+		elif self._second_mark is None:
+			if value < self._first_mark:
+				self._second_mark=self._first_mark
+				self._first_mark=value
+			else:
+				self._second_mark=value
+			self.emitter.emit("a-b-loop", self._first_mark, self._second_mark)
+		else:
+			self._clear_marks()
+
+	def _clear_marks(self):
+		if self._first_mark is not None:
+			self.emitter.emit("a-b-loop", -1.0, -1.0)
+		self._first_mark=None
+		self._second_mark=None
+
 	def _database_is_empty(self):
 		return self.stats().get("songs", "0") == "0"
 
@@ -885,8 +868,13 @@ class Client(MPDClient):
 			if "songid" in diff:
 				self.current_cover=self.get_cover(self.currentsong()["file"])
 				self.emitter.emit("current-song", status["song"], status["songid"], status["state"])
+				self._clear_marks()
 			if "elapsed" in diff:
-				self.emitter.emit("elapsed", float(diff["elapsed"]), float(status.get("duration", 0.0)))
+				elapsed=float(diff["elapsed"])
+				self.emitter.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
+				if self._second_mark is not None:
+					if elapsed > self._second_mark:
+						self.seekcur(self._first_mark)
 			if "bitrate" in diff:
 				if diff["bitrate"] == "0":
 					self.emitter.emit("bitrate", None)
@@ -894,9 +882,8 @@ class Client(MPDClient):
 					self.emitter.emit("bitrate", diff["bitrate"])
 			if "volume" in diff:
 				self.emitter.emit("volume", float(diff["volume"]))
-			for key in ("state", "audio"):
-				if key in diff:
-					self.emitter.emit(key, diff[key])
+			if "state" in diff:
+				self.emitter.emit("state", diff["state"])
 			if "single" in diff:
 				self.emitter.emit("single", diff["single"] == "1")
 				self.emitter.emit("single-oneshot", diff["single"] == "oneshot")
@@ -908,14 +895,13 @@ class Client(MPDClient):
 				if "songid" == key:
 					self.current_cover=None
 					self.emitter.emit("current-song", None, None, status["state"])
+					self._clear_marks()
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
 				elif "updating_db" == key:
 					self.emitter.emit("updated-db", self._database_is_empty())
 				elif "bitrate" == key:
 					self.emitter.emit("bitrate", None)
-				elif "audio" == key:
-					self.emitter.emit("audio", None)
 			self._last_status=status
 		except (ConnectionError, ConnectionResetError) as e:
 			self.disconnect()
@@ -943,7 +929,7 @@ class ViewSettings(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("View"))
 		toggle_data=(
-			(_("Show Audio _Format"), "show-audio-format", ""),
+			(_("_Show Bit Rate"), "show-bit-rate", ""),
 		)
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
@@ -1076,7 +1062,7 @@ class ServerStats(Adw.Dialog):
 			list_box.append(row)
 
 		# packing
-		clamp=Adw.Clamp(child=list_box, margin_top=12, margin_bottom=18, margin_start=18, margin_end=18)
+		clamp=Adw.Clamp(child=list_box, margin_top=12, margin_bottom=18, margin_start=12, margin_end=12)
 		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
 		toolbar_view=Adw.ToolbarView(content=scroll)
 		toolbar_view.add_top_bar(Adw.HeaderBar())
@@ -1085,6 +1071,38 @@ class ServerStats(Adw.Dialog):
 ###########################
 # general purpose widgets #
 ###########################
+
+class SongRow(Gtk.Box):
+	def __init__(self, show_track=True, **kwargs):
+		super().__init__( **kwargs)
+
+		# labels
+		self._track=Gtk.Label(xalign=1, single_line_mode=True, width_chars=3, visible=show_track, css_classes=["numeric"])
+		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
+		self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label", "caption"])
+		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
+
+		# packing
+		self.append(self._track)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
+		box.append(self._title)
+		box.append(self._subtitle)
+		self.append(box)
+		self.append(self._length)
+
+	def set_song(self, song):
+		self._track.set_text(song["track"][0])
+		title,subtitle=song.get_markup()
+		self._title.set_markup(title)
+		self._subtitle.set_visible(bool(subtitle))
+		self._subtitle.set_text(subtitle)
+		self._length.set_text(str(song["duration"]))
+
+	def unset_song(self):
+		self._track.set_text("")
+		self._title.set_text("")
+		self._subtitle.set_text("")
+		self._length.set_text("")
 
 class ListModel(GObject.Object, Gio.ListModel):
 	def __init__(self, item_type):
@@ -1210,30 +1228,10 @@ class SongMenu(Gtk.PopoverMenu):
 		self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
 		self.popup()
 
-class SongListRow(Gtk.Box):
+class SongListRow(SongRow):
 	position=GObject.Property(type=int, default=-1)
 	def __init__(self):
 		super().__init__(can_target=False)  # can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
-
-		# labels
-		self._track=Gtk.Label(xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric"])
-		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
-		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
-
-		# packing
-		self.append(self._track)
-		self.append(self._title)
-		self.append(self._length)
-
-	def set_song(self, song):
-		self._track.set_text(song["track"][0])
-		self._title.set_markup(song.get_markup())
-		self._length.set_text(str(song["duration"]))
-
-	def unset_song(self):
-		self._track.set_text("")
-		self._title.set_text("")
-		self._length.set_text("")
 
 class SongList(Gtk.ListView):
 	def __init__(self):
@@ -1278,22 +1276,27 @@ class SongList(Gtk.ListView):
 
 	def get_position(self, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is self:
+		if item is self or item is None:
 			return None
 		return item.get_first_child().get_property("position")
 
 	def get_song(self, position):
 		return self.get_model().get_item(position)
 
-class BrowserSongList(SongList):
+class BrowserSongRow(SongRow):
+	def __init__(self, song, **kwargs):
+		super().__init__(**kwargs)
+		self.song=song
+		self.set_song(song)
+
+class BrowserSongList(Gtk.ListBox):  # TODO Menu!
 	def __init__(self, client):
-		super().__init__()
+		super().__init__(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
 		self._client=client
 		self._activate_on_release=False
 
 		# menu
 		self._menu=SongMenu(client)
-		self._menu.set_parent(self)
 
 		# action group
 		action_group=Gio.SimpleActionGroup()
@@ -1316,69 +1319,47 @@ class BrowserSongList(SongList):
 		self.add_controller(drag_source)
 
 		# connect
-		self.connect("activate", self._on_activate)
+		self.connect("row-activated", self._on_row_activated)
 		button_controller.connect("pressed", self._on_button_pressed)
-		button_controller.connect("stopped", self._on_button_stopped)
-		button_controller.connect("released", self._on_button_released)
 		long_press_controller.connect("pressed", self._on_long_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
 
-	def clear(self):
-		self._menu.popdown()
-		self.get_model().clear()
+	def _open_menu(self, row, x, y):
+		self._menu.unparent()
+		self._menu.set_parent(row)
+		point=Graphene.Point.zero()
+		point.x,point.y=x,y
+		computed_point,point=self.compute_point(row, point)
+		if computed_point:
+			self._menu.open(row.get_child().song["file"], point.x, point.y)
 
-	def append(self, data):
-		self.get_model().append(data)
-
-	def _on_activate(self, listview, pos):
-		self._client.file_to_playlist(self.get_model().get_item(pos)["file"], "play")
+	def _on_row_activated(self, list_box, row):
+		self._client.file_to_playlist(row.get_child().song["file"], "play")
 
 	def _on_button_pressed(self, controller, n_press, x, y):
-		if (position:=self.get_position(x,y)) is not None:
-			if controller.get_current_button() == 1 and n_press == 1:
-				self._activate_on_release=True
-			elif controller.get_current_button() == 2 and n_press == 1:
-				self._client.file_to_playlist(self.get_song(position)["file"], "append")
+		if (row:=self.get_row_at_y(y)) is not None:
+			if controller.get_current_button() == 2 and n_press == 1:
+				self._client.file_to_playlist(row.get_child().song["file"], "append")
 			elif controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(self.get_song(position)["file"], x, y)
-
-	def _on_button_stopped(self, controller):
-		self._activate_on_release=False
-
-	def _on_button_released(self, controller, n_press, x, y):
-		if self._activate_on_release and (position:=self.get_position(x,y)) is not None:
-			self._client.file_to_playlist(self.get_song(position)["file"], "play")
-		self._activate_on_release=False
+				self._open_menu(row, x, y)
 
 	def _on_long_pressed(self, controller, x, y):
-		if (position:=self.get_position(x,y)) is not None:
-			self._menu.open(self.get_song(position)["file"], x, y)
+		if (row:=self.get_row_at_y(y)) is not None:
+			self._open_menu(row, x, y)
 
 	def _on_menu(self, action, state):
-		self._menu.open(self.get_focus_song()["file"], *self.get_focus_popup_point())
+		row=self.get_focus_child()
+		self._menu.unparent()
+		self._menu.set_parent(row)
+		self._menu.open(row.get_child().song["file"], 0, 0)
 
 	def _on_drag_prepare(self, drag_source, x, y):
-		if (position:=self.get_position(x,y)) is not None:
-			return Gdk.ContentProvider.new_for_value(self.get_model().get_item(position))
+		if (row:=self.get_row_at_y(y)) is not None:
+			return Gdk.ContentProvider.new_for_value(row.get_child().song)
 
 ###########
 # browser #
 ###########
-
-class SearchSongRow(Gtk.Box):
-	def __init__(self, song):
-		super().__init__()
-		self.song=song
-
-		# labels
-		title_label=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, hexpand=True)
-		title_label.set_markup(song.get_markup())
-		length_label=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
-		length_label.set_text(str(song["duration"]))
-
-		# packing
-		self.append(title_label)
-		self.append(length_label)
 
 class SearchView(Gtk.Stack):
 	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -1388,12 +1369,12 @@ class SearchView(Gtk.Stack):
 		self._client=client
 
 		# artist list
-		self._artist_list=Gtk.ListBox(activate_on_single_click=True, selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
 		self._artist_list.add_css_class("rich-list")
 		self._artist_list.add_css_class("boxed-list")
 
 		# song list
-		self._song_list=Gtk.ListBox(activate_on_single_click=True, selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._song_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
 		self._song_list.add_css_class("rich-list")
 		self._song_list.add_css_class("boxed-list")
 
@@ -1416,34 +1397,31 @@ class SearchView(Gtk.Stack):
 		self._song_list.connect("row-activated", self._on_song_activate)
 
 		# packing
-		self.add_named(Gtk.ScrolledWindow(child=Adw.Clamp(child=box)), "results")
 		self.add_named(status_page, "no-results")
+		self.add_named(Gtk.ScrolledWindow(child=Adw.Clamp(child=box)), "results")
 
 	def clear(self):
 		self._artist_list.remove_all()
 		self._song_list.remove_all()
-		self.set_visible_child_name("results")
+		self.set_visible_child_name("no-results")
 
 	def search(self, search_text, artists):
 		self.clear()
 		if (keywords:=search_text.split()):
-			self._client.restrict_tagtypes("track", "title", "artist", "albumartist", "album", "date")
+			self._client.restrict_tagtypes("title", "artist", "albumartist", "album", "date")
 			expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in keywords))
 			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
 			self._client.tagtypes("all")
 			for song in songs:
-				row=SearchSongRow(song)
+				row=BrowserSongRow(song, show_track=False)
 				self._song_list.append(row)
 			if songs:
+				self.set_visible_child_name("results")
 				artists=filter(lambda x: all(keyword.casefold() in x.name.casefold() for keyword in keywords), artists)
 				for artist in itertools.islice(artists, 20):  # TODO adjust number of results
 					label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, label=artist.name)
 					self._artist_list.append(label)
 				self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
-			else:  # if no songs were found there also won't be any artists matching the keywords
-				self.set_visible_child_name("no-results")
-		else:
-			self.set_visible_child_name("no-results")
 
 	def _on_artist_activate(self, list_box, row):
 		self.emit("artist-selected", row.get_child().get_label())
@@ -1599,7 +1577,7 @@ class AlbumListRow(Gtk.Box):
 		square_container=SquareContainer(self._cover)
 		square_container.set_valign(Gtk.Align.START)
 		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
-		self._date=Gtk.Label(single_line_mode=True)
+		self._date=Gtk.Label(single_line_mode=True, css_classes=["dim-label", "caption"])
 		self.append(square_container)
 		self.append(self._title)
 		self.append(self._date)
@@ -1622,12 +1600,18 @@ class AlbumListRow(Gtk.Box):
 				album.cover=cover.get_paintable()
 		self._cover.set_paintable(album.cover)
 
-class AlbumList(Gtk.GridView):
+class AlbumsPage(Adw.NavigationPage):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client, settings):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
+		super().__init__(title="Album List", tag="album_list")  # TODO title
 		self._settings=settings
 		self._client=client
+
+		# grid view
+		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
+		self.grid_view.remove_css_class("view")
+		self._selection_model=SelectionModel(Album)
+		self.grid_view.set_model(self._selection_model)
 
 		# factory
 		def setup(factory, item):
@@ -1639,14 +1623,24 @@ class AlbumList(Gtk.GridView):
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
-		self.set_factory(factory)
+		self.grid_view.set_factory(factory)
 
-		# model
-		self._selection_model=SelectionModel(Album)
-		self.set_model(self._selection_model)
+		# breakpoint bin
+		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=336)  # TODO height_request
+		for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
+			break_point=Adw.Breakpoint()
+			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
+			break_point.add_setter(self.grid_view, "max-columns", columns)
+			breakpoint_bin.add_breakpoint(break_point)
+		breakpoint_bin.set_child(Gtk.ScrolledWindow(child=self.grid_view, hscrollbar_policy=Gtk.PolicyType.NEVER))
 
 		# connect
-		self.connect("activate", self._on_activate)
+		self.grid_view.connect("activate", self._on_activate)
+
+		# packing
+		toolbar_view=Adw.ToolbarView(content=breakpoint_bin)
+		toolbar_view.add_top_bar(Adw.HeaderBar())
+		self.set_child(toolbar_view)
 
 	def clear(self, *args):
 		self._selection_model.clear()
@@ -1664,6 +1658,7 @@ class AlbumList(Gtk.GridView):
 	def display(self, artist):
 		self._settings.set_property("cursor-watch", True)
 		self._selection_model.clear()
+		self.set_title(artist)
 		# ensure list is empty
 		main=GLib.main_context_default()
 		while main.pending():
@@ -1672,239 +1667,241 @@ class AlbumList(Gtk.GridView):
 		self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
 		self._settings.set_property("cursor-watch", False)
 
-	def select(self, name, date):
-		for i, album in enumerate(self._selection_model):
-			if album.name == name and album.date == date:
-				self.scroll_to(i, Gtk.ListScrollFlags.FOCUS, None)
-				self.emit("album-selected", album.artist, album.name, album.date)
-				return
-
 	def _on_activate(self, widget, pos):
 		album=self._selection_model.get_item(pos)
 		self.emit("album-selected", album.artist, album.name, album.date)
 
-class AlbumView(Gtk.Box):
-	__gsignals__={"close": (GObject.SignalFlags.RUN_FIRST, None, ())}
-	def __init__(self, client):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL)
-		self._client=client
-		self._tag_filter=()
+class AlbumPage(Adw.NavigationPage):
+	def __init__(self, client, albumartist, album, date, file=None):
+		super().__init__()
+		tag_filter=("albumartist", albumartist, "album", album, "date", date)
 
 		# songs list
-		self.song_list=BrowserSongList(self._client)
-		clamp=Adw.ClampScrollable(child=self.song_list)
-		clamp.add_css_class("view")
-		scroll=Gtk.ScrolledWindow(child=clamp, vexpand=True)
-		scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		song_list=BrowserSongList(client)
+		song_list.add_css_class("rich-list")
+		song_list.add_css_class("boxed-list")
+
+		# header bar
+		header_bar=Adw.HeaderBar()
+		window_title=Adw.WindowTitle()
+		header_bar.set_title_widget(window_title)
 
 		# buttons
-		self._buttons=Gtk.Box(spacing=6)
-		data=((_("Append"), "list-add-symbolic", "append"),
-			(_("Play"), "media-playback-start-symbolic", "play")
+		data=((_("Play"), "media-playback-start-symbolic", "play"),
+			(_("Append"), "list-add-symbolic", "append")
 		)
 		for tooltip, icon_name, mode in data:
 			button=Gtk.Button(icon_name=icon_name, tooltip_text=tooltip)
-			button.add_css_class("circular")
-			button.connect("clicked", self._on_button_clicked, mode)
-			self._buttons.append(button)
+			button.connect("clicked", lambda widget, mode: client.filter_to_playlist(tag_filter, mode), mode)
+			header_bar.pack_end(button)
 
 		# cover
-		self._cover=Gtk.Picture()
-
-		# labels
-		self._title=Gtk.Label(xalign=0, wrap=True, css_classes=["heading"])
-		self._date=Gtk.Label(xalign=0, single_line_mode=True)
-		self._duration=Gtk.Label(xalign=0, wrap=True)
-
-		# event controller
-		button1_controller=Gtk.GestureClick(button=1)
-		self._cover.add_controller(button1_controller)
-
-		# connect
-		button1_controller.connect("released", self._on_button1_released)
+		album_cover=Gtk.Image(width_request=200, height_request=200)
 
 		# packing
-		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START, margin_top=9)
-		title_box.append(self._title)
-		title_box.append(self._date)
-		control_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.END, margin_bottom=9, spacing=6)
-		control_box.append(self._duration)
-		control_box.append(self._buttons)
-		header=Gtk.Grid(column_homogeneous=True, column_spacing=12, margin_end=12)
-		header.attach(self._cover, 0, 0, 1, 2)
-		header.attach(title_box, 1, 0, 1, 1)
-		header.attach(control_box, 1, 1, 1, 1)
-		self.append(Adw.Clamp(child=header))
-		self.append(Gtk.Separator())
-		self.append(scroll)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+		box.append(album_cover)
+		box.append(Adw.Clamp(child=song_list))
+		self._scroll=Gtk.ScrolledWindow(child=box)#, vexpand=True)
+		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		toolbar_view=Adw.ToolbarView(content=self._scroll)
+		toolbar_view.add_top_bar(header_bar)
+		self.set_child(toolbar_view)
 
-	def display(self, albumartist, album, date):
+		# populate
 		if album:
-			self._title.set_text(album)
-			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album)])
+			self.set_title(album)
+			window_title.set_title(album)
+			album_cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of {album}").format(album=album)])
 		else:
-			self._title.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Album"))}</i>')
-			self._cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of an unknown album")])
-		self._date.set_text(date)
-		self.song_list.clear()
-		self._tag_filter=("albumartist", albumartist, "album", album, "date", date)
-		count=self._client.count(*self._tag_filter)
-		duration=str(Duration(count["playtime"]))
-		length=int(count["songs"])
-		text=ngettext("{number} song ({duration})", "{number} songs ({duration})", length).format(number=length, duration=duration)
-		self._duration.set_text(text)
-		self._client.restrict_tagtypes("track", "title", "artist")
-		songs=self._client.find(*self._tag_filter)
-		self._client.tagtypes("all")
-		self.song_list.append(songs)
-		self.song_list.scroll_to(0, Gtk.ListScrollFlags.NONE, None)
-		if (cover:=self._client.get_cover(songs[0]["file"])) is None:
-			self._cover.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
+			self.set_title(_("Unknown Album"))
+			window_title.set_title(_("Unknown Album"))
+			album_cover.update_property([Gtk.AccessibleProperty.LABEL], [_("Album cover of an unknown album")])
+		window_title.set_subtitle(" • ".join(filter(None, (date, str(Duration(client.count(*tag_filter)["playtime"]))))))
+		client.restrict_tagtypes("track", "title", "artist")
+		songs=client.find(*tag_filter)
+		client.tagtypes("all")
+		if (cover:=client.get_cover(songs[0]["file"])) is None:
+			album_cover.set_from_paintable(lookup_icon(FALLBACK_COVER, 1024))
 		else:
-			self._cover.set_paintable(cover.get_paintable())
+			album_cover.set_from_paintable(cover.get_paintable())
+		for song in songs:
+			row=BrowserSongRow(song)
+			song_list.append(row)
 
-	def select(self, file):
-		for i, song in enumerate(self.song_list.get_model()):
-			if song["file"] == file:
-				self.song_list.scroll_to(i, Gtk.ListScrollFlags.FOCUS, None)
+		# scroll to file
+		if file is not None:
+			for i, song in enumerate(songs):
+				if song["file"] == file:
+					row=song_list.get_row_at_index(i)
+					GLib.idle_add(self._scroll_to, row)
+					break
 
-	def _on_button1_released(self, controller, n_press, x, y):
-		if self._cover.contains(x, y):
-			self.emit("close")
+	def _scroll_to(self, row):
+		row.grab_focus()
+		computed_point,point=row.compute_point(self._scroll.get_child(), Graphene.Point.zero())
+		if computed_point:
+			adj=self._scroll.get_vadjustment()
+			value=point.y-self._scroll.get_height()*0.4
+			if value >= adj.get_value():
+				adj.set_value(value)
+		return False
 
-	def _on_button_clicked(self, widget, mode):
-		self._client.filter_to_playlist(self._tag_filter, mode)
+class MainMenuButton(Gtk.MenuButton):
+	def __init__(self):
+		super().__init__(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True)
+		app_section=Gio.Menu()
+		app_section.append(_("_Preferences"), "win.settings")
+		app_section.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
+		app_section.append(_("_Help"), "win.help")
+		app_section.append(_("_About Plattenalbum"), "app.about")
+		menu=Gio.Menu()
+		menu.append(_("_Disconnect"), "mpd.disconnect")
+		menu.append(_("_Update Database"), "mpd.update")
+		menu.append(_("_Server Statistics"), "win.stats")
+		menu.append_section(None, app_section)
+		self.set_menu_model(menu)
 
-class BreakpointBin(Adw.BreakpointBin):
-	def __init__(self, grid):
-		super().__init__(width_request=320, height_request=336)  # TODO height_request
-		for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
-			break_point=Adw.Breakpoint()
-			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
-			break_point.add_setter(grid, "max-columns", columns)
-			self.add_breakpoint(break_point)
-
-class Browser(Gtk.Box):
-	__gsignals__={"stop-search": (GObject.SignalFlags.RUN_FIRST, None, ())}
+class Browser(Gtk.Stack):
+	show_search=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL)
+		super().__init__()
+		self._client=client
 
-		# widgets
+		# search
+		self._search_view=SearchView(client)
+		self.search_entry=Gtk.SearchEntry(placeholder_text=_("Search collection"), max_width_chars=25)
+		self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
+		search_toolbar_view=Adw.ToolbarView(content=self._search_view)
+		search_header_bar=Adw.HeaderBar(title_widget=self.search_entry)
+		search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
+		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
+		search_header_bar.pack_start(search_button)
+		search_toolbar_view.add_top_bar(search_header_bar)
+
+		# artist list
 		self._artist_list=ArtistList(client)
-		self._album_list=AlbumList(client, settings)
-		artist_window=Gtk.ScrolledWindow(child=self._artist_list, hexpand=True)
-		album_window=Gtk.ScrolledWindow(child=self._album_list, hscrollbar_policy=Gtk.PolicyType.NEVER)
-		self._album_view=AlbumView(client)
-		self._search_window=SearchView(client)
+		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
+		artist_header_bar=Adw.HeaderBar()
+		search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
+		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
+		artist_header_bar.pack_start(search_button)
+		artist_header_bar.pack_end(MainMenuButton())
+		artist_toolbar_view=Adw.ToolbarView(content=artist_window)
+		artist_toolbar_view.add_top_bar(artist_header_bar)
+		artist_page=Adw.NavigationPage(child=artist_toolbar_view, title=_("Artists"), tag="artists")
+
+		# album list
+		self._albums_page=AlbumsPage(client, settings)
 
 		# navigation view
-		self._navigation_view=Adw.NavigationView()
-		albums_page=Adw.NavigationPage(child=album_window, title="Album List", tag="album_list")  # TODO title
-		self._navigation_view.add(albums_page)
-		album_page=Adw.NavigationPage(child=self._album_view, title="Album View", tag="album_view")  # TODO title
-		self._navigation_view.add(album_page)
-
-		# album list breakpoint bin
-		album_list_breakpoint_bin=BreakpointBin(self._album_list)
-		album_list_breakpoint_bin.set_child(self._navigation_view)
+		self._album_navigation_view=Adw.NavigationView()
+		self._album_navigation_view.add(self._albums_page)
+		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title="Albums", tag="albums")  # TODO title
 
 		# split view
-		self._overlay_split_view=Adw.OverlaySplitView(sidebar=artist_window, content=album_list_breakpoint_bin)
-		sidebar_button=Gtk.ToggleButton(icon_name="sidebar-show-symbolic", tooltip_text=_("Artists"))
-		sidebar_button.bind_property("active", self._overlay_split_view, "show-sidebar", GObject.BindingFlags.BIDIRECTIONAL)
-		self.sidebar_button_revealer=Gtk.Revealer(reveal_child=True, visible=False, transition_type=Gtk.RevealerTransitionType.CROSSFADE)
-		self.sidebar_button_revealer.set_child(sidebar_button)
+		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
 
 		# breakpoint bin
 		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=336)  # TODO height_request
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
-		break_point.add_setter(self._overlay_split_view, "collapsed", True)
-		break_point.add_setter(self.sidebar_button_revealer, "visible", True)
+		break_point.add_setter(self._navigation_split_view, "collapsed", True)
 		breakpoint_bin.add_breakpoint(break_point)
-		breakpoint_bin.set_child(self._overlay_split_view)
+		breakpoint_bin.set_child(self._navigation_split_view)
 
 		# status page
 		status_page=Adw.StatusPage(title=_("Collection is Empty"), icon_name="folder-music-symbolic")
+		status_page_header_bar=Adw.HeaderBar(show_title=False)
+		status_page_header_bar.pack_end(MainMenuButton())
+		status_page_toolbar_view=Adw.ToolbarView(content=status_page)
+		status_page_toolbar_view.add_top_bar(status_page_header_bar)
 
-		# stacks
-		# TODO names
-		self._collection_stack=Gtk.Stack()
-		self._collection_stack.add_named(breakpoint_bin, "browser")
-		self._collection_stack.add_named(status_page, "empty-collection")
-		self._main_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-		self._main_stack.add_named(self._collection_stack, "collection")
-		self._main_stack.add_named(self._search_window, "search")
+		# navigation view
+		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack.add_named(breakpoint_bin, "collection")
+		self._stack.add_named(search_toolbar_view, "search")
 
 		# connect
-		self._album_list.connect("album-selected", self._on_album_selected)
-		self._album_view.connect("close", lambda *args: self._navigation_view.pop_to_tag("album_list"))
+		self.connect("notify::show-search", self._on_search_toggled)
+		self._albums_page.connect("album-selected", self._on_album_selected)
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
 		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
-		self._artist_list.artist_selection_model.connect("clear", self._album_list.clear)
-		self._search_window.connect("artist-selected", self._on_search_artist_selected)
-		self._search_window.connect("song-selected", self._on_search_song_selected)
+		self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
+		self._search_view.connect("artist-selected", self._on_search_artist_selected)
+		self._search_view.connect("song-selected", self._on_search_song_selected)
+		self.search_entry.connect("search-started", self._on_search_started)
+		self.search_entry.connect("search-changed", self._on_search_changed)
+		self.search_entry.connect("stop-search", self._on_search_stopped)
 		client.emitter.connect("disconnected", self._on_disconnected)
 		client.emitter.connect("connection-error", self._on_connection_error)
 		client.emitter.connect("connected", self._on_connected_or_updated_db)
 		client.emitter.connect("updated-db", self._on_connected_or_updated_db)
 
 		# packing
-		self.append(self._main_stack)
+		self.add_named(self._stack, "browser")
+		self.add_named(status_page_toolbar_view, "empty-collection")
 
-	def search(self, search_text):
-		if search_text:
-			self.sidebar_button_revealer.set_reveal_child(False)
-			self._main_stack.set_visible_child_name("search")
-			self._search_window.search(search_text, self._artist_list.artist_selection_model)
+	def _on_search_toggled(self, *args):
+		if self.get_property("show-search"):
+			self._stack.set_visible_child_name("search")
+			self.search_entry.grab_focus()
 		else:
-			self.sidebar_button_revealer.set_reveal_child(True)
-			self._main_stack.set_visible_child_name("collection")
-			self._search_window.clear()
+			self._stack.set_visible_child_name("collection")
+			self.search_entry.set_text("")
+
+	def _on_search_started(self, entry):
+		self.set_property("show-search", True)
+
+	def _on_search_changed(self, entry):
+		if (search_text:=self.search_entry.get_text()):
+			self.search_entry.grab_focus()
+			self._search_view.search(search_text, self._artist_list.artist_selection_model)
+		else:
+			self._search_view.clear()
+
+	def _on_search_stopped(self, widget):
+		self.set_property("show-search", False)
 
 	def _on_artist_selected(self, model, position):
-		if self._overlay_split_view.get_collapsed():
-			self._overlay_split_view.set_show_sidebar(False)
-		self._navigation_view.pop_to_tag("album_list")
-		self._album_list.display(model.get_artist(position))
+		if self._navigation_split_view.get_collapsed():
+			self._navigation_split_view.set_show_content(True)
+		self._album_navigation_view.replace_with_tags(["album_list"])
+		self._albums_page.display(model.get_artist(position))
 
 	def _on_artist_reselected(self, model):
-		if self._overlay_split_view.get_collapsed():
-			self._overlay_split_view.set_show_sidebar(False)
-		self._navigation_view.pop_to_tag("album_list")
+		if self._navigation_split_view.get_collapsed():
+			self._navigation_split_view.set_show_content(True)
+		self._album_navigation_view.pop_to_tag("album_list")
 
 	def _on_album_selected(self, widget, *tags):
-		self._album_view.display(*tags)
-		self._navigation_view.push_by_tag("album_view")
-		self._album_view.song_list.grab_focus()
+		self._album_navigation_view.push(AlbumPage(self._client, *tags))
 
 	def _on_search_artist_selected(self, widget, artist):
 		self._artist_list.select(artist)
-		self.emit("stop-search")
-		self._main_stack.set_visible_child_name("collection")
+		self.set_property("show-search", False)
+		self._albums_page.grid_view.grab_focus()
 
 	def _on_search_song_selected(self, widget, song):
 		self._artist_list.select(song["albumartist"][0])
-		self._album_list.select(song["album"][0], song["date"][0])
-		self._album_view.select(song["file"])
-		self.emit("stop-search")
-		self._main_stack.set_visible_child_name("collection")
-		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
-		self.get_root().set_focus_visible(True)
+		album_page=AlbumPage(self._client, song["albumartist"][0], song["album"][0], song["date"][0], song["file"])
+		self._album_navigation_view.replace([self._albums_page, album_page])
+		self.set_property("show-search", False)
 
 	def _on_disconnected(self, *args):
-		self._navigation_view.pop_to_tag("album_list")
-		self._collection_stack.set_visible_child_name("browser")
+		self._album_navigation_view.pop_to_tag("album_list")
+		self.set_visible_child_name("browser")
+		self.set_property("show-search", False)
 
 	def _on_connection_error(self, *args):
-		self._collection_stack.set_visible_child_name("empty-collection")
+		self.set_visible_child_name("empty-collection")
 
 	def _on_connected_or_updated_db(self, emitter, database_is_empty):
-		self.emit("stop-search")
+		self.set_property("show-search", False)
 		if database_is_empty:
-			self._collection_stack.set_visible_child_name("empty-collection")
+			self.set_visible_child_name("empty-collection")
 		else:
-			self._collection_stack.set_visible_child_name("browser")
+			self.set_visible_child_name("browser")
 
 ############
 # playlist #
@@ -2143,13 +2140,13 @@ class PlaylistWindow(Gtk.Stack):
 
 		# widgets
 		self._playlist_view=PlaylistView(self._client)
-		self._scroll=Gtk.ScrolledWindow(child=self._playlist_view, hexpand=True, vexpand=True)
-		self._adj=self._scroll.get_vadjustment()
+		self.scroll=Gtk.ScrolledWindow(child=self._playlist_view, hexpand=True, vexpand=True)
+		self._adj=self.scroll.get_vadjustment()
 		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
 		status_page.add_css_class("compact")
 
 		# scroll button
-		overlay=Gtk.Overlay(child=self._scroll)
+		overlay=Gtk.Overlay(child=self.scroll)
 		self._scroll_button=Gtk.Button(css_classes=["osd", "circular"], tooltip_text=_("Scroll to Current Song"),
 			margin_bottom=6, margin_top=6, halign=Gtk.Align.CENTER, visible=False)
 		overlay.add_overlay(self._scroll_button)
@@ -2200,7 +2197,7 @@ class PlaylistWindow(Gtk.Stack):
 				self._scroll_button.set_icon_name("go-up-symbolic")
 				self._scroll_button.set_valign(Gtk.Align.START)
 				self._scroll_button.set_visible(True)
-			elif self._adj.get_value() < value-self._scroll.get_height():
+			elif self._adj.get_value() < value-self.scroll.get_height():
 				self._scroll_button.set_icon_name("go-down-symbolic")
 				self._scroll_button.set_valign(Gtk.Align.END)
 				self._scroll_button.set_visible(True)
@@ -2239,10 +2236,8 @@ class LetrasParser(HTMLParser):
 			self.text+=data+"\n"
 
 class LyricsWindow(Gtk.Stack):
-	def __init__(self, client):
+	def __init__(self):
 		super().__init__()
-		self._client=client
-		self._displayed_song_file=None
 
 		# status pages
 		no_lyrics_status_page=Adw.StatusPage(icon_name="lyrics-symbolic", title=_("No Lyrics Found"))
@@ -2250,6 +2245,9 @@ class LyricsWindow(Gtk.Stack):
 		connection_error_status_page=Adw.StatusPage(
 			icon_name="network-wired-disconnected-symbolic", title=_("Connection Error"), description=_("Check your network connection"))
 		connection_error_status_page.add_css_class("compact")
+		searching_status_page=Adw.StatusPage(title=_("Searching…"))
+		spinner=Adw.SpinnerPaintable(widget=searching_status_page)
+		searching_status_page.set_paintable(spinner)
 
 		# text view
 		self._text_view=Gtk.TextView(
@@ -2261,24 +2259,22 @@ class LyricsWindow(Gtk.Stack):
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
 
-		# connect
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._song_changed=self._client.emitter.connect("current-song", self._refresh)
-		self._client.emitter.handler_block(self._song_changed)
-
 		# packing
 		scroll=Gtk.ScrolledWindow(child=self._text_view)
 		self.add_named(scroll, "lyrics")
 		self.add_named(no_lyrics_status_page, "no-lyrics")
 		self.add_named(connection_error_status_page, "connection-error")
+		self.add_named(searching_status_page, "searching")
 
-	def enable(self, *args):
-		self._refresh()
-		self._client.emitter.handler_unblock(self._song_changed)
-		self._text_view.grab_focus()
+	def clear(self):
+		self.set_visible_child_name("no-lyrics")
+		self._text_buffer.set_text("")
+		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
-	def disable(self, *args):
-		self._client.emitter.handler_block(self._song_changed)
+	def display(self, song):
+		self.set_visible_child_name("searching")
+		update_thread=threading.Thread(target=self._display_lyrics, kwargs={"song": song}, daemon=True)
+		update_thread.start()
 
 	def _get_lyrics(self, title, artist):
 		title=urllib.parse.quote_plus(title)
@@ -2294,27 +2290,12 @@ class LyricsWindow(Gtk.Stack):
 		try:
 			text=self._get_lyrics(song["title"][0], song["artist"][0])
 			idle_add(self._text_buffer.set_text, text)
+			idle_add(self._text_view.update_property, [Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
+			idle_add(self.set_visible_child_name, "lyrics")
 		except urllib.error.URLError:
 			idle_add(self.set_visible_child_name, "connection-error")
 		except ValueError:
 			idle_add(self.set_visible_child_name, "no-lyrics")
-
-	def _refresh(self, *args):
-		if self._client.connected() and (song:=self._client.currentsong()):
-			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
-			self._text_buffer.set_text(_("searching…"))
-			self.set_visible_child_name("lyrics")
-			update_thread=threading.Thread(target=self._display_lyrics, kwargs={"song": song}, daemon=True)
-			update_thread.start()
-		else:
-			self.set_visible_child_name("no-lyrics")
-			self._text_buffer.set_text("")
-			self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
-
-	def _on_disconnected(self, *args):
-		self.set_visible_child_name("no-lyrics")
-		self._text_buffer.set_text("")
-		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 class MainCover(Gtk.Picture):
 	def __init__(self, client):
@@ -2338,72 +2319,62 @@ class MainCover(Gtk.Picture):
 	def _on_disconnected(self, *args):
 		self._clear()
 
-class CoverLyricsWindow(Gtk.Stack):
-	show_lyrics=GObject.Property(type=bool, default=False)
+##########
+# player #
+##########
+
+class PlayButton(Gtk.Button):
 	def __init__(self, client):
-		super().__init__(transition_type=Gtk.StackTransitionType.CROSSFADE)
-
-		# cover
-		main_cover=MainCover(client)
-		window_handle=Gtk.WindowHandle(child=main_cover)
-
-		# lyrics window
-		self._lyrics_window=LyricsWindow(client)
-
-		# connect
-		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
-
-		# packing
-		self.add_named(window_handle, "cover")
-		self.add_named(self._lyrics_window, "lyrics")
-
-	def _on_lyrics_toggled(self, *args):
-		if self.get_property("show-lyrics"):
-			self.set_visible_child_name("lyrics")
-			self._lyrics_window.enable()
-		else:
-			self.set_visible_child_name("cover")
-			self._lyrics_window.disable()
-
-######################
-# action bar widgets #
-######################
-
-class PlaybackControl(Gtk.Box):
-	def __init__(self, client, settings):
-		super().__init__(spacing=6)
-
-		# widgets
-		self._play_button=Gtk.Button(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
-		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
-		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
-
-		# connect
+		super().__init__(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
 		client.emitter.connect("state", self._on_state)
-
-		# packing
-		self.append(prev_button)
-		self.append(self._play_button)
-		self.append(next_button)
 
 	def _on_state(self, emitter, state):
 		if state == "play":
-			self._play_button.set_property("icon-name", "media-playback-pause-symbolic")
-			self._play_button.set_tooltip_text(_("Pause"))
+			self.set_property("icon-name", "media-playback-pause-symbolic")
+			self.set_tooltip_text(_("Pause"))
 		else:
-			self._play_button.set_property("icon-name", "media-playback-start-symbolic")
-			self._play_button.set_tooltip_text(_("Play"))
+			self.set_property("icon-name", "media-playback-start-symbolic")
+			self.set_tooltip_text(_("Play"))
 
-class SeekBar(Gtk.Box):
-	def __init__(self, client):
-		super().__init__(hexpand=True, margin_start=6, margin_end=6)
+class BitRate(Gtk.Label):
+	def __init__(self, client, settings):
+		super().__init__(xalign=1, single_line_mode=True, css_classes=["caption", "numeric", "dim-label"])
 		self._client=client
-		self._first_mark=None
-		self._second_mark=None
+		settings.bind("show-bit-rate", self, "visible", Gio.SettingsBindFlags.GET)
+		self._mask=_("{bitrate} kb/s")
+
+		# connect
+		self._client.emitter.connect("bitrate", self._on_bitrate)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+
+	def _on_bitrate(self, emitter, bitrate):
+		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
+		if bitrate is None:
+			self.set_text("")
+		else:
+			self.set_text(self._mask.format(bitrate=bitrate))
+
+	def _on_disconnected(self, *args):
+		self.set_text("")
+
+class PlaybackControls(Gtk.Box):
+	def __init__(self, client, settings):
+		super().__init__(hexpand=True, orientation=Gtk.Orientation.VERTICAL)
+		self.add_css_class("toolbar")
+		self._client=client
+
+		# buttons
+		buttons=Gtk.Box(spacing=6)
+		play_button=PlayButton(client)
+		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
+		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
+		buttons.append(prev_button)
+		buttons.append(play_button)
+		buttons.append(next_button)
 
 		# labels
-		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, css_classes=["numeric"])
-		self._rest=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
+		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
+		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
 
 		# progress bar
 		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True)
@@ -2421,29 +2392,30 @@ class SeekBar(Gtk.Box):
 		# event controllers
 		controller_motion=Gtk.EventControllerMotion()
 		self._scale.add_controller(controller_motion)
-		elapsed_button1_controller=Gtk.GestureClick(button=1)
-		self._elapsed.add_controller(elapsed_button1_controller)
-		rest_button1_controller=Gtk.GestureClick(button=1)
-		self._rest.add_controller(rest_button1_controller)
+
 
 		# connect
 		self._scale.connect("change-value", self._on_change_value)
 		controller_motion.connect("motion", self._on_pointer_motion)
 		controller_motion.connect("leave", self._on_pointer_leave)
-		elapsed_button1_controller.connect("released", self._on_label_button_released)
-		rest_button1_controller.connect("released", self._on_label_button_released)
 		self._client.emitter.connect("disconnected", self._disable)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("elapsed", self._refresh)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 
 		# packing
-		self.append(self._elapsed)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box.append(self._rest)
+		box.append(BitRate(client, settings))
+		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
+		center_box.set_center_widget(buttons)
+		center_box.set_start_widget(self._elapsed)
+		center_box.set_end_widget(box)
 		self.append(self._scale)
-		self.append(self._rest)
+		self.append(center_box)
 
 	def _refresh(self, emitter, elapsed, duration):
-		self.set_sensitive(True)
+		self._scale.set_visible(True)
 		if duration > 0:
 			if elapsed > duration:  # fix display error
 				elapsed=duration
@@ -2451,25 +2423,16 @@ class SeekBar(Gtk.Box):
 			self._scale.set_value(elapsed)
 			self._elapsed.set_text(str(Duration(elapsed)))
 			self._rest.set_text(str(Duration(duration-elapsed)))
-			if self._second_mark is not None:
-				if elapsed > self._second_mark:
-					self._client.seekcur(self._first_mark)
 		else:
 			self._disable()
 			self._elapsed.set_text(str(Duration(elapsed)))
 
 	def _disable(self, *args):
 		self._popover.popdown()
-		self.set_sensitive(False)
+		self._scale.set_visible(False)
 		self._scale.set_range(0, 0)
 		self._elapsed.set_text("")
 		self._rest.set_text("")
-		self._clear_marks()
-
-	def _clear_marks(self, *args):
-		self._first_mark=None
-		self._second_mark=None
-		self._scale.clear_marks()
 
 	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
 		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
@@ -2518,84 +2481,12 @@ class SeekBar(Gtk.Box):
 	def _on_pointer_leave(self, *args):
 		self._popover.popdown()
 
-	def _on_label_button_released(self, controller, n_press, x, y):
-		if n_press == 1:
-			value=self._scale.get_value()
-			if self._first_mark is None:
-				self._first_mark=value
-				self._scale.add_mark(value, Gtk.PositionType.BOTTOM, None)
-			elif self._second_mark is None:
-				if value < self._first_mark:
-					self._second_mark=self._first_mark
-					self._first_mark=value
-				else:
-					self._second_mark=value
-				self._scale.add_mark(value, Gtk.PositionType.BOTTOM, None)
-			else:
-				self._clear_marks()
-
 	def _on_state(self, emitter, state):
 		if state == "stop":
 			self._disable()
 
 	def _on_song_changed(self, *args):
-		self._clear_marks()
 		self._popover.popdown()
-
-class AudioFormat(Gtk.Box):
-	def __init__(self, client, settings):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, margin_end=3)
-		self._client=client
-		settings.bind("show-audio-format", self, "visible", Gio.SettingsBindFlags.GET)
-
-		# labels
-		self._file_type_label=Gtk.Label(xalign=1, single_line_mode=True)
-		self._separator_label=Gtk.Label(xalign=1, single_line_mode=True)
-		self._brate_label=Gtk.Label(xalign=1, single_line_mode=True, width_chars=5, css_classes=["numeric"])
-		self._format_label=Gtk.Label(single_line_mode=True, css_classes=["caption"])
-
-		# connect
-		self._client.emitter.connect("audio", self._on_audio)
-		self._client.emitter.connect("bitrate", self._on_bitrate)
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-
-		# packing
-		hbox=Gtk.Box(halign=Gtk.Align.END)
-		hbox.append(self._brate_label)
-		hbox.append(self._separator_label)
-		hbox.append(self._file_type_label)
-		self.append(hbox)
-		self.append(self._format_label)
-
-	def _on_audio(self, emitter, audio_format):
-		if audio_format is None:
-			self._format_label.set_text("")
-		else:
-			self._format_label.set_text(str(Format(audio_format)))
-
-	def _on_bitrate(self, emitter, brate):
-		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
-		if brate is None:
-			self._brate_label.set_text("—")
-		else:
-			self._brate_label.set_text(brate)
-
-	def _on_song_changed(self, *args):
-		if (song:=self._client.currentsong()):
-			file_type=song["file"].split(".")[-1].split("/")[0].upper()
-			self._separator_label.set_text(" kb∕s • ")
-			self._file_type_label.set_text(file_type)
-		else:
-			self._file_type_label.set_text("")
-			self._separator_label.set_text(" kb∕s")
-			self._format_label.set_text("")
-
-	def _on_disconnected(self, *args):
-		self._brate_label.set_text("—")
-		self._separator_label.set_text(" kb/s")
-		self._file_type_label.set_text("")
-		self._format_label.set_text("")
 
 class VolumeControl(Gtk.Box):
 	def __init__(self, client):
@@ -2622,9 +2513,9 @@ class VolumeControl(Gtk.Box):
 	def _refresh(self, emitter, volume):
 		self._adjustment.set_value(max(volume, 0))
 
-class MainMenuButton(Gtk.MenuButton):
+class PlayerMenuButton(Gtk.MenuButton):
 	def __init__(self, client):
-		super().__init__(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True)
+		super().__init__(icon_name="view-more-symbolic", tooltip_text=_("Player Menu"))
 		self._volume_visible=False
 
 		# volume
@@ -2633,28 +2524,15 @@ class MainMenuButton(Gtk.MenuButton):
 		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
 
 		# menu model
-		app_section=Gio.Menu()
-		app_section.append(_("_Preferences"), "win.settings")
-		app_section.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
-		app_section.append(_("_Help"), "win.help")
-		app_section.append(_("_About Plattenalbum"), "app.about")
-		mpd_section=Gio.Menu()
-		mpd_section.append(_("_Disconnect"), "mpd.disconnect")
-		mpd_section.append(_("_Update Database"), "mpd.update")
-		mpd_section.append(_("_Server Statistics"), "win.stats")
-		playback_section=Gio.Menu()
-		playback_section.append(_("_Repeat Mode"), "mpd.repeat")
-		playback_section.append(_("R_andom Mode"), "mpd.random")
-		playback_section.append(_("_Single Mode"), "mpd.single")
-		playback_section.append(_("_Pause After Song"), "mpd.single-oneshot")
-		playback_section.append(_("_Consume Mode"), "mpd.consume")
-		self._playback_submenu=Gio.Menu()
-		self._playback_submenu.append_section(None, playback_section)
+		self._playback_section=Gio.Menu()
+		self._playback_section.append(_("_Repeat Mode"), "mpd.repeat")
+		self._playback_section.append(_("R_andom Mode"), "mpd.random")
+		self._playback_section.append(_("_Single Mode"), "mpd.single")
+		self._playback_section.append(_("_Pause After Song"), "mpd.single-oneshot")
+		self._playback_section.append(_("_Consume Mode"), "mpd.consume")
 		menu=Gio.Menu()
 		menu.append(_("_Lyrics"), "win.toggle-lyrics")
-		menu.append_submenu(_("Play_back"), self._playback_submenu)
-		menu.append_section(None, mpd_section)
-		menu.append_section(None, app_section)
+		menu.append_section(None, self._playback_section)
 
 		# popover menu
 		self._popover_menu=Gtk.PopoverMenu.new_from_model(menu)
@@ -2666,28 +2544,172 @@ class MainMenuButton(Gtk.MenuButton):
 
 	def _on_volume_changed(self, emitter, volume):
 		if volume < 0 and self._volume_visible:
-			self._playback_submenu.remove(0)
+			self._playback_section.remove(0)
 			self._volume_visible=False
 		elif volume >= 0 and not self._volume_visible:
-			self._playback_submenu.prepend_item(self._volume_item)
+			self._playback_section.prepend_item(self._volume_item)
 			self._popover_menu.add_child(self._volume_control, "volume")
 			self._volume_visible=True
 
 	def _on_disconnected(self, *args):
 		if self._volume_visible:
-			self._playback_submenu.remove(0)
+			self._playback_section.remove(0)
 			self._volume_visible=False
+
+class Player(Adw.Bin):
+	show_lyrics=GObject.Property(type=bool, default=False)
+	sheet_mode=GObject.Property(type=bool, default=False)
+	def __init__(self, client, settings):
+		super().__init__()
+		self.add_css_class("view")
+		self._client=client
+
+		# widgets
+		window_handle=Gtk.WindowHandle(child=MainCover(client))
+		self._lyrics_window=LyricsWindow()
+		playlist_window=PlaylistWindow(client)
+		self.bind_property("sheet-mode", playlist_window.scroll, "propagate-natural-height", GObject.BindingFlags.DEFAULT)
+		playback_controls=PlaybackControls(client, settings)
+
+		# stack
+		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack.add_named(window_handle, "cover")
+		self._stack.add_named(self._lyrics_window, "lyrics")
+
+		# header bar
+		self._title=Adw.WindowTitle()
+		header_bar=Adw.HeaderBar(title_widget=self._title)
+		header_bar.pack_start(PlayerMenuButton(client))
+
+		# connect
+		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
+		self._client.emitter.connect("current-song", self._on_song_changed)
+		self._client.emitter.connect("playlist", self._on_playlist_changed)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connected", self._on_connected)
+
+		# packing
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box.append(self._stack)
+		box.append(playlist_window)
+		self._toolbar_view=Adw.ToolbarView()
+		self._toolbar_view.add_top_bar(header_bar)
+		self._toolbar_view.set_content(box)
+		self._toolbar_view.add_bottom_bar(playback_controls)
+		self.set_child(self._toolbar_view)
+
+	def _clear_title(self):
+		self._title.set_title("")
+		self._title.set_subtitle("")
+
+	def _on_lyrics_toggled(self, *args):
+		if self.get_property("show-lyrics"):
+			self._stack.set_visible_child_name("lyrics")
+			if self._client.connected() and (song:=self._client.currentsong()):
+				self._lyrics_window.display(song)
+		else:
+			self._stack.set_visible_child_name("cover")
+			self._lyrics_window.clear()
+
+	def _on_song_changed(self, emitter, song, songid, state):
+		if (song:=self._client.currentsong()):
+			self._title.set_title(song["title"][0])
+			self._title.set_subtitle(str(song["artist"]))
+			if self.get_property("show-lyrics"):
+				self._lyrics_window.display(song)
+		else:
+			self._clear_title()
+			if self.get_property("show-lyrics"):
+				self._lyrics_window.clear()
+
+	def _on_playlist_changed(self, emitter, version, length, song_pos):
+		self._toolbar_view.set_reveal_bottom_bars(length > 0)
+
+	def _on_disconnected(self, *args):
+		self._clear_title()
+		self.set_property("show-lyrics", False)
+
+	def _on_connected(self, *args):
+		self.set_property("show-lyrics", False)
+
+##############
+# player bar #
+##############
+
+class ProgressBar(Gtk.ProgressBar):
+	def __init__(self, client):
+		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.FILL)
+		self.add_css_class("osd")
+		client.emitter.connect("state", self._on_state)
+		client.emitter.connect("elapsed", self._on_elapsed)
+
+	def _on_state(self, emitter, state):
+		if state == "stop":
+			self.set_visible(False)
+			self.set_fraction(0.0)
+
+	def _on_elapsed(self, emitter, elapsed, duration):
+		if duration > 0:
+			self.set_visible(True)
+			self.set_fraction(elapsed/duration)
+		else:
+			self.set_visible(False)
+			self.set_fraction(0.0)
+
+class PlayerBar(Gtk.Overlay):
+	def __init__(self, client):
+		super().__init__()
+		self._client=client
+
+		# widgets
+		progress_bar=ProgressBar(client)
+		play_button=PlayButton(client)
+		self._title=Gtk.Label(xalign=0, css_classes=["heading"])
+		self._subtitle=Gtk.Label(xalign=0, css_classes=["dim-label", "caption"])
+
+		# connect
+		self._client.emitter.connect("current-song", self._on_song_changed)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+
+		# packing
+		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True)
+		title_box.append(self._title)
+		title_box.append(self._subtitle)
+		inner_box=Gtk.Box()
+		inner_box.add_css_class("toolbar")
+		inner_box.append(title_box)
+		inner_box.append(play_button)
+		outer_box=Gtk.Box()
+		outer_box.append(MainCover(client))
+		outer_box.append(inner_box)
+		self.add_overlay(progress_bar)
+		self.set_child(outer_box)
+
+	def _clear_title(self):
+		self._title.set_text("")
+		self._subtitle.set_text("")
+
+	def _on_song_changed(self, emitter, song, songid, state):
+		if (song:=self._client.currentsong()):
+			self._title.set_text(song["title"][0])
+			self._subtitle.set_text(str(song["artist"]))
+		else:
+			self._clear_title()
+
+	def _on_disconnected(self, *args):
+		self._clear_title()
 
 ###################
 # MPD gio actions #
 ###################
+
 class MPDActionGroup(Gio.SimpleActionGroup):
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
 
 		# actions
-		self._disable_on_stop_data=["next","prev","seek-forward","seek-backward"]
+		self._disable_on_stop_data=["next","prev","seek-forward","seek-backward","a-b-loop"]
 		self._disable_no_song=["tidy","enqueue"]
 		self._enable_on_reconnect_data=["toggle-play","stop","clear","update","disconnect"]
 		self._data=self._disable_on_stop_data+self._disable_no_song+self._enable_on_reconnect_data
@@ -2730,6 +2752,9 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 
 	def _on_seek_backward(self, action, param):
 		self._client.seekcur("-10")
+
+	def _on_a_b_loop(self, action, param):
+		self._client.a_b_loop()
 
 	def _on_tidy(self, action, param):
 		self._client.tidy_playlist()
@@ -2783,9 +2808,10 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 ###############
 # main window #
 ###############
+
 class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
-		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=480, width_request=620, **kwargs)
+		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=480, width_request=360, **kwargs)
 		self.set_default_icon_name("de.wagnermartin.Plattenalbum")
 		self._client=client
 		self._settings=settings
@@ -2796,59 +2822,57 @@ class MainWindow(Adw.ApplicationWindow):
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
-		cover_playlist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		self._browser=Browser(self._client, self._settings)
-		cover_lyrics_window=CoverLyricsWindow(self._client)
-		playlist_window=PlaylistWindow(self._client)
-		playback_control=PlaybackControl(self._client, self._settings)
-		seek_bar=SeekBar(self._client)
-		audio=AudioFormat(self._client, self._settings)
-		main_menu_button=MainMenuButton(self._client)
+		browser=Browser(self._client, self._settings)
+		player=Player(self._client, self._settings)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
+		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "settings","local-connect","remote-connect","setup","stats","help","toggle-search","toggle-artists")
+		simple_actions_data=("close", "settings","local-connect","remote-connect","setup","stats","help")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
-		self.add_action(Gio.PropertyAction.new("toggle-lyrics", cover_lyrics_window, "show-lyrics"))
+		self.add_action(Gio.PropertyAction.new("toggle-lyrics", player, "show-lyrics"))
+		self.add_action(Gio.PropertyAction.new("toggle-search", browser, "show-search"))
 
 		# search
-		self._search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
-		self._search_entry=Gtk.SearchEntry(placeholder_text=_("Search collection"))
-		self._search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
-		self._search_entry.set_key_capture_widget(self)  # type to search
+		# TODO see: https://gitlab.gnome.org/GNOME/gtk/-/issues/6874
+		# TODO this is not compatible with the A-B loop shortcut
+		#browser.search_entry.set_key_capture_widget(self)  # type to search
 
-		# left button box
-		self._left_button_box=Gtk.Box(spacing=6)
-		self._left_button_box.append(self._search_button)
-		self._left_button_box.append(self._browser.sidebar_button_revealer)
-
-		# header bar
-		self._title=Adw.WindowTitle()
-		self._title_stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, hexpand=True, hhomogeneous=False)
-		self._title_stack.add_named(self._title, "title")
-		self._title_stack.add_named(Adw.Clamp(child=self._search_entry, maximum_size=400), "search-entry")
-		header_bar=Adw.HeaderBar(title_widget=self._title_stack)
-		header_bar.pack_start(self._left_button_box)
-		header_bar.pack_end(main_menu_button)
-
-		# sidebar
-		cover_playlist_box.append(cover_lyrics_window)
-		cover_playlist_box.append(Gtk.Separator())
-		cover_playlist_box.append(playlist_window)
-		sidebar=Gtk.Box()
-		sidebar.add_css_class("view")
+		# sidebar layout
+		sidebar=Gtk.Box(css_classes=["view"])
 		sidebar.append(Gtk.Separator())
-		sidebar.append(cover_playlist_box)
-
-		# split view
+		sidebar.append(Adw.LayoutSlot(id="player"))
 		overlay_split_view=Adw.OverlaySplitView(
 			sidebar_position=Gtk.PackType.END, min_sidebar_width=300, max_sidebar_width=500, sidebar_width_fraction=0.30)
-		overlay_split_view.set_content(self._browser)
+		overlay_split_view.set_content(Adw.LayoutSlot(id="browser"))
 		overlay_split_view.set_sidebar(sidebar)
+		sidebar_layout=Adw.Layout(content=overlay_split_view, name="sidebar")
+
+		# bottom sheet layout
+		content_bin=Adw.Bin(child=Adw.LayoutSlot(id="browser"))
+		bottom_sheet=Adw.BottomSheet(
+			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client), show_drag_handle=False, full_width=False)
+		bottom_sheet.bind_property("bottom-bar-height", content_bin, "margin-bottom", GObject.BindingFlags.DEFAULT)
+		bottom_sheet_layout=Adw.Layout(content=bottom_sheet, name="bottom-sheet")
+
+		# multi layout view
+		multi_layout_view=Adw.MultiLayoutView()
+		multi_layout_view.add_layout(sidebar_layout)
+		multi_layout_view.add_layout(bottom_sheet_layout)
+		multi_layout_view.set_child("browser", browser)
+		multi_layout_view.set_child("player", player)
+		multi_layout_view.set_layout_name("sidebar")
+
+		# breakpoint
+		break_point=Adw.Breakpoint()
+		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 620sp"))
+		break_point.add_setter(multi_layout_view, "layout-name", "bottom-sheet")
+		break_point.add_setter(player, "sheet-mode", True)
+		self.add_breakpoint(break_point)
 
 		# status page
 		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
@@ -2865,37 +2889,29 @@ class MainWindow(Adw.ApplicationWindow):
 		button_box.append(local_connect_button)
 		button_box.append(remote_connect_button)
 		status_page.set_child(button_box)
+		menu=Gio.Menu()
+		menu.append(_("_Preferences"), "win.settings")
+		menu.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
+		menu.append(_("_Help"), "win.help")
+		menu.append(_("_About Plattenalbum"), "app.about")
+		menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True, menu_model=menu)
+		header_bar=Adw.HeaderBar()
+		header_bar.pack_end(menu_button)
+		status_page_toolbar_view=Adw.ToolbarView(content=status_page)
+		status_page_toolbar_view.add_top_bar(header_bar)
 
 		# stack
 		self._status_page_stack=Gtk.Stack()
-		self._status_page_stack.add_named(overlay_split_view, "content")
-		self._status_page_stack.add_named(status_page, "status-page")
-
-		# action bar
-		self._action_bar=Gtk.Box()
-		self._action_bar.add_css_class("toolbar")
-		self._action_bar.append(playback_control)
-		self._action_bar.append(seek_bar)
-		self._action_bar.append(audio)
-
-		# toolbar view
-		self._toolbar_view=Adw.ToolbarView(top_bar_style=Adw.ToolbarStyle.RAISED_BORDER, bottom_bar_style=Adw.ToolbarStyle.RAISED_BORDER)
-		self._toolbar_view.add_top_bar(header_bar)
-		self._toolbar_view.add_bottom_bar(self._action_bar)
-		self._toolbar_view.set_content(self._status_page_stack)
+		self._status_page_stack.add_named(multi_layout_view, "content")
+		self._status_page_stack.add_named(status_page_toolbar_view, "status-page")
 
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
-		self._search_entry.add_controller(controller_focus)
+		browser.search_entry.add_controller(controller_focus)
 
 		# connect
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
-		self._search_entry.connect("search-started", self._on_search_started)
-		self._search_entry.connect("search-changed", self._on_search_changed)
-		self._search_entry.connect("stop-search", self._on_search_stopped)
-		self._browser.connect("stop-search", self._on_search_stopped)
-		self._search_button.connect("clicked", self._on_search_button_clicked)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("connected", self._on_connected)
@@ -2903,9 +2919,10 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.emitter.connect("connection_error", self._on_connection_error)
 		self._client.emitter.connect("updating-db", self._on_updating_db)
 		self._client.emitter.connect("updated-db", self._on_updated_db)
+		self._client.emitter.connect("a-b-loop", self._on_a_b_loop)
 
 		# packing
-		self._toast_overlay=Adw.ToastOverlay(child=self._toolbar_view)
+		self._toast_overlay=Adw.ToastOverlay(child=self._status_page_stack)
 		self.set_content(self._toast_overlay)
 
 	def open(self):
@@ -2928,17 +2945,6 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _clear_title(self):
 		self.set_title("Plattenalbum")
-		self._title.set_title("Plattenalbum")
-		self._title.set_subtitle("")
-
-	def _on_toggle_search(self, action, param):
-		self._search_button.emit("clicked")
-
-	def _on_toggle_artists(self, action, param):
-		revealer=self._browser.sidebar_button_revealer
-		if revealer.get_visible() and revealer.get_reveal_child():
-			revealer.get_child().grab_focus()
-			revealer.get_child().emit("clicked")
 
 	def _on_close(self, action, param):
 		if (dialog:=self.get_visible_dialog()) is None:
@@ -2947,59 +2953,39 @@ class MainWindow(Adw.ApplicationWindow):
 			dialog.close()
 
 	def _on_settings(self, action, param):
-		SettingsDialog(self._client, self._settings).present(self)
+		if self.get_visible_dialog() is None:
+			SettingsDialog(self._client, self._settings).present(self)
 
 	def _on_local_connect(self, action, param):
-		LocalConnectDialog(self._settings).present(self)
+		if self.get_visible_dialog() is None:
+			LocalConnectDialog(self._settings).present(self)
 
 	def _on_remote_connect(self, action, param):
-		RemoteConnectDialog(self._settings).present(self)
+		if self.get_visible_dialog() is None:
+			RemoteConnectDialog(self._settings).present(self)
 
 	def _on_setup(self, action, param):
-		SetupDialog().present(self)
+		if self.get_visible_dialog() is None:
+			SetupDialog().present(self)
 
 	def _on_stats(self, action, param):
-		ServerStats(self._client, self._settings).present(self)
+		if self.get_visible_dialog() is None:
+			ServerStats(self._client, self._settings).present(self)
 
 	def _on_help(self, action, param):
 		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/plattenalbum/wiki/Usage").launch(self, None, None, None)
 
-	def _on_search_started(self, entry):
-		self._search_button.set_active(True)
-		self._title_stack.set_visible_child_name("search-entry")
-		self._search_entry.grab_focus()
-
-	def _on_search_changed(self, entry):
-		search_text=self._search_entry.get_text()
-		if search_text:
-			self._search_entry.grab_focus()
-		self._browser.search(search_text)
-
-	def _on_search_stopped(self, widget):
-		self._search_button.set_active(False)
-		self._title_stack.set_visible_child_name("title")
-		self._search_entry.set_text("")
-
-	def _on_search_button_clicked(self, button):
-		if button.get_active():
-			self._title_stack.set_visible_child_name("search-entry")
-			self._search_entry.grab_focus()
-		else:
-			self._title_stack.set_visible_child_name("title")
-			self._search_entry.set_text("")
-
 	def _on_search_entry_focus_event(self, controller, focus):
 		if focus:
 			self.get_application().set_accels_for_action("mpd.toggle-play", [])
+			self.get_application().set_accels_for_action("mpd.a-b-loop", [])
 		else:
 			self.get_application().set_accels_for_action("mpd.toggle-play", ["space"])
+			self.get_application().set_accels_for_action("mpd.a-b-loop", ["l"])
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
-			window_title=" • ".join(filter(None, (song["title"][0], str(song["artist"]))))
-			self.set_title(window_title)
-			self._title.set_title(window_title)
-			self._title.set_subtitle(song.get_album_with_date())
+			self.set_title(song["title"][0])
 			if self._settings.get_boolean("send-notify"):
 				if not self.is_active() and state == "play":
 					notify=Gio.Notification()
@@ -3020,28 +3006,15 @@ class MainWindow(Adw.ApplicationWindow):
 		if (dialog:=self.get_visible_dialog()) is not None:
 			dialog.close()
 		self._status_page_stack.set_visible_child_name("content")
-		self._toolbar_view.set_reveal_bottom_bars(True)
-		self._toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED_BORDER)
-		self._left_button_box.set_visible(True)
-		for action in ("stats","toggle-search"):
-			self.lookup_action(action).set_enabled(True)
-		self._search_button.set_sensitive(True)
-		self._action_bar.set_sensitive(True)
+		self.lookup_action("stats").set_enabled(True)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
-		for action in ("stats","toggle-search"):
-			self.lookup_action(action).set_enabled(False)
-		self._search_entry.emit("stop-search")
-		self._search_button.set_sensitive(False)
-		self._action_bar.set_sensitive(False)
+		self.lookup_action("stats").set_enabled(False)
 		self._updating_toast.dismiss()
 
 	def _on_connection_error(self, *args):
 		self._status_page_stack.set_visible_child_name("status-page")
-		self._toolbar_view.set_reveal_bottom_bars(False)
-		self._toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
-		self._left_button_box.set_visible(False)
 		if (dialog:=self.get_visible_dialog()) is not None:
 			if isinstance(dialog, ConnectDialog):
 				dialog.connection_error()
@@ -3053,15 +3026,26 @@ class MainWindow(Adw.ApplicationWindow):
 		self._updating_toast.dismiss()
 		self._toast_overlay.add_toast(self._updated_toast)
 
+	def _on_a_b_loop(self, emitter, first_mark, second_mark):
+		if first_mark < 0.0:
+			title=_("Cleared A‐B loop")
+		else:
+			if second_mark < 0.0:
+				title=_("Started A‐B loop at {start}").format(start=Duration(first_mark))
+			else:
+				title=_("Activated A‐B loop from {start} to {end}").format(start=Duration(first_mark), end=Duration(second_mark))
+		self._a_b_loop_toast.set_title(title)
+		self._toast_overlay.add_toast(self._a_b_loop_toast)
+
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
 			self.set_cursor_from_name("progress")
 		else:
 			self.set_cursor_from_name(None)
 
-###################
-# Gtk application #
-###################
+###############
+# application #
+###############
 
 class Plattenalbum(Adw.Application):
 	def __init__(self):
@@ -3089,13 +3073,13 @@ class Plattenalbum(Adw.Application):
 		action_accels=(
 			("app.quit", ["<Control>q"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
 			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.toggle-search", ["<Control>f"]),("win.toggle-artists", ["F9"]),("mpd.disconnect", ["<Control>d"]),
+			("win.toggle-search", ["<Control>f"]),("mpd.disconnect", ["<Control>d"]),
 			("win.stats", ["<Control>i"]),("win.close", ["<Control>w"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
 			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
 			("mpd.single-oneshot", ["<Control>p"]),
-			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),
+			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),("mpd.a-b-loop", ["l"]),
 			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])
 		)
 		for action, accels in action_accels:

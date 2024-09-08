@@ -1,7 +1,7 @@
 {
   "app-id": "de.wagnermartin.Plattenalbum",
   "runtime": "org.gnome.Platform",
-  "runtime-version": "46",
+  "runtime-version": "master",
   "sdk": "org.gnome.Sdk",
   "command": "plattenalbum",
   "finish-args": [

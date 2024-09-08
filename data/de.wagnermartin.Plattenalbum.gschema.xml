@@ -30,9 +30,9 @@
 			<default>""</default>
 			<summary>Password</summary>
 		</key>
-		<key type="b" name="show-audio-format">
+		<key type="b" name="show-bit-rate">
 			<default>false</default>
-			<summary>Show audio format</summary>
+			<summary>Show bit rate</summary>
 		</key>
 		<key type="b" name="send-notify">
 			<default>false</default>
