@@ -1778,6 +1778,7 @@ class Browser(Gtk.Stack):
 		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
 		search_header_bar.pack_start(search_button)
 		search_toolbar_view.add_top_bar(search_header_bar)
+		search_toolbar_view.add_css_class("content-pane")
 
 		# artist list
 		self._artist_list=ArtistList(client)
@@ -1807,6 +1808,8 @@ class Browser(Gtk.Stack):
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
 		break_point.add_setter(self._navigation_split_view, "collapsed", True)
+		break_point.connect("apply", lambda *args: self._navigation_split_view.add_css_class("content-pane"))
+		break_point.connect("unapply", lambda *args: self._navigation_split_view.remove_css_class("content-pane"))
 		breakpoint_bin.add_breakpoint(break_point)
 		breakpoint_bin.set_child(self._navigation_split_view)
 
@@ -1961,6 +1964,7 @@ class PlaylistView(SongList):
 		self._playlist_version=None
 		self._activate_on_release=False
 		self._autoscroll=True
+		self.add_css_class("background")
 
 		# menu
 		self._menu=PlaylistMenu(client)
@@ -2257,6 +2261,7 @@ class LyricsWindow(Gtk.Stack):
 			justification=Gtk.Justification.CENTER,
 			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9
 		)
+		self._text_view.remove_css_class("view")
 
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
@@ -2563,7 +2568,6 @@ class Player(Adw.Bin):
 	sheet_mode=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
-		self.add_css_class("view")
 		self._client=client
 
 		# widgets
@@ -2845,13 +2849,12 @@ class MainWindow(Adw.ApplicationWindow):
 		#browser.search_entry.set_key_capture_widget(self)  # type to search
 
 		# sidebar layout
-		sidebar=Gtk.Box(css_classes=["view"])
-		sidebar.append(Gtk.Separator())
-		sidebar.append(Adw.LayoutSlot(id="player"))
 		overlay_split_view=Adw.OverlaySplitView(
 			sidebar_position=Gtk.PackType.END, min_sidebar_width=300, max_sidebar_width=500, sidebar_width_fraction=0.30)
 		overlay_split_view.set_content(Adw.LayoutSlot(id="browser"))
-		overlay_split_view.set_sidebar(sidebar)
+		overlay_split_view.set_sidebar(Adw.LayoutSlot(id="player"))
+		overlay_split_view.get_content().get_parent().set_css_classes(["sidebar-pane"])
+		overlay_split_view.get_sidebar().get_parent().set_css_classes(["content-pane"])
 		sidebar_layout=Adw.Layout(content=overlay_split_view, name="sidebar")
 
 		# bottom sheet layout
