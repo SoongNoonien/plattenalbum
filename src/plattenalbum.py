@@ -2666,8 +2666,8 @@ class PlayerBar(Gtk.Overlay):
 		# widgets
 		progress_bar=ProgressBar(client)
 		play_button=PlayButton(client)
-		self._title=Gtk.Label(xalign=0, css_classes=["heading"])
-		self._subtitle=Gtk.Label(xalign=0, css_classes=["dim-label", "caption"])
+		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
+		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label", "caption"])
 
 		# connect
 		self._client.emitter.connect("current-song", self._on_song_changed)
