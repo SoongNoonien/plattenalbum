@@ -1821,7 +1821,7 @@ class Browser(Gtk.Stack):
 		status_page_toolbar_view.add_top_bar(status_page_header_bar)
 
 		# navigation view
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack=Gtk.Stack()
 		self._stack.add_named(breakpoint_bin, "collection")
 		self._stack.add_named(search_toolbar_view, "search")
 
@@ -2578,7 +2578,7 @@ class Player(Adw.Bin):
 		playback_controls=PlaybackControls(client, settings)
 
 		# stack
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack=Gtk.Stack()
 		self._stack.add_named(window_handle, "cover")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
