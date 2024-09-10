@@ -1571,7 +1571,7 @@ class SquareContainer(Gtk.Widget):
 
 class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
 		self._cover=Gtk.Picture(margin_bottom=3)
 		square_container=SquareContainer(self._cover)
@@ -1609,7 +1609,7 @@ class AlbumsPage(Adw.NavigationPage):
 
 		# grid view
 		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
-		self.grid_view.remove_css_class("view")
+		self.grid_view.add_css_class("navigation-sidebar")
 		self._selection_model=SelectionModel(Album)
 		self.grid_view.set_model(self._selection_model)
 
