@@ -2261,7 +2261,7 @@ class LyricsWindow(Gtk.Stack):
 			justification=Gtk.Justification.CENTER,
 			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9
 		)
-		self._text_view.remove_css_class("view")
+		self._text_view.add_css_class("inline")
 
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
