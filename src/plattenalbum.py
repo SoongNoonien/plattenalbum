@@ -1603,7 +1603,7 @@ class AlbumListRow(Gtk.Box):
 class AlbumsPage(Adw.NavigationPage):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client, settings):
-		super().__init__(title="Album List", tag="album_list")  # TODO title
+		super().__init__(title=_("Albums"), tag="album_list")
 		self._settings=settings
 		self._client=client
 
@@ -1644,6 +1644,7 @@ class AlbumsPage(Adw.NavigationPage):
 
 	def clear(self, *args):
 		self._selection_model.clear()
+		self.set_title(_("Albums"))
 
 	def _get_albums(self, artist):
 		albums=self._client.list("albumsort", "albumartist", artist, "group", "date", "group", "album")
@@ -1798,7 +1799,7 @@ class Browser(Gtk.Stack):
 		# navigation view
 		self._album_navigation_view=Adw.NavigationView()
 		self._album_navigation_view.add(self._albums_page)
-		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title="Albums", tag="albums")  # TODO title
+		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
 		# split view
 		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
