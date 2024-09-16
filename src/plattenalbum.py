@@ -2532,15 +2532,17 @@ class PlayerMenuButton(Gtk.MenuButton):
 		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
 
 		# menu model
-		self._playback_section=Gio.Menu()
-		self._playback_section.append(_("_Repeat Mode"), "mpd.repeat")
-		self._playback_section.append(_("R_andom Mode"), "mpd.random")
-		self._playback_section.append(_("_Single Mode"), "mpd.single")
-		self._playback_section.append(_("_Pause After Song"), "mpd.single-oneshot")
-		self._playback_section.append(_("_Consume Mode"), "mpd.consume")
+		playback_section=Gio.Menu()
+		playback_section.append(_("_Repeat Mode"), "mpd.repeat")
+		playback_section.append(_("R_andom Mode"), "mpd.random")
+		playback_section.append(_("_Single Mode"), "mpd.single")
+		playback_section.append(_("_Pause After Song"), "mpd.single-oneshot")
+		playback_section.append(_("_Consume Mode"), "mpd.consume")
+		self._volume_section=Gio.Menu()
 		menu=Gio.Menu()
 		menu.append(_("_Lyrics"), "win.toggle-lyrics")
-		menu.append_section(None, self._playback_section)
+		menu.append_section(None, playback_section)
+		menu.append_section(None, self._volume_section)
 
 		# popover menu
 		self._popover_menu=Gtk.PopoverMenu.new_from_model(menu)
@@ -2552,16 +2554,16 @@ class PlayerMenuButton(Gtk.MenuButton):
 
 	def _on_volume_changed(self, emitter, volume):
 		if volume < 0 and self._volume_visible:
-			self._playback_section.remove(0)
+			self._volume_section.remove(0)
 			self._volume_visible=False
 		elif volume >= 0 and not self._volume_visible:
-			self._playback_section.prepend_item(self._volume_item)
+			self._volume_section.append_item(self._volume_item)
 			self._popover_menu.add_child(self._volume_control, "volume")
 			self._volume_visible=True
 
 	def _on_disconnected(self, *args):
 		if self._volume_visible:
-			self._playback_section.remove(0)
+			self._volume_section.remove(0)
 			self._volume_visible=False
 
 class Player(Adw.Bin):
