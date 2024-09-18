@@ -16,14 +16,6 @@ Browse your collection while viewing large album covers. Play your music without
 
 Plattenalbum can be obtained through the [AUR](https://aur.archlinux.org/packages/plattenalbum). Also the [latest development version](https://aur.archlinux.org/packages/plattenalbum-git) is available there.
 
-### Gentoo
-
-After you have set up a [custom repository](https://wiki.gentoo.org/wiki/Custom_repository) you can do the following.
-- Download the [.ebuild](https://github.com/SoongNoonien/plattenalbum/releases/latest)
-- Place it into your local tree
-- Generate manifest file
-- Run: `emerge plattenalbum`
-
 ## Building
 
 Install the following dependencies on your system.
