@@ -3084,10 +3084,10 @@ class Plattenalbum(Adw.Application):
 			("win.toggle-search", ["<Control>f"]),("mpd.disconnect", ["<Control>d"]),
 			("win.stats", ["<Control>i"]),("win.close", ["<Control>w"]),
 			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
-			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
+			("mpd.next", ["<Control>k"]),("mpd.prev", ["<Shift><Control>k"]),("mpd.repeat", ["<Control>r"]),
 			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
 			("mpd.single-oneshot", ["<Control>p"]),
-			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),("mpd.a-b-loop", ["l"]),
+			("mpd.seek-forward", ["<Control>plus"]),("mpd.seek-backward", ["<Control>minus"]),("mpd.a-b-loop", ["l"]),
 			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])
 		)
 		for action, accels in action_accels:
