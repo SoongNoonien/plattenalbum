@@ -17,13 +17,13 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Preferences</property>
-			<property name="accelerator">&lt;Control&gt;comma</property>
+			<property name="accelerator">&lt;Ctrl&gt;comma</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Shortcuts</property>
-			<property name="accelerator">&lt;Control&gt;question</property>
+			<property name="accelerator">&lt;Ctrl&gt;question</property>
 			</object>
 		</child>
 		<child>
@@ -35,7 +35,7 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Disconnect</property>
-			<property name="accelerator">&lt;Control&gt;d</property>
+			<property name="accelerator">&lt;Ctrl&gt;d</property>
 			</object>
 		</child>
 		<child>
@@ -47,19 +47,19 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Server Statistics</property>
-			<property name="accelerator">&lt;Control&gt;i</property>
+			<property name="accelerator">&lt;Ctrl&gt;i</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Close</property>
-			<property name="accelerator">&lt;Control&gt;w</property>
+			<property name="accelerator">&lt;Ctrl&gt;w</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Quit</property>
-			<property name="accelerator">&lt;Control&gt;q</property>
+			<property name="accelerator">&lt;Ctrl&gt;q</property>
 			</object>
 		</child>
 		</object>
@@ -70,13 +70,13 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Toggle Lyrics</property>
-			<property name="accelerator">&lt;Control&gt;l</property>
+			<property name="accelerator">&lt;Ctrl&gt;l</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Toggle Search</property>
-			<property name="accelerator">&lt;Control&gt;f</property>
+			<property name="accelerator">&lt;Ctrl&gt;f</property>
 			</object>
 		</child>
 		</object>
@@ -93,31 +93,31 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Stop</property>
-			<property name="accelerator">&lt;Control&gt;space</property>
+			<property name="accelerator">&lt;Ctrl&gt;space</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Next</property>
-			<property name="accelerator">&lt;Control&gt;k</property>
+			<property name="accelerator">&lt;Ctrl&gt;k</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Previous</property>
-			<property name="accelerator">&lt;Shift&gt;&lt;Control&gt;k</property>
+			<property name="accelerator">&lt;Shift&gt;&lt;Ctrl&gt;k</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Seek Forward</property>
-			<property name="accelerator">&lt;Control&gt;plus</property>
+			<property name="accelerator">&lt;Ctrl&gt;plus</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Seek Backward</property>
-			<property name="accelerator">&lt;Control&gt;minus</property>
+			<property name="accelerator">&lt;Ctrl&gt;minus</property>
 			</object>
 		</child>
 		<child>
@@ -134,31 +134,31 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Toggle Repeat Mode</property>
-			<property name="accelerator">&lt;Control&gt;r</property>
+			<property name="accelerator">&lt;Ctrl&gt;r</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Toggle Random Mode</property>
-			<property name="accelerator">&lt;Control&gt;n</property>
+			<property name="accelerator">&lt;Ctrl&gt;n</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Toggle Single Mode</property>
-			<property name="accelerator">&lt;Control&gt;s</property>
+			<property name="accelerator">&lt;Ctrl&gt;s</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Pause After Song</property>
-			<property name="accelerator">&lt;Control&gt;p</property>
+			<property name="accelerator">&lt;Ctrl&gt;p</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Toggle Consume Mode</property>
-			<property name="accelerator">&lt;Control&gt;o</property>
+			<property name="accelerator">&lt;Ctrl&gt;o</property>
 			</object>
 		</child>
 		</object>
@@ -175,13 +175,13 @@
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Tidy</property>
-			<property name="accelerator">&lt;Control&gt;t</property>
+			<property name="accelerator">&lt;Ctrl&gt;t</property>
 			</object>
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
 			<property name="title" translatable="yes">Enqueue Album</property>
-			<property name="accelerator">&lt;Control&gt;e</property>
+			<property name="accelerator">&lt;Ctrl&gt;e</property>
 			</object>
 		</child>
 		</object>

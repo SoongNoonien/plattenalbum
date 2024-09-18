@@ -3079,16 +3079,13 @@ class Plattenalbum(Adw.Application):
 		self.add_action(action)
 		# accelerators
 		action_accels=(
-			("app.quit", ["<Control>q"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
-			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.toggle-search", ["<Control>f"]),("mpd.disconnect", ["<Control>d"]),
-			("win.stats", ["<Control>i"]),("win.close", ["<Control>w"]),
-			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
-			("mpd.next", ["<Control>k"]),("mpd.prev", ["<Shift><Control>k"]),("mpd.repeat", ["<Control>r"]),
-			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
-			("mpd.single-oneshot", ["<Control>p"]),
-			("mpd.seek-forward", ["<Control>plus"]),("mpd.seek-backward", ["<Control>minus"]),("mpd.a-b-loop", ["l"]),
-			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])
+			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.help", ["F1"]),("win.settings", ["<Ctrl>comma"]),
+			("win.show-help-overlay", ["<Ctrl>question"]),("win.toggle-lyrics", ["<Ctrl>l"]),("win.toggle-search", ["<Ctrl>f"]),
+			("win.stats", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),
+			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),
+			("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),
+			("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),
+			("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)
