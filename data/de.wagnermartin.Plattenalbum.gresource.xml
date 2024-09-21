@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
 	<gresource prefix="/de/wagnermartin/Plattenalbum">
-		<file>AboutDialog.ui</file>
+		<file>de.wagnermartin.Plattenalbum.metainfo.xml</file>
 		<file>ShortcutsWindow.ui</file>
 	</gresource>
 	<gresource prefix="/de/wagnermartin/Plattenalbum/icons/scalable/actions">

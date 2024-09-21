@@ -1571,7 +1571,7 @@ class SquareContainer(Gtk.Widget):
 
 class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
 		self._cover=Gtk.Picture(margin_bottom=3)
 		square_container=SquareContainer(self._cover)
@@ -1603,13 +1603,13 @@ class AlbumListRow(Gtk.Box):
 class AlbumsPage(Adw.NavigationPage):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client, settings):
-		super().__init__(title="Album List", tag="album_list")  # TODO title
+		super().__init__(title=_("Albums"), tag="album_list")
 		self._settings=settings
 		self._client=client
 
 		# grid view
 		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
-		self.grid_view.remove_css_class("view")
+		self.grid_view.add_css_class("navigation-sidebar")
 		self._selection_model=SelectionModel(Album)
 		self.grid_view.set_model(self._selection_model)
 
@@ -1644,6 +1644,7 @@ class AlbumsPage(Adw.NavigationPage):
 
 	def clear(self, *args):
 		self._selection_model.clear()
+		self.set_title(_("Albums"))
 
 	def _get_albums(self, artist):
 		albums=self._client.list("albumsort", "albumartist", artist, "group", "date", "group", "album")
@@ -1778,6 +1779,7 @@ class Browser(Gtk.Stack):
 		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
 		search_header_bar.pack_start(search_button)
 		search_toolbar_view.add_top_bar(search_header_bar)
+		search_toolbar_view.add_css_class("content-pane")
 
 		# artist list
 		self._artist_list=ArtistList(client)
@@ -1797,7 +1799,7 @@ class Browser(Gtk.Stack):
 		# navigation view
 		self._album_navigation_view=Adw.NavigationView()
 		self._album_navigation_view.add(self._albums_page)
-		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title="Albums", tag="albums")  # TODO title
+		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
 		# split view
 		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
@@ -1807,6 +1809,8 @@ class Browser(Gtk.Stack):
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
 		break_point.add_setter(self._navigation_split_view, "collapsed", True)
+		break_point.connect("apply", lambda *args: self._navigation_split_view.add_css_class("content-pane"))
+		break_point.connect("unapply", lambda *args: self._navigation_split_view.remove_css_class("content-pane"))
 		breakpoint_bin.add_breakpoint(break_point)
 		breakpoint_bin.set_child(self._navigation_split_view)
 
@@ -1818,7 +1822,7 @@ class Browser(Gtk.Stack):
 		status_page_toolbar_view.add_top_bar(status_page_header_bar)
 
 		# navigation view
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack=Gtk.Stack()
 		self._stack.add_named(breakpoint_bin, "collection")
 		self._stack.add_named(search_toolbar_view, "search")
 
@@ -1887,6 +1891,8 @@ class Browser(Gtk.Stack):
 		album_page=AlbumPage(self._client, song["albumartist"][0], song["album"][0], song["date"][0], song["file"])
 		self._album_navigation_view.replace([self._albums_page, album_page])
 		self.set_property("show-search", False)
+		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
+		self.get_root().set_focus_visible(True)
 
 	def _on_disconnected(self, *args):
 		self._album_navigation_view.pop_to_tag("album_list")
@@ -1959,6 +1965,7 @@ class PlaylistView(SongList):
 		self._playlist_version=None
 		self._activate_on_release=False
 		self._autoscroll=True
+		self.add_css_class("background")
 
 		# menu
 		self._menu=PlaylistMenu(client)
@@ -2255,6 +2262,7 @@ class LyricsWindow(Gtk.Stack):
 			justification=Gtk.Justification.CENTER,
 			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9
 		)
+		self._text_view.add_css_class("inline")
 
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
@@ -2524,15 +2532,17 @@ class PlayerMenuButton(Gtk.MenuButton):
 		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
 
 		# menu model
-		self._playback_section=Gio.Menu()
-		self._playback_section.append(_("_Repeat Mode"), "mpd.repeat")
-		self._playback_section.append(_("R_andom Mode"), "mpd.random")
-		self._playback_section.append(_("_Single Mode"), "mpd.single")
-		self._playback_section.append(_("_Pause After Song"), "mpd.single-oneshot")
-		self._playback_section.append(_("_Consume Mode"), "mpd.consume")
+		playback_section=Gio.Menu()
+		playback_section.append(_("_Repeat Mode"), "mpd.repeat")
+		playback_section.append(_("R_andom Mode"), "mpd.random")
+		playback_section.append(_("_Single Mode"), "mpd.single")
+		playback_section.append(_("_Pause After Song"), "mpd.single-oneshot")
+		playback_section.append(_("_Consume Mode"), "mpd.consume")
+		self._volume_section=Gio.Menu()
 		menu=Gio.Menu()
 		menu.append(_("_Lyrics"), "win.toggle-lyrics")
-		menu.append_section(None, self._playback_section)
+		menu.append_section(None, playback_section)
+		menu.append_section(None, self._volume_section)
 
 		# popover menu
 		self._popover_menu=Gtk.PopoverMenu.new_from_model(menu)
@@ -2544,16 +2554,16 @@ class PlayerMenuButton(Gtk.MenuButton):
 
 	def _on_volume_changed(self, emitter, volume):
 		if volume < 0 and self._volume_visible:
-			self._playback_section.remove(0)
+			self._volume_section.remove(0)
 			self._volume_visible=False
 		elif volume >= 0 and not self._volume_visible:
-			self._playback_section.prepend_item(self._volume_item)
+			self._volume_section.append_item(self._volume_item)
 			self._popover_menu.add_child(self._volume_control, "volume")
 			self._volume_visible=True
 
 	def _on_disconnected(self, *args):
 		if self._volume_visible:
-			self._playback_section.remove(0)
+			self._volume_section.remove(0)
 			self._volume_visible=False
 
 class Player(Adw.Bin):
@@ -2561,7 +2571,6 @@ class Player(Adw.Bin):
 	sheet_mode=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
-		self.add_css_class("view")
 		self._client=client
 
 		# widgets
@@ -2572,7 +2581,7 @@ class Player(Adw.Bin):
 		playback_controls=PlaybackControls(client, settings)
 
 		# stack
-		self._stack=Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+		self._stack=Gtk.Stack()
 		self._stack.add_named(window_handle, "cover")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
@@ -2664,8 +2673,8 @@ class PlayerBar(Gtk.Overlay):
 		# widgets
 		progress_bar=ProgressBar(client)
 		play_button=PlayButton(client)
-		self._title=Gtk.Label(xalign=0, css_classes=["heading"])
-		self._subtitle=Gtk.Label(xalign=0, css_classes=["dim-label", "caption"])
+		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
+		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label", "caption"])
 
 		# connect
 		self._client.emitter.connect("current-song", self._on_song_changed)
@@ -2843,19 +2852,18 @@ class MainWindow(Adw.ApplicationWindow):
 		#browser.search_entry.set_key_capture_widget(self)  # type to search
 
 		# sidebar layout
-		sidebar=Gtk.Box(css_classes=["view"])
-		sidebar.append(Gtk.Separator())
-		sidebar.append(Adw.LayoutSlot(id="player"))
 		overlay_split_view=Adw.OverlaySplitView(
 			sidebar_position=Gtk.PackType.END, min_sidebar_width=300, max_sidebar_width=500, sidebar_width_fraction=0.30)
 		overlay_split_view.set_content(Adw.LayoutSlot(id="browser"))
-		overlay_split_view.set_sidebar(sidebar)
+		overlay_split_view.set_sidebar(Adw.LayoutSlot(id="player"))
+		overlay_split_view.get_content().get_parent().set_css_classes(["sidebar-pane"])
+		overlay_split_view.get_sidebar().get_parent().set_css_classes(["content-pane"])
 		sidebar_layout=Adw.Layout(content=overlay_split_view, name="sidebar")
 
 		# bottom sheet layout
 		content_bin=Adw.Bin(child=Adw.LayoutSlot(id="browser"))
 		bottom_sheet=Adw.BottomSheet(
-			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client), show_drag_handle=False, full_width=False)
+			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client), show_drag_handle=False)
 		bottom_sheet.bind_property("bottom-bar-height", content_bin, "margin-bottom", GObject.BindingFlags.DEFAULT)
 		bottom_sheet_layout=Adw.Layout(content=bottom_sheet, name="bottom-sheet")
 
@@ -3071,16 +3079,13 @@ class Plattenalbum(Adw.Application):
 		self.add_action(action)
 		# accelerators
 		action_accels=(
-			("app.quit", ["<Control>q"]),("win.help", ["F1"]),("win.settings", ["<Control>comma"]),
-			("win.show-help-overlay", ["<Control>question"]),("win.toggle-lyrics", ["<Control>l"]),
-			("win.toggle-search", ["<Control>f"]),("mpd.disconnect", ["<Control>d"]),
-			("win.stats", ["<Control>i"]),("win.close", ["<Control>w"]),
-			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Control>space"]),
-			("mpd.next", ["KP_Add"]),("mpd.prev", ["KP_Subtract"]),("mpd.repeat", ["<Control>r"]),
-			("mpd.random", ["<Control>n"]),("mpd.single", ["<Control>s"]),("mpd.consume", ["<Control>o"]),
-			("mpd.single-oneshot", ["<Control>p"]),
-			("mpd.seek-forward", ["KP_Multiply"]),("mpd.seek-backward", ["KP_Divide"]),("mpd.a-b-loop", ["l"]),
-			("mpd.enqueue", ["<Control>e"]),("mpd.tidy", ["<Control>t"])
+			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.help", ["F1"]),("win.settings", ["<Ctrl>comma"]),
+			("win.show-help-overlay", ["<Ctrl>question"]),("win.toggle-lyrics", ["<Ctrl>l"]),("win.toggle-search", ["<Ctrl>f"]),
+			("win.stats", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),
+			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),
+			("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),
+			("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),
+			("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)
@@ -3107,9 +3112,10 @@ class Plattenalbum(Adw.Application):
 		return 0
 
 	def _on_about(self, *args):
-		builder=Gtk.Builder()
-		builder.add_from_resource("/de/wagnermartin/Plattenalbum/AboutDialog.ui")
-		dialog=builder.get_object("about_dialog")
+		dialog=Adw.AboutDialog.new_from_appdata("/de/wagnermartin/Plattenalbum/de.wagnermartin.Plattenalbum.metainfo.xml")
+		dialog.set_copyright("© 2020-2024 Martin Wagner")
+		dialog.set_developers(["Martin Wagner <martin.wagner.dev@gmail.com>"])
+		dialog.set_translator_credits(_("translator-credits"))
 		dialog.present(self._window)
 
 	def _on_quit(self, *args):

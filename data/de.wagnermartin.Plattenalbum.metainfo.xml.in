@@ -3,7 +3,7 @@
 <component type="desktop-application">
   <id>de.wagnermartin.Plattenalbum</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-3.0</project_license>
+  <project_license>GPL-3.0-or-later</project_license>
   <name>Plattenalbum</name>
   <summary>Connect to your music</summary>
   <description>
@@ -16,19 +16,28 @@
   </branding>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.0.0/screenshots/main_window.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/main_window.png</image>
       <caption>Main window</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.0.0/screenshots/album_view.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/album_view.png</image>
       <caption>Album View</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.0.0/screenshots/search.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/search.png</image>
       <caption>Search</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/small.png</image>
+      <caption>Small window</caption>
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.2.0" date="2024-09-18">
+      <description translate="no">
+        <p>Reworked UI and improved adaptiveness.</p>
+      </description>
+    </release>
     <release version="2.1.1" date="2024-06-16">
       <description translate="no">
         <p>Improved autoscrolling in the playlist and added Hindi and Russian translations.</p>
@@ -62,7 +71,7 @@
     </release>
   </releases>
   <requires>
-    <display_length compare="ge">620</display_length>
+    <display_length compare="ge">360</display_length>
   </requires>
   <recommends>
     <control>pointing</control>
@@ -70,6 +79,7 @@
   </recommends>
   <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
+  <url type="help">https://github.com/SoongNoonien/plattenalbum/discussions</url>
   <url type="bugtracker">https://github.com/SoongNoonien/plattenalbum/issues</url>
   <content_rating type="oars-1.1" />
   <translation type="gettext">de.wagnermartin.Plattenalbum</translation>
