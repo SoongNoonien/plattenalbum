@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2024-09-21 19:24+0300\n"
+"PO-Revision-Date: 2024-09-21 19:45+0300\n"
 "Last-Translator: Alexander Froloff <alexander.froloff@mxc.ru>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -57,7 +57,7 @@ msgstr "Поддержка MPRIS"
 
 #: src/plattenalbum.py:946
 msgid "Disable if “MPRIS” is supported by another client"
-msgstr "Отключить, если MPRIS поддерживается другим клиентом"
+msgstr "Отключите, если MPRIS поддерживается другим клиентом"
 
 #: src/plattenalbum.py:965
 msgid "_Connect"
