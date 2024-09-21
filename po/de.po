@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-18 20:49+0200\n"
-"PO-Revision-Date: 2024-09-18 20:50+0200\n"
+"POT-Creation-Date: 2024-09-21 09:50+0200\n"
+"PO-Revision-Date: 2024-09-21 09:51+0200\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -411,6 +411,10 @@ msgstr "A‐B‐Schleife von {start} bis {end} aktiviert"
 #: src/plattenalbum.py:3061
 msgid "Debug mode"
 msgstr "Debugmodus"
+
+#: src/plattenalbum.py:3118
+msgid "translator-credits"
+msgstr "Martin Wagner <martin.wagner.dev@gmail.com>"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3

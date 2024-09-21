@@ -3,7 +3,7 @@
 <component type="desktop-application">
   <id>de.wagnermartin.Plattenalbum</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-3.0</project_license>
+  <project_license>GPL-3.0-or-later</project_license>
   <name>Plattenalbum</name>
   <summary>Connect to your music</summary>
   <description>
@@ -79,6 +79,7 @@
   </recommends>
   <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
+  <url type="help">https://github.com/SoongNoonien/plattenalbum/discussions</url>
   <url type="bugtracker">https://github.com/SoongNoonien/plattenalbum/issues</url>
   <content_rating type="oars-1.1" />
   <translation type="gettext">de.wagnermartin.Plattenalbum</translation>

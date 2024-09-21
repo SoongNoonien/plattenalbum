@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-18 20:49+0200\n"
+"POT-Creation-Date: 2024-09-21 09:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -404,6 +404,10 @@ msgstr ""
 
 #: src/plattenalbum.py:3061
 msgid "Debug mode"
+msgstr ""
+
+#: src/plattenalbum.py:3118
+msgid "translator-credits"
 msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7

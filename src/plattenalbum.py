@@ -3112,9 +3112,10 @@ class Plattenalbum(Adw.Application):
 		return 0
 
 	def _on_about(self, *args):
-		builder=Gtk.Builder()
-		builder.add_from_resource("/de/wagnermartin/Plattenalbum/AboutDialog.ui")
-		dialog=builder.get_object("about_dialog")
+		dialog=Adw.AboutDialog.new_from_appdata("/de/wagnermartin/Plattenalbum/de.wagnermartin.Plattenalbum.metainfo.xml")
+		dialog.set_copyright("© 2020-2024 Martin Wagner")
+		dialog.set_developers(["Martin Wagner <martin.wagner.dev@gmail.com>"])
+		dialog.set_translator_credits(_("translator-credits"))
 		dialog.present(self._window)
 
 	def _on_quit(self, *args):
