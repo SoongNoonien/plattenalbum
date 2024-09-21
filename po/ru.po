@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2024-09-21 10:03+0200\n"
+"PO-Revision-Date: 2024-09-21 19:45+0300\n"
 "Last-Translator: Alexander Froloff <alexander.froloff@mxc.ru>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #: src/plattenalbum.py:505
 #, python-brace-format
@@ -33,7 +33,7 @@ msgstr "Вид"
 
 #: src/plattenalbum.py:932
 msgid "_Show Bit Rate"
-msgstr ""
+msgstr "Показывать битрейт"
 
 #: src/plattenalbum.py:941
 msgid "Behavior"
@@ -57,35 +57,27 @@ msgstr "Поддержка MPRIS"
 
 #: src/plattenalbum.py:946
 msgid "Disable if “MPRIS” is supported by another client"
-msgstr ""
+msgstr "Отключите, если MPRIS поддерживается другим клиентом"
 
 #: src/plattenalbum.py:965
-#, fuzzy
-#| msgid "Connection"
 msgid "_Connect"
 msgstr "Подключение"
 
 #: src/plattenalbum.py:973
-#, fuzzy
-#| msgid "Connection"
 msgid "Connection failed"
-msgstr "Подключение"
+msgstr "Подключение не удалось"
 
 #: src/plattenalbum.py:987
-#, fuzzy
-#| msgid "Connection"
 msgid "Local Connection"
-msgstr "Подключение"
+msgstr "Локальное подключение"
 
 #: src/plattenalbum.py:990 src/plattenalbum.py:1007
 msgid "Password (optional)"
-msgstr ""
+msgstr "Пароль (необязательно)"
 
 #: src/plattenalbum.py:997
-#, fuzzy
-#| msgid "Connection"
 msgid "Remote Connection"
-msgstr "Подключение"
+msgstr "Удалённое подключение"
 
 #: src/plattenalbum.py:1000
 msgid "Host Name"
@@ -97,7 +89,7 @@ msgstr "Порт"
 
 #: src/plattenalbum.py:1025
 msgid "Setup"
-msgstr ""
+msgstr "Настройка"
 
 #: src/plattenalbum.py:1027
 msgid ""
@@ -106,6 +98,10 @@ msgid ""
 "initialize a basic local instance. After that, Plattenalbum should be able "
 "to seamlessly connect to it."
 msgstr ""
+"Установите Music Player Daemon (<tt>mpd</tt>) с помощью пакетного менеджера "
+"и выполните следующие команды для настройки и инициализации базового "
+"локального экземпляра. После этого Plattenalbum должен без проблем "
+"подключиться к нему."
 
 #: src/plattenalbum.py:1037 data/ShortcutsWindow.ui:49
 msgid "Server Statistics"
@@ -198,7 +194,7 @@ msgstr "Добавить"
 
 #: src/plattenalbum.py:1718 src/plattenalbum.py:1719
 msgid "Unknown Album"
-msgstr ""
+msgstr "Неизвестный альбом"
 
 #: src/plattenalbum.py:1753 src/plattenalbum.py:2905 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
@@ -221,10 +217,8 @@ msgid "_About Plattenalbum"
 msgstr "О программе"
 
 #: src/plattenalbum.py:1760
-#, fuzzy
-#| msgid "_Reconnect"
 msgid "_Disconnect"
-msgstr "Переподключиться"
+msgstr "Отключиться"
 
 #: src/plattenalbum.py:1761
 msgid "_Update Database"
@@ -286,10 +280,8 @@ msgid "Check your network connection"
 msgstr "Проверьте настройки сети"
 
 #: src/plattenalbum.py:2255
-#, fuzzy
-#| msgid "searching…"
 msgid "Searching…"
-msgstr "поиск…"
+msgstr "Поиск…"
 
 #: src/plattenalbum.py:2280
 msgid "Lyrics view"
@@ -311,7 +303,7 @@ msgstr "Пауза"
 #: src/plattenalbum.py:2352
 #, python-brace-format
 msgid "{bitrate} kb/s"
-msgstr ""
+msgstr "{bitrate}  кбит/с"
 
 #: src/plattenalbum.py:2377 data/ShortcutsWindow.ui:107
 msgid "Previous"
@@ -330,10 +322,8 @@ msgid "Volume control"
 msgstr "Громкость"
 
 #: src/plattenalbum.py:2526
-#, fuzzy
-#| msgid "Playback Menu"
 msgid "Player Menu"
-msgstr "Меню воспроизведения"
+msgstr "Меню проигрывателя"
 
 #: src/plattenalbum.py:2536
 msgid "_Repeat Mode"
@@ -369,16 +359,10 @@ msgstr "База данных обновлена"
 
 #. status page
 #: src/plattenalbum.py:2886
-#, fuzzy
-#| msgid "Connect to your music"
 msgid "Connect to Your Music"
 msgstr "Слушайте музыку"
 
 #: src/plattenalbum.py:2887
-#, fuzzy
-#| msgid ""
-#| "To use Plattenalbum an instance of the “Music Player Daemon” needs to be "
-#| "set up and running on this or another device in the network"
 msgid ""
 "To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
 "up and running on this device or another one on the network"
@@ -388,17 +372,13 @@ msgstr ""
 
 #: src/plattenalbum.py:2889
 msgid "_Set up Instance"
-msgstr ""
+msgstr "Настроить"
 
 #: src/plattenalbum.py:2891
-#, fuzzy
-#| msgid "Connection"
 msgid "Connect _Locally"
-msgstr "Подключение"
+msgstr "Подключиться локально"
 
 #: src/plattenalbum.py:2893
-#, fuzzy
-#| msgid "_Connect to Remote Server"
 msgid "Connect _Remotely"
 msgstr "Подключиться к удалённому серверу"
 
@@ -418,17 +398,17 @@ msgstr "Играет «{title}»"
 
 #: src/plattenalbum.py:3039
 msgid "Cleared A‐B loop"
-msgstr ""
+msgstr "Повтор фрагмента очищен"
 
 #: src/plattenalbum.py:3042
 #, python-brace-format
 msgid "Started A‐B loop at {start}"
-msgstr ""
+msgstr "Начат повтор фрагмента с {start}"
 
 #: src/plattenalbum.py:3044
 #, python-brace-format
 msgid "Activated A‐B loop from {start} to {end}"
-msgstr ""
+msgstr "Активирован повтор фрагмента от {start} до {end}"
 
 #: src/plattenalbum.py:3061
 msgid "Debug mode"
@@ -469,10 +449,8 @@ msgid "Album View"
 msgstr "Просмотр альбома"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
-#, fuzzy
-#| msgid "Main window"
 msgid "Small window"
-msgstr "Основное окно"
+msgstr "Мини-окно"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
@@ -499,10 +477,8 @@ msgid "Shortcuts"
 msgstr "Горячие клавиши"
 
 #: data/ShortcutsWindow.ui:37
-#, fuzzy
-#| msgid "Reconnect"
 msgid "Disconnect"
-msgstr "Переподключение"
+msgstr "Отключиться"
 
 #: data/ShortcutsWindow.ui:43
 msgid "Update Database"
@@ -550,7 +526,7 @@ msgstr "Поиск назад"
 
 #: data/ShortcutsWindow.ui:125
 msgid "A‐B Loop"
-msgstr ""
+msgstr "Повтор фрагмента"
 
 #: data/ShortcutsWindow.ui:133
 msgid "Playback Options"
