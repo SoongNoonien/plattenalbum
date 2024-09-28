@@ -2446,7 +2446,6 @@ class PlaybackControls(Gtk.Box):
 		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
 			scroll == Gtk.ScrollType.PAGE_BACKWARD or scroll == Gtk.ScrollType.PAGE_FORWARD or
 			scroll == Gtk.ScrollType.JUMP):
-			self._client.seekcur(value)
 			duration=self._adjustment.get_upper()
 			current_pos=self._scale.get_value()
 			if value >= duration:
@@ -2459,7 +2458,7 @@ class PlaybackControls(Gtk.Box):
 				self._popover.popdown()
 			else:
 				pos=value
-			if abs(current_pos-pos) > 0.1:
+			if abs(current_pos-pos) > 1:
 				try:
 					self._client.seekcur(pos)
 				except:
