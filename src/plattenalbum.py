@@ -1289,7 +1289,7 @@ class BrowserSongRow(SongRow):
 		self.song=song
 		self.set_song(song)
 
-class BrowserSongList(Gtk.ListBox):  # TODO Menu!
+class BrowserSongList(Gtk.ListBox):
 	def __init__(self, client):
 		super().__init__(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
 		self._client=client
@@ -2107,7 +2107,7 @@ class PlaylistView(SongList):
 			return point.y > widget.get_height()/2
 		return False
 
-	def _on_drop(self, drop_target, value, x, y):  # TODO
+	def _on_drop(self, drop_target, value, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if isinstance(value, int):
 			if item is not self:
@@ -2844,11 +2844,6 @@ class MainWindow(Adw.ApplicationWindow):
 			self.add_action(action)
 		self.add_action(Gio.PropertyAction.new("toggle-lyrics", player, "show-lyrics"))
 		self.add_action(Gio.PropertyAction.new("toggle-search", browser, "show-search"))
-
-		# search
-		# TODO see: https://gitlab.gnome.org/GNOME/gtk/-/issues/6874
-		# TODO this is not compatible with the A-B loop shortcut
-		#browser.search_entry.set_key_capture_widget(self)  # type to search
 
 		# sidebar layout
 		overlay_split_view=Adw.OverlaySplitView(
