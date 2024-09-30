@@ -479,7 +479,6 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		for prop in ("CanGoNext","CanGoPrevious","CanPlay","CanPause","CanSeek","Shuffle"):
 			self._set_property(self._MPRIS_PLAYER_IFACE, prop, GLib.Variant("b", False))
 
-
 ######################
 # MPD client wrapper #
 ######################
@@ -2400,7 +2399,6 @@ class PlaybackControls(Gtk.Box):
 		# event controllers
 		controller_motion=Gtk.EventControllerMotion()
 		self._scale.add_controller(controller_motion)
-
 
 		# connect
 		self._scale.connect("change-value", self._on_change_value)
