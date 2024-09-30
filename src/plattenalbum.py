@@ -1121,7 +1121,7 @@ class ListModel(GObject.Object, Gio.ListModel):
 	def do_get_n_items(self):
 		return len(self.data)
 
-class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
+class SelectionModel(ListModel, Gtk.SelectionModel):
 	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
 			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
@@ -1179,9 +1179,7 @@ class SelectionModel(ListModel, Gtk.SelectionModel):  # TODO
 	def do_unselect_all(self): return False
 	def do_unselect_item(self, position): return False
 	def do_unselect_range(self, position, n_items): return False
-
-	def do_get_selection_in_range(self, position, n_items):  # TODO
-		return Gtk.Bitset.new_range(0, n_items)
+	def do_get_selection_in_range(self, position, n_items): return False
 
 	def do_is_selected(self, position):
 		return position == self._selected
