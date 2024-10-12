@@ -33,6 +33,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.2.1" date="2024-10-12">
+      <description translate="no">
+        <p>Minor fixes and translation updates</p>
+      </description>
+    </release>
     <release version="2.2.0" date="2024-09-18">
       <description translate="no">
         <p>Reworked UI and improved adaptiveness.</p>
