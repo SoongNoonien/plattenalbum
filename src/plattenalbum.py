@@ -2984,21 +2984,26 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
 			self.set_title(song["title"][0])
-			if self._settings.get_boolean("send-notify"):
-				if not self.is_active() and state == "play":
-					notify=Gio.Notification()
-					notify.set_title(_("Next Title is Playing"))
-					if artist:=song["artist"]:
-						body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
-					else:
-						body=_("Now playing “{title}”").format(title=song["title"][0])
-					notify.set_body(body)
-					self.get_application().send_notification("title-change", notify)
+			if self._settings.get_boolean("send-notify") and not self.is_active() and state == "play":
+				notify=Gio.Notification()
+				notify.set_title(_("Next Title is Playing"))
+				if artist:=song["artist"]:
+					body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
 				else:
-					self.get_application().withdraw_notification("title-change")
+					body=_("Now playing “{title}”").format(title=song["title"][0])
+				notify.set_body(body)
+				self.get_application().send_notification("title-change", notify)
+			else:
+				self.get_application().withdraw_notification("title-change")
 		else:
 			self._clear_title()
-			self.get_application().withdraw_notification("title-change")
+			if self._settings.get_boolean("send-notify") and not self.is_active():
+				notify=Gio.Notification()
+				notify.set_title(_("Playback Finished"))
+				notify.set_body(_("The playlist is over"))
+				self.get_application().send_notification("title-change", notify)
+			else:
+				self.get_application().withdraw_notification("title-change")
 
 	def _on_connected(self, *args):
 		if (dialog:=self.get_visible_dialog()) is not None:
