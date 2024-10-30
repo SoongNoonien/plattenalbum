@@ -2399,15 +2399,19 @@ class PlaybackControls(Gtk.Box):
 		# buttons
 		buttons=Gtk.Box(spacing=6)
 		play_button=PlayButton(client)
-		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
-		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
+		play_button.add_css_class("pill")
+		play_button.add_css_class("raised")
+		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev", valign=Gtk.Align.CENTER)
+		prev_button.add_css_class("circular")
+		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next", valign=Gtk.Align.CENTER)
+		next_button.add_css_class("circular")
 		buttons.append(prev_button)
 		buttons.append(play_button)
 		buttons.append(next_button)
 
 		# labels
-		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
-		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
+		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.CENTER, css_classes=["numeric"])
+		self._rest=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
 
 		# progress bar
 		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True)
@@ -2436,7 +2440,7 @@ class PlaybackControls(Gtk.Box):
 		self._client.emitter.connect("current-song", self._on_song_changed)
 
 		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER)
 		box.append(self._rest)
 		box.append(BitRate(client, settings))
 		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
@@ -2595,10 +2599,33 @@ class Player(Adw.Bin):
 		super().__init__()
 		self._client=client
 
-		# widgets
-		window_handle=Gtk.WindowHandle(child=MainCover(client))
-		self._lyrics_window=LyricsWindow()
+		# box
+		box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		box.set_margin_start(12)
+		box.set_margin_end(12)
+		box.set_margin_top(12)
+		box.set_margin_bottom(12)
+
+		# cover
+		cover = MainCover(client)
+		cover.add_css_class("card")
+		box.append(cover)
+
+		# song
+		song_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		self._title = Gtk.Label(ellipsize=Pango.EllipsizeMode.END)
+		self._title.add_css_class("heading")
+		song_box.append(self._title)
+		self._subtitle = Gtk.Label(ellipsize=Pango.EllipsizeMode.END)
+		song_box.append(self._subtitle)
+		box.append(song_box)
+
 		playback_controls=PlaybackControls(client, settings)
+		box.append(playback_controls)
+
+		# widgets
+		window_handle=Gtk.WindowHandle(child=box)
+		self._lyrics_window=LyricsWindow()
 
 		# stack
 		self._stack=Gtk.Stack()
@@ -2606,8 +2633,8 @@ class Player(Adw.Bin):
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
 		# header bar
-		self._title=Adw.WindowTitle()
-		header_bar=Adw.HeaderBar(title_widget=self._title)
+		window_title=Adw.WindowTitle(title=_("Now Playing"))
+		header_bar=Adw.HeaderBar(title_widget=window_title)
 		header_bar.pack_start(PlayerMenuButton(client))
 
 		# connect
@@ -2618,17 +2645,14 @@ class Player(Adw.Bin):
 		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		box.append(self._stack)
 		self._toolbar_view=Adw.ToolbarView()
 		self._toolbar_view.add_top_bar(header_bar)
-		self._toolbar_view.set_content(box)
-		self._toolbar_view.add_bottom_bar(playback_controls)
+		self._toolbar_view.set_content(self._stack)
 		self.set_child(self._toolbar_view)
 
 	def _clear_title(self):
-		self._title.set_title("")
-		self._title.set_subtitle("")
+		self._title.set_label("")
+		self._subtitle.set_label("")
 
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
@@ -2641,8 +2665,8 @@ class Player(Adw.Bin):
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
-			self._title.set_title(song["title"][0])
-			self._title.set_subtitle(str(song["artist"]))
+			self._title.set_label(song["title"][0])
+			self._subtitle.set_label(str(song["artist"]))
 			if self.get_property("show-lyrics"):
 				self._lyrics_window.display(song)
 		else:
