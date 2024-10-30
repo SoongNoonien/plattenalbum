@@ -2591,7 +2591,6 @@ class PlayerMenuButton(Gtk.MenuButton):
 
 class Player(Adw.Bin):
 	show_lyrics=GObject.Property(type=bool, default=False)
-	sheet_mode=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
@@ -2599,8 +2598,6 @@ class Player(Adw.Bin):
 		# widgets
 		window_handle=Gtk.WindowHandle(child=MainCover(client))
 		self._lyrics_window=LyricsWindow()
-		playlist_window=PlaylistWindow(client)
-		self.bind_property("sheet-mode", playlist_window.scroll, "propagate-natural-height", GObject.BindingFlags.DEFAULT)
 		playback_controls=PlaybackControls(client, settings)
 
 		# stack
@@ -2623,7 +2620,6 @@ class Player(Adw.Bin):
 		# packing
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		box.append(self._stack)
-		box.append(playlist_window)
 		self._toolbar_view=Adw.ToolbarView()
 		self._toolbar_view.add_top_bar(header_bar)
 		self._toolbar_view.set_content(box)
@@ -2898,7 +2894,6 @@ class MainWindow(Adw.ApplicationWindow):
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 620sp"))
 		break_point.add_setter(multi_layout_view, "layout-name", "bottom-sheet")
-		break_point.add_setter(player, "sheet-mode", True)
 		self.add_breakpoint(break_point)
 
 		# status page
