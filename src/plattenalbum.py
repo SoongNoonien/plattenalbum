@@ -47,7 +47,7 @@ bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
 textdomain("de.wagnermartin.Plattenalbum")
 Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource")))
 
-FALLBACK_COVER="emblem-music-symbolic"
+FALLBACK_COVER="audio-x-generic"
 
 ############################
 # decorators and functions #
