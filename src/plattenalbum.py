@@ -1669,6 +1669,19 @@ class AlbumsPage(Adw.NavigationPage):
 		album=self._selection_model.get_item(pos)
 		self.emit("album-selected", album.artist, album.name, album.date)
 
+class QueuePage(Adw.NavigationPage):
+	def __init__(self, client):
+		super().__init__(title=_("Queue"), tag="queue_list")
+
+		# header bar
+		header_bar=Adw.HeaderBar()
+
+		playlist_window=PlaylistWindow(client)
+
+		toolbar_view=Adw.ToolbarView(content=playlist_window)
+		toolbar_view.add_top_bar(header_bar)
+		self.set_child(toolbar_view)
+
 class AlbumPage(Adw.NavigationPage):
 	def __init__(self, client, albumartist, album, date, file=None):
 		super().__init__()
@@ -1762,6 +1775,7 @@ class MainMenuButton(Gtk.MenuButton):
 
 class Browser(Gtk.Stack):
 	show_search=GObject.Property(type=bool, default=False)
+	show_queue=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
@@ -1785,6 +1799,9 @@ class Browser(Gtk.Stack):
 		search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
 		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
 		artist_header_bar.pack_start(search_button)
+		queue_button=Gtk.ToggleButton(icon_name="music-queue-symbolic", tooltip_text=_("Queue"))
+		queue_button.bind_property("active", self, "show-queue", GObject.BindingFlags.BIDIRECTIONAL)
+		artist_header_bar.pack_start(queue_button)
 		artist_header_bar.pack_end(MainMenuButton())
 		artist_toolbar_view=Adw.ToolbarView(content=artist_window)
 		artist_toolbar_view.add_top_bar(artist_header_bar)
@@ -1793,9 +1810,13 @@ class Browser(Gtk.Stack):
 		# album list
 		self._albums_page=AlbumsPage(client, settings)
 
+		# queue list
+		self._queue_page=QueuePage(client)
+
 		# navigation view
 		self._album_navigation_view=Adw.NavigationView()
 		self._album_navigation_view.add(self._albums_page)
+		self._album_navigation_view.add(self._queue_page)
 		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
 		# split view
@@ -1825,6 +1846,7 @@ class Browser(Gtk.Stack):
 
 		# connect
 		self.connect("notify::show-search", self._on_search_toggled)
+		self.connect("notify::show-queue", self._on_queue_toggled)
 		self._albums_page.connect("album-selected", self._on_album_selected)
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
 		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
@@ -1863,6 +1885,12 @@ class Browser(Gtk.Stack):
 
 	def _on_search_stopped(self, widget):
 		self.set_property("show-search", False)
+
+	def _on_queue_toggled(self, *args):
+		if self.get_property("show-queue"):
+			self._album_navigation_view.replace_with_tags(["queue_list"])
+		else:
+			self._album_navigation_view.replace_with_tags(["album_list"])
 
 	def _on_artist_selected(self, model, position):
 		if self._navigation_split_view.get_collapsed():
@@ -2840,6 +2868,7 @@ class MainWindow(Adw.ApplicationWindow):
 			self.add_action(action)
 		self.add_action(Gio.PropertyAction.new("toggle-lyrics", player, "show-lyrics"))
 		self.add_action(Gio.PropertyAction.new("toggle-search", browser, "show-search"))
+		self.add_action(Gio.PropertyAction.new("toggle-queue", browser, "show-queue"))
 
 		# sidebar layout
 		overlay_split_view=Adw.OverlaySplitView(
