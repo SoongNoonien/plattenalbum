@@ -1570,10 +1570,10 @@ class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
-		self._cover=Gtk.Picture(margin_bottom=3)
+		self._cover=Gtk.Picture()
 		square_container=SquareContainer(self._cover)
 		square_container.set_valign(Gtk.Align.START)
-		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
+		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, margin_top=3, css_classes=["heading"])
 		self._date=Gtk.Label(single_line_mode=True, css_classes=["dim-label", "caption"])
 		self.append(square_container)
 		self.append(self._title)
