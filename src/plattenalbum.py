@@ -1680,6 +1680,19 @@ class AlbumsPage(Adw.NavigationPage):
 		album=self._selection_model.get_item(pos)
 		self.emit("album-selected", album.artist, album.name, album.date)
 
+class QueuePage(Adw.NavigationPage):
+	def __init__(self, client):
+		super().__init__(title=_("Queue"), tag="queue_list")
+
+		# header bar
+		header_bar=Adw.HeaderBar()
+
+		playlist_window=PlaylistWindow(client)
+
+		toolbar_view=Adw.ToolbarView(content=playlist_window)
+		toolbar_view.add_top_bar(header_bar)
+		self.set_child(toolbar_view)
+
 class AlbumPage(Adw.NavigationPage):
 	def __init__(self, client, albumartist, album, date, file=None):
 		super().__init__()
@@ -1773,6 +1786,7 @@ class MainMenuButton(Gtk.MenuButton):
 
 class Browser(Gtk.Stack):
 	show_search=GObject.Property(type=bool, default=False)
+	show_queue=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
@@ -1796,6 +1810,9 @@ class Browser(Gtk.Stack):
 		search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
 		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
 		artist_header_bar.pack_start(search_button)
+		queue_button=Gtk.ToggleButton(icon_name="music-queue-symbolic", tooltip_text=_("Queue"))
+		queue_button.bind_property("active", self, "show-queue", GObject.BindingFlags.BIDIRECTIONAL)
+		artist_header_bar.pack_start(queue_button)
 		artist_header_bar.pack_end(MainMenuButton())
 		artist_toolbar_view=Adw.ToolbarView(content=artist_window)
 		artist_toolbar_view.add_top_bar(artist_header_bar)
@@ -1804,9 +1821,13 @@ class Browser(Gtk.Stack):
 		# album list
 		self._albums_page=AlbumsPage(client, settings)
 
+		# queue list
+		self._queue_page=QueuePage(client)
+
 		# navigation view
 		self._album_navigation_view=Adw.NavigationView()
 		self._album_navigation_view.add(self._albums_page)
+		self._album_navigation_view.add(self._queue_page)
 		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
 		# split view
@@ -1836,6 +1857,7 @@ class Browser(Gtk.Stack):
 
 		# connect
 		self.connect("notify::show-search", self._on_search_toggled)
+		self.connect("notify::show-queue", self._on_queue_toggled)
 		self._albums_page.connect("album-selected", self._on_album_selected)
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
 		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
@@ -1874,6 +1896,12 @@ class Browser(Gtk.Stack):
 
 	def _on_search_stopped(self, widget):
 		self.set_property("show-search", False)
+
+	def _on_queue_toggled(self, *args):
+		if self.get_property("show-queue"):
+			self._album_navigation_view.replace_with_tags(["queue_list"])
+		else:
+			self._album_navigation_view.replace_with_tags(["album_list"])
 
 	def _on_artist_selected(self, model, position):
 		if self._navigation_split_view.get_collapsed():
@@ -2382,15 +2410,19 @@ class PlaybackControls(Gtk.Box):
 		# buttons
 		buttons=Gtk.Box(spacing=6)
 		play_button=PlayButton(client)
-		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
-		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
+		play_button.add_css_class("pill")
+		play_button.add_css_class("raised")
+		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev", valign=Gtk.Align.CENTER)
+		prev_button.add_css_class("circular")
+		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next", valign=Gtk.Align.CENTER)
+		next_button.add_css_class("circular")
 		buttons.append(prev_button)
 		buttons.append(play_button)
 		buttons.append(next_button)
 
 		# labels
-		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
-		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
+		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.CENTER, css_classes=["numeric"])
+		self._rest=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric"])
 
 		# progress bar
 		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True)
@@ -2419,7 +2451,7 @@ class PlaybackControls(Gtk.Box):
 		self._client.emitter.connect("current-song", self._on_song_changed)
 
 		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER)
 		box.append(self._rest)
 		box.append(BitRate(client, settings))
 		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
@@ -2574,17 +2606,37 @@ class PlayerMenuButton(Gtk.MenuButton):
 
 class Player(Adw.Bin):
 	show_lyrics=GObject.Property(type=bool, default=False)
-	sheet_mode=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
 
-		# widgets
-		window_handle=Gtk.WindowHandle(child=MainCover(client))
-		self._lyrics_window=LyricsWindow()
-		playlist_window=PlaylistWindow(client)
-		self.bind_property("sheet-mode", playlist_window.scroll, "propagate-natural-height", GObject.BindingFlags.DEFAULT)
+		# box
+		box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		box.set_margin_start(12)
+		box.set_margin_end(12)
+		box.set_margin_top(12)
+		box.set_margin_bottom(12)
+
+		# cover
+		cover = MainCover(client)
+		cover.add_css_class("card")
+		box.append(cover)
+
+		# song
+		song_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		self._title = Gtk.Label(ellipsize=Pango.EllipsizeMode.END)
+		self._title.add_css_class("heading")
+		song_box.append(self._title)
+		self._subtitle = Gtk.Label(ellipsize=Pango.EllipsizeMode.END)
+		song_box.append(self._subtitle)
+		box.append(song_box)
+
 		playback_controls=PlaybackControls(client, settings)
+		box.append(playback_controls)
+
+		# widgets
+		window_handle=Gtk.WindowHandle(child=box)
+		self._lyrics_window=LyricsWindow()
 
 		# stack
 		self._stack=Gtk.Stack()
@@ -2592,8 +2644,8 @@ class Player(Adw.Bin):
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
 		# header bar
-		self._title=Adw.WindowTitle()
-		header_bar=Adw.HeaderBar(title_widget=self._title)
+		window_title=Adw.WindowTitle(title=_("Now Playing"))
+		header_bar=Adw.HeaderBar(title_widget=window_title)
 		header_bar.pack_start(PlayerMenuButton(client))
 
 		# connect
@@ -2604,18 +2656,14 @@ class Player(Adw.Bin):
 		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		box.append(self._stack)
-		box.append(playlist_window)
 		self._toolbar_view=Adw.ToolbarView()
 		self._toolbar_view.add_top_bar(header_bar)
-		self._toolbar_view.set_content(box)
-		self._toolbar_view.add_bottom_bar(playback_controls)
+		self._toolbar_view.set_content(self._stack)
 		self.set_child(self._toolbar_view)
 
 	def _clear_title(self):
-		self._title.set_title("")
-		self._title.set_subtitle("")
+		self._title.set_label("")
+		self._subtitle.set_label("")
 
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
@@ -2628,8 +2676,8 @@ class Player(Adw.Bin):
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
-			self._title.set_title(song["title"][0])
-			self._title.set_subtitle(str(song["artist"]))
+			self._title.set_label(song["title"][0])
+			self._subtitle.set_label(str(song["artist"]))
 			if self.get_property("show-lyrics"):
 				self._lyrics_window.display(song)
 		else:
@@ -2851,6 +2899,7 @@ class MainWindow(Adw.ApplicationWindow):
 			self.add_action(action)
 		self.add_action(Gio.PropertyAction.new("toggle-lyrics", player, "show-lyrics"))
 		self.add_action(Gio.PropertyAction.new("toggle-search", browser, "show-search"))
+		self.add_action(Gio.PropertyAction.new("toggle-queue", browser, "show-queue"))
 
 		# sidebar layout
 		overlay_split_view=Adw.OverlaySplitView(
@@ -2880,7 +2929,6 @@ class MainWindow(Adw.ApplicationWindow):
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 620sp"))
 		break_point.add_setter(multi_layout_view, "layout-name", "bottom-sheet")
-		break_point.add_setter(player, "sheet-mode", True)
 		self.add_breakpoint(break_point)
 
 		# status page
