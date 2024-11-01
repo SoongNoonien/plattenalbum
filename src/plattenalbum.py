@@ -1371,7 +1371,7 @@ class AlbumCover(Gtk.Widget):
 		return (for_size, for_size, -1, -1)
 
 	def set_paintable(self, paintable):
-		if paintable.get_width()/paintable.get_height() >= 1:
+		if paintable.get_intrinsic_width()/paintable.get_intrinsic_height() >= 1:
 			self._picture.set_halign(Gtk.Align.FILL)
 			self._picture.set_valign(Gtk.Align.CENTER)
 		else:
