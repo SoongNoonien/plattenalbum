@@ -1354,6 +1354,31 @@ class BrowserSongList(Gtk.ListBox):
 		if (row:=self.get_row_at_y(y)) is not None:
 			return Gdk.ContentProvider.new_for_value(row.get_child().song)
 
+class AlbumCover(Gtk.Widget):
+	def __init__(self):
+		super().__init__(hexpand=True)
+		self._picture=Gtk.Picture()
+		self._picture.set_parent(self)
+		self.connect("destroy", lambda *args: self._picture.unparent())
+
+	def do_get_request_mode(self):
+		return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
+
+	def do_size_allocate(self, width, height, baseline):
+		self._picture.allocate(width, height, baseline, None)
+
+	def do_measure(self, orientation, for_size):
+		return (for_size, for_size, -1, -1)
+
+	def set_paintable(self, paintable):
+		if paintable.get_width()/paintable.get_height() >= 1:
+			self._picture.set_halign(Gtk.Align.FILL)
+			self._picture.set_valign(Gtk.Align.CENTER)
+		else:
+			self._picture.set_halign(Gtk.Align.CENTER)
+			self._picture.set_valign(Gtk.Align.FILL)
+		self._picture.set_paintable(paintable)
+
 ###########
 # browser #
 ###########
@@ -1551,31 +1576,14 @@ class Album(GObject.Object):
 		self.date=date
 		self.cover=None
 
-class SquareContainer(Gtk.Widget):
-	def __init__(self, child):
-		super().__init__(hexpand=True)
-		child.set_parent(self)
-		self.connect("destroy", lambda *args: child.unparent())
-
-	def do_get_request_mode(self):
-		return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
-
-	def do_size_allocate(self, width, height, baseline):
-		self.get_first_child().allocate(width, height, baseline, None)
-
-	def do_measure(self, orientation, for_size):
-		return (for_size, for_size, -1, -1)
-
 class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
-		self._cover=Gtk.Picture()
-		square_container=SquareContainer(self._cover)
-		square_container.set_valign(Gtk.Align.START)
+		self._cover=AlbumCover()
 		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, margin_top=3, css_classes=["heading"])
 		self._date=Gtk.Label(single_line_mode=True, css_classes=["dim-label", "caption"])
-		self.append(square_container)
+		self.append(self._cover)
 		self.append(self._title)
 		self.append(self._date)
 
@@ -1694,11 +1702,11 @@ class AlbumPage(Adw.NavigationPage):
 			header_bar.pack_end(button)
 
 		# cover
-		album_cover=Gtk.Image(width_request=200, height_request=200)
+		album_cover=AlbumCover()
 
 		# packing
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
-		box.append(album_cover)
+		box.append(Adw.Clamp(child=album_cover, maximum_size=200))
 		box.append(Adw.Clamp(child=song_list))
 		self._scroll=Gtk.ScrolledWindow(child=box)#, vexpand=True)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -1720,9 +1728,9 @@ class AlbumPage(Adw.NavigationPage):
 		songs=client.find(*tag_filter)
 		client.tagtypes("all")
 		if (cover:=client.get_cover(songs[0]["file"])) is None:
-			album_cover.set_from_paintable(lookup_icon(FALLBACK_COVER, 1024))
+			album_cover.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
 		else:
-			album_cover.set_from_paintable(cover.get_paintable())
+			album_cover.set_paintable(cover.get_paintable())
 		for song in songs:
 			row=BrowserSongRow(song)
 			song_list.append(row)
