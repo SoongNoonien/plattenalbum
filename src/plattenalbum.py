@@ -1357,7 +1357,7 @@ class BrowserSongList(Gtk.ListBox):
 class AlbumCover(Gtk.Widget):
 	def __init__(self):
 		super().__init__(hexpand=True)
-		self._picture=Gtk.Picture()
+		self._picture=Gtk.Picture(css_classes=["cover"])
 		self._picture.set_parent(self)
 		self.connect("destroy", lambda *args: self._picture.unparent())
 

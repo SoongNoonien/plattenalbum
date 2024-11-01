@@ -3,6 +3,7 @@
 	<gresource prefix="/de/wagnermartin/Plattenalbum">
 		<file>de.wagnermartin.Plattenalbum.metainfo.xml</file>
 		<file>ShortcutsWindow.ui</file>
+		<file>style.css</file>
 	</gresource>
 	<gresource prefix="/de/wagnermartin/Plattenalbum/icons/scalable/actions">
 		<file alias="lyrics-symbolic.svg">lyrics-symbolic.svg</file>
