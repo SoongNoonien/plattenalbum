@@ -7,6 +7,6 @@
 		<file>fallback-cover.svg</file>
 	</gresource>
 	<gresource prefix="/de/wagnermartin/Plattenalbum/icons/scalable/actions">
-		<file alias="lyrics-symbolic.svg">lyrics-symbolic.svg</file>
+		<file>lyrics-symbolic.svg</file>
 	</gresource>
 </gresources>
