@@ -2725,9 +2725,9 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 
 		# actions
 		self._disable_on_stop_data=["next","prev","seek-forward","seek-backward","a-b-loop"]
-		self._disable_no_song=["tidy","enqueue"]
+		self._disable_no_song_data=["tidy","enqueue"]
 		self._enable_on_reconnect_data=["toggle-play","stop","clear","update","disconnect"]
-		self._data=self._disable_on_stop_data+self._disable_no_song+self._enable_on_reconnect_data
+		self._data=self._disable_on_stop_data+self._disable_no_song_data+self._enable_on_reconnect_data
 		for name in self._data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2807,7 +2807,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 			self.lookup_action(action).set_enabled(state_dict[state])
 
 	def _on_song_changed(self, emitter, song, songid, state):
-		for action in self._disable_no_song:
+		for action in self._disable_no_song_data:
 			self.lookup_action(action).set_enabled(song is not None)
 
 	def _on_disconnected(self, *args):
