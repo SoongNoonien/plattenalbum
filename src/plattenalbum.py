@@ -47,7 +47,7 @@ bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
 textdomain("de.wagnermartin.Plattenalbum")
 Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource")))
 
-FALLBACK_COVER="media-optical"
+FALLBACK_COVER="/de/wagnermartin/Plattenalbum/fallback-cover.svg"
 
 ############################
 # decorators and functions #
@@ -565,7 +565,7 @@ class BinaryCover(bytes):
 		try:
 			paintable=Gdk.Texture.new_from_bytes(GLib.Bytes.new(self))
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			paintable=lookup_icon(FALLBACK_COVER, 1024)
+			paintable=Gdk.Texture.new_from_resource(FALLBACK_COVER)
 		return paintable
 
 class FileCover(str):
@@ -573,7 +573,7 @@ class FileCover(str):
 		try:
 			paintable=Gdk.Texture.new_from_filename(self)
 		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			paintable=lookup_icon(FALLBACK_COVER, 1024)
+			paintable=Gdk.Texture.new_from_resource(FALLBACK_COVER)
 		return paintable
 
 class EventEmitter(GObject.Object):
@@ -1603,7 +1603,7 @@ class AlbumListRow(Gtk.Box):
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
 			self._client.tagtypes("all")
 			if (cover:=self._client.get_cover(song["file"])) is None:
-				album.cover=lookup_icon(FALLBACK_COVER, 1024)
+				album.cover=Gdk.Texture.new_from_resource(FALLBACK_COVER)
 			else:
 				album.cover=cover.get_paintable()
 		self._cover.set_paintable(album.cover)
@@ -1731,7 +1731,7 @@ class AlbumPage(Adw.NavigationPage):
 		songs=client.find(*tag_filter)
 		client.tagtypes("all")
 		if (cover:=client.get_cover(songs[0]["file"])) is None:
-			album_cover.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
+			album_cover.set_paintable(Gdk.Texture.new_from_resource(FALLBACK_COVER))
 		else:
 			album_cover.set_paintable(cover.get_paintable())
 		for song in songs:
@@ -2324,7 +2324,7 @@ class MainCover(Gtk.Picture):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 	def _clear(self):
-		self.set_paintable(lookup_icon(FALLBACK_COVER, 1024))
+		self.set_paintable(Gdk.Texture.new_from_resource(FALLBACK_COVER))
 
 	def _refresh(self, *args):
 		if self._client.current_cover is None:
