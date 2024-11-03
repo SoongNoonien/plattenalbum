@@ -1379,8 +1379,8 @@ class AlbumCover(Gtk.Widget):
 			self._picture.set_valign(Gtk.Align.FILL)
 		self._picture.set_paintable(paintable)
 
-	def set_alt_text(self, alt_text):
-		self._picture.update_property([Gtk.AccessibleProperty.LABEL], [alt_text])
+	def set_alternative_text(self, alt_text):
+		self._picture.set_alternative_text(alt_text)
 
 ###########
 # browser #
@@ -1593,10 +1593,10 @@ class AlbumListRow(Gtk.Box):
 	def set_album(self, album):
 		if album.name:
 			self._title.set_text(album.name)
-			self._cover.set_alt_text(_("Album cover of {album}").format(album=album.name))
+			self._cover.set_alternative_text(_("Album cover of {album}").format(album=album.name))
 		else:
 			self._title.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Album"))}</i>')
-			self._cover.set_alt_text(_("Album cover of an unknown album"))
+			self._cover.set_alternative_text(_("Album cover of an unknown album"))
 		self._date.set_text(album.date)
 		if album.cover is None:
 			self._client.tagtypes("clear")
@@ -1721,11 +1721,11 @@ class AlbumPage(Adw.NavigationPage):
 		if album:
 			self.set_title(album)
 			window_title.set_title(album)
-			album_cover.set_alt_text(_("Album cover of {album}").format(album=album))
+			album_cover.set_alternative_text(_("Album cover of {album}").format(album=album))
 		else:
 			self.set_title(_("Unknown Album"))
 			window_title.set_title(_("Unknown Album"))
-			album_cover.set_alt_text(_("Album cover of an unknown album"))
+			album_cover.set_alternative_text(_("Album cover of an unknown album"))
 		window_title.set_subtitle(" • ".join(filter(None, (date, str(Duration(client.count(*tag_filter)["playtime"]))))))
 		client.restrict_tagtypes("track", "title", "artist")
 		songs=client.find(*tag_filter)
@@ -2316,7 +2316,7 @@ class LyricsWindow(Gtk.Stack):
 class MainCover(Gtk.Picture):
 	def __init__(self, client):
 		super().__init__()
-		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Current album cover")])
+		self.set_alternative_text(_("Current album cover"))
 		self._client=client
 
 		# connect
