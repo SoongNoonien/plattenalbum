@@ -2587,7 +2587,7 @@ class Player(Adw.Bin):
 		playback_controls=PlaybackControls(client, settings)
 
 		# stack
-		self._stack=Gtk.Stack()
+		self._stack=Gtk.Stack(visible=False)
 		self._stack.add_named(window_handle, "cover")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
@@ -2607,7 +2607,7 @@ class Player(Adw.Bin):
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		box.append(self._stack)
 		box.append(playlist_window)
-		self._toolbar_view=Adw.ToolbarView()
+		self._toolbar_view=Adw.ToolbarView(reveal_bottom_bars=False)
 		self._toolbar_view.add_top_bar(header_bar)
 		self._toolbar_view.set_content(box)
 		self._toolbar_view.add_bottom_bar(playback_controls)
@@ -2628,11 +2628,13 @@ class Player(Adw.Bin):
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
+			self._stack.set_visible(True)
 			self._title.set_title(song["title"][0])
 			self._title.set_subtitle(str(song["artist"]))
 			if self.get_property("show-lyrics"):
 				self._lyrics_window.display(song)
 		else:
+			self._stack.set_visible(False)
 			self._clear_title()
 			if self.get_property("show-lyrics"):
 				self._lyrics_window.clear()
