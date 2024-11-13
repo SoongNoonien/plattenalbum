@@ -425,7 +425,7 @@ msgid "translator-credits"
 msgstr ""
 "Martin de Reuver\n"
 "Rijnder Wever <rijnder.wever@gmail.com>\n"
-"Heimen Stoffels\n"
+"Heimen Stoffels <vistausss@fastmail.com>"
 "vistausss@fastmail.com"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
