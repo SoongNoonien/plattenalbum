@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-10-30 23:58+0100\n"
-"PO-Revision-Date: 2024-11-11 13:47+0330\n"
+"PO-Revision-Date: 2024-12-10 16:10+0330\n"
 "Last-Translator: Danial Behzadi <dani.behzi@ubuntu.com>\n"
 "Language-Team: \n"
 "Language: fa\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.5\n"
 
 #: src/plattenalbum.py:504
 #, python-brace-format
@@ -94,12 +94,12 @@ msgstr "برپاسازی"
 msgid ""
 "To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
 "system package manager, and run the following commands to configure and "
-"initialize a basic local instance. After that, Plattenalbum should be able "
-"to seamlessly connect to it."
+"initialize a basic local instance. After that, Plattenalbum should be able to "
+"seamlessly connect to it."
 msgstr ""
-"برای آغاز، حدمت پخش کنندهٔ آهنگ (<tt>mpd</tt>) را با مدیر بستهٔ سامانه‌تان نصب "
-"کرده و فرمان‌های زیر را برای پیکربندی و راه‌اندازی نمونهٔ محلی پایه‌ای اجرا "
-"کنید. پس از آن پلتن‌آلبوم باید بتواند بدون مشکل وصل شود."
+"برای آغاز، خدمت پخش کنندهٔ آهنگ (<tt>mpd</tt>) را با مدیر بستهٔ سامانه‌تان نصب "
+"کرده و فرمان‌های زیر را برای پیکربندی و راه‌اندازی نمونهٔ محلی پایه‌ای اجرا کنید. "
+"پس از آن آلبوم صفحه باید بتواند بدون مشکل وصل شود."
 
 #: src/plattenalbum.py:1036 data/ShortcutsWindow.ui:49
 msgid "Server Statistics"
@@ -212,7 +212,7 @@ msgstr "_راهنما"
 
 #: src/plattenalbum.py:1755 src/plattenalbum.py:2894
 msgid "_About Plattenalbum"
-msgstr "_دربارهٔ پلتن‌آلبوم"
+msgstr "_دربارهٔ آلبوم صفحه"
 
 #: src/plattenalbum.py:1757
 msgid "_Disconnect"
@@ -362,10 +362,10 @@ msgstr "وصل شدن به آهنگ‌هایتان"
 
 #: src/plattenalbum.py:2877
 msgid ""
-"To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
-"up and running on this device or another one on the network"
+"To use Plattenalbum, an instance of the Music Player Daemon needs to be set up "
+"and running on this device or another one on the network"
 msgstr ""
-"برای استفاده از پلتن‌آلبوم، باید نمونه‌ای زا حدمت پخش کنندهٔ آهنگ برپا شده روی "
+"برای استفاده از آلبوم صفحه، باید نمونه‌ای از خدمت پخش کنندهٔ آهنگ برپا شده و روی "
 "این افزاره یا روی شبکه در حال اجرا باشد"
 
 #: src/plattenalbum.py:2879
@@ -427,7 +427,7 @@ msgstr "دانیال بهزادی <dani.behzi@ubuntu.com>"
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
-msgstr "پلتن‌آلبوم"
+msgstr "آلبوم صفحه"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
@@ -443,8 +443,8 @@ msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
 msgstr ""
-"مرور مجموعه‌تان با دیدن جلد آلبوم‌های بزرگ. پخش آهنگ‌هایتان بدون مدیریت "
-"سیاهه‌های پخش."
+"مرور مجموعه‌تان با دیدن جلد آلبوم‌های بزرگ. پخش آهنگ‌هایتان بدون مدیریت سیاهه‌های "
+"پخش."
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
 msgid "Main window"
