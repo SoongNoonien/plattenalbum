@@ -421,7 +421,7 @@ msgstr "โหมด Debug"
 
 #: src/plattenalbum.py:3110
 msgid "translator-credits"
-msgstr "Supakorn Huemwang <shuemwang.han@gmail.com>\n"
+msgstr "Supakorn Huemwang <shuemwang.han@gmail.com>"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
