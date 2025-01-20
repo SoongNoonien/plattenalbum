@@ -1,3 +1,4 @@
 .cover {
+  background-color: var(--window-bg-color);
   border-radius: 6px;
 }
