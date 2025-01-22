@@ -639,11 +639,18 @@ class Client(MPDClient):
 
 	def try_connect(self, remote):
 		self.emitter.emit("connecting")
+
+		if (host:=os.environ.get('MPD_HOST')):
+			port=int(os.environ.get('MPD_PORT', '6600'))
+			remote = True
+		elif (host:=self._settings.get_string("host")):
+			port=self._settings.get_int("port")
+
 		def callback():
 			# connect
 			if remote:
 				try:
-					self.connect(self._settings.get_string("host"), self._settings.get_int("port"))
+					self.connect(host, port)
 				except:
 					self.emitter.emit("connection_error")
 					self._start_idle_id=None
@@ -683,7 +690,8 @@ class Client(MPDClient):
 				self.disconnect()
 				self.emitter.emit("connection_error")
 			# connect successful
-			self._settings.set_boolean("remote-connection", remote)
+			if 'MPD_HOST' not in os.environ:
+				self._settings.set_boolean("remote-connection", remote)
 			self._start_idle_id=None
 			return False
 		self._start_idle_id=GLib.idle_add(callback)
