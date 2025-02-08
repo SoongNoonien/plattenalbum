@@ -16,23 +16,31 @@
   </branding>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/main_window.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.2/screenshots/main_window.png</image>
       <caption>Main window</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/album_view.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.2/screenshots/album_view.png</image>
       <caption>Album View</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/search.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.2/screenshots/search.png</image>
       <caption>Search</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/small.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.2/screenshots/small.png</image>
       <caption>Small window</caption>
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.2.2" date="2025-02-08">
+      <description translate="no">
+        <p>Rounded cover corners</p>
+        <p>New cover fallback</p>
+        <p>Notification when playlist is over</p>
+        <p>Persian and Thai translations</p>
+      </description>
+    </release>
     <release version="2.2.1" date="2024-10-12">
       <description translate="no">
         <p>Minor fixes and translation updates</p>
