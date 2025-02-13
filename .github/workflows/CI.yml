@@ -15,9 +15,10 @@ jobs:
       options: --privileged
     steps:
     - uses: actions/checkout@v4
-    - uses: jochumdev/flatpak-github-actions/flatpak-builder@builder-update-deps
+    - uses: flatpak/flatpak-github-actions/flatpak-builder@master
       with:
         bundle: plattenalbum.flatpak
         manifest-path: de.wagnermartin.Plattenalbum.json
         run-tests: true
         cache-key: flatpak-builder-${{ github.sha }}
+        upload-artifact: false
