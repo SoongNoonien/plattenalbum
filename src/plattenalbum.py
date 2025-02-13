@@ -669,10 +669,10 @@ class Client(MPDClient):
 					return False
 			# connected
 			commands=self.commands()
-			if remote:
-				self._music_directory=None
-			elif "config" in commands:
+			try:
 				self._music_directory=self.config()
+			except:
+				self._music_directory=None
 			if "outputs" in commands and "enableoutput" in commands:
 				if len(self.outputs()) == 1:
 					self.enableoutput(0)
