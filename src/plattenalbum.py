@@ -2840,6 +2840,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self.set_default_icon_name("de.wagnermartin.Plattenalbum")
 		self._client=client
 		self._settings=settings
+		self._suspend_inhibit=0
 
 		# shortcuts
 		builder=Gtk.Builder()
@@ -2932,6 +2933,7 @@ class MainWindow(Adw.ApplicationWindow):
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.emitter.connect("current-song", self._on_song_changed)
+		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connection_error", self._on_connection_error)
@@ -3024,6 +3026,13 @@ class MainWindow(Adw.ApplicationWindow):
 			else:
 				self.get_application().withdraw_notification("title-change")
 
+	def _on_state(self, emitter, state):
+		if state == "play":
+			self._suspend_inhibit=self.get_application().inhibit(self, Gtk.ApplicationInhibitFlags.SUSPEND, _("Playing music"))
+		elif self._suspend_inhibit:
+			self.get_application().uninhibit(self._suspend_inhibit)
+			self._suspend_inhibit=0
+
 	def _on_connected(self, *args):
 		if (dialog:=self.get_visible_dialog()) is not None:
 			dialog.close()
@@ -3034,6 +3043,9 @@ class MainWindow(Adw.ApplicationWindow):
 		self._clear_title()
 		self.lookup_action("stats").set_enabled(False)
 		self._updating_toast.dismiss()
+		if self._suspend_inhibit:
+			self.get_application().uninhibit(self._suspend_inhibit)
+			self._suspend_inhibit=0
 
 	def _on_connection_error(self, *args):
 		self._status_page_stack.set_visible_child_name("status-page")
