@@ -637,36 +637,48 @@ class Client(MPDClient):
 		self.emitter.emit("updating-db")
 		return job_id
 
-	def try_connect(self, remote):
+	def try_connect(self, manual):
 		self.emitter.emit("connecting")
 		def callback():
 			# connect
-			if remote:
+			if manual:
 				try:
 					self.connect(self._settings.get_string("host"), self._settings.get_int("port"))
 				except:
 					self.emitter.emit("connection_error")
 					self._start_idle_id=None
 					return False
-			else:
-				try:
-					self.connect(self._socket_path, None)
-				except:
+				# set password
+				if password:=self._settings.get_string("password"):
 					try:
-						self.connect("/run/mpd/socket", None)
+						self.password(password)
 					except:
+						self.disconnect()
 						self.emitter.emit("connection_error")
 						self._start_idle_id=None
 						return False
-			# set password
-			if password:=self._settings.get_string("password"):
-				try:
-					self.password(password)
-				except:
-					self.disconnect()
-					self.emitter.emit("connection_error")
-					self._start_idle_id=None
-					return False
+			else:
+				host=GLib.getenv("MPD_HOST")
+				port=GLib.getenv("MPD_PORT")
+				if host is not None or port is not None:
+					if host is None:
+						host="localhost"
+					if port is None:
+						port=6600
+					try:
+						self.connect(host, port)
+					except:
+						pass
+				if not self.connected():
+					try:
+						self.connect(self._socket_path, None)
+					except:
+						try:
+							self.connect("/run/mpd/socket", None)
+						except:
+							self.emitter.emit("connection_error")
+							self._start_idle_id=None
+							return False
 			# connected
 			commands=self.commands()
 			try:
@@ -683,7 +695,7 @@ class Client(MPDClient):
 				self.disconnect()
 				self.emitter.emit("connection_error")
 			# connect successful
-			self._settings.set_boolean("remote-connection", remote)
+			self._settings.set_boolean("manual-connection", manual)
 			self._start_idle_id=None
 			return False
 		self._start_idle_id=GLib.idle_add(callback)
@@ -981,22 +993,12 @@ class ConnectDialog(Adw.Dialog):
 	def connection_error(self):
 		self._toast_overlay.add_toast(self._connection_toast)
 
-class LocalConnectDialog(ConnectDialog):
+class ManualConnectDialog(ConnectDialog):
 	def __init__(self, settings):
-		super().__init__(_("Local Connection"), GLib.Variant("b", False))
+		super().__init__(_("Manual Connection"), GLib.Variant("b", True))
 		list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
 		list_box.add_css_class("boxed-list")
-		password_row=Adw.PasswordEntryRow(title=_("Password (optional)"))
-		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
-		list_box.append(password_row)
-		self.set_content(list_box)
-
-class RemoteConnectDialog(ConnectDialog):
-	def __init__(self, settings):
-		super().__init__(_("Remote Connection"), GLib.Variant("b", True))
-		list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
-		list_box.add_css_class("boxed-list")
-		hostname_row=Adw.EntryRow(title=_("Host Name"))
+		hostname_row=Adw.EntryRow(title=_("Host"))
 		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		list_box.append(hostname_row)
 		port_row=Adw.SpinRow.new_with_range(0, 65535, 1)
@@ -2852,7 +2854,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "settings","local-connect","remote-connect","setup","stats","help")
+		simple_actions_data=("close", "settings","manual-connect","setup","reconnect","stats","help")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2895,16 +2897,13 @@ class MainWindow(Adw.ApplicationWindow):
 		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
 		status_page.set_description(_("To use Plattenalbum, an instance of the Music Player Daemon "\
 			"needs to be set up and running on this device or another one on the network"))
-		setup_button=Gtk.Button(label=_("_Set up Instance"), use_underline=True, action_name="win.setup")
+		setup_button=Gtk.Button(label=_("_Set up"), use_underline=True, action_name="win.setup")
 		setup_button.set_css_classes(["suggested-action", "pill"])
-		local_connect_button=Gtk.Button(label=_("Connect _Locally"), use_underline=True, action_name="win.local-connect")
-		local_connect_button.add_css_class("pill")
-		remote_connect_button=Gtk.Button(label=_("Connect _Remotely"), use_underline=True, action_name="win.remote-connect")
-		remote_connect_button.add_css_class("pill")
+		manual_connect_button=Gtk.Button(label=_("Connect _Manually"), use_underline=True, action_name="win.manual-connect")
+		manual_connect_button.add_css_class("pill")
 		button_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER, spacing=12)
 		button_box.append(setup_button)
-		button_box.append(local_connect_button)
-		button_box.append(remote_connect_button)
+		button_box.append(manual_connect_button)
 		status_page.set_child(button_box)
 		menu=Gio.Menu()
 		menu.append(_("_Preferences"), "win.settings")
@@ -2912,7 +2911,9 @@ class MainWindow(Adw.ApplicationWindow):
 		menu.append(_("_Help"), "win.help")
 		menu.append(_("_About Plattenalbum"), "app.about")
 		menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True, menu_model=menu)
+		reconnect_button=Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=_("Reconnect"), action_name="win.reconnect")
 		header_bar=Adw.HeaderBar()
+		header_bar.pack_start(reconnect_button)
 		header_bar.pack_end(menu_button)
 		status_page_toolbar_view=Adw.ToolbarView(content=status_page)
 		status_page_toolbar_view.add_top_bar(header_bar)
@@ -2958,7 +2959,7 @@ class MainWindow(Adw.ApplicationWindow):
 		while main.pending():
 			main.iteration()
 		self._settings.bind("maximize", self, "maximized", Gio.SettingsBindFlags.SET)
-		self._client.try_connect(self._settings.get_boolean("remote-connection"))
+		self._client.try_connect(self._settings.get_boolean("manual-connection"))
 
 	def _clear_title(self):
 		self.set_title("Plattenalbum")
@@ -2973,17 +2974,16 @@ class MainWindow(Adw.ApplicationWindow):
 		if self.get_visible_dialog() is None:
 			SettingsDialog(self._client, self._settings).present(self)
 
-	def _on_local_connect(self, action, param):
+	def _on_manual_connect(self, action, param):
 		if self.get_visible_dialog() is None:
-			LocalConnectDialog(self._settings).present(self)
-
-	def _on_remote_connect(self, action, param):
-		if self.get_visible_dialog() is None:
-			RemoteConnectDialog(self._settings).present(self)
+			ManualConnectDialog(self._settings).present(self)
 
 	def _on_setup(self, action, param):
 		if self.get_visible_dialog() is None:
 			SetupDialog().present(self)
+
+	def _on_reconnect(self, action, param):
+		self._client.try_connect(self._settings.get_boolean("manual-connection"))
 
 	def _on_stats(self, action, param):
 		if self.get_visible_dialog() is None:
