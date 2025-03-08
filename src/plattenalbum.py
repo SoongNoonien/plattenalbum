@@ -613,6 +613,7 @@ class Client(MPDClient):
 		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
 		self._socket_path=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
+		self.server=""
 
 	# overloads to use Song class
 	def currentsong(self, *args):
@@ -644,6 +645,7 @@ class Client(MPDClient):
 			if manual:
 				try:
 					self.connect(self._settings.get_string("host"), self._settings.get_int("port"))
+					self.server=f'{self._settings.get_string("host")}:{self._settings.get_int("port")}'
 				except:
 					self.emitter.emit("connection_error")
 					self._start_idle_id=None
@@ -667,14 +669,17 @@ class Client(MPDClient):
 						port=6600
 					try:
 						self.connect(host, port)
+						self.server=f"{host}:{port}"
 					except:
 						pass
 				if not self.connected():
 					try:
 						self.connect(self._socket_path, None)
+						self.server=self._socket_path
 					except:
 						try:
 							self.connect("/run/mpd/socket", None)
+							self.server="/run/mpd/socket"
 						except:
 							self.emitter.emit("connection_error")
 							self._start_idle_id=None
@@ -704,6 +709,7 @@ class Client(MPDClient):
 		super().disconnect()
 		self._last_status={}
 		self._music_directory=None
+		self.server=""
 		self.current_cover=None
 		self.emitter.emit("disconnected")
 
@@ -1043,6 +1049,7 @@ class ServerStats(Adw.Dialog):
 
 		# populate
 		display_str={
+			"server": _("Server"),
 			"protocol": _("Protocol"),
 			"uptime": _("Uptime"),
 			"playtime": _("Playtime"),
@@ -1053,11 +1060,12 @@ class ServerStats(Adw.Dialog):
 			"db_update": _("Database Update")
 		}
 		stats=client.stats()
+		stats["server"]=client.server
 		stats["protocol"]=str(client.mpd_version)
 		for key in ("uptime","playtime","db_playtime"):
 			stats[key]=str(Duration(stats[key]))
 		stats["db_update"]=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%a %d %B %Y, %H∶%M")
-		for key in ("protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs"):
+		for key in ("server","protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs"):
 			row=Adw.ActionRow(activatable=False, selectable=False, subtitle_selectable=True, title=display_str[key], subtitle=stats[key])
 			row.add_css_class("property")
 			list_box.append(row)
