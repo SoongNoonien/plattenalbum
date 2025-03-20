@@ -978,7 +978,7 @@ class SettingsDialog(Adw.PreferencesDialog):
 class ConnectDialog(Adw.Dialog):
 	def __init__(self, title, target):
 		super().__init__(title=title, width_request=360, follows_content_size=True)
-		self._clamp=Adw.Clamp(margin_top=12, margin_bottom=18, margin_start=18, margin_end=18)
+		self._clamp=Adw.Clamp(margin_top=24, margin_bottom=24, margin_start=12, margin_end=12)
 		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="mpd.connect", action_target=target)
 		connect_button.set_css_classes(["suggested-action"])
 		cancel_button=Gtk.Button(label=_("Ca_ncel"), use_underline=True)
@@ -1073,7 +1073,7 @@ class ServerStats(Adw.Dialog):
 			list_box.append(row)
 
 		# packing
-		clamp=Adw.Clamp(child=list_box, margin_top=12, margin_bottom=18, margin_start=12, margin_end=12)
+		clamp=Adw.Clamp(child=list_box, margin_top=24, margin_bottom=24, margin_start=12, margin_end=12)
 		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
 		toolbar_view=Adw.ToolbarView(content=scroll)
 		toolbar_view.add_top_bar(Adw.HeaderBar())
