@@ -978,20 +978,22 @@ class SettingsDialog(Adw.PreferencesDialog):
 class ConnectDialog(Adw.Dialog):
 	def __init__(self, title, target):
 		super().__init__(title=title, width_request=360, follows_content_size=True)
-		self._clamp=Adw.Clamp()
-		button=Gtk.Button(label=_("_Connect"), use_underline=True, halign=Gtk.Align.CENTER, action_name="mpd.connect", action_target=target)
-		button.set_css_classes(["pill", "suggested-action"])
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24, margin_top=12, margin_bottom=18, margin_start=18, margin_end=18)
-		box.append(self._clamp)
-		box.append(button)
-		scroll=Gtk.ScrolledWindow(child=box, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+		self._clamp=Adw.Clamp(margin_top=12, margin_bottom=18, margin_start=18, margin_end=18)
+		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="mpd.connect", action_target=target)
+		connect_button.set_css_classes(["suggested-action"])
+		cancel_button=Gtk.Button(label=_("Ca_ncel"), use_underline=True)
+		cancel_button.connect("clicked", lambda *args: self.close())
+		scroll=Gtk.ScrolledWindow(child=self._clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+		header_bar=Adw.HeaderBar(show_start_title_buttons=False, show_end_title_buttons=False)
+		header_bar.pack_start(cancel_button)
+		header_bar.pack_end(connect_button)
 		toolbar_view=Adw.ToolbarView(content=scroll)
-		toolbar_view.add_top_bar(Adw.HeaderBar())
+		toolbar_view.add_top_bar(header_bar)
 		self._connection_toast=Adw.Toast(title=_("Connection failed"))
 		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
 		self.set_child(self._toast_overlay)
-		self.set_default_widget(button)
-		self.set_focus(button)
+		self.set_default_widget(connect_button)
+		self.set_focus(connect_button)
 
 	def set_content(self, widget):
 		self._clamp.set_child(widget)
@@ -2863,7 +2865,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "settings","manual-connect","setup","reconnect","stats","help")
+		simple_actions_data=("close", "settings","manual-connect","stats","help")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2906,12 +2908,12 @@ class MainWindow(Adw.ApplicationWindow):
 		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
 		status_page.set_description(_("To use Plattenalbum, an instance of the Music Player Daemon "\
 			"needs to be set up and running on this device or another one on the network"))
-		setup_button=Gtk.Button(label=_("_Set up"), use_underline=True, action_name="win.setup")
-		setup_button.set_css_classes(["suggested-action", "pill"])
+		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="mpd.connect", action_target=GLib.Variant("b", False))
+		connect_button.set_css_classes(["suggested-action", "pill"])
 		manual_connect_button=Gtk.Button(label=_("Connect _Manually"), use_underline=True, action_name="win.manual-connect")
 		manual_connect_button.add_css_class("pill")
 		button_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER, spacing=12)
-		button_box.append(setup_button)
+		button_box.append(connect_button)
 		button_box.append(manual_connect_button)
 		status_page.set_child(button_box)
 		menu=Gio.Menu()
@@ -2920,9 +2922,7 @@ class MainWindow(Adw.ApplicationWindow):
 		menu.append(_("_Help"), "win.help")
 		menu.append(_("_About Plattenalbum"), "app.about")
 		menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True, menu_model=menu)
-		reconnect_button=Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=_("Reconnect"), action_name="win.reconnect")
 		header_bar=Adw.HeaderBar()
-		header_bar.pack_start(reconnect_button)
 		header_bar.pack_end(menu_button)
 		status_page_toolbar_view=Adw.ToolbarView(content=status_page)
 		status_page_toolbar_view.add_top_bar(header_bar)
@@ -2988,13 +2988,6 @@ class MainWindow(Adw.ApplicationWindow):
 		if self.get_visible_dialog() is None:
 			ManualConnectDialog(self._settings).present(self)
 
-	def _on_setup(self, action, param):
-		if self.get_visible_dialog() is None:
-			SetupDialog().present(self)
-
-	def _on_reconnect(self, action, param):
-		self._client.try_connect(self._settings.get_boolean("manual-connection"))
-
 	def _on_stats(self, action, param):
 		if self.get_visible_dialog() is None:
 			ServerStats(self._client, self._settings).present(self)
@@ -3056,10 +3049,13 @@ class MainWindow(Adw.ApplicationWindow):
 			self._suspend_inhibit=0
 
 	def _on_connection_error(self, *args):
-		self._status_page_stack.set_visible_child_name("status-page")
-		if (dialog:=self.get_visible_dialog()) is not None:
-			if isinstance(dialog, ConnectDialog):
+		if self._status_page_stack.get_visible_child_name() == "status-page":
+			if (dialog:=self.get_visible_dialog()) is None:
+				SetupDialog().present(self)
+			elif isinstance(dialog, ConnectDialog):
 				dialog.connection_error()
+		else:
+			self._status_page_stack.set_visible_child_name("status-page")
 
 	def _on_updating_db(self, *args):
 		self._toast_overlay.add_toast(self._updating_toast)
