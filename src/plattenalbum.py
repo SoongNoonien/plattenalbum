@@ -1354,6 +1354,10 @@ class BrowserSongList(Gtk.ListBox):
 		long_press_controller.connect("pressed", self._on_long_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
 
+	def remove_all(self):
+		self._menu.unparent()
+		super().remove_all()
+
 	def _open_menu(self, row, x, y):
 		self._menu.unparent()
 		self._menu.set_parent(row)
