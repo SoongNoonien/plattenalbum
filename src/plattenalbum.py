@@ -1421,8 +1421,7 @@ class AlbumCover(Gtk.Widget):
 
 class SearchView(Gtk.Stack):
 	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-			"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
-			"song-selected": (GObject.SignalFlags.RUN_FIRST, None, (Song,))}
+			"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
@@ -1439,7 +1438,7 @@ class SearchView(Gtk.Stack):
 		self._album_list.add_css_class("boxed-list")
 
 		# song list
-		self._song_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._song_list=BrowserSongList(client)
 		self._song_list.add_css_class("rich-list")
 		self._song_list.add_css_class("boxed-list")
 
@@ -1464,7 +1463,6 @@ class SearchView(Gtk.Stack):
 		# connect
 		self._artist_list.connect("row-activated", self._on_artist_activate)
 		self._album_list.connect("row-activated", self._on_album_activate)
-		self._song_list.connect("row-activated", self._on_song_activate)
 
 		# packing
 		self.add_named(status_page, "no-results")
@@ -1506,9 +1504,6 @@ class SearchView(Gtk.Stack):
 
 	def _on_album_activate(self, list_box, row):
 		self.emit("album-selected", row.get_child().album, row.get_child().artist, row.get_child().date)
-
-	def _on_song_activate(self, list_box, row):
-		self.emit("song-selected", row.get_child().song)
 
 class Artist(GObject.Object):
 	def __init__(self, name):
@@ -1737,7 +1732,7 @@ class AlbumsPage(Adw.NavigationPage):
 		self.emit("album-selected", album.artist, album.name, album.date)
 
 class AlbumPage(Adw.NavigationPage):
-	def __init__(self, client, albumartist, album, date, file=None):
+	def __init__(self, client, albumartist, album, date):
 		super().__init__()
 		tag_filter=("albumartist", albumartist, "album", album, "date", date)
 
@@ -1792,24 +1787,6 @@ class AlbumPage(Adw.NavigationPage):
 		for song in songs:
 			row=BrowserSongRow(song)
 			song_list.append(row)
-
-		# scroll to file
-		if file is not None:
-			for i, song in enumerate(songs):
-				if song["file"] == file:
-					row=song_list.get_row_at_index(i)
-					GLib.idle_add(self._scroll_to, row)
-					break
-
-	def _scroll_to(self, row):
-		row.grab_focus()
-		computed_point,point=row.compute_point(self._scroll.get_child(), Graphene.Point.zero())
-		if computed_point:
-			adj=self._scroll.get_vadjustment()
-			value=point.y-self._scroll.get_height()*0.4
-			if value >= adj.get_value():
-				adj.set_value(value)
-		return False
 
 class MainMenuButton(Gtk.MenuButton):
 	def __init__(self):
@@ -1897,7 +1874,6 @@ class Browser(Gtk.Stack):
 		self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
 		self._search_view.connect("album-selected", self._on_search_album_selected)
-		self._search_view.connect("song-selected", self._on_search_song_selected)
 		self.search_entry.connect("search-started", self._on_search_started)
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
@@ -1956,14 +1932,6 @@ class Browser(Gtk.Stack):
 		self._album_navigation_view.replace([self._albums_page, album_page])
 		self.set_property("show-search", False)
 		album_page.play_button.grab_focus()
-
-	def _on_search_song_selected(self, widget, song):
-		self._artist_list.select(song["albumartist"][0])
-		album_page=AlbumPage(self._client, song["albumartist"][0], song["album"][0], song["date"][0], song["file"])
-		self._album_navigation_view.replace([self._albums_page, album_page])
-		self.set_property("show-search", False)
-		# TODO https://lazka.github.io/pgi-docs/Gtk-4.0/classes/Window.html#Gtk.Window.set_focus_visible
-		self.get_root().set_focus_visible(True)
 
 	def _on_disconnected(self, *args):
 		self._album_navigation_view.pop_to_tag("album_list")
