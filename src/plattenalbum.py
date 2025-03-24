@@ -1083,6 +1083,27 @@ class ServerStats(Adw.Dialog):
 # general purpose widgets #
 ###########################
 
+class AlbumRow(Gtk.Box):
+	def __init__(self, album):
+		super().__init__()
+		self.album=album["album"]
+		self.artist=album["albumartist"]
+		self.date=album["date"]
+
+		# labels
+		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
+		self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label", "caption"])
+
+		# fill
+		self._title.set_markup(f"<b>{GLib.markup_escape_text(album['album'])}</b> • {GLib.markup_escape_text(album['albumartist'])}")
+		self._subtitle.set_text(album["date"])
+
+		# packing
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
+		box.append(self._title)
+		box.append(self._subtitle)
+		self.append(box)
+
 class SongRow(Gtk.Box):
 	def __init__(self, show_track=True, **kwargs):
 		super().__init__( **kwargs)
@@ -1400,15 +1421,22 @@ class AlbumCover(Gtk.Widget):
 
 class SearchView(Gtk.Stack):
 	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+			"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
 			"song-selected": (GObject.SignalFlags.RUN_FIRST, None, (Song,))}
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
+		self._results=20  # TODO adjust number of results
 
 		# artist list
 		self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
 		self._artist_list.add_css_class("rich-list")
 		self._artist_list.add_css_class("boxed-list")
+
+		# album list
+		self._album_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._album_list.add_css_class("rich-list")
+		self._album_list.add_css_class("boxed-list")
 
 		# song list
 		self._song_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
@@ -1419,11 +1447,15 @@ class SearchView(Gtk.Stack):
 		self._artist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
 		self._artist_box.append(Gtk.Label(label=_("Artists"), xalign=0, css_classes=["heading"]))
 		self._artist_box.append(self._artist_list)
+		self._album_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		self._album_box.append(Gtk.Label(label=_("Albums"), xalign=0, css_classes=["heading"]))
+		self._album_box.append(self._album_list)
 		song_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
 		song_box.append(Gtk.Label(label=_("Songs"), xalign=0, css_classes=["heading"]))
 		song_box.append(self._song_list)
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
 		box.append(self._artist_box)
+		box.append(self._album_box)
 		box.append(song_box)
 
 		# status page
@@ -1431,6 +1463,7 @@ class SearchView(Gtk.Stack):
 
 		# connect
 		self._artist_list.connect("row-activated", self._on_artist_activate)
+		self._album_list.connect("row-activated", self._on_album_activate)
 		self._song_list.connect("row-activated", self._on_song_activate)
 
 		# packing
@@ -1439,29 +1472,40 @@ class SearchView(Gtk.Stack):
 
 	def clear(self):
 		self._artist_list.remove_all()
+		self._album_list.remove_all()
 		self._song_list.remove_all()
 		self.set_visible_child_name("no-results")
 
-	def search(self, search_text, artists):
+	def search(self, search_text):
 		self.clear()
 		if (keywords:=search_text.split()):
 			self._client.restrict_tagtypes("title", "artist", "albumartist", "album", "date")
 			expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in keywords))
-			songs=self._client.search(f"({expressions})", "window", "0:20")  # TODO adjust number of results
+			songs=self._client.search(f"({expressions})", "window", f"0:{self._results}")
 			self._client.tagtypes("all")
 			for song in songs:
 				row=BrowserSongRow(song, show_track=False)
 				self._song_list.append(row)
 			if songs:
 				self.set_visible_child_name("results")
-				artists=filter(lambda x: all(keyword.casefold() in x.name.casefold() for keyword in keywords), artists)
-				for artist in itertools.islice(artists, 20):  # TODO adjust number of results
-					label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, label=artist.name)
+				expressions=" AND ".join((f"(albumartist contains_ci '{keyword}')" for keyword in keywords))
+				artists=self._client.list("albumartist", f"({expressions})")
+				for artist in itertools.islice(artists, self._results):
+					label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, label=artist["albumartist"])
 					self._artist_list.append(label)
 				self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
+				expressions=" AND ".join((f"(!((album !contains_ci '{keyword}') AND (albumartist !contains_ci '{keyword}') AND (date !contains_ci '{keyword}')))" for keyword in keywords))
+				albums=self._client.list("album", f"({expressions})", "group", "date", "group", "albumartist")
+				for album in itertools.islice(albums, self._results):
+					album_row=AlbumRow(album)
+					self._album_list.append(album_row)
+				self._album_box.set_visible(self._album_list.get_first_child() is not None)
 
 	def _on_artist_activate(self, list_box, row):
 		self.emit("artist-selected", row.get_child().get_label())
+
+	def _on_album_activate(self, list_box, row):
+		self.emit("album-selected", row.get_child().album, row.get_child().artist, row.get_child().date)
 
 	def _on_song_activate(self, list_box, row):
 		self.emit("song-selected", row.get_child().song)
@@ -1702,19 +1746,18 @@ class AlbumPage(Adw.NavigationPage):
 		song_list.add_css_class("rich-list")
 		song_list.add_css_class("boxed-list")
 
+		# buttons
+		self.play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"))
+		self.play_button.connect("clicked", lambda *args: client.filter_to_playlist(tag_filter, "play"))
+		append_button=Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Append"))
+		append_button.connect("clicked", lambda *args: client.filter_to_playlist(tag_filter, "append"))
+
 		# header bar
 		header_bar=Adw.HeaderBar()
 		window_title=Adw.WindowTitle()
 		header_bar.set_title_widget(window_title)
-
-		# buttons
-		data=((_("Play"), "media-playback-start-symbolic", "play"),
-			(_("Append"), "list-add-symbolic", "append")
-		)
-		for tooltip, icon_name, mode in data:
-			button=Gtk.Button(icon_name=icon_name, tooltip_text=tooltip)
-			button.connect("clicked", lambda widget, mode: client.filter_to_playlist(tag_filter, mode), mode)
-			header_bar.pack_end(button)
+		header_bar.pack_end(self.play_button)
+		header_bar.pack_end(append_button)
 
 		# cover
 		album_cover=AlbumCover()
@@ -1853,6 +1896,7 @@ class Browser(Gtk.Stack):
 		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
 		self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
+		self._search_view.connect("album-selected", self._on_search_album_selected)
 		self._search_view.connect("song-selected", self._on_search_song_selected)
 		self.search_entry.connect("search-started", self._on_search_started)
 		self.search_entry.connect("search-changed", self._on_search_changed)
@@ -1880,7 +1924,7 @@ class Browser(Gtk.Stack):
 	def _on_search_changed(self, entry):
 		if (search_text:=self.search_entry.get_text()):
 			self.search_entry.grab_focus()
-			self._search_view.search(search_text, self._artist_list.artist_selection_model)
+			self._search_view.search(search_text)
 		else:
 			self._search_view.clear()
 
@@ -1905,6 +1949,13 @@ class Browser(Gtk.Stack):
 		self._artist_list.select(artist)
 		self.set_property("show-search", False)
 		self._albums_page.grid_view.grab_focus()
+
+	def _on_search_album_selected(self, widget, album, artist, date):
+		self._artist_list.select(artist)
+		album_page=AlbumPage(self._client, artist, album, date)
+		self._album_navigation_view.replace([self._albums_page, album_page])
+		self.set_property("show-search", False)
+		album_page.play_button.grab_focus()
 
 	def _on_search_song_selected(self, widget, song):
 		self._artist_list.select(song["albumartist"][0])
