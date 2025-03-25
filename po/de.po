@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-03-20 14:47+0100\n"
-"PO-Revision-Date: 2025-03-20 14:48+0100\n"
+"PO-Revision-Date: 2025-03-25 15:23+0100\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -169,7 +169,7 @@ msgstr "Keine Ergebnisse gefunden"
 
 #: src/plattenalbum.py:1430
 msgid "Try a different search"
-msgstr "Versuche eine andere Suche"
+msgstr "Versuchen Sie eine andere Suche"
 
 #: src/plattenalbum.py:1511
 msgid "Unknown Artist"
