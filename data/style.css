@@ -2,3 +2,9 @@
   background-color: var(--window-bg-color);
   border-radius: 6px;
 }
+
+.song-title {
+  margin-top: -6px;
+  margin-bottom: -6px;
+  min-height: 12px;
+}

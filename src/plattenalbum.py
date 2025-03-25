@@ -2724,7 +2724,8 @@ class PlayerBar(Gtk.Overlay):
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
 		# packing
-		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True)
+		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
+		title_box.add_css_class("song-title")
 		title_box.append(self._title)
 		title_box.append(self._subtitle)
 		inner_box=Gtk.Box()
@@ -2732,7 +2733,7 @@ class PlayerBar(Gtk.Overlay):
 		inner_box.append(title_box)
 		inner_box.append(play_button)
 		outer_box=Gtk.Box()
-		outer_box.append(MainCover(client))
+		outer_box.append(Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=46, child=MainCover(client)))
 		outer_box.append(inner_box)
 		self.add_overlay(progress_bar)
 		self.set_child(outer_box)
