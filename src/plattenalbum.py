@@ -601,6 +601,7 @@ class EventEmitter(GObject.Object):
 class Client(MPDClient):
 	def __init__(self, settings):
 		super().__init__()
+		self.add_command("config", MPDClient._parse_object)  # Work around https://github.com/Mic92/python-mpd2/issues/244
 		self._settings=settings
 		self.emitter=EventEmitter()
 		self._last_status={}
@@ -687,7 +688,7 @@ class Client(MPDClient):
 			# connected
 			commands=self.commands()
 			try:
-				self._music_directory=self.config()
+				self._music_directory=self.config()["music_directory"]
 			except:
 				self._music_directory=None
 			if "outputs" in commands and "enableoutput" in commands:
