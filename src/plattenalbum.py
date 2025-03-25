@@ -2908,10 +2908,11 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# bottom sheet layout
 		content_bin=Adw.Bin(child=Adw.LayoutSlot(id="browser"))
-		bottom_sheet=Adw.BottomSheet(
-			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client), show_drag_handle=False)
-		bottom_sheet.bind_property("bottom-bar-height", content_bin, "margin-bottom", GObject.BindingFlags.DEFAULT)
-		bottom_sheet_layout=Adw.Layout(content=bottom_sheet, name="bottom-sheet")
+		self._bottom_sheet=Adw.BottomSheet(
+			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client),
+			reveal_bottom_bar=False, show_drag_handle=False)
+		self._bottom_sheet.bind_property("bottom-bar-height", content_bin, "margin-bottom", GObject.BindingFlags.DEFAULT)
+		bottom_sheet_layout=Adw.Layout(content=self._bottom_sheet, name="bottom-sheet")
 
 		# multi layout view
 		multi_layout_view=Adw.MultiLayoutView()
@@ -2965,6 +2966,7 @@ class MainWindow(Adw.ApplicationWindow):
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.emitter.connect("current-song", self._on_song_changed)
+		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -3050,6 +3052,9 @@ class MainWindow(Adw.ApplicationWindow):
 				self.get_application().send_notification("title-change", notify)
 			else:
 				self.get_application().withdraw_notification("title-change")
+
+	def _on_playlist_changed(self, emitter, version, length, song_pos):
+		self._bottom_sheet.set_reveal_bottom_bar(length > 0)
 
 	def _on_state(self, emitter, state):
 		if state == "play":

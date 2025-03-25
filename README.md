@@ -27,7 +27,7 @@ Install the following dependencies on your system.
 
 ### Runtime Dependencies
 - GTK4 >=4.12.0
-- libadwaita >=1.6.0
+- libadwaita >=1.7.0
 - Python3
 
 #### Python Modules
