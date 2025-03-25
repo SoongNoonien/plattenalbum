@@ -1482,7 +1482,7 @@ class SearchView(Gtk.Stack):
 		self.clear()
 		if (keywords:=search_text.split()):
 			self._client.restrict_tagtypes("title", "artist", "albumartist", "album", "date")
-			expressions=" AND ".join((f"(any contains '{keyword}')" for keyword in keywords))
+			expressions=" AND ".join((f"(!((title !contains '{keyword}') AND (artist !contains '{keyword}') AND (album !contains '{keyword}') AND (date !contains '{keyword}')))" for keyword in keywords))
 			songs=self._client.search(f"({expressions})", "window", f"0:{self._results}")
 			self._client.tagtypes("all")
 			for song in songs:
