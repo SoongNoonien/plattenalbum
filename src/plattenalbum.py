@@ -2616,15 +2616,20 @@ class Player(Adw.Bin):
 		self._client=client
 
 		# widgets
-		window_handle=Gtk.WindowHandle(child=MainCover(client))
+		self._window_handle=Gtk.WindowHandle(visible=False, child=MainCover(client))
 		self._lyrics_window=LyricsWindow()
 		playlist_window=PlaylistWindow(client)
 		self.bind_property("sheet-mode", playlist_window.scroll, "propagate-natural-height", GObject.BindingFlags.DEFAULT)
 		playback_controls=PlaybackControls(client, settings)
 
+		# box
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box.append(self._window_handle)
+		box.append(playlist_window)
+
 		# stack
-		self._stack=Gtk.Stack(visible=False)
-		self._stack.add_named(window_handle, "cover")
+		self._stack=Gtk.Stack()
+		self._stack.add_named(box, "playlist")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
 		# header bar
@@ -2640,12 +2645,9 @@ class Player(Adw.Bin):
 		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		box.append(self._stack)
-		box.append(playlist_window)
 		self._toolbar_view=Adw.ToolbarView(reveal_bottom_bars=False)
 		self._toolbar_view.add_top_bar(header_bar)
-		self._toolbar_view.set_content(box)
+		self._toolbar_view.set_content(self._stack)
 		self._toolbar_view.add_bottom_bar(playback_controls)
 		self.set_child(self._toolbar_view)
 
@@ -2659,18 +2661,18 @@ class Player(Adw.Bin):
 			if self._client.connected() and (song:=self._client.currentsong()):
 				self._lyrics_window.display(song)
 		else:
-			self._stack.set_visible_child_name("cover")
+			self._stack.set_visible_child_name("playlist")
 			self._lyrics_window.clear()
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
-			self._stack.set_visible(True)
+			self._window_handle.set_visible(True)
 			self._title.set_title(song["title"][0])
 			self._title.set_subtitle(str(song["artist"]))
 			if self.get_property("show-lyrics"):
 				self._lyrics_window.display(song)
 		else:
-			self._stack.set_visible(False)
+			self._window_handle.set_visible(False)
 			self._clear_title()
 			if self.get_property("show-lyrics"):
 				self._lyrics_window.clear()
