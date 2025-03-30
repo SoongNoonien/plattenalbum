@@ -2301,18 +2301,18 @@ class LyricsWindow(Gtk.Stack):
 		searching_status_page.set_paintable(spinner)
 
 		# text view
-		self._text_view=Gtk.TextView(
+		self.text_view=Gtk.TextView(
 			editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD,
 			justification=Gtk.Justification.CENTER,
 			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9
 		)
-		self._text_view.add_css_class("inline")
+		self.text_view.add_css_class("inline")
 
 		# text buffer
-		self._text_buffer=self._text_view.get_buffer()
+		self._text_buffer=self.text_view.get_buffer()
 
 		# packing
-		scroll=Gtk.ScrolledWindow(child=self._text_view)
+		scroll=Gtk.ScrolledWindow(child=self.text_view)
 		self.add_named(scroll, "lyrics")
 		self.add_named(no_lyrics_status_page, "no-lyrics")
 		self.add_named(connection_error_status_page, "connection-error")
@@ -2321,7 +2321,7 @@ class LyricsWindow(Gtk.Stack):
 	def clear(self):
 		self.set_visible_child_name("no-lyrics")
 		self._text_buffer.set_text("")
-		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
+		self.text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 	def display(self, song):
 		self.set_visible_child_name("searching")
@@ -2342,7 +2342,7 @@ class LyricsWindow(Gtk.Stack):
 		try:
 			text=self._get_lyrics(song["title"][0], song["artist"][0])
 			idle_add(self._text_buffer.set_text, text)
-			idle_add(self._text_view.update_property, [Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
+			idle_add(self.text_view.update_property, [Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=song["title"])])
 			idle_add(self.set_visible_child_name, "lyrics")
 		except urllib.error.URLError:
 			idle_add(self.set_visible_child_name, "connection-error")
@@ -2660,6 +2660,7 @@ class Player(Adw.Bin):
 			self._stack.set_visible_child_name("lyrics")
 			if self._client.connected() and (song:=self._client.currentsong()):
 				self._lyrics_window.display(song)
+				self._lyrics_window.text_view.grab_focus()
 		else:
 			self._stack.set_visible_child_name("playlist")
 			self._lyrics_window.clear()
