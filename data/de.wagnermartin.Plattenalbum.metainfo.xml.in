@@ -35,10 +35,12 @@
   <releases>
     <release version="2.2.2" date="2025-02-08">
       <description translate="no">
-        <p>Rounded cover corners</p>
-        <p>New cover fallback</p>
-        <p>Notification when playlist is over</p>
-        <p>Persian and Thai translations</p>
+        <ul>
+          <li>Rounded cover corners</li>
+          <li>New cover fallback</li>
+          <li>Notification when playlist is over</li>
+          <li>Persian and Thai translations</li>
+        </ul>
       </description>
     </release>
     <release version="2.2.1" date="2024-10-12">
