@@ -2426,6 +2426,7 @@ class PlaybackControls(Gtk.Box):
 
 		# labels
 		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
+		self._elapsed.add_css_class("toolbar-text")
 		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
 
 		# progress bar
@@ -2455,7 +2456,8 @@ class PlaybackControls(Gtk.Box):
 		self._client.emitter.connect("current-song", self._on_song_changed)
 
 		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START)
+		box.add_css_class("toolbar-text")
 		box.append(self._rest)
 		box.append(BitRate(client, settings))
 		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
@@ -2729,7 +2731,7 @@ class PlayerBar(Gtk.Overlay):
 
 		# packing
 		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
-		title_box.add_css_class("song-title")
+		title_box.add_css_class("toolbar-text")
 		title_box.append(self._title)
 		title_box.append(self._subtitle)
 		inner_box=Gtk.Box()
