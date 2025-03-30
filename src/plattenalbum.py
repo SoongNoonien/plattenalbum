@@ -1690,7 +1690,7 @@ class AlbumsPage(Adw.NavigationPage):
 		self.grid_view.set_factory(factory)
 
 		# breakpoint bin
-		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=336)  # TODO height_request
+		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)  # TODO height_request
 		for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
 			break_point=Adw.Breakpoint()
 			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
@@ -1850,7 +1850,7 @@ class Browser(Gtk.Stack):
 		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
 
 		# breakpoint bin
-		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=336)  # TODO height_request
+		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)  # TODO height_request
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
 		break_point.add_setter(self._navigation_split_view, "collapsed", True)
@@ -2876,7 +2876,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 
 class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
-		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=480, width_request=360, **kwargs)
+		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=294, width_request=360, **kwargs)
 		self.set_default_icon_name("de.wagnermartin.Plattenalbum")
 		self._client=client
 		self._settings=settings
