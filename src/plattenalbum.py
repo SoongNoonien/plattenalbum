@@ -866,6 +866,9 @@ class Client(MPDClient):
 		else:
 			self._clear_marks()
 
+	def get_search_expression(self, tags, keywords):
+		return "("+(" AND ".join("(!("+(" AND ".join(f"({tag} !contains_ci '{keyword}')" for tag in tags))+"))" for keyword in keywords))+")"
+
 	def _clear_marks(self):
 		if self._first_mark is not None:
 			self.emitter.emit("a-b-loop", -1.0, -1.0)
@@ -1431,6 +1434,9 @@ class SearchView(Gtk.Stack):
 		super().__init__()
 		self._client=client
 		self._results=20  # TODO adjust number of results
+		self._song_tags=("title", "artist", "album", "date")
+		self._artist_tags=("albumartist", "albumartistsort")
+		self._album_tags=("album", "albumartist", "albumartistsort", "date")
 
 		# artist list
 		self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
@@ -1454,13 +1460,13 @@ class SearchView(Gtk.Stack):
 		self._album_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
 		self._album_box.append(Gtk.Label(label=_("Albums"), xalign=0, css_classes=["heading"]))
 		self._album_box.append(self._album_list)
-		song_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		song_box.append(Gtk.Label(label=_("Songs"), xalign=0, css_classes=["heading"]))
-		song_box.append(self._song_list)
+		self._song_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		self._song_box.append(Gtk.Label(label=_("Songs"), xalign=0, css_classes=["heading"]))
+		self._song_box.append(self._song_list)
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
 		box.append(self._artist_box)
 		box.append(self._album_box)
-		box.append(song_box)
+		box.append(self._song_box)
 
 		# status page
 		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results Found"), description=_("Try a different search"))
@@ -1482,27 +1488,25 @@ class SearchView(Gtk.Stack):
 	def search(self, search_text):
 		self.clear()
 		if (keywords:=search_text.split()):
-			self._client.restrict_tagtypes("title", "artist", "albumartist", "album", "date")
-			expressions=" AND ".join((f"(!((title !contains '{keyword}') AND (artist !contains '{keyword}') AND (album !contains '{keyword}') AND (date !contains '{keyword}')))" for keyword in keywords))
-			songs=self._client.search(f"({expressions})", "window", f"0:{self._results}")
+			self._client.restrict_tagtypes(*self._song_tags)
+			songs=self._client.search(self._client.get_search_expression(self._song_tags, keywords), "window", f"0:{self._results}")
 			self._client.tagtypes("all")
 			for song in songs:
 				row=BrowserSongRow(song, show_track=False)
 				self._song_list.append(row)
-			if songs:
+			self._song_box.set_visible(self._song_list.get_first_child() is not None)
+			albums=self._client.list("album", self._client.get_search_expression(self._album_tags, keywords), "group", "date", "group", "albumartist")
+			for album in itertools.islice(albums, self._results):
+				album_row=AlbumRow(album)
+				self._album_list.append(album_row)
+			self._album_box.set_visible(self._album_list.get_first_child() is not None)
+			artists=self._client.list("albumartist", self._client.get_search_expression(self._artist_tags, keywords))
+			for artist in itertools.islice(artists, self._results):
+				label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, label=artist["albumartist"])
+				self._artist_list.append(label)
+			self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
+			if self._song_box.get_visible() or self._album_box.get_visible() or self._artist_box.get_visible():
 				self.set_visible_child_name("results")
-				expressions=" AND ".join((f"(albumartist contains_ci '{keyword}')" for keyword in keywords))
-				artists=self._client.list("albumartist", f"({expressions})")
-				for artist in itertools.islice(artists, self._results):
-					label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, label=artist["albumartist"])
-					self._artist_list.append(label)
-				self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
-				expressions=" AND ".join((f"(!((album !contains_ci '{keyword}') AND (albumartist !contains_ci '{keyword}') AND (date !contains_ci '{keyword}')))" for keyword in keywords))
-				albums=self._client.list("album", f"({expressions})", "group", "date", "group", "albumartist")
-				for album in itertools.islice(albums, self._results):
-					album_row=AlbumRow(album)
-					self._album_list.append(album_row)
-				self._album_box.set_visible(self._album_list.get_first_child() is not None)
 
 	def _on_artist_activate(self, list_box, row):
 		self.emit("artist-selected", row.get_child().get_label())
