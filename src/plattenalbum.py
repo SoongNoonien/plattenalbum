@@ -542,8 +542,6 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 				return self["albumartist"]
 			elif key == "artistsort":
 				return self["artist"]
-			elif key == "albumsort":
-				return self["album"]
 			elif key == "title":
 				return MultiTag([os.path.basename(self.data["file"])])
 			elif key == "duration":
@@ -1631,11 +1629,10 @@ class ArtistList(Gtk.ListView):
 				self.select(artist)
 
 class Album(GObject.Object):
-	def __init__(self, artist, name, sortname, date):
+	def __init__(self, artist, name, date):
 		GObject.Object.__init__(self)
 		self.artist=artist
 		self.name=name
-		self.sortname=sortname
 		self.date=date
 		self.cover=None
 
@@ -1715,14 +1712,9 @@ class AlbumsPage(Adw.NavigationPage):
 		self.set_title(_("Albums"))
 
 	def _get_albums(self, artist):
-		albums=self._client.list("albumsort", "albumartist", artist, "group", "date", "group", "album")
-		for _, album in itertools.groupby(albums, key=lambda x: (x["album"], x["date"])):
-			tmp=next(album)
-			# ignore multiple albumsort values
-			if next(album, None) is None:
-				yield Album(artist, tmp["album"], tmp["albumsort"], tmp["date"])
-			else:
-				yield Album(artist, tmp["album"], tmp["album"], tmp["date"])
+		albums=self._client.list("album", "albumartist", artist, "group", "date")
+		for album in albums:
+			yield Album(artist, album["album"], album["date"])
 
 	def display(self, artist):
 		self._settings.set_property("cursor-watch", True)
