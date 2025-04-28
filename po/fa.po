@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-30 23:58+0100\n"
-"PO-Revision-Date: 2024-12-10 16:10+0330\n"
+"POT-Creation-Date: 2025-03-20 14:47+0100\n"
+"PO-Revision-Date: 2025-04-28 16:38+0330\n"
 "Last-Translator: Danial Behzadi <dani.behzi@ubuntu.com>\n"
 "Language-Team: \n"
 "Language: fa\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 3.5\n"
+"X-Generator: Poedit 3.6\n"
 
 #: src/plattenalbum.py:504
 #, python-brace-format
@@ -26,71 +26,71 @@ msgid_plural "{days} days"
 msgstr[0] "{days} روز"
 msgstr[1] "{days} روز"
 
-#: src/plattenalbum.py:929
+#: src/plattenalbum.py:947
 msgid "View"
 msgstr "نما"
 
-#: src/plattenalbum.py:931
+#: src/plattenalbum.py:949
 msgid "_Show Bit Rate"
 msgstr "_نمایش نرخ بیت"
 
-#: src/plattenalbum.py:940
+#: src/plattenalbum.py:958
 msgid "Behavior"
 msgstr "رفتار"
 
-#: src/plattenalbum.py:942
+#: src/plattenalbum.py:960
 msgid "Send _Notification on Title Change"
 msgstr "فرستادن _آگاهی تغییر عنوان"
 
-#: src/plattenalbum.py:943
+#: src/plattenalbum.py:961
 msgid "Re_wind via Previous Button"
 msgstr "_پس‌روی با دکمهٔ پیشین"
 
-#: src/plattenalbum.py:944
+#: src/plattenalbum.py:962
 msgid "Stop _Playback on Quit"
 msgstr "_توقّف پخش با خروج"
 
-#: src/plattenalbum.py:945
+#: src/plattenalbum.py:963
 msgid "Support “_MPRIS”"
 msgstr "پشتیبانی _MPRIS"
 
-#: src/plattenalbum.py:945
+#: src/plattenalbum.py:963
 msgid "Disable if “MPRIS” is supported by another client"
 msgstr "از کار انداختن در صورت پشتیبانی MPRIS به دست کارخواهی دیگر"
 
-#: src/plattenalbum.py:964
+#: src/plattenalbum.py:982 src/plattenalbum.py:2911
 msgid "_Connect"
 msgstr "_اتّصال"
 
-#: src/plattenalbum.py:972
+#: src/plattenalbum.py:984
+msgid "Ca_ncel"
+msgstr "_لغو"
+
+#: src/plattenalbum.py:992
 msgid "Connection failed"
 msgstr "اتّصال شکست خورد"
 
-#: src/plattenalbum.py:986
-msgid "Local Connection"
-msgstr "اتّصال محلی"
+#: src/plattenalbum.py:1006
+msgid "Manual Connection"
+msgstr "اتّصال دستی"
 
-#: src/plattenalbum.py:989 src/plattenalbum.py:1006
-msgid "Password (optional)"
-msgstr "گذرواژه (اختیاری)"
+#: src/plattenalbum.py:1009
+msgid "Host"
+msgstr "میزبان"
 
-#: src/plattenalbum.py:996
-msgid "Remote Connection"
-msgstr "اتّصال دوردست"
-
-#: src/plattenalbum.py:999
-msgid "Host Name"
-msgstr "نام میزبان"
-
-#: src/plattenalbum.py:1003
+#: src/plattenalbum.py:1013
 msgid "Port"
 msgstr "درگاه"
 
-#: src/plattenalbum.py:1024
+#: src/plattenalbum.py:1016
+msgid "Password (optional)"
+msgstr "گذرواژه (اختیاری)"
+
+#: src/plattenalbum.py:1034
 msgid "Setup"
 msgstr "برپاسازی"
 
-#: src/plattenalbum.py:1026
+#: src/plattenalbum.py:1036
 msgid ""
 "To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
 "system package manager, and run the following commands to configure and "
@@ -101,266 +101,274 @@ msgstr ""
 "کرده و فرمان‌های زیر را برای پیکربندی و راه‌اندازی نمونهٔ محلی پایه‌ای اجرا کنید. "
 "پس از آن آلبوم صفحه باید بتواند بدون مشکل وصل شود."
 
-#: src/plattenalbum.py:1036 data/ShortcutsWindow.ui:49
+#: src/plattenalbum.py:1046 data/ShortcutsWindow.ui:49
 msgid "Server Statistics"
 msgstr "آمار کارساز"
 
-#: src/plattenalbum.py:1044
+#: src/plattenalbum.py:1054
+msgid "Server"
+msgstr "کارساز"
+
+#: src/plattenalbum.py:1055
 msgid "Protocol"
 msgstr "شیوه‌نامه"
 
-#: src/plattenalbum.py:1045
+#: src/plattenalbum.py:1056
 msgid "Uptime"
 msgstr "زمان بالا بودن"
 
-#: src/plattenalbum.py:1046
+#: src/plattenalbum.py:1057
 msgid "Playtime"
 msgstr "زمان پخش"
 
-#: src/plattenalbum.py:1047 src/plattenalbum.py:1380 src/plattenalbum.py:1791
+#: src/plattenalbum.py:1058 src/plattenalbum.py:1420 src/plattenalbum.py:1814
 msgid "Artists"
 msgstr "هنرمندان"
 
-#: src/plattenalbum.py:1048 src/plattenalbum.py:1603 src/plattenalbum.py:1644
-#: src/plattenalbum.py:1799
+#: src/plattenalbum.py:1059 src/plattenalbum.py:1626 src/plattenalbum.py:1667
+#: src/plattenalbum.py:1822
 msgid "Albums"
 msgstr "آلبوم‌ها"
 
-#: src/plattenalbum.py:1049 src/plattenalbum.py:1383
+#: src/plattenalbum.py:1060 src/plattenalbum.py:1423
 msgid "Songs"
 msgstr "آوازها"
 
-#: src/plattenalbum.py:1050
+#: src/plattenalbum.py:1061
 msgid "Total Playtime"
 msgstr "مجموع زمان‌های پخش"
 
-#: src/plattenalbum.py:1051
+#: src/plattenalbum.py:1062
 msgid "Database Update"
 msgstr "به‌روز رسانی پایگاه داده"
 
-#: src/plattenalbum.py:1190 src/plattenalbum.py:1916
+#: src/plattenalbum.py:1202 src/plattenalbum.py:1939
 msgid "Context menu"
 msgstr "فهرست بافتاری"
 
-#: src/plattenalbum.py:1212
+#: src/plattenalbum.py:1224
 msgid "_Append"
 msgstr "_افزودن"
 
-#: src/plattenalbum.py:1213
+#: src/plattenalbum.py:1225
 msgid "As _Next"
 msgstr "به عنوان _بعدی"
 
-#: src/plattenalbum.py:1214
+#: src/plattenalbum.py:1226
 msgid "_Play"
 msgstr "_پخش"
 
-#: src/plattenalbum.py:1216 src/plattenalbum.py:1934
+#: src/plattenalbum.py:1228 src/plattenalbum.py:1957
 msgid "_Show"
 msgstr "_نمایش"
 
 #. status page
-#: src/plattenalbum.py:1390
+#: src/plattenalbum.py:1430
 msgid "No Results Found"
 msgstr "هیچ نتیجه‌ای پیدا نشد"
 
-#: src/plattenalbum.py:1390
+#: src/plattenalbum.py:1430
 msgid "Try a different search"
 msgstr "آزمودن جست‌وجویی متفاوت"
 
-#: src/plattenalbum.py:1585 src/plattenalbum.py:1713
+#: src/plattenalbum.py:1511
+msgid "Unknown Artist"
+msgstr "هنرمند ناشناخته"
+
+#: src/plattenalbum.py:1608 src/plattenalbum.py:1736
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "جلد آلبوم {album}"
 
-#: src/plattenalbum.py:1588 src/plattenalbum.py:1717
+#: src/plattenalbum.py:1610 src/plattenalbum.py:1738 src/plattenalbum.py:1739
+msgid "Unknown Album"
+msgstr "آلبوم ناشناخته"
+
+#: src/plattenalbum.py:1611 src/plattenalbum.py:1740
 msgid "Album cover of an unknown album"
 msgstr "جلد آلبومی ناشناس"
 
-#: src/plattenalbum.py:1664
+#: src/plattenalbum.py:1687
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "آلبوم‌های {artist}"
 
 #. buttons
-#: src/plattenalbum.py:1688 src/plattenalbum.py:2333 src/plattenalbum.py:2342
+#: src/plattenalbum.py:1711 src/plattenalbum.py:2356 src/plattenalbum.py:2365
 msgid "Play"
 msgstr "پخش"
 
-#: src/plattenalbum.py:1689
+#: src/plattenalbum.py:1712
 msgid "Append"
 msgstr "افزودن"
 
-#: src/plattenalbum.py:1715 src/plattenalbum.py:1716
-msgid "Unknown Album"
-msgstr "آلبوم ناشناخته"
-
-#: src/plattenalbum.py:1750 src/plattenalbum.py:2895 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:1773 src/plattenalbum.py:2924 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
 msgstr "فهرست اصلی"
 
-#: src/plattenalbum.py:1752 src/plattenalbum.py:2891
+#: src/plattenalbum.py:1775 src/plattenalbum.py:2920
 msgid "_Preferences"
 msgstr "_ترجیحات"
 
-#: src/plattenalbum.py:1753 src/plattenalbum.py:2892
+#: src/plattenalbum.py:1776 src/plattenalbum.py:2921
 msgid "_Keyboard Shortcuts"
 msgstr "_میان‌برهای صفحه‌کلید"
 
-#: src/plattenalbum.py:1754 src/plattenalbum.py:2893
+#: src/plattenalbum.py:1777 src/plattenalbum.py:2922
 msgid "_Help"
 msgstr "_راهنما"
 
-#: src/plattenalbum.py:1755 src/plattenalbum.py:2894
+#: src/plattenalbum.py:1778 src/plattenalbum.py:2923
 msgid "_About Plattenalbum"
 msgstr "_دربارهٔ آلبوم صفحه"
 
-#: src/plattenalbum.py:1757
+#: src/plattenalbum.py:1780
 msgid "_Disconnect"
 msgstr "_قطع ارتباط"
 
-#: src/plattenalbum.py:1758
+#: src/plattenalbum.py:1781
 msgid "_Update Database"
 msgstr "_به‌روز رسانی پایگاه داده"
 
-#: src/plattenalbum.py:1759
+#: src/plattenalbum.py:1782
 msgid "_Server Statistics"
 msgstr "_آمار کارساز"
 
-#: src/plattenalbum.py:1771 src/plattenalbum.py:1772
+#: src/plattenalbum.py:1794 src/plattenalbum.py:1795
 msgid "Search collection"
 msgstr "جست‌وجوی مجموعه"
 
-#: src/plattenalbum.py:1775 src/plattenalbum.py:1785
+#: src/plattenalbum.py:1798 src/plattenalbum.py:1808
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 msgid "Search"
 msgstr "جست‌وجو"
 
 #. status page
-#: src/plattenalbum.py:1815
+#: src/plattenalbum.py:1838
 msgid "Collection is Empty"
 msgstr "مجموعه خالیست"
 
-#: src/plattenalbum.py:1933
+#: src/plattenalbum.py:1956
 msgid "_Remove"
 msgstr "_برداشتن"
 
-#: src/plattenalbum.py:1936
+#: src/plattenalbum.py:1959
 msgid "_Enqueue Album"
 msgstr "_صف کردن آلبوم"
 
-#: src/plattenalbum.py:1937
+#: src/plattenalbum.py:1960
 msgid "_Tidy"
 msgstr "_تمیز"
 
-#: src/plattenalbum.py:1939
+#: src/plattenalbum.py:1962
 msgid "_Clear"
 msgstr "_پاک کردن"
 
-#: src/plattenalbum.py:2149
+#: src/plattenalbum.py:2172
 msgid "Playlist is Empty"
 msgstr "سیاههٔ پخش خالیست"
 
-#: src/plattenalbum.py:2154
+#: src/plattenalbum.py:2177
 msgid "Scroll to Current Song"
 msgstr "پیمایش به آواز کنونی"
 
 #. status pages
-#: src/plattenalbum.py:2247
+#: src/plattenalbum.py:2270
 msgid "No Lyrics Found"
 msgstr "هیچ ترانه‌ای پیدا نشد"
 
-#: src/plattenalbum.py:2250
+#: src/plattenalbum.py:2273
 msgid "Connection Error"
 msgstr "خطای اتّصال"
 
-#: src/plattenalbum.py:2250
+#: src/plattenalbum.py:2273
 msgid "Check your network connection"
 msgstr "بررسی اتّصال شبکه‌ایتان"
 
-#: src/plattenalbum.py:2252
+#: src/plattenalbum.py:2275
 msgid "Searching…"
 msgstr "جوییدن…"
 
-#: src/plattenalbum.py:2277
+#: src/plattenalbum.py:2300
 msgid "Lyrics view"
 msgstr "نمای ترانه"
 
-#: src/plattenalbum.py:2298
+#: src/plattenalbum.py:2321
 #, python-brace-format
 msgid "Lyrics of {song}"
 msgstr "ترانهٔ {song}"
 
-#: src/plattenalbum.py:2308
+#: src/plattenalbum.py:2331
 msgid "Current album cover"
 msgstr "جلد آلبوم کنونی"
 
-#: src/plattenalbum.py:2339
+#: src/plattenalbum.py:2362
 msgid "Pause"
 msgstr "مکث"
 
-#: src/plattenalbum.py:2349
+#: src/plattenalbum.py:2372
 #, python-brace-format
 msgid "{bitrate} kb/s"
 msgstr "{bitrate} ک‌ب/ث"
 
-#: src/plattenalbum.py:2374 data/ShortcutsWindow.ui:107
+#: src/plattenalbum.py:2397 data/ShortcutsWindow.ui:107
 msgid "Previous"
 msgstr "پیشین"
 
-#: src/plattenalbum.py:2375 data/ShortcutsWindow.ui:101
+#: src/plattenalbum.py:2398 data/ShortcutsWindow.ui:101
 msgid "Next"
 msgstr "بعدی"
 
-#: src/plattenalbum.py:2387
+#: src/plattenalbum.py:2410
 msgid "Progress bar"
 msgstr "نوار پیشرفت"
 
-#: src/plattenalbum.py:2501
+#: src/plattenalbum.py:2524
 msgid "Volume control"
 msgstr "واپایش حجم صدا"
 
-#: src/plattenalbum.py:2521
+#: src/plattenalbum.py:2544
 msgid "Player Menu"
 msgstr "فهرست پخش کننده"
 
-#: src/plattenalbum.py:2531
+#: src/plattenalbum.py:2554
 msgid "_Repeat Mode"
 msgstr "حالت _تکرار"
 
-#: src/plattenalbum.py:2532
+#: src/plattenalbum.py:2555
 msgid "R_andom Mode"
 msgstr "حالت _کاتوره‌ای"
 
-#: src/plattenalbum.py:2533
+#: src/plattenalbum.py:2556
 msgid "_Single Mode"
 msgstr "حالت تک _آهنگ"
 
-#: src/plattenalbum.py:2534
+#: src/plattenalbum.py:2557
 msgid "_Pause After Song"
 msgstr "_مکث پس از آواز"
 
-#: src/plattenalbum.py:2535
+#: src/plattenalbum.py:2558
 msgid "_Consume Mode"
 msgstr "حالت _مصرف"
 
-#: src/plattenalbum.py:2538
+#: src/plattenalbum.py:2561
 msgid "_Lyrics"
 msgstr "_ترانه"
 
-#: src/plattenalbum.py:2831
+#: src/plattenalbum.py:2863
 msgid "Database is being updated"
 msgstr "پایگاه داده دارد به‌روز می‌شود"
 
-#: src/plattenalbum.py:2832
+#: src/plattenalbum.py:2864
 msgid "Database updated"
 msgstr "پایگاه داده به‌روز شد"
 
 #. status page
-#: src/plattenalbum.py:2876
+#: src/plattenalbum.py:2908
 msgid "Connect to Your Music"
 msgstr "وصل شدن به آهنگ‌هایتان"
 
-#: src/plattenalbum.py:2877
+#: src/plattenalbum.py:2909
 msgid ""
 "To use Plattenalbum, an instance of the Music Player Daemon needs to be set up "
 "and running on this device or another one on the network"
@@ -368,69 +376,65 @@ msgstr ""
 "برای استفاده از آلبوم صفحه، باید نمونه‌ای از خدمت پخش کنندهٔ آهنگ برپا شده و روی "
 "این افزاره یا روی شبکه در حال اجرا باشد"
 
-#: src/plattenalbum.py:2879
-msgid "_Set up Instance"
-msgstr "_برپایی نمونه"
+#: src/plattenalbum.py:2913
+msgid "Connect _Manually"
+msgstr "وصل شدن _دستی"
 
-#: src/plattenalbum.py:2881
-msgid "Connect _Locally"
-msgstr "وصل شدن _محلی"
-
-#: src/plattenalbum.py:2883
-msgid "Connect _Remotely"
-msgstr "وصل شدن _دوردست"
-
-#: src/plattenalbum.py:2989
+#: src/plattenalbum.py:3011
 msgid "Next Title is Playing"
 msgstr "عنوان بعدی پخش می‌شود"
 
-#: src/plattenalbum.py:2991
+#: src/plattenalbum.py:3013
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "در حال پخش «{title}» از «{artist}»"
 
-#: src/plattenalbum.py:2993
+#: src/plattenalbum.py:3015
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "در حال پخش «{title}»"
 
-#: src/plattenalbum.py:3001
+#: src/plattenalbum.py:3024
 msgid "Playback Finished"
 msgstr "پخش پایان یافت"
 
-#: src/plattenalbum.py:3002
+#: src/plattenalbum.py:3025
 msgid "The playlist is over"
 msgstr "سیاههٔ پخش تمام شد"
 
-#: src/plattenalbum.py:3031
+#: src/plattenalbum.py:3032
+msgid "Playing music"
+msgstr "پخش کردن آهنگ"
+
+#: src/plattenalbum.py:3069
 msgid "Cleared A‐B loop"
 msgstr "حلقهٔ آ-ب پاک شد"
 
-#: src/plattenalbum.py:3034
+#: src/plattenalbum.py:3072
 #, python-brace-format
 msgid "Started A‐B loop at {start}"
 msgstr "آغاز حلقهٔ آ-ب در {start}"
 
-#: src/plattenalbum.py:3036
+#: src/plattenalbum.py:3074
 #, python-brace-format
 msgid "Activated A‐B loop from {start} to {end}"
 msgstr "حلقهٔ آ-ب از {start} تا {end} فعّال شد"
 
-#: src/plattenalbum.py:3053
+#: src/plattenalbum.py:3091
 msgid "Debug mode"
 msgstr "حالت اشکال‌زدایی"
 
-#: src/plattenalbum.py:3110
+#: src/plattenalbum.py:3148
 msgid "translator-credits"
 msgstr "دانیال بهزادی <dani.behzi@ubuntu.com>"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
-#: data/de.wagnermartin.Plattenalbum.desktop.in:3
+#: data/de.wagnermartin.Plattenalbum.desktop.in:2
 msgid "Plattenalbum"
 msgstr "آلبوم صفحه"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
-#: data/de.wagnermartin.Plattenalbum.desktop.in:5
+#: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Connect to your music"
 msgstr "وصل شدن به آهنگ‌هایتان"
 
@@ -458,11 +462,11 @@ msgstr "نمای آلبوم"
 msgid "Small window"
 msgstr "پنجرهٔ کوچک"
 
-#: data/de.wagnermartin.Plattenalbum.desktop.in:4
+#: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Music Browser"
 msgstr "مرورگر آهنگ"
 
-#: data/de.wagnermartin.Plattenalbum.desktop.in:12
+#: data/de.wagnermartin.Plattenalbum.desktop.in:11
 msgid "Music;Player;"
 msgstr "Music;Player;پخش‌کننده‌;موزیک;آهنگ;موسیقی;"
 
@@ -573,3 +577,12 @@ msgstr "تمیز"
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
 msgstr "صف کردن آلبوم"
+
+#~ msgid "Remote Connection"
+#~ msgstr "اتّصال دوردست"
+
+#~ msgid "_Set up Instance"
+#~ msgstr "_برپایی نمونه"
+
+#~ msgid "Connect _Remotely"
+#~ msgstr "وصل شدن _دوردست"
