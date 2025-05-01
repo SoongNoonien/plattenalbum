@@ -1394,8 +1394,8 @@ class BrowserSongList(Gtk.ListBox):
 			return Gdk.ContentProvider.new_for_value(row.get_child().song)
 
 class AlbumCover(Gtk.Widget):
-	def __init__(self):
-		super().__init__(hexpand=True)
+	def __init__(self, **kwargs):
+		super().__init__(hexpand=True, **kwargs)
 		self._picture=Gtk.Picture(css_classes=["cover", "frame"])
 		self._picture.set_parent(self)
 		self.connect("destroy", lambda *args: self._picture.unparent())
@@ -1420,6 +1420,28 @@ class AlbumCover(Gtk.Widget):
 
 	def set_alternative_text(self, alt_text):
 		self._picture.set_alternative_text(alt_text)
+
+class ToolbarCover(Gtk.Picture):
+	def __init__(self, client):
+		super().__init__(css_classes=["toolbar-cover"])
+		self.set_alternative_text(_("Current album cover"))
+		self._client=client
+
+		# connect
+		self._client.emitter.connect("current-song", self._refresh)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+
+	def _clear(self):
+		self.set_paintable(FALLBACK_COVER)
+
+	def _refresh(self, *args):
+		if self._client.current_cover is None:
+			self._clear()
+		else:
+			self.set_paintable(self._client.current_cover.get_paintable())
+
+	def _on_disconnected(self, *args):
+		self._clear()
 
 ###########
 # browser #
@@ -2006,6 +2028,7 @@ class PlaylistView(SongList):
 		self._activate_on_release=False
 		self._autoscroll=True
 		self.add_css_class("background")
+		self.add_css_class("playlist")
 
 		# menu
 		self._menu=PlaylistMenu(client)
@@ -2187,7 +2210,7 @@ class PlaylistWindow(Gtk.Stack):
 
 		# widgets
 		self._playlist_view=PlaylistView(self._client)
-		self.scroll=Gtk.ScrolledWindow(child=self._playlist_view, hexpand=True, vexpand=True)
+		self.scroll=Gtk.ScrolledWindow(child=self._playlist_view, propagate_natural_height=True, hexpand=True, vexpand=True)
 		self._adj=self.scroll.get_vadjustment()
 		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
 		status_page.add_css_class("compact")
@@ -2257,9 +2280,9 @@ class PlaylistWindow(Gtk.Stack):
 	def _on_connection_error(self, *args):
 		self.set_visible_child_name("empty-playlist")
 
-####################
-# cover and lyrics #
-####################
+##########
+# lyrics #
+##########
 
 class LetrasParser(HTMLParser):
 	def __init__(self):
@@ -2344,28 +2367,6 @@ class LyricsWindow(Gtk.Stack):
 			idle_add(self.set_visible_child_name, "connection-error")
 		except ValueError:
 			idle_add(self.set_visible_child_name, "no-lyrics")
-
-class MainCover(Gtk.Picture):
-	def __init__(self, client):
-		super().__init__()
-		self.set_alternative_text(_("Current album cover"))
-		self._client=client
-
-		# connect
-		self._client.emitter.connect("current-song", self._refresh)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-
-	def _clear(self):
-		self.set_paintable(FALLBACK_COVER)
-
-	def _refresh(self, *args):
-		if self._client.current_cover is None:
-			self._clear()
-		else:
-			self.set_paintable(self._client.current_cover.get_paintable())
-
-	def _on_disconnected(self, *args):
-		self._clear()
 
 ##########
 # player #
@@ -2561,63 +2562,22 @@ class VolumeControl(Gtk.Box):
 	def _refresh(self, emitter, volume):
 		self._adjustment.set_value(max(volume, 0))
 
-class PlayerMenuButton(Gtk.MenuButton):
-	def __init__(self, client):
-		super().__init__(icon_name="view-more-symbolic", tooltip_text=_("Player Menu"))
-		self._volume_visible=False
-
-		# volume
-		self._volume_control=VolumeControl(client)
-		self._volume_item=Gio.MenuItem()
-		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
-
-		# menu model
-		playback_section=Gio.Menu()
-		playback_section.append(_("_Repeat Mode"), "mpd.repeat")
-		playback_section.append(_("R_andom Mode"), "mpd.random")
-		playback_section.append(_("_Single Mode"), "mpd.single")
-		playback_section.append(_("_Pause After Song"), "mpd.single-oneshot")
-		playback_section.append(_("_Consume Mode"), "mpd.consume")
-		self._volume_section=Gio.Menu()
-		menu=Gio.Menu()
-		menu.append(_("_Lyrics"), "win.toggle-lyrics")
-		menu.append_section(None, playback_section)
-		menu.append_section(None, self._volume_section)
-
-		# popover menu
-		self._popover_menu=Gtk.PopoverMenu.new_from_model(menu)
-		self.set_popover(self._popover_menu)
-
-		# connect
-		client.emitter.connect("volume", self._on_volume_changed)
-		client.emitter.connect("disconnected", self._on_disconnected)
-
-	def _on_volume_changed(self, emitter, volume):
-		if volume < 0 and self._volume_visible:
-			self._volume_section.remove(0)
-			self._volume_visible=False
-		elif volume >= 0 and not self._volume_visible:
-			self._volume_section.append_item(self._volume_item)
-			self._popover_menu.add_child(self._volume_control, "volume")
-			self._volume_visible=True
-
-	def _on_disconnected(self, *args):
-		if self._volume_visible:
-			self._volume_section.remove(0)
-			self._volume_visible=False
-
-class Player(Adw.Bin):
+class Player(Adw.BreakpointBin):
 	show_lyrics=GObject.Property(type=bool, default=False)
+	show_large_cover=GObject.Property(type=bool, default=False)
 	sheet_mode=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
-		super().__init__()
+		super().__init__(width_request=300, height_request=200)
 		self._client=client
+		self._volume_visible=False
 
 		# widgets
-		self._window_handle=Gtk.WindowHandle(visible=False, child=MainCover(client))
+		self._large_cover=AlbumCover(visible=False, margin_start=12, margin_end=12, margin_top=6, margin_bottom=18)
+		self._window_handle=Gtk.WindowHandle(child=self._large_cover, visible=False)
+		small_cover=ToolbarCover(client)
+		self._clamp=Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=34, child=small_cover)
 		self._lyrics_window=LyricsWindow()
 		playlist_window=PlaylistWindow(client)
-		self.bind_property("sheet-mode", playlist_window.scroll, "propagate-natural-height", GObject.BindingFlags.DEFAULT)
 		playback_controls=PlaybackControls(client, settings)
 
 		# box
@@ -2630,15 +2590,53 @@ class Player(Adw.Bin):
 		self._stack.add_named(box, "playlist")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
+		# volume
+		self._volume_control=VolumeControl(client)
+		self._volume_item=Gio.MenuItem()
+		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
+
+		# menu model
+		self._volume_section=Gio.Menu()
+		menu=Gio.Menu()
+		menu.append(_("_Repeat Mode"), "mpd.repeat")
+		menu.append(_("R_andom Mode"), "mpd.random")
+		menu.append(_("_Single Mode"), "mpd.single")
+		menu.append(_("_Pause After Song"), "mpd.single-oneshot")
+		menu.append(_("_Consume Mode"), "mpd.consume")
+		menu.append_section(None, self._volume_section)
+
+		# popover menu
+		self._popover_menu=Gtk.PopoverMenu.new_from_model(menu)
+
+		# split button
+		self._split_button=Adw.SplitButton(icon_name="lyrics-symbolic", action_name="win.toggle-lyrics")
+		self._split_button.set_popover(self._popover_menu)
+
 		# header bar
 		self._title=Adw.WindowTitle()
 		header_bar=Adw.HeaderBar(title_widget=self._title)
-		header_bar.pack_start(PlayerMenuButton(client))
+		header_bar.pack_start(self._clamp)
+		header_bar.pack_end(self._split_button)
+
+		# breakpoint bin
+		self._break_point=Adw.Breakpoint()
+		self._break_point.set_condition(Adw.BreakpointCondition.parse(f"min-height: 520px and max-aspect-ratio: 3/5"))
+		self._break_point.connect("apply", self._on_break_point_apply)
+		self._break_point.connect("unapply", self._on_break_point_unapply)
+		self.add_breakpoint(self._break_point)
+
+		# property binding
+		self.bind_property("show-large-cover", self._large_cover, "visible", GObject.BindingFlags.DEFAULT)
+		self.bind_property("sheet-mode", header_bar, "show-end-title-buttons", GObject.BindingFlags.INVERT_BOOLEAN)
+		self.bind_property("sheet-mode", header_bar, "show-start-title-buttons", GObject.BindingFlags.INVERT_BOOLEAN)
 
 		# connect
 		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
+		self.connect("notify::show-large-cover", self._on_show_large_cover_toggled)
+		self.connect("notify::sheet-mode", self._on_sheet_mode_toggled)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
+		self._client.emitter.connect("volume", self._on_volume_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 
@@ -2653,15 +2651,42 @@ class Player(Adw.Bin):
 		self._title.set_title("")
 		self._title.set_subtitle("")
 
+	def _clear_cover(self):
+		self._large_cover.set_paintable(FALLBACK_COVER)
+
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
+			self._clamp.set_visible(True)
+			self._split_button.set_icon_name("view-list-symbolic")
+			self._split_button.set_tooltip_text(_("Playlist"))
 			self._stack.set_visible_child_name("lyrics")
 			if self._client.connected() and (song:=self._client.currentsong()):
 				self._lyrics_window.display(song)
 				self._lyrics_window.text_view.grab_focus()
 		else:
+			self._clamp.set_visible(not self.get_property("show-large-cover"))
+			self._split_button.set_icon_name("lyrics-symbolic")
+			self._split_button.set_tooltip_text(_("Lyrics"))
 			self._stack.set_visible_child_name("playlist")
 			self._lyrics_window.clear()
+
+	def _on_show_large_cover_toggled(self, *args):
+		if not self.get_property("show-lyrics"):
+			self._clamp.set_visible(not self.get_property("show-large-cover"))
+
+	def _on_sheet_mode_toggled(self, *args):
+		if self.get_property("sheet-mode"):
+			self.remove_breakpoint(self._break_point)
+		else:
+			self.add_breakpoint(self._break_point)
+
+	def _on_break_point_apply(self, *args):
+		if not self.get_property("sheet-mode"):
+			self.set_property("show-large-cover", True)
+
+	def _on_break_point_unapply(self, *args):
+		if not self.get_property("sheet-mode"):
+			self.set_property("show-large-cover", False)
 
 	def _on_song_changed(self, emitter, song, songid, state):
 		if (song:=self._client.currentsong()):
@@ -2675,13 +2700,30 @@ class Player(Adw.Bin):
 			self._clear_title()
 			if self.get_property("show-lyrics"):
 				self._lyrics_window.clear()
+		if self._client.current_cover is None:
+			self._clear_cover()
+		else:
+			self._large_cover.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_playlist_changed(self, emitter, version, length, song_pos):
 		self._toolbar_view.set_reveal_bottom_bars(length > 0)
 
+	def _on_volume_changed(self, emitter, volume):
+		if volume < 0 and self._volume_visible:
+			self._volume_section.remove(0)
+			self._volume_visible=False
+		elif volume >= 0 and not self._volume_visible:
+			self._volume_section.append_item(self._volume_item)
+			self._popover_menu.add_child(self._volume_control, "volume")
+			self._volume_visible=True
+
 	def _on_disconnected(self, *args):
 		self._clear_title()
+		self._clear_cover()
 		self.set_property("show-lyrics", False)
+		if self._volume_visible:
+			self._volume_section.remove(0)
+			self._volume_visible=False
 
 	def _on_connected(self, *args):
 		self.set_property("show-lyrics", False)
@@ -2716,6 +2758,7 @@ class PlayerBar(Gtk.Overlay):
 		self._client=client
 
 		# widgets
+		cover=ToolbarCover(client)
 		progress_bar=ProgressBar(client)
 		play_button=PlayButton(client)
 		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
@@ -2730,15 +2773,13 @@ class PlayerBar(Gtk.Overlay):
 		title_box.add_css_class("toolbar-text")
 		title_box.append(self._title)
 		title_box.append(self._subtitle)
-		inner_box=Gtk.Box()
-		inner_box.add_css_class("toolbar")
-		inner_box.append(title_box)
-		inner_box.append(play_button)
-		outer_box=Gtk.Box()
-		outer_box.append(Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=46, child=MainCover(client)))
-		outer_box.append(inner_box)
+		box=Gtk.Box()
+		box.add_css_class("toolbar")
+		box.append(Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=34, child=cover))
+		box.append(title_box)
+		box.append(play_button)
 		self.add_overlay(progress_bar)
-		self.set_child(outer_box)
+		self.set_child(box)
 
 	def _clear_title(self):
 		self._title.set_text("")
@@ -2911,8 +2952,8 @@ class MainWindow(Adw.ApplicationWindow):
 		# bottom sheet layout
 		content_bin=Adw.Bin(child=Adw.LayoutSlot(id="browser"))
 		self._bottom_sheet=Adw.BottomSheet(
-			content=content_bin, sheet=Adw.LayoutSlot(id="player"), bottom_bar=PlayerBar(client),
-			reveal_bottom_bar=False, show_drag_handle=False)
+			content=content_bin, sheet=Adw.LayoutSlot(id="player"),
+			bottom_bar=PlayerBar(client), show_drag_handle=False)
 		self._bottom_sheet.bind_property("bottom-bar-height", content_bin, "margin-bottom", GObject.BindingFlags.DEFAULT)
 		bottom_sheet_layout=Adw.Layout(content=self._bottom_sheet, name="bottom-sheet")
 
@@ -2929,6 +2970,13 @@ class MainWindow(Adw.ApplicationWindow):
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 620sp"))
 		break_point.add_setter(multi_layout_view, "layout-name", "bottom-sheet")
 		break_point.add_setter(player, "sheet-mode", True)
+		break_point.add_setter(player, "show-large-cover", False)
+		self.add_breakpoint(break_point)
+		break_point=Adw.Breakpoint()
+		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 620sp and max-aspect-ratio: 4/7"))
+		break_point.add_setter(multi_layout_view, "layout-name", "bottom-sheet")
+		break_point.add_setter(player, "sheet-mode", True)
+		break_point.add_setter(player, "show-large-cover", True)
 		self.add_breakpoint(break_point)
 
 		# status page
@@ -2964,11 +3012,11 @@ class MainWindow(Adw.ApplicationWindow):
 		browser.search_entry.add_controller(controller_focus)
 
 		# connect
+		multi_layout_view.connect("notify::layout-name", self._on_layout_name)
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("state", self._on_state)
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -3055,9 +3103,6 @@ class MainWindow(Adw.ApplicationWindow):
 			else:
 				self.get_application().withdraw_notification("title-change")
 
-	def _on_playlist_changed(self, emitter, version, length, song_pos):
-		self._bottom_sheet.set_reveal_bottom_bar(length > 0)
-
 	def _on_state(self, emitter, state):
 		if state == "play":
 			self._suspend_inhibit=self.get_application().inhibit(self, Gtk.ApplicationInhibitFlags.SUSPEND, _("Playing music"))
@@ -3111,6 +3156,10 @@ class MainWindow(Adw.ApplicationWindow):
 			self.set_cursor_from_name("progress")
 		else:
 			self.set_cursor_from_name(None)
+
+	def _on_layout_name(self, obj, *args):
+		if obj.get_layout_name() == "bottom-sheet":
+			self._bottom_sheet.set_open(True)
 
 ###############
 # application #
