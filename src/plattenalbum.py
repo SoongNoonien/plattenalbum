@@ -1043,9 +1043,9 @@ class SetupDialog(ConnectDialog):
 		box.append(CommandLabel("systemctl --user enable --now mpd.socket"))
 		self.set_content(box)
 
-class ServerStats(Adw.Dialog):
+class ServerInfo(Adw.Dialog):
 	def __init__(self, client, settings):
-		super().__init__(title=_("Server Statistics"), width_request=360, follows_content_size=True)
+		super().__init__(title=_("Server Information"), width_request=360, follows_content_size=True)
 
 		# list box
 		list_box=Gtk.ListBox(valign=Gtk.Align.START)
@@ -1822,7 +1822,7 @@ class MainMenuButton(Gtk.MenuButton):
 		menu=Gio.Menu()
 		menu.append(_("_Disconnect"), "mpd.disconnect")
 		menu.append(_("_Update Database"), "mpd.update")
-		menu.append(_("_Server Statistics"), "win.stats")
+		menu.append(_("_Server Information"), "win.server-info")
 		menu.append_section(None, app_section)
 		self.set_menu_model(menu)
 
@@ -2932,7 +2932,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "settings","manual-connect","stats","help")
+		simple_actions_data=("close", "settings","manual-connect","server-info","help")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -3064,9 +3064,9 @@ class MainWindow(Adw.ApplicationWindow):
 		if self.get_visible_dialog() is None:
 			ManualConnectDialog(self._settings).present(self)
 
-	def _on_stats(self, action, param):
+	def _on_server_info(self, action, param):
 		if self.get_visible_dialog() is None:
-			ServerStats(self._client, self._settings).present(self)
+			ServerInfo(self._client, self._settings).present(self)
 
 	def _on_help(self, action, param):
 		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/plattenalbum/wiki/Usage").launch(self, None, None, None)
@@ -3114,11 +3114,11 @@ class MainWindow(Adw.ApplicationWindow):
 		if (dialog:=self.get_visible_dialog()) is not None:
 			dialog.close()
 		self._status_page_stack.set_visible_child_name("content")
-		self.lookup_action("stats").set_enabled(True)
+		self.lookup_action("server-info").set_enabled(True)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
-		self.lookup_action("stats").set_enabled(False)
+		self.lookup_action("server-info").set_enabled(False)
 		self._updating_toast.dismiss()
 		if self._suspend_inhibit:
 			self.get_application().uninhibit(self._suspend_inhibit)
@@ -3191,7 +3191,7 @@ class Plattenalbum(Adw.Application):
 		action_accels=(
 			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.help", ["F1"]),("win.settings", ["<Ctrl>comma"]),
 			("win.show-help-overlay", ["<Ctrl>question"]),("win.toggle-lyrics", ["<Ctrl>l"]),("win.toggle-search", ["<Ctrl>f"]),
-			("win.stats", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),
+			("win.server-info", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),
 			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),
 			("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),
 			("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),
