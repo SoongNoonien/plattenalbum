@@ -2609,7 +2609,8 @@ class Player(Adw.BreakpointBin):
 		self._popover_menu=Gtk.PopoverMenu.new_from_model(menu)
 
 		# split button
-		self._split_button=Adw.SplitButton(icon_name="lyrics-symbolic", action_name="win.toggle-lyrics")
+		self._split_button=Adw.SplitButton(icon_name="lyrics-symbolic", tooltip_text=_("Lyrics"),
+			dropdown_tooltip=_("Player Menu"), action_name="win.toggle-lyrics")
 		self._split_button.set_popover(self._popover_menu)
 
 		# header bar
