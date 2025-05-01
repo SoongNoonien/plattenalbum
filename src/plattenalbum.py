@@ -1784,7 +1784,7 @@ class AlbumPage(Adw.NavigationPage):
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
 		box.append(Adw.Clamp(child=album_cover, maximum_size=200))
 		box.append(Adw.Clamp(child=song_list))
-		self._scroll=Gtk.ScrolledWindow(child=box)#, vexpand=True)
+		self._scroll=Gtk.ScrolledWindow(child=box)
 		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		toolbar_view=Adw.ToolbarView(content=self._scroll)
 		toolbar_view.add_top_bar(header_bar)
