@@ -2385,6 +2385,13 @@ class PlayButton(Gtk.Button):
 			self.set_property("icon-name", "media-playback-start-symbolic")
 			self.set_tooltip_text(_("Play"))
 
+class MediaButtons(Gtk.Box):
+	def __init__(self, client):
+		super().__init__(spacing=6)
+		self.append(Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev"))
+		self.append(PlayButton(client))
+		self.append(Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next"))
+
 class BitRate(Gtk.Label):
 	def __init__(self, client, settings):
 		super().__init__(xalign=1, single_line_mode=True, css_classes=["caption", "numeric", "dim-label"])
@@ -2411,15 +2418,6 @@ class PlaybackControls(Gtk.Box):
 		super().__init__(hexpand=True, orientation=Gtk.Orientation.VERTICAL)
 		self.add_css_class("toolbar")
 		self._client=client
-
-		# buttons
-		buttons=Gtk.Box(spacing=6)
-		play_button=PlayButton(client)
-		prev_button=Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev")
-		next_button=Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next")
-		buttons.append(prev_button)
-		buttons.append(play_button)
-		buttons.append(next_button)
 
 		# labels
 		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
@@ -2458,7 +2456,7 @@ class PlaybackControls(Gtk.Box):
 		box.append(self._rest)
 		box.append(BitRate(client, settings))
 		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
-		center_box.set_center_widget(buttons)
+		center_box.set_center_widget(MediaButtons(client))
 		center_box.set_start_widget(self._elapsed)
 		center_box.set_end_widget(box)
 		self.append(self._scale)
@@ -2769,7 +2767,6 @@ class PlayerBar(Gtk.Overlay):
 		# widgets
 		cover=ToolbarCover(client)
 		progress_bar=ProgressBar(client)
-		play_button=PlayButton(client)
 		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
 		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label", "caption"])
 
@@ -2786,7 +2783,7 @@ class PlayerBar(Gtk.Overlay):
 		box.add_css_class("toolbar")
 		box.append(Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=34, child=cover))
 		box.append(title_box)
-		box.append(play_button)
+		box.append(MediaButtons(client))
 		self.add_overlay(progress_bar)
 		self.set_child(box)
 
