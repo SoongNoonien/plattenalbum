@@ -2562,6 +2562,46 @@ class VolumeControl(Gtk.Box):
 	def _refresh(self, emitter, volume):
 		self._adjustment.set_value(max(volume, 0))
 
+class PlayerMenu(Gtk.PopoverMenu):
+	def __init__(self, client):
+		super().__init__()
+		self._client=client
+		self._volume_visible=False
+
+		# volume
+		self._volume_control=VolumeControl(client)
+		self._volume_item=Gio.MenuItem()
+		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
+
+		# menu model
+		self._volume_section=Gio.Menu()
+		menu=Gio.Menu()
+		menu.append(_("_Repeat Mode"), "mpd.repeat")
+		menu.append(_("R_andom Mode"), "mpd.random")
+		menu.append(_("_Single Mode"), "mpd.single")
+		menu.append(_("_Pause After Song"), "mpd.single-oneshot")
+		menu.append(_("_Consume Mode"), "mpd.consume")
+		menu.append_section(None, self._volume_section)
+		self.set_menu_model(menu)
+
+		# connect
+		self._client.emitter.connect("volume", self._on_volume_changed)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+
+	def _on_volume_changed(self, emitter, volume):
+		if volume < 0 and self._volume_visible:
+			self._volume_section.remove(0)
+			self._volume_visible=False
+		elif volume >= 0 and not self._volume_visible:
+			self._volume_section.append_item(self._volume_item)
+			self.add_child(self._volume_control, "volume")
+			self._volume_visible=True
+
+	def _on_disconnected(self, *args):
+		if self._volume_visible:
+			self._volume_section.remove(0)
+			self._volume_visible=False
+
 class Player(Adw.BreakpointBin):
 	show_lyrics=GObject.Property(type=bool, default=False)
 	show_large_cover=GObject.Property(type=bool, default=False)
@@ -2569,7 +2609,6 @@ class Player(Adw.BreakpointBin):
 	def __init__(self, client, settings):
 		super().__init__(width_request=300, height_request=200)
 		self._client=client
-		self._volume_visible=False
 
 		# widgets
 		self._large_cover=AlbumCover(visible=False, margin_start=12, margin_end=12, margin_top=6, margin_bottom=18)
@@ -2590,28 +2629,10 @@ class Player(Adw.BreakpointBin):
 		self._stack.add_named(box, "playlist")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
-		# volume
-		self._volume_control=VolumeControl(client)
-		self._volume_item=Gio.MenuItem()
-		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
-
-		# menu model
-		self._volume_section=Gio.Menu()
-		menu=Gio.Menu()
-		menu.append(_("_Repeat Mode"), "mpd.repeat")
-		menu.append(_("R_andom Mode"), "mpd.random")
-		menu.append(_("_Single Mode"), "mpd.single")
-		menu.append(_("_Pause After Song"), "mpd.single-oneshot")
-		menu.append(_("_Consume Mode"), "mpd.consume")
-		menu.append_section(None, self._volume_section)
-
-		# popover menu
-		self._popover_menu=Gtk.PopoverMenu.new_from_model(menu)
-
 		# split button
 		self._split_button=Adw.SplitButton(icon_name="lyrics-symbolic", tooltip_text=_("Lyrics"),
 			dropdown_tooltip=_("Player Menu"), action_name="win.toggle-lyrics")
-		self._split_button.set_popover(self._popover_menu)
+		self._split_button.set_popover(PlayerMenu(client))
 
 		# header bar
 		self._title=Adw.WindowTitle()
@@ -2637,7 +2658,6 @@ class Player(Adw.BreakpointBin):
 		self.connect("notify::sheet-mode", self._on_sheet_mode_toggled)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
-		self._client.emitter.connect("volume", self._on_volume_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("connected", self._on_connected)
 
@@ -2709,22 +2729,10 @@ class Player(Adw.BreakpointBin):
 	def _on_playlist_changed(self, emitter, version, length, song_pos):
 		self._toolbar_view.set_reveal_bottom_bars(length > 0)
 
-	def _on_volume_changed(self, emitter, volume):
-		if volume < 0 and self._volume_visible:
-			self._volume_section.remove(0)
-			self._volume_visible=False
-		elif volume >= 0 and not self._volume_visible:
-			self._volume_section.append_item(self._volume_item)
-			self._popover_menu.add_child(self._volume_control, "volume")
-			self._volume_visible=True
-
 	def _on_disconnected(self, *args):
 		self._clear_title()
 		self._clear_cover()
 		self.set_property("show-lyrics", False)
-		if self._volume_visible:
-			self._volume_section.remove(0)
-			self._volume_visible=False
 
 	def _on_connected(self, *args):
 		self.set_property("show-lyrics", False)
