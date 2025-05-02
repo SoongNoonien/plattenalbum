@@ -1323,7 +1323,7 @@ class BrowserSongRow(SongRow):
 
 class BrowserSongList(Gtk.ListBox):
 	def __init__(self, client):
-		super().__init__(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		super().__init__(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
 		self._client=client
 		self._activate_on_release=False
 
@@ -1459,12 +1459,12 @@ class SearchView(Gtk.Stack):
 		self._album_tags=("album", "albumartist", "albumartistsort", "date")
 
 		# artist list
-		self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
 		self._artist_list.add_css_class("rich-list")
 		self._artist_list.add_css_class("boxed-list")
 
 		# album list
-		self._album_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, valign=Gtk.Align.START)
+		self._album_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
 		self._album_list.add_css_class("rich-list")
 		self._album_list.add_css_class("boxed-list")
 
