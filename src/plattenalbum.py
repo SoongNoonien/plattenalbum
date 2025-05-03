@@ -572,6 +572,10 @@ class FileCover(str):
 			paintable=FALLBACK_COVER
 		return paintable
 
+class FallbackCover():
+	def get_paintable(self):
+		return FALLBACK_COVER
+
 class EventEmitter(GObject.Object):
 	__gsignals__={
 		"updating-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
@@ -604,7 +608,7 @@ class Client(MPDClient):
 		self._main_timeout_id=None
 		self._start_idle_id=None
 		self._music_directory=None
-		self.current_cover=None
+		self.current_cover=FallbackCover()
 		self._first_mark=None
 		self._second_mark=None
 		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
@@ -707,7 +711,7 @@ class Client(MPDClient):
 		self._last_status={}
 		self._music_directory=None
 		self.server=""
-		self.current_cover=None
+		self.current_cover=FallbackCover()
 		self.emitter.emit("disconnected")
 
 	def connected(self):
@@ -794,7 +798,7 @@ class Client(MPDClient):
 		elif (cover_binary:=self.get_cover_binary(uri)) is not None:
 			return BinaryCover(cover_binary)
 		else:
-			return None
+			return FallbackCover()
 
 	def get_absolute_path(self, uri):
 		if self._music_directory is not None:
@@ -912,7 +916,7 @@ class Client(MPDClient):
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
-					self.current_cover=None
+					self.current_cover=FallbackCover()
 					self.emitter.emit("current-song", Song({}), None, None, status["state"])
 					self._clear_marks()
 				elif "volume" == key:
@@ -1431,17 +1435,11 @@ class ToolbarCover(Gtk.Picture):
 		self._client.emitter.connect("current-song", self._refresh)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 
-	def _clear(self):
-		self.set_paintable(FALLBACK_COVER)
-
 	def _refresh(self, *args):
-		if self._client.current_cover is None:
-			self._clear()
-		else:
-			self.set_paintable(self._client.current_cover.get_paintable())
+		self.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_disconnected(self, *args):
-		self._clear()
+		self.set_paintable(FALLBACK_COVER)
 
 ###########
 # browser #
@@ -1681,10 +1679,7 @@ class AlbumListRow(Gtk.Box):
 			self._client.tagtypes("clear")
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
 			self._client.tagtypes("all")
-			if (cover:=self._client.get_cover(song["file"])) is None:
-				album.cover=FALLBACK_COVER
-			else:
-				album.cover=cover.get_paintable()
+			album.cover=self._client.get_cover(song["file"]).get_paintable()
 		self._cover.set_paintable(album.cover)
 
 class AlbumsPage(Adw.NavigationPage):
@@ -1803,10 +1798,7 @@ class AlbumPage(Adw.NavigationPage):
 		client.restrict_tagtypes("track", "title", "artist")
 		songs=client.find(*tag_filter)
 		client.tagtypes("all")
-		if (cover:=client.get_cover(songs[0]["file"])) is None:
-			album_cover.set_paintable(FALLBACK_COVER)
-		else:
-			album_cover.set_paintable(cover.get_paintable())
+		album_cover.set_paintable(client.get_cover(songs[0]["file"]).get_paintable())
 		for song in songs:
 			row=BrowserSongRow(song)
 			song_list.append(row)
@@ -2701,9 +2693,6 @@ class Player(Adw.BreakpointBin):
 		self._title.set_title("")
 		self._title.set_subtitle("")
 
-	def _clear_cover(self):
-		self._large_cover.set_paintable(FALLBACK_COVER)
-
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
 			self._clamp.set_visible(True)
@@ -2750,17 +2739,14 @@ class Player(Adw.BreakpointBin):
 			self._clear_title()
 			if self.get_property("show-lyrics"):
 				self._lyrics_window.clear()
-		if self._client.current_cover is None:
-			self._clear_cover()
-		else:
-			self._large_cover.set_paintable(self._client.current_cover.get_paintable())
+		self._large_cover.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_playlist_changed(self, emitter, version, length, song_pos):
 		self._toolbar_view.set_reveal_bottom_bars(length > 0)
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
-		self._clear_cover()
+		self._large_cover.set_paintable(FALLBACK_COVER)
 		self.set_property("show-lyrics", False)
 
 	def _on_connected(self, *args):
