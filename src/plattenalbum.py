@@ -425,7 +425,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._update_metadata(song)
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
-	def _on_playlist_changed(self, emitter, version, length, song_pos):
+	def _on_playlist_changed(self, emitter, version, length, songpos):
 		value=GLib.Variant("b", length > 0)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPlay", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPause", value)
@@ -2120,7 +2120,7 @@ class PlaylistView(SongList):
 		self._autoscroll=False
 		self._client.play(pos)
 
-	def _on_playlist_changed(self, emitter, version, length, song_pos):
+	def _on_playlist_changed(self, emitter, version, length, songpos):
 		self._menu.popdown()
 		self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
 		songs=[]
@@ -2132,7 +2132,7 @@ class PlaylistView(SongList):
 		for song in songs:
 			self.get_model().set(int(song["pos"]), song)
 		self.get_model().clear(length)
-		self._refresh_selection(song_pos)
+		self._refresh_selection(songpos)
 		if self._playlist_version is None and (selected:=self.get_model().get_selected()) is not None:  # always scroll to song on startup
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 		self._playlist_version=version
@@ -2269,7 +2269,7 @@ class PlaylistWindow(Gtk.Stack):
 			return True
 		return False
 
-	def _on_playlist_changed(self, emitter, version, length, song_pos):
+	def _on_playlist_changed(self, emitter, version, length, songpos):
 		if length:
 			self.set_visible_child_name("playlist")
 		else:
@@ -2741,7 +2741,7 @@ class Player(Adw.BreakpointBin):
 				self._lyrics_window.clear()
 		self._large_cover.set_paintable(self._client.current_cover.get_paintable())
 
-	def _on_playlist_changed(self, emitter, version, length, song_pos):
+	def _on_playlist_changed(self, emitter, version, length, songpos):
 		self._toolbar_view.set_reveal_bottom_bars(length > 0)
 
 	def _on_disconnected(self, *args):
@@ -2916,7 +2916,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		for action in self._disable_no_song_data:
 			self.lookup_action(action).set_enabled(songpos is not None)
 
-	def _on_playlist_changed(self, emitter, version, length, song_pos):
+	def _on_playlist_changed(self, emitter, version, length, songpos):
 		for action in self._enable_disable_on_playlist_data:
 			self.lookup_action(action).set_enabled(length > 0)
 
