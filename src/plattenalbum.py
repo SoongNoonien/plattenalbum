@@ -30,7 +30,6 @@ import threading
 import functools
 import itertools
 import collections
-import os
 import sys
 import signal
 import re
@@ -45,7 +44,7 @@ locale.bindtextdomain("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@")
 locale.textdomain("de.wagnermartin.Plattenalbum")
 bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
 textdomain("de.wagnermartin.Plattenalbum")
-Gio.Resource._register(Gio.resource_load(os.path.join("@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource")))
+Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
 
 FALLBACK_COVER=Gdk.Paintable.new_empty(1, 1)
 
@@ -543,7 +542,7 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 			elif key == "artistsort":
 				return self["artist"]
 			elif key == "title":
-				return MultiTag([os.path.basename(self.data["file"])])
+				return MultiTag([GLib.path_get_basename(self.data["file"])])
 			elif key == "duration":
 				return Duration()
 			else:
@@ -610,7 +609,7 @@ class Client(MPDClient):
 		self._first_mark=None
 		self._second_mark=None
 		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
-		self._socket_path=os.path.join(GLib.get_user_runtime_dir(), "mpd/socket")
+		self._socket_path=GLib.build_filenamev([GLib.get_user_runtime_dir(), "mpd", "socket"])
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 		self.server=""
 
@@ -770,13 +769,14 @@ class Client(MPDClient):
 
 	def get_cover_path(self, uri):
 		if self._music_directory is not None:
-			song_dir=os.path.join(self._music_directory, os.path.dirname(uri))
+			song_dir=GLib.build_filenamev([self._music_directory, GLib.path_get_dirname(uri)])
 			if uri.lower().endswith(".cue"):
-				song_dir=os.path.dirname(song_dir)  # get actual directory of .cue file
-			if os.path.isdir(song_dir):
-				for f in os.listdir(song_dir):
+				song_dir=GLib.path_get_dirname(song_dir)  # get actual directory of .cue file
+			if GLib.file_test(song_dir, GLib.FileTest.IS_DIR):
+				directory=GLib.Dir.open(song_dir, 0)
+				while (f:=directory.read_name()) is not None:
 					if self._cover_regex.match(f):
-						return os.path.join(song_dir, f)
+						return GLib.build_filenamev([song_dir, f])
 		return None
 
 	def get_cover_binary(self, uri):
@@ -799,8 +799,8 @@ class Client(MPDClient):
 
 	def get_absolute_path(self, uri):
 		if self._music_directory is not None:
-			path=re.sub(r"(.*\.cue)\/track\d+$", r"\1", os.path.join(self._music_directory, uri), flags=re.IGNORECASE)
-			if os.path.isfile(path):
+			path=re.sub(r"(.*\.cue)\/track\d+$", r"\1", GLib.build_filenamev([self._music_directory, uri]), flags=re.IGNORECASE)
+			if GLib.file_test(path, GLib.FileTest.IS_REGULAR):
 				return path
 			else:
 				return None
