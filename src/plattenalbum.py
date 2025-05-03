@@ -2179,7 +2179,9 @@ class PlaylistView(SongList):
 		self._remove_highlight()
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if isinstance(value, int):
-			if item is not self:
+			if item is self:
+				position=self.get_model().get_n_items()-1
+			else:
 				row=item.get_first_child()
 				position=row.get_property("position")
 				if value == position:
@@ -2188,20 +2190,18 @@ class PlaylistView(SongList):
 					position-=1
 				if self._point_in_lower_half(x, y, item):
 					position+=1
-			else:
-				position=self.get_model().get_n_items()-1
 			if value == position:
 				return False
 			self._client.move(value, position)
 			return True
 		elif isinstance(value, Song):
-			if item is not self:
+			if item is self:
+				position=self.get_model().get_n_items()
+			else:
 				row=item.get_first_child()
 				position=row.get_property("position")
 				if self._point_in_lower_half(x, y, item):
 					position+=1
-			else:
-				position=self.get_model().get_n_items()
 			self._client.addid(value["file"], position)
 			return True
 		return False
@@ -2217,16 +2217,16 @@ class PlaylistView(SongList):
 	def _on_drop_motion(self, drop_motion, x, y):
 		self._remove_highlight()
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is not self:
+		if item is self:
+			self.add_css_class("drop-playlist")
+			self._highlighted_widget=self
+		else:
 			row=item.get_first_child()
 			if self._point_in_lower_half(x, y, item):
 				row.add_css_class("drop-bottom")
 			else:
 				row.add_css_class("drop-top")
 			self._highlighted_widget=row
-		else:
-			self.add_css_class("drop-playlist")
-			self._highlighted_widget=self
 
 	def _on_drop_leave(self, drop_motion):
 		self._remove_highlight()
