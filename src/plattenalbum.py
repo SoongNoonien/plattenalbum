@@ -375,12 +375,11 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		)
 
 	# other methods
-	def _update_metadata(self):
+	def _update_metadata(self, song):
 		"""
 		Translate metadata returned by MPD to the MPRIS v2 syntax.
 		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
 		"""
-		song=self._client.currentsong()
 		self._metadata={}
 		for tag, xesam_tag in (("album","album"),("title","title"),("date","contentCreated")):
 			if tag in song:
@@ -422,8 +421,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanSeek", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
 
-	def _on_song_changed(self, *args):
-		self._update_metadata()
+	def _on_song_changed(self, emitter, song, songpos, songid, state):
+		self._update_metadata(song)
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
 	def _on_playlist_changed(self, emitter, version, length, song_pos):
@@ -462,7 +461,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _on_mpris_changed(self, settings, key):
 		if settings.get_boolean(key):
 			self._enable()
-			self._update_metadata()
+			self._update_metadata(self._client.currentsong())
 			for prop in ("PlaybackStatus", "Metadata", "Volume", "LoopStatus", "CanGoNext",
 					"CanGoPrevious", "CanPlay", "CanPause", "CanSeek", "Shuffle"):
 				self._update_property(self._MPRIS_PLAYER_IFACE, prop)
@@ -581,7 +580,7 @@ class EventEmitter(GObject.Object):
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"current-song": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,)),
+		"current-song": (GObject.SignalFlags.RUN_FIRST, None, (Song,str,str,str,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"volume": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
@@ -885,8 +884,9 @@ class Client(MPDClient):
 			if "playlist" in diff:
 				self.emitter.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
 			if "songid" in diff:
-				self.current_cover=self.get_cover(self.currentsong()["file"])
-				self.emitter.emit("current-song", status["song"], status["songid"], status["state"])
+				song=self.currentsong()
+				self.current_cover=self.get_cover(song["file"])
+				self.emitter.emit("current-song", song, status["song"], status["songid"], status["state"])
 				self._clear_marks()
 			if "elapsed" in diff:
 				elapsed=float(diff["elapsed"])
@@ -913,7 +913,7 @@ class Client(MPDClient):
 			for key in diff:
 				if "songid" == key:
 					self.current_cover=None
-					self.emitter.emit("current-song", None, None, status["state"])
+					self.emitter.emit("current-song", Song({}), None, None, status["state"])
 					self._clear_marks()
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
@@ -2145,8 +2145,8 @@ class PlaylistView(SongList):
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 		self._playlist_version=version
 
-	def _on_song_changed(self, emitter, song, songid, state):
-		self._refresh_selection(song)
+	def _on_song_changed(self, emitter, song, songpos, songid, state):
+		self._refresh_selection(songpos)
 		if self._autoscroll:
 			if (selected:=self.get_model().get_selected()) is not None and state == "play":
 				self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
@@ -2738,8 +2738,8 @@ class Player(Adw.BreakpointBin):
 		if not self.get_property("sheet-mode"):
 			self.set_property("show-large-cover", False)
 
-	def _on_song_changed(self, emitter, song, songid, state):
-		if (song:=self._client.currentsong()):
+	def _on_song_changed(self, emitter, song, songpos, songid, state):
+		if song:
 			self._window_handle.set_visible(True)
 			self._title.set_title(song["title"][0])
 			self._title.set_subtitle(str(song["artist"]))
@@ -2822,8 +2822,8 @@ class PlayerBar(Gtk.Overlay):
 		self._title.set_text("")
 		self._subtitle.set_text("")
 
-	def _on_song_changed(self, emitter, song, songid, state):
-		if (song:=self._client.currentsong()):
+	def _on_song_changed(self, emitter, song, songpos, songid, state):
+		if song:
 			self._title.set_text(song["title"][0])
 			self._subtitle.set_text(str(song["artist"]))
 		else:
@@ -2926,9 +2926,9 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		for action in self._disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state_dict[state])
 
-	def _on_song_changed(self, emitter, song, songid, state):
+	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		for action in self._disable_no_song_data:
-			self.lookup_action(action).set_enabled(song is not None)
+			self.lookup_action(action).set_enabled(songpos is not None)
 
 	def _on_playlist_changed(self, emitter, version, length, song_pos):
 		for action in self._enable_disable_on_playlist_data:
@@ -3116,8 +3116,8 @@ class MainWindow(Adw.ApplicationWindow):
 			self.get_application().set_accels_for_action("mpd.toggle-play", ["space"])
 			self.get_application().set_accels_for_action("mpd.a-b-loop", ["l"])
 
-	def _on_song_changed(self, emitter, song, songid, state):
-		if (song:=self._client.currentsong()):
+	def _on_song_changed(self, emitter, song, songpos, songid, state):
+		if song:
 			self.set_title(song["title"][0])
 			if self._settings.get_boolean("send-notify") and not self.is_active() and state == "play":
 				notify=Gio.Notification()
