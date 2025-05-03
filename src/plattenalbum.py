@@ -1427,7 +1427,7 @@ class AlbumCover(Gtk.Widget):
 
 class ToolbarCover(Gtk.Picture):
 	def __init__(self, client):
-		super().__init__(css_classes=["toolbar-cover"])
+		super().__init__(css_classes=["toolbar-cover", "frame"])
 		self.set_alternative_text(_("Current album cover"))
 		self._client=client
 
