@@ -2027,6 +2027,7 @@ class PlaylistView(SongList):
 		self._playlist_version=None
 		self._activate_on_release=False
 		self._autoscroll=True
+		self._highlighted_widget=None
 		self.add_css_class("background")
 		self.add_css_class("playlist")
 
@@ -2062,6 +2063,8 @@ class PlaylistView(SongList):
 		drop_target.set_actions(Gdk.DragAction.COPY|Gdk.DragAction.MOVE)
 		drop_target.set_gtypes((int,Song,))
 		self.add_controller(drop_target)
+		drop_motion=Gtk.DropControllerMotion()
+		self.add_controller(drop_motion)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -2071,6 +2074,8 @@ class PlaylistView(SongList):
 		long_press_controller.connect("pressed", self._on_long_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
 		drop_target.connect("drop", self._on_drop)
+		drop_motion.connect("motion", self._on_drop_motion)
+		drop_motion.connect("leave", self._on_drop_leave)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -2162,7 +2167,7 @@ class PlaylistView(SongList):
 		if (position:=self.get_position(x,y)) is not None:
 			return Gdk.ContentProvider.new_for_value(position)
 
-	def _point_in_upper_half(self, x, y, widget):
+	def _point_in_lower_half(self, x, y, widget):
 		point=Graphene.Point.zero()
 		point.x,point.y=x,y
 		computed_point,point=self.compute_point(widget, point)
@@ -2171,6 +2176,7 @@ class PlaylistView(SongList):
 		return False
 
 	def _on_drop(self, drop_target, value, x, y):
+		self._remove_highlight()
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if isinstance(value, int):
 			if item is not self:
@@ -2180,7 +2186,7 @@ class PlaylistView(SongList):
 					return False
 				if value < position:
 					position-=1
-				if self._point_in_upper_half(x, y, item):
+				if self._point_in_lower_half(x, y, item):
 					position+=1
 			else:
 				position=self.get_model().get_n_items()-1
@@ -2192,13 +2198,38 @@ class PlaylistView(SongList):
 			if item is not self:
 				row=item.get_first_child()
 				position=row.get_property("position")
-				if self._point_in_upper_half(x, y, item):
+				if self._point_in_lower_half(x, y, item):
 					position+=1
 			else:
 				position=self.get_model().get_n_items()
 			self._client.addid(value["file"], position)
 			return True
 		return False
+
+	def _remove_highlight(self):
+		if self._highlighted_widget is self:
+			self.remove_css_class("drop-playlist")
+		elif self._highlighted_widget is not None:
+			self._highlighted_widget.remove_css_class("drop-top")
+			self._highlighted_widget.remove_css_class("drop-bottom")
+		self._highlighted_widget=None
+
+	def _on_drop_motion(self, drop_motion, x, y):
+		self._remove_highlight()
+		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if item is not self:
+			row=item.get_first_child()
+			if self._point_in_lower_half(x, y, item):
+				row.add_css_class("drop-bottom")
+			else:
+				row.add_css_class("drop-top")
+			self._highlighted_widget=row
+		else:
+			self.add_css_class("drop-playlist")
+			self._highlighted_widget=self
+
+	def _on_drop_leave(self, drop_motion):
+		self._remove_highlight()
 
 	def _on_disconnected(self, *args):
 		self._clear()

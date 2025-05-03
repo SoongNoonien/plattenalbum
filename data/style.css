@@ -18,6 +18,10 @@
   padding-bottom: 6px;
 }
 
+.playlist:drop(active) {
+  box-shadow: unset;
+}
+
 .playlist > row {
   border-radius: 9px;
   padding-left: 6px;
@@ -28,4 +32,21 @@
   padding-top: 6px;
   margin-bottom: 2px;
   padding-bottom: 6px;
+}
+
+.drop-top {
+  border-top: 2px solid var(--accent-bg-color);
+  margin-top: -9px;
+  padding-top: 7px;
+}
+
+.drop-bottom {
+  border-bottom: 2px solid var(--accent-bg-color);
+  margin-bottom: -9px;
+  padding-bottom: 7px;
+}
+
+.drop-playlist {
+  border-bottom: 2px solid var(--accent-bg-color);
+  padding-bottom: 4px;
 }
