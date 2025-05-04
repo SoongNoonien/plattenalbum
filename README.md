@@ -12,9 +12,9 @@ Browse your collection while viewing large album covers. Play your music without
 
 <a href='https://flathub.org/apps/details/de.wagnermartin.Plattenalbum'><img width='240' alt='Download on Flathub' src='https://flathub.org/api/badge?svg&locale=en'/></a>
 
-### Arch
+### Distribution Packages
 
-Plattenalbum can be obtained through the [AUR](https://aur.archlinux.org/packages/plattenalbum). Also the [latest development version](https://aur.archlinux.org/packages/plattenalbum-git) is available there.
+[![Packaging status](https://repology.org/badge/vertical-allrepos/plattenalbum.svg)](https://repology.org/project/plattenalbum/versions)
 
 ## Building
 
@@ -31,7 +31,7 @@ Install the following dependencies on your system.
 - Python3
 
 #### Python Modules
-- mpd (python-mpd2 >=3.1)
+- mpd (python-mpd2 >=3.1.0)
 - gi (Gtk, Adw, Gio, Gdk, Pango, GObject, GLib)
 
 Execute the following commands to build and install the program.
