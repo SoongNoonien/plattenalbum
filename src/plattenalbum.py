@@ -1537,7 +1537,7 @@ class Artist(GObject.Object):
 		GObject.Object.__init__(self)
 		self.name=name
 
-class ArtistSelectionModel(SelectionModel):  # TODO
+class ArtistSelectionModel(SelectionModel):
 	def __init__(self):
 		super().__init__(Artist)
 
@@ -1708,7 +1708,7 @@ class AlbumsPage(Adw.NavigationPage):
 		self.grid_view.set_factory(factory)
 
 		# breakpoint bin
-		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)  # TODO height_request
+		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
 		for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
 			break_point=Adw.Breakpoint()
 			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
@@ -1860,7 +1860,7 @@ class Browser(Gtk.Stack):
 		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
 
 		# breakpoint bin
-		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)  # TODO height_request
+		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
 		break_point.add_setter(self._navigation_split_view, "collapsed", True)
