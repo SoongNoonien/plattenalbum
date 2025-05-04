@@ -4,6 +4,7 @@
 		<file>de.wagnermartin.Plattenalbum.metainfo.xml</file>
 		<file>ShortcutsWindow.ui</file>
 		<file>style.css</file>
+		<file>style-hc.css</file>
 	</gresource>
 	<gresource prefix="/de/wagnermartin/Plattenalbum/icons/scalable/actions">
 		<file>lyrics-symbolic.svg</file>
