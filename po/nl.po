@@ -3,13 +3,12 @@
 # This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2024-09-21 09:53+0200\n"
+"PO-Revision-Date: 2025-05-05 13:08+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -17,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.6\n"
 
 #: src/plattenalbum.py:505
 #, python-brace-format
@@ -32,7 +31,7 @@ msgstr "Weergave"
 
 #: src/plattenalbum.py:932
 msgid "_Show Bit Rate"
-msgstr ""
+msgstr "Toon Bit_snelheid"
 
 #: src/plattenalbum.py:941
 msgid "Behavior"
@@ -40,15 +39,15 @@ msgstr "Gedrag"
 
 #: src/plattenalbum.py:943
 msgid "Send _Notification on Title Change"
-msgstr "Verstuur _notificatie na titelwisseling"
+msgstr "Meldi_ng tonen na wisselen van nummer"
 
 #: src/plattenalbum.py:944
 msgid "Re_wind via Previous Button"
-msgstr "_Terugspoelen via vorige knop"
+msgstr "Terugspoelen met behulp van _vorige knop"
 
 #: src/plattenalbum.py:945
 msgid "Stop _Playback on Quit"
-msgstr "Stop met _afspelen na afsluiten"
+msgstr "Afs_pelen stoppen na afsluiten"
 
 #: src/plattenalbum.py:946
 msgid "Support “_MPRIS”"
@@ -56,35 +55,27 @@ msgstr "Ondersteuning voor “_MPRIS”"
 
 #: src/plattenalbum.py:946
 msgid "Disable if “MPRIS” is supported by another client"
-msgstr ""
+msgstr "Schakel “MPRIS” uit als een andere client dit reeds ondersteunt"
 
 #: src/plattenalbum.py:965
-#, fuzzy
-#| msgid "Connection"
 msgid "_Connect"
-msgstr "Verbinding"
+msgstr "Ver_binden"
 
 #: src/plattenalbum.py:973
-#, fuzzy
-#| msgid "Connection"
 msgid "Connection failed"
-msgstr "Verbinding"
+msgstr "Verbinding mislukt"
 
 #: src/plattenalbum.py:987
-#, fuzzy
-#| msgid "Connection"
 msgid "Local Connection"
-msgstr "Verbinding"
+msgstr "Lokale verbinding"
 
 #: src/plattenalbum.py:990 src/plattenalbum.py:1007
 msgid "Password (optional)"
-msgstr ""
+msgstr "Wachtwoord (optioneel)"
 
 #: src/plattenalbum.py:997
-#, fuzzy
-#| msgid "Connection"
 msgid "Remote Connection"
-msgstr "Verbinding"
+msgstr "Externe verbinding"
 
 #: src/plattenalbum.py:1000
 msgid "Host Name"
@@ -92,11 +83,11 @@ msgstr "Hostnaam"
 
 #: src/plattenalbum.py:1004
 msgid "Port"
-msgstr "Port"
+msgstr "Poort"
 
 #: src/plattenalbum.py:1025
 msgid "Setup"
-msgstr ""
+msgstr "Instelhulp"
 
 #: src/plattenalbum.py:1027
 msgid ""
@@ -105,10 +96,14 @@ msgid ""
 "initialize a basic local instance. After that, Plattenalbum should be able "
 "to seamlessly connect to it."
 msgstr ""
+"Om te beginnen, installeer je allereerst de Music Player Daemon (<tt>mpd</"
+"tt>) via de pakketbeheerder van je systeem, en voer je daarna de volgende "
+"commando’s uit om een eenvoudige lokale instantie op te zetten. Zodra je dit "
+"gedaan hebt, zou Plattenalbum meteen verbinding moeten maken met mpd."
 
 #: src/plattenalbum.py:1037 data/ShortcutsWindow.ui:49
 msgid "Server Statistics"
-msgstr "Server Statistieken"
+msgstr "Serverstatistieken"
 
 #: src/plattenalbum.py:1045
 msgid "Protocol"
@@ -120,7 +115,7 @@ msgstr "Uptime"
 
 #: src/plattenalbum.py:1047
 msgid "Playtime"
-msgstr "Afspeeltijd"
+msgstr "Speelduur"
 
 #: src/plattenalbum.py:1048 src/plattenalbum.py:1383 src/plattenalbum.py:1794
 msgid "Artists"
@@ -137,11 +132,11 @@ msgstr "Nummer"
 
 #: src/plattenalbum.py:1051
 msgid "Total Playtime"
-msgstr "Totale Afspeeltijd"
+msgstr "Totale Speelduur"
 
 #: src/plattenalbum.py:1052
 msgid "Database Update"
-msgstr "Database Update"
+msgstr "Database Bijwerken"
 
 #: src/plattenalbum.py:1193 src/plattenalbum.py:1919
 msgid "Context menu"
@@ -153,11 +148,11 @@ msgstr "_Toevoegen"
 
 #: src/plattenalbum.py:1216
 msgid "As _Next"
-msgstr "Als _Volgende"
+msgstr "Als Volge_nde"
 
 #: src/plattenalbum.py:1217
 msgid "_Play"
-msgstr "_Afspelen"
+msgstr "Afs_pelen"
 
 #: src/plattenalbum.py:1219 src/plattenalbum.py:1937
 msgid "_Show"
@@ -197,7 +192,7 @@ msgstr "Toevoegen"
 
 #: src/plattenalbum.py:1718 src/plattenalbum.py:1719
 msgid "Unknown Album"
-msgstr ""
+msgstr "Onbekend Album"
 
 #: src/plattenalbum.py:1753 src/plattenalbum.py:2905 data/ShortcutsWindow.ui:31
 msgid "Main Menu"
@@ -213,29 +208,27 @@ msgstr "Snel_toetsen"
 
 #: src/plattenalbum.py:1757 src/plattenalbum.py:2903
 msgid "_Help"
-msgstr "_Help"
+msgstr "_Hulp"
 
 #: src/plattenalbum.py:1758 src/plattenalbum.py:2904
 msgid "_About Plattenalbum"
 msgstr "_Over Plattenalbum"
 
 #: src/plattenalbum.py:1760
-#, fuzzy
-#| msgid "_Reconnect"
 msgid "_Disconnect"
-msgstr "Op_nieuw verbinden"
+msgstr "Verbin_ding verbreken"
 
 #: src/plattenalbum.py:1761
 msgid "_Update Database"
-msgstr "_Update database"
+msgstr "_Database bijwerken"
 
 #: src/plattenalbum.py:1762
 msgid "_Server Statistics"
-msgstr "_Server Statistieken"
+msgstr "_Serverstatistieken"
 
 #: src/plattenalbum.py:1774 src/plattenalbum.py:1775
 msgid "Search collection"
-msgstr "Zoek in collectie"
+msgstr "Verzameling doorzoeken"
 
 #: src/plattenalbum.py:1778 src/plattenalbum.py:1788
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
@@ -245,7 +238,7 @@ msgstr "Zoeken"
 #. status page
 #: src/plattenalbum.py:1818
 msgid "Collection is Empty"
-msgstr "Collectie is Leeg"
+msgstr "Verzameling is Leeg"
 
 #: src/plattenalbum.py:1936
 msgid "_Remove"
@@ -253,7 +246,7 @@ msgstr "_Verwijderen"
 
 #: src/plattenalbum.py:1939
 msgid "_Enqueue Album"
-msgstr "Album aan _Wachtrij Toevoegen"
+msgstr "Album aan Wachtrij _Toevoegen"
 
 #: src/plattenalbum.py:1940
 msgid "_Tidy"
@@ -261,7 +254,7 @@ msgstr "_Opschonen"
 
 #: src/plattenalbum.py:1942
 msgid "_Clear"
-msgstr "_Leegmaken"
+msgstr "_Wissen"
 
 #: src/plattenalbum.py:2152
 msgid "Playlist is Empty"
@@ -269,7 +262,7 @@ msgstr "Afspeellijst is Leeg"
 
 #: src/plattenalbum.py:2157
 msgid "Scroll to Current Song"
-msgstr ""
+msgstr "Naar Huidig Nummer Springen"
 
 #. status pages
 #: src/plattenalbum.py:2250
@@ -282,13 +275,11 @@ msgstr "Verbindingsfout"
 
 #: src/plattenalbum.py:2253
 msgid "Check your network connection"
-msgstr "Controleer je netwerk verbinding"
+msgstr "Controleer je netwerkverbinding"
 
 #: src/plattenalbum.py:2255
-#, fuzzy
-#| msgid "searching…"
 msgid "Searching…"
-msgstr "zoeken…"
+msgstr "Bezig met zoeken…"
 
 #: src/plattenalbum.py:2280
 msgid "Lyrics view"
@@ -301,7 +292,7 @@ msgstr "Lyrics van {song}"
 
 #: src/plattenalbum.py:2311
 msgid "Current album cover"
-msgstr "Huidige albumcover"
+msgstr "Huidige albumhoes"
 
 #: src/plattenalbum.py:2342
 msgid "Pause"
@@ -310,7 +301,7 @@ msgstr "Pauzeren"
 #: src/plattenalbum.py:2352
 #, python-brace-format
 msgid "{bitrate} kb/s"
-msgstr ""
+msgstr "{bitrate} kb/s"
 
 #: src/plattenalbum.py:2377 data/ShortcutsWindow.ui:107
 msgid "Previous"
@@ -326,13 +317,11 @@ msgstr "Voortgangsbalk"
 
 #: src/plattenalbum.py:2506
 msgid "Volume control"
-msgstr ""
+msgstr "Volumeregeling"
 
 #: src/plattenalbum.py:2526
-#, fuzzy
-#| msgid "Playback Menu"
 msgid "Player Menu"
-msgstr "Afspeelmenu"
+msgstr "Spelermenu"
 
 #: src/plattenalbum.py:2536
 msgid "_Repeat Mode"
@@ -352,7 +341,7 @@ msgstr "_Pauzeren Na Nummer"
 
 #: src/plattenalbum.py:2540
 msgid "_Consume Mode"
-msgstr "_Consumeer Modus"
+msgstr "_Consumeermodus"
 
 #: src/plattenalbum.py:2543
 msgid "_Lyrics"
@@ -360,64 +349,64 @@ msgstr "_Lyrics"
 
 #: src/plattenalbum.py:2836
 msgid "Database is being updated"
-msgstr "Database wordt geüpdate"
+msgstr "Database wordt bijgewerkt"
 
 #: src/plattenalbum.py:2837
 msgid "Database updated"
-msgstr "Database geüpdate"
+msgstr "Database is bijgewerkt"
 
 #. status page
 #: src/plattenalbum.py:2886
 msgid "Connect to Your Music"
-msgstr ""
+msgstr "Verbind met Je Muziek"
 
 #: src/plattenalbum.py:2887
 msgid ""
 "To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
 "up and running on this device or another one on the network"
 msgstr ""
+"Om Plattenalbum te gebruiken, is een ingestelde, actieve instantie van de "
+"Music Player Daemon op dit apparaat of het netwerk vereist"
 
 #: src/plattenalbum.py:2889
 msgid "_Set up Instance"
-msgstr ""
+msgstr "_Instantie Opzetten"
 
 #: src/plattenalbum.py:2891
-#, fuzzy
-#| msgid "Connection"
 msgid "Connect _Locally"
-msgstr "Verbinding"
+msgstr "_Lokale Verbinding Opzetten"
 
 #: src/plattenalbum.py:2893
 msgid "Connect _Remotely"
-msgstr ""
+msgstr "Exte_rne Verbinding Opzetten"
 
 #: src/plattenalbum.py:3000
 msgid "Next Title is Playing"
-msgstr ""
+msgstr "Het volgende nummer wordt afgespeeld"
 
 #: src/plattenalbum.py:3002
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
-msgstr ""
+msgstr "“{title}” van “{artist}” wordt nu afgespeeld"
 
 #: src/plattenalbum.py:3004
 #, python-brace-format
 msgid "Now playing “{title}”"
-msgstr ""
+msgstr "“{title}” wordt nu afgespeeld"
 
 #: src/plattenalbum.py:3039
 msgid "Cleared A‐B loop"
-msgstr ""
+msgstr "A‐B lus gewist"
 
 #: src/plattenalbum.py:3042
 #, python-brace-format
 msgid "Started A‐B loop at {start}"
-msgstr ""
+msgstr "A-B lus gestart op {start}"
 
 #: src/plattenalbum.py:3044
 #, python-brace-format
 msgid "Activated A‐B loop from {start} to {end}"
-msgstr ""
+msgstr "A-B lus geactiveerd van {start} tot {end}"
 
 #: src/plattenalbum.py:3061
 msgid "Debug mode"
@@ -427,6 +416,7 @@ msgstr "Debugmodus"
 msgid "translator-credits"
 msgstr ""
 "Martin de Reuver\n"
+"Heimen Stoffels\n"
 "Rijnder Wever <rijnder.wever@gmail.com>"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
@@ -437,34 +427,31 @@ msgstr "Plattenalbum"
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
 #: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Connect to your music"
-msgstr ""
+msgstr "Verbind met je muziek"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
 msgid "A client for the Music Player Daemon (MPD)."
-msgstr "Een client voor Music Player Daemon (MPD)."
+msgstr "Een client voor de Music Player Daemon (MPD)."
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
 msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
 msgstr ""
-"Blader door je verzameling terwijl je grote albumhoezen bekijkt. Speel je "
-"muziek af zonder afspeellijsten te beheren."
+"Blader door je verzameling terwijl aan de hand van grote albumhoezen. Speel "
+"muziek af zonder afspeellijsten te hoeven beheren."
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
-#, fuzzy
 msgid "Main window"
-msgstr "Hoofdmenu"
+msgstr "Hoofdvenster"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
-#, fuzzy
 msgid "Album View"
-msgstr "Albums"
+msgstr "Albumweergave"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
-#, fuzzy
 msgid "Small window"
-msgstr "Hoofdmenu"
+msgstr "Klein venster"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
@@ -480,7 +467,7 @@ msgstr "Algemeen"
 
 #: data/ShortcutsWindow.ui:13
 msgid "Online Help"
-msgstr "Online Help"
+msgstr "Online hulp"
 
 #: data/ShortcutsWindow.ui:19
 msgid "Preferences"
@@ -491,18 +478,16 @@ msgid "Shortcuts"
 msgstr "Sneltoetsen"
 
 #: data/ShortcutsWindow.ui:37
-#, fuzzy
-#| msgid "Reconnect"
 msgid "Disconnect"
-msgstr "Opnieuw Verbinden"
+msgstr "Verbinding verbreken"
 
 #: data/ShortcutsWindow.ui:43
 msgid "Update Database"
-msgstr "Database updaten"
+msgstr "Database bijwerken"
 
 #: data/ShortcutsWindow.ui:55
 msgid "Close"
-msgstr ""
+msgstr "Sluiten"
 
 #: data/ShortcutsWindow.ui:61
 msgid "Quit"
@@ -514,11 +499,11 @@ msgstr "Venster"
 
 #: data/ShortcutsWindow.ui:72
 msgid "Toggle Lyrics"
-msgstr "Lyrics aan-/uitzetten"
+msgstr "Lyrics tonen/verbergen"
 
 #: data/ShortcutsWindow.ui:78
 msgid "Toggle Search"
-msgstr "Zoeken aan-/uitzetten"
+msgstr "Zoekbalk tonen/verbegen"
 
 #: data/ShortcutsWindow.ui:86
 msgid "Playback"
@@ -530,7 +515,7 @@ msgstr "Afspelen/Pauzeren"
 
 #: data/ShortcutsWindow.ui:95
 msgid "Stop"
-msgstr "Stop"
+msgstr "Stoppen"
 
 #: data/ShortcutsWindow.ui:113
 msgid "Seek Forward"
@@ -542,23 +527,23 @@ msgstr "Achteruit Spoelen"
 
 #: data/ShortcutsWindow.ui:125
 msgid "A‐B Loop"
-msgstr ""
+msgstr "A-B Lus"
 
 #: data/ShortcutsWindow.ui:133
 msgid "Playback Options"
-msgstr "Afspeel opties"
+msgstr "Afspeelopties"
 
 #: data/ShortcutsWindow.ui:136
 msgid "Toggle Repeat Mode"
-msgstr "Herhaalmodus aan-/uitzetten"
+msgstr "Herhaalmodus aan/uit"
 
 #: data/ShortcutsWindow.ui:142
 msgid "Toggle Random Mode"
-msgstr "Willekeurige modus aan-/uitzetten"
+msgstr "Willekeurige modus aan/uit"
 
 #: data/ShortcutsWindow.ui:148
 msgid "Toggle Single Mode"
-msgstr "Enkele modus aan-/uitzetten"
+msgstr "Enkele modus aan/uit"
 
 #: data/ShortcutsWindow.ui:154
 msgid "Pause After Song"
@@ -566,7 +551,7 @@ msgstr "Pauzeer Na Nummer"
 
 #: data/ShortcutsWindow.ui:160
 msgid "Toggle Consume Mode"
-msgstr "Consumeer modus aan-/uitzetten"
+msgstr "Consumeermodus aan-/uit"
 
 #: data/ShortcutsWindow.ui:168
 msgid "Playlist"
@@ -582,7 +567,7 @@ msgstr "Opschonen"
 
 #: data/ShortcutsWindow.ui:183
 msgid "Enqueue Album"
-msgstr "Album aan wachtrij toevoegen"
+msgstr "Album aan Wachtrij Toevoegen"
 
 #, python-brace-format
 #~ msgid "{channels} channel"
@@ -608,11 +593,9 @@ msgstr "Album aan wachtrij toevoegen"
 #~ msgstr[0] "{number} nummer ({duration})"
 #~ msgstr[1] "{number} nummers ({duration})"
 
-#, fuzzy
 #~ msgid "Play_back"
 #~ msgstr "Afspelen"
 
-#, fuzzy
 #~ msgid "Not Connected"
 #~ msgstr "Verbinding"
 
