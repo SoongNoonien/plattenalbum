@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2025-05-05 13:08+0200\n"
+"PO-Revision-Date: 2025-05-05 18:28+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -31,7 +31,7 @@ msgstr "Weergave"
 
 #: src/plattenalbum.py:932
 msgid "_Show Bit Rate"
-msgstr "Toon Bit_snelheid"
+msgstr "Toon _Bitsnelheid"
 
 #: src/plattenalbum.py:941
 msgid "Behavior"
@@ -39,15 +39,15 @@ msgstr "Gedrag"
 
 #: src/plattenalbum.py:943
 msgid "Send _Notification on Title Change"
-msgstr "Meldi_ng tonen na wisselen van nummer"
+msgstr "_Notificatie bij het wisselen van nummer"
 
 #: src/plattenalbum.py:944
 msgid "Re_wind via Previous Button"
-msgstr "Terugspoelen met behulp van _vorige knop"
+msgstr "_Terugspoelen met behulp van vorige knop"
 
 #: src/plattenalbum.py:945
 msgid "Stop _Playback on Quit"
-msgstr "Afs_pelen stoppen na afsluiten"
+msgstr "_Afspelen stoppen na afsluiten"
 
 #: src/plattenalbum.py:946
 msgid "Support “_MPRIS”"
@@ -216,7 +216,7 @@ msgstr "_Over Plattenalbum"
 
 #: src/plattenalbum.py:1760
 msgid "_Disconnect"
-msgstr "Verbin_ding verbreken"
+msgstr "Ver_binding verbreken"
 
 #: src/plattenalbum.py:1761
 msgid "_Update Database"
