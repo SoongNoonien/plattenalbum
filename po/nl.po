@@ -148,11 +148,11 @@ msgstr "_Toevoegen"
 
 #: src/plattenalbum.py:1216
 msgid "As _Next"
-msgstr "Als Volge_nde"
+msgstr "Als _Volgende"
 
 #: src/plattenalbum.py:1217
 msgid "_Play"
-msgstr "Afs_pelen"
+msgstr "_Afspelen"
 
 #: src/plattenalbum.py:1219 src/plattenalbum.py:1937
 msgid "_Show"
