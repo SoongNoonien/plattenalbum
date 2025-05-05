@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2025-05-05 18:28+0200\n"
+"PO-Revision-Date: 2025-05-05 18:32+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -128,7 +128,7 @@ msgstr "Albums"
 
 #: src/plattenalbum.py:1050 src/plattenalbum.py:1386
 msgid "Songs"
-msgstr "Nummer"
+msgstr "Nummers"
 
 #: src/plattenalbum.py:1051
 msgid "Total Playtime"
@@ -136,7 +136,7 @@ msgstr "Totale Speelduur"
 
 #: src/plattenalbum.py:1052
 msgid "Database Update"
-msgstr "Database Bijwerken"
+msgstr "Database Laatst Bijgewerkt"
 
 #: src/plattenalbum.py:1193 src/plattenalbum.py:1919
 msgid "Context menu"
