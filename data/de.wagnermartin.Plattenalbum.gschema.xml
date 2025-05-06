@@ -13,9 +13,9 @@
 			<default>650</default>
 			<summary>Default height of window</summary>
 		</key>
-		<key type="b" name="remote-connection">
+		<key type="b" name="manual-connection">
 			<default>false</default>
-			<summary>Connect to remote server</summary>
+			<summary>Connect to manually configured server</summary>
 		</key>
 		<key type="s" name="host">
 			<default>""</default>

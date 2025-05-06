@@ -46,7 +46,7 @@
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Server Statistics</property>
+			<property name="title" translatable="yes">Server Information</property>
 			<property name="accelerator">&lt;Ctrl&gt;i</property>
 			</object>
 		</child>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (C) 2020-2024 Martin Wagner <martin.wagner.dev@gmail.com> -->
+<!-- Copyright (C) 2020-2025 Martin Wagner <martin.wagner.dev@gmail.com> -->
 <component type="desktop-application">
   <id>de.wagnermartin.Plattenalbum</id>
   <metadata_license>CC0-1.0</metadata_license>
@@ -16,23 +16,53 @@
   </branding>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/main_window.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/main_window.png</image>
       <caption>Main window</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/album_view.png</image>
-      <caption>Album View</caption>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/album_view.png</image>
+      <caption>Album view</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/search.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/search.png</image>
       <caption>Search</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.2.0/screenshots/small.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/small.png</image>
       <caption>Small window</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/small_playlist.png</image>
+      <caption>Small window with playlist</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/small_cover.png</image>
+      <caption>Small window with cover</caption>
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.3.0" date="2025-05-04">
+      <description translate="no">
+        <ul>
+          <li>Reworked player pane</li>
+          <li>Simplified connect workflow</li>
+          <li>Improved drag and drop feedback</li>
+          <li>Inhibit suspend on playback</li>
+          <li>Reduced minimum window size</li>
+          <li>Updated Persian and German translations</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.2.2" date="2025-02-08">
+      <description translate="no">
+        <ul>
+          <li>Rounded cover corners</li>
+          <li>New cover fallback</li>
+          <li>Notification when playlist is over</li>
+          <li>Persian and Thai translations</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.2.1" date="2024-10-12">
       <description translate="no">
         <p>Minor fixes and translation updates</p>

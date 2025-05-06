@@ -1,3 +1,48 @@
 .cover {
+  background-color: var(--window-bg-color);
   border-radius: 6px;
+}
+
+.toolbar-text {
+  margin-top: -6px;
+  margin-bottom: -6px;
+  min-height: 12px;
+}
+
+.toolbar-cover {
+  border-radius: 9px;
+}
+
+.playlist {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.playlist:drop(active) {
+  box-shadow: unset;
+}
+
+.playlist > row {
+  border-radius: 9px;
+  padding-left: 6px;
+  margin-left: 6px;
+  padding-right: 6px;
+  margin-right: 6px;
+}
+
+.drop-top {
+  border-top: 2px solid var(--accent-bg-color);
+  margin-top: -9px;
+  padding-top: 7px;
+}
+
+.drop-bottom {
+  border-bottom: 2px solid var(--accent-bg-color);
+  margin-bottom: -9px;
+  padding-bottom: 7px;
+}
+
+.drop-playlist {
+  border-bottom: 2px solid var(--accent-bg-color);
+  padding-bottom: 4px;
 }
