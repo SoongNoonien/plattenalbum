@@ -1,10 +1,14 @@
+![icon](/data/de.wagnermartin.Plattenalbum.svg)
+
 # Plattenalbum
+
+[![Available on Flathub](https://img.shields.io/flathub/downloads/de.wagnermartin.Plattenalbum?logo=flathub&labelColor=77767b&color=4a90d9)](https://flathub.org/apps/de.wagnermartin.Plattenalbum)
+
+![screenshot](screenshots/main_window.png)
 
 A client for the Music Player Daemon (MPD).
 
 Browse your collection while viewing large album covers. Play your music without managing playlists.</p>
-
-![ScreenShot](screenshots/main_window.png)
 
 ## Installation
 
