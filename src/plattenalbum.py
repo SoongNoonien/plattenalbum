@@ -2020,7 +2020,6 @@ class PlaylistView(SongList):
 		self._activate_on_release=False
 		self._autoscroll=True
 		self._highlighted_widget=None
-		self.add_css_class("background")
 		self.add_css_class("playlist")
 
 		# menu
