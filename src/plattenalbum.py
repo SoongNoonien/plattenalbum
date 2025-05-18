@@ -1857,7 +1857,7 @@ class Browser(Gtk.Stack):
 		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
 		# split view
-		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
+		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page, show_content=True)
 
 		# breakpoint bin
 		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
