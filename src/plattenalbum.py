@@ -492,7 +492,7 @@ class Duration():
 
 	def __str__(self):
 		if self._fallback:
-			return "‒‒∶‒‒"
+			return "‒‒:‒‒"
 		else:
 			seconds=int(self._seconds)
 			days,seconds=divmod(seconds, 86400) # 86400 seconds make a day
@@ -500,11 +500,11 @@ class Duration():
 			minutes,seconds=divmod(seconds, 60)
 			if days > 0:
 				days_string=ngettext("{days} day", "{days} days", days).format(days=days)
-				return f"{days_string}, {hours:02d}∶{minutes:02d}∶{seconds:02d}"
+				return f"{days_string}, {hours:02d}:{minutes:02d}:{seconds:02d}"
 			elif hours > 0:
-				return f"{hours}∶{minutes:02d}∶{seconds:02d}"
+				return f"{hours}:{minutes:02d}:{seconds:02d}"
 			else:
-				return f"{minutes:02d}∶{seconds:02d}"
+				return f"{minutes:02d}:{seconds:02d}"
 
 	def __float__(self):
 		return self._seconds
@@ -1072,7 +1072,7 @@ class ServerInfo(Adw.Dialog):
 		stats["protocol"]=str(client.mpd_version)
 		for key in ("uptime","playtime","db_playtime"):
 			stats[key]=str(Duration(stats[key]))
-		stats["db_update"]=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%a %d %B %Y, %H∶%M")
+		stats["db_update"]=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%a %d %B %Y, %H:%M")
 		for key in ("server","protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs"):
 			row=Adw.ActionRow(activatable=False, selectable=False, subtitle_selectable=True, title=display_str[key], subtitle=stats[key])
 			row.add_css_class("property")
