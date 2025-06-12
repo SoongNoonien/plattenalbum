@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2025-06-11 23:36+0200\n"
+"PO-Revision-Date: 2025-06-12 12:59+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: pl\n"
@@ -33,7 +33,7 @@ msgstr "Widok"
 
 #: src/plattenalbum.py:932
 msgid "_Show Bit Rate"
-msgstr "Pokaż bitrate"
+msgstr "Pokaż _bitrate"
 
 #: src/plattenalbum.py:941
 msgid "Behavior"
@@ -41,19 +41,19 @@ msgstr "Zachowanie"
 
 #: src/plattenalbum.py:943
 msgid "Send _Notification on Title Change"
-msgstr "Wysyłaj powiadomienia przy zmianie utworu"
+msgstr "Wysyłaj po_wiadomienia przy zmianie utworu"
 
 #: src/plattenalbum.py:944
 msgid "Re_wind via Previous Button"
-msgstr "Przewijaj w tył za pomocą przycisku „poprzedni”"
+msgstr "Przewijaj w _tył za pomocą przycisku „poprzedni”"
 
 #: src/plattenalbum.py:945
 msgid "Stop _Playback on Quit"
-msgstr "Zatrzymaj odtwarzanie po wyjściu"
+msgstr "_Zatrzymaj odtwarzanie po wyjściu"
 
 #: src/plattenalbum.py:946
 msgid "Support “_MPRIS”"
-msgstr "Obsługuj „MPRIS”"
+msgstr "Obsługuj „_MPRIS”"
 
 #: src/plattenalbum.py:946
 msgid "Disable if “MPRIS” is supported by another client"
@@ -61,7 +61,7 @@ msgstr "Wyłącz jeśli „MPRIS” jest obsługiwany przez innego klienta"
 
 #: src/plattenalbum.py:965
 msgid "_Connect"
-msgstr "Połącz"
+msgstr "_Połącz"
 
 #: src/plattenalbum.py:973
 msgid "Connection failed"
@@ -146,19 +146,19 @@ msgstr "Menu kontekstowe"
 
 #: src/plattenalbum.py:1215
 msgid "_Append"
-msgstr "Dodaj"
+msgstr "_Dodaj"
 
 #: src/plattenalbum.py:1216
 msgid "As _Next"
-msgstr "Jako następny"
+msgstr "Jako _następny"
 
 #: src/plattenalbum.py:1217
 msgid "_Play"
-msgstr "Odtwórz"
+msgstr "_Odtwórz"
 
 #: src/plattenalbum.py:1219 src/plattenalbum.py:1937
 msgid "_Show"
-msgstr "Pokaż"
+msgstr "_Pokaż"
 
 #. status page
 #: src/plattenalbum.py:1393
@@ -202,31 +202,31 @@ msgstr "Menu główne"
 
 #: src/plattenalbum.py:1755 src/plattenalbum.py:2901
 msgid "_Preferences"
-msgstr "Preferencje"
+msgstr "P_referencje"
 
 #: src/plattenalbum.py:1756 src/plattenalbum.py:2902
 msgid "_Keyboard Shortcuts"
-msgstr "Skróty klawiszowe"
+msgstr "Skróty _klawiszowe"
 
 #: src/plattenalbum.py:1757 src/plattenalbum.py:2903
 msgid "_Help"
-msgstr "Pomoc"
+msgstr "Po_moc"
 
 #: src/plattenalbum.py:1758 src/plattenalbum.py:2904
 msgid "_About Plattenalbum"
-msgstr "O Plattenalbum"
+msgstr "_O Plattenalbum"
 
 #: src/plattenalbum.py:1760
 msgid "_Disconnect"
-msgstr "Rozłącz"
+msgstr "_Rozłącz"
 
 #: src/plattenalbum.py:1761
 msgid "_Update Database"
-msgstr "Aktualizuj bazę danych"
+msgstr "_Aktualizuj bazę danych"
 
 #: src/plattenalbum.py:1762
 msgid "_Server Statistics"
-msgstr "Statystyki serwera"
+msgstr "_Statystyki serwera"
 
 #: src/plattenalbum.py:1774 src/plattenalbum.py:1775
 msgid "Search collection"
@@ -244,19 +244,19 @@ msgstr "Biblioteka jest pusta"
 
 #: src/plattenalbum.py:1936
 msgid "_Remove"
-msgstr "Usuń"
+msgstr "_Usuń"
 
 #: src/plattenalbum.py:1939
 msgid "_Enqueue Album"
-msgstr "Dodaj album do kolejki"
+msgstr "_Dodaj album do kolejki"
 
 #: src/plattenalbum.py:1940
 msgid "_Tidy"
-msgstr "Uporządkuj"
+msgstr "U_porządkuj"
 
 #: src/plattenalbum.py:1942
 msgid "_Clear"
-msgstr "Wyczyść"
+msgstr "_Wyczyść"
 
 #: src/plattenalbum.py:2152
 msgid "Playlist is Empty"
@@ -327,27 +327,27 @@ msgstr "Menu odtwarzacza"
 
 #: src/plattenalbum.py:2536
 msgid "_Repeat Mode"
-msgstr "Tryb powtarzania"
+msgstr "Tryb _powtarzania"
 
 #: src/plattenalbum.py:2537
 msgid "R_andom Mode"
-msgstr "Tryb losowy"
+msgstr "Tryb _losowy"
 
 #: src/plattenalbum.py:2538
 msgid "_Single Mode"
-msgstr "Tryb pojedynczy"
+msgstr "Tryb po_jedynczy"
 
 #: src/plattenalbum.py:2539
 msgid "_Pause After Song"
-msgstr "Zapauzuj po utworze"
+msgstr "_Zapauzuj po utworze"
 
 #: src/plattenalbum.py:2540
 msgid "_Consume Mode"
-msgstr "Tryb wyczerpywania"
+msgstr "Tryb _wyczerpywania"
 
 #: src/plattenalbum.py:2543
 msgid "_Lyrics"
-msgstr "Tekst utworu"
+msgstr "_Tekst utworu"
 
 #: src/plattenalbum.py:2836
 msgid "Database is being updated"
@@ -372,15 +372,15 @@ msgstr ""
 
 #: src/plattenalbum.py:2889
 msgid "_Set up Instance"
-msgstr "Skonfiguruj instancję"
+msgstr "_Skonfiguruj instancję"
 
 #: src/plattenalbum.py:2891
 msgid "Connect _Locally"
-msgstr "Połącz się lokalnie"
+msgstr "Połącz się _lokalnie"
 
 #: src/plattenalbum.py:2893
 msgid "Connect _Remotely"
-msgstr "Połącz się zdalnie"
+msgstr "Połącz się _zdalnie"
 
 #: src/plattenalbum.py:3000
 msgid "Next Title is Playing"
@@ -458,7 +458,7 @@ msgstr "Przeglądarka muzyki"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:12
 msgid "Music;Player;"
-msgstr ""
+msgstr "Muzyka;Odtwarzacz;"
 
 #: data/ShortcutsWindow.ui:10
 msgid "General"
