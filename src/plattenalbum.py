@@ -2300,7 +2300,7 @@ class PlaylistWindow(Gtk.Stack):
 		self.set_visible_child_name("playlist")
 
 	def _on_connection_error(self, *args):
-		self.set_visible_child_name("playlist")
+		self.set_visible_child_name("empty-playlist")
 
 ##########
 # lyrics #
@@ -2746,7 +2746,6 @@ class Player(Adw.BreakpointBin):
 	def _on_disconnected(self, *args):
 		self._clear_title()
 		self._large_cover.set_paintable(FALLBACK_COVER)
-		self._window_handle.set_visible(False)
 		self.set_property("show-lyrics", False)
 
 	def _on_connected(self, *args):
