@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2025-06-21 17:25+0200\n"
+"PO-Revision-Date: 2025-06-25 10:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -212,7 +212,7 @@ msgstr "_Aide"
 
 #: src/plattenalbum.py:1758 src/plattenalbum.py:2904
 msgid "_About Plattenalbum"
-msgstr "À _propos de Plattenalbum"
+msgstr "À pr_opos de Plattenalbum"
 
 #: src/plattenalbum.py:1760
 msgid "_Disconnect"
