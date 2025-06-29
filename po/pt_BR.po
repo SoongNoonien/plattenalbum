@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-05-04 20:30+0200\n"
-"PO-Revision-Date: 2025-05-06 21:54-0300\n"
+"PO-Revision-Date: 2025-06-29 09:53+0200\n"
 "Last-Translator: Tiago Lucas Flach <tiagolucas9830@gmail.com>\n"
 "Language-Team: \n"
 "Language: pt_BR\n"
@@ -32,7 +32,7 @@ msgstr "Visualizar"
 
 #: src/plattenalbum.py:955
 msgid "_Show Bit Rate"
-msgstr "_Mostrar taxa de bits"
+msgstr "Mostrar taxa de _bits"
 
 #: src/plattenalbum.py:964
 msgid "Behavior"
@@ -153,7 +153,7 @@ msgstr "_Acrescentar"
 
 #: src/plattenalbum.py:1252
 msgid "As _Next"
-msgstr "Como _Próxima"
+msgstr "Como P_róxima"
 
 #: src/plattenalbum.py:1253
 msgid "_Play"
@@ -217,7 +217,7 @@ msgstr "_Preferências"
 
 #: src/plattenalbum.py:1811 src/plattenalbum.py:3019
 msgid "_Keyboard Shortcuts"
-msgstr "_Atalhos do Teclado"
+msgstr "Atalhos do _Teclado"
 
 #: src/plattenalbum.py:1812 src/plattenalbum.py:3020
 msgid "_Help"
@@ -233,11 +233,11 @@ msgstr "_Desconectar"
 
 #: src/plattenalbum.py:1816
 msgid "_Update Database"
-msgstr "_Atualizar Banco de Dados"
+msgstr "Atualizar _Banco de Dados"
 
 #: src/plattenalbum.py:1817
 msgid "_Server Information"
-msgstr "Informações do _Servidor"
+msgstr "_Informações do Servidor"
 
 #: src/plattenalbum.py:1829 src/plattenalbum.py:1830
 msgid "Search collection"
@@ -267,7 +267,7 @@ msgstr "_Limpo"
 
 #: src/plattenalbum.py:1996
 msgid "_Clear"
-msgstr "_Limpar"
+msgstr "Lim_par"
 
 #: src/plattenalbum.py:2238
 msgid "Playlist is Empty"
@@ -338,7 +338,7 @@ msgstr "Modo _Aleatório"
 
 #: src/plattenalbum.py:2602
 msgid "_Single Mode"
-msgstr "Modo _Único"
+msgstr "Modo Ú_nico"
 
 #: src/plattenalbum.py:2603
 msgid "_Pause After Song"
