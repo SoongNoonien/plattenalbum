@@ -41,6 +41,14 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.3.1" date="2025-06-29">
+      <description translate="no">
+        <ul>
+          <li>Minor bug fixes</li>
+          <li>Updated Dutch, Persian, German, Polish, Thai, French and Brazilian Portuguese translations</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.3.0" date="2025-05-04">
       <description translate="no">
         <ul>
