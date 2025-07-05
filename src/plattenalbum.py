@@ -795,14 +795,14 @@ class Client(MPDClient):
 			return FallbackCover()
 
 	def get_absolute_path(self, uri):
-		if self._music_directory is not None:
-			path=re.sub(r"(.*\.cue)\/track\d+$", r"\1", GLib.build_filenamev([self._music_directory, uri]), flags=re.IGNORECASE)
-			if GLib.file_test(path, GLib.FileTest.IS_REGULAR):
-				return path
-			else:
-				return None
-		else:
-			return None
+		stripped_uri=re.sub(r"(.*\.cue)\/track\d+$", r"\1", uri, flags=re.IGNORECASE)
+		if GLib.file_test(stripped_uri, GLib.FileTest.IS_REGULAR):
+			return stripped_uri
+		elif self._music_directory is not None:
+			absolute_path=GLib.build_filenamev([self._music_directory, stripped_uri])
+			if GLib.file_test(absolute_path, GLib.FileTest.IS_REGULAR):
+				return absolute_path
+		return None
 
 	def can_show_file(self, uri):
 		has_owner,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
