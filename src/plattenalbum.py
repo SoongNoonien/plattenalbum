@@ -1356,7 +1356,7 @@ class BrowserSongList(Gtk.ListBox):
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
-		long_press_controller=Gtk.GestureLongPress(touch_only=True)
+		long_press_controller=Gtk.GestureLongPress()
 		self.add_controller(long_press_controller)
 		drag_source=Gtk.DragSource()
 		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
@@ -2068,7 +2068,7 @@ class PlaylistView(SongList):
 		# event controller
 		button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
-		long_press_controller=Gtk.GestureLongPress(touch_only=True)
+		long_press_controller=Gtk.GestureLongPress()
 		self.add_controller(long_press_controller)
 		drag_source=Gtk.DragSource()
 		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
