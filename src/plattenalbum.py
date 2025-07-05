@@ -2106,12 +2106,6 @@ class PlaylistView(SongList):
 		self._playlist_version=None
 		self.get_model().clear()
 
-	def _delete(self, position):
-		if position == self.get_model().get_selected():
-			self._client.tidy_playlist()
-		else:
-			self._client.delete(position)
-
 	def _refresh_selection(self, song):
 		if song is None:
 			self.get_model().unselect()
@@ -2126,7 +2120,7 @@ class PlaylistView(SongList):
 			if controller.get_current_button() == 1 and n_press == 1:
 				self._activate_on_release=True
 			elif controller.get_current_button() == 2 and n_press == 1:
-				self._delete(position)
+				self._client.delete(position)
 			elif controller.get_current_button() == 3 and n_press == 1:
 				self._menu.open(self.get_song(position)["file"], position, x, y)
 
