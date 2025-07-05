@@ -804,14 +804,14 @@ class Client(MPDClient):
 		else:
 			return None
 
-	def can_show_in_file_manager(self, uri):
+	def can_show_file(self, uri):
 		has_owner,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
 			GLib.Variant("(s)",("org.freedesktop.FileManager1",)), GLib.VariantType("(b)"), Gio.DBusCallFlags.NONE, -1, None)
 		activatable,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "ListActivatableNames",
 			None, GLib.VariantType("(as)"), Gio.DBusCallFlags.NONE, -1, None)
 		return (has_owner or "org.freedesktop.FileManager1" in activatable) and self.get_absolute_path(uri) is not None
 
-	def show_in_file_manager(self, uri):
+	def show_file(self, uri):
 		file=Gio.File.new_for_path(self.get_absolute_path(uri))
 		self._bus.call_sync("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1",
 			"ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), None, Gio.DBusCallFlags.NONE, -1, None)
@@ -1236,27 +1236,23 @@ class SongMenu(Gtk.PopoverMenu):
 		action=Gio.SimpleAction.new("as_next", None)
 		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "as_next"))
 		action_group.add_action(action)
-		action=Gio.SimpleAction.new("play", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "play"))
-		action_group.add_action(action)
 		if show_album:
 			action=Gio.SimpleAction.new("show-album", None)
 			action.connect("activate", lambda *args: self._client.show_album(self._file))
 			action_group.add_action(action)
-		self._show_action=Gio.SimpleAction.new("show", None)
-		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._file))
-		action_group.add_action(self._show_action)
+		self._show_file_action=Gio.SimpleAction.new("show-file", None)
+		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._file))
+		action_group.add_action(self._show_file_action)
 		self.insert_action_group("menu", action_group)
 
 		# menu model
 		menu=Gio.Menu()
 		menu.append(_("_Append"), "menu.append")
 		menu.append(_("As _Next"), "menu.as_next")
-		menu.append(_("_Play"), "menu.play")
 		subsection=Gio.Menu()
 		if show_album:
 			subsection.append(_("Show Al_bum"), "menu.show-album")
-		subsection.append(_("_Show"), "menu.show")
+		subsection.append(_("Show _File"), "menu.show-file")
 		menu.append_section(None, subsection)
 		self.set_menu_model(menu)
 
@@ -1265,7 +1261,7 @@ class SongMenu(Gtk.PopoverMenu):
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self.set_pointing_to(rect)
-		self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
+		self._show_file_action.set_enabled(self._client.can_show_file(file))
 		self.popup()
 
 class SongListRow(SongRow):
@@ -2007,23 +2003,21 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		self._show_album_action=Gio.SimpleAction.new("show-album", None)
 		self._show_album_action.connect("activate", lambda *args: self._client.show_album(self._file))
 		action_group.add_action(self._show_album_action)
-		self._show_action=Gio.SimpleAction.new("show", None)
-		self._show_action.connect("activate", lambda *args: self._client.show_in_file_manager(self._file))
-		action_group.add_action(self._show_action)
+		self._show_file_action=Gio.SimpleAction.new("show-file", None)
+		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._file))
+		action_group.add_action(self._show_file_action)
 		self.insert_action_group("menu", action_group)
 
 		# menu model
 		menu=Gio.Menu()
 		menu.append(_("_Remove"), "menu.remove")
-		menu.append(_("Show _Album"), "menu.show-album")
-		menu.append(_("_Show"), "menu.show")
-		current_song_section=Gio.Menu()
-		current_song_section.append(_("_Enqueue Album"), "mpd.enqueue")
-		current_song_section.append(_("_Tidy"), "mpd.tidy")
-		subsection=Gio.Menu()
-		subsection.append(_("_Clear"), "mpd.clear")
-		menu.append_section(None, current_song_section)
-		menu.append_section(None, subsection)
+		menu.append(_("Show Al_bum"), "menu.show-album")
+		menu.append(_("Show _File"), "menu.show-file")
+		mpd_section=Gio.Menu()
+		mpd_section.append(_("_Enqueue Album"), "mpd.enqueue")
+		mpd_section.append(_("_Tidy"), "mpd.tidy")
+		mpd_section.append(_("_Clear"), "mpd.clear")
+		menu.append_section(None, mpd_section)
 		self.set_menu_model(menu)
 
 	def open(self, file, position, x, y):
@@ -2035,11 +2029,11 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		if file is None or position is None:
 			self._remove_action.set_enabled(False)
 			self._show_album_action.set_enabled(False)
-			self._show_action.set_enabled(False)
+			self._show_file_action.set_enabled(False)
 		else:
 			self._remove_action.set_enabled(True)
 			self._show_album_action.set_enabled(self._client.can_show_album(file))
-			self._show_action.set_enabled(self._client.can_show_in_file_manager(file))
+			self._show_file_action.set_enabled(self._client.can_show_file(file))
 		self.popup()
 
 class PlaylistView(SongList):
