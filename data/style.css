@@ -15,8 +15,7 @@
 
 .playlist {
   background-color: transparent;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  padding: 6px;
 }
 
 .playlist:drop(active) {
@@ -25,22 +24,26 @@
 
 .playlist > row {
   border-radius: 9px;
-  padding-left: 6px;
-  margin-left: 6px;
-  padding-right: 6px;
-  margin-right: 6px;
+  min-height: 48px;
+}
+
+.playlist > row > box {
+  margin: 0px 12px;
+  border-spacing: 6px;
+}
+
+.playlist > row > box > box{
+  border-spacing: 3px;
 }
 
 .drop-top {
   border-top: 2px solid var(--accent-bg-color);
-  margin-top: -9px;
-  padding-top: 7px;
+  padding-top: 0px;
 }
 
 .drop-bottom {
   border-bottom: 2px solid var(--accent-bg-color);
-  margin-bottom: -9px;
-  padding-bottom: 7px;
+  padding-bottom: 0px;
 }
 
 .drop-playlist {

@@ -1112,9 +1112,11 @@ class AlbumRow(Adw.ActionRow):
 		self.add_suffix(date)
 		self.add_suffix(Gtk.Image(icon_name="go-next-symbolic"))
 
-class SongRow(Gtk.Box):
+class SongListRow(Gtk.Box):
+	position=GObject.Property(type=int, default=-1)
 	def __init__(self, show_track=True, **kwargs):
-		super().__init__(margin_start=6, margin_end=6, **kwargs)
+		# can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
+		super().__init__(can_target=False, **kwargs)
 
 		# labels
 		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
@@ -1122,7 +1124,7 @@ class SongRow(Gtk.Box):
 		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
 
 		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, spacing=3, hexpand=True)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
 		box.append(self._title)
 		box.append(self._subtitle)
 		self.append(box)
@@ -1264,14 +1266,9 @@ class SongMenu(Gtk.PopoverMenu):
 		self._show_file_action.set_enabled(self._client.can_show_file(file))
 		self.popup()
 
-class SongListRow(SongRow):
-	position=GObject.Property(type=int, default=-1)
-	def __init__(self):
-		super().__init__(can_target=False)  # can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
-
 class SongList(Gtk.ListView):
 	def __init__(self):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, css_classes=["rich-list"])
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM)
 		self.set_model(SelectionModel(Song))
 
 		# factory
@@ -2230,12 +2227,11 @@ class PlaylistView(SongList):
 			self.add_css_class("drop-playlist")
 			self._highlighted_widget=self
 		else:
-			row=item.get_first_child()
 			if self._point_in_lower_half(x, y, item):
-				row.add_css_class("drop-bottom")
+				item.add_css_class("drop-bottom")
 			else:
-				row.add_css_class("drop-top")
-			self._highlighted_widget=row
+				item.add_css_class("drop-top")
+			self._highlighted_widget=item
 
 	def _on_drop_leave(self, drop_motion):
 		self._remove_highlight()
