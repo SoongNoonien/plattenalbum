@@ -1118,7 +1118,7 @@ class SongRow(Gtk.Box):
 
 		# labels
 		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
-		self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label", "caption"])
+		self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
 		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
 
 		# packing
@@ -1672,7 +1672,7 @@ class AlbumListRow(Gtk.Box):
 		self._client=client
 		self._cover=AlbumCover()
 		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, margin_top=3)
-		self._date=Gtk.Label(single_line_mode=True, css_classes=["dim-label", "caption"])
+		self._date=Gtk.Label(single_line_mode=True, css_classes=["dimmed", "caption"])
 		self.append(self._cover)
 		self.append(self._title)
 		self.append(self._date)
@@ -2451,7 +2451,7 @@ class MediaButtons(Gtk.Box):
 
 class BitRate(Gtk.Label):
 	def __init__(self, client, settings):
-		super().__init__(xalign=1, single_line_mode=True, css_classes=["caption", "numeric", "dim-label"])
+		super().__init__(xalign=1, single_line_mode=True, css_classes=["caption", "numeric", "dimmed"])
 		self._client=client
 		settings.bind("show-bit-rate", self, "visible", Gio.SettingsBindFlags.GET)
 		self._mask=_("{bitrate} kb/s")
@@ -2472,7 +2472,7 @@ class BitRate(Gtk.Label):
 
 class PlaylistProgress(Gtk.Label):
 	def __init__(self, client):
-		super().__init__(xalign=0, single_line_mode=True, css_classes=["caption", "dim-label"])
+		super().__init__(xalign=0, single_line_mode=True, css_classes=["caption", "dimmed"])
 		self._client=client
 		self._length=0
 
@@ -2845,7 +2845,7 @@ class PlayerBar(Gtk.Overlay):
 		cover=ToolbarCover(client)
 		progress_bar=ProgressBar(client)
 		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
-		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dim-label", "caption"])
+		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
 
 		# connect
 		self._client.emitter.connect("current-song", self._on_song_changed)
