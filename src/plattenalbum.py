@@ -2209,13 +2209,8 @@ class PlaylistView(SongList):
 			self.add_css_class("drop-playlist")
 			self._highlighted_widget=self
 		else:
-			row=item.get_first_child()
-			if row.get_property("position") >= self.get_model().get_n_items()-1:
-				self.add_css_class("drop-playlist")
-				self._highlighted_widget=self
-			else:
-				item.add_css_class("drop-row")
-				self._highlighted_widget=item
+			item.add_css_class("drop-row")
+			self._highlighted_widget=item
 
 	def _on_drop_leave(self, drop_target):
 		self._remove_highlight()
