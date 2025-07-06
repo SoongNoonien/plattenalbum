@@ -37,6 +37,6 @@
   padding: 0px;
 }
 
-.drop-playlist {
-  box-shadow: inset 0 0 0 2px var(--accent-bg-color);
+.no-drop-highlight:drop(active) {
+  box-shadow: unset;
 }

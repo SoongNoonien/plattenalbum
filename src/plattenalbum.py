@@ -2044,6 +2044,7 @@ class PlaylistView(SongList):
 		self._autoscroll=True
 		self._highlighted_widget=None
 		self.add_css_class("playlist")
+		self.add_css_class("no-drop-highlight")
 
 		# menu
 		self._menu=PlaylistMenu(client)
@@ -2196,19 +2197,14 @@ class PlaylistView(SongList):
 		return False
 
 	def _remove_highlight(self):
-		if self._highlighted_widget is self:
-			self.remove_css_class("drop-playlist")
-		elif self._highlighted_widget is not None:
+		if self._highlighted_widget is not None:
 			self._highlighted_widget.remove_css_class("drop-row")
 		self._highlighted_widget=None
 
 	def _on_drop_motion(self, drop_motion, x, y):
 		self._remove_highlight()
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is self:
-			self.add_css_class("drop-playlist")
-			self._highlighted_widget=self
-		else:
+		if item is not self:
 			item.add_css_class("drop-row")
 			self._highlighted_widget=item
 
@@ -2229,6 +2225,7 @@ class PlaylistWindow(Gtk.Stack):
 		self._adj=self.scroll.get_vadjustment()
 		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
 		status_page.add_css_class("compact")
+		status_page.add_css_class("no-drop-highlight")
 
 		# scroll button
 		overlay=Gtk.Overlay(child=self.scroll)
