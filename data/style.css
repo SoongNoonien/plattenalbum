@@ -18,10 +18,6 @@
   padding: 6px;
 }
 
-.playlist:drop(active) {
-  box-shadow: unset;
-}
-
 .playlist > row {
   border-radius: 9px;
   min-height: 48px;
@@ -36,17 +32,11 @@
   border-spacing: 3px;
 }
 
-.drop-top {
-  border-top: 2px solid var(--accent-bg-color);
-  padding-top: 0px;
-}
-
-.drop-bottom {
-  border-bottom: 2px solid var(--accent-bg-color);
-  padding-bottom: 0px;
+.drop-row {
+  border: 2px solid var(--accent-bg-color);
+  padding: 0px;
 }
 
 .drop-playlist {
-  border-bottom: 2px solid var(--accent-bg-color);
-  padding-bottom: 4px;
+  box-shadow: inset 0 0 0 2px var(--accent-bg-color);
 }

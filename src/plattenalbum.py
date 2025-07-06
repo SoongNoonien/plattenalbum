@@ -2216,8 +2216,7 @@ class PlaylistView(SongList):
 		if self._highlighted_widget is self:
 			self.remove_css_class("drop-playlist")
 		elif self._highlighted_widget is not None:
-			self._highlighted_widget.remove_css_class("drop-top")
-			self._highlighted_widget.remove_css_class("drop-bottom")
+			self._highlighted_widget.remove_css_class("drop-row")
 		self._highlighted_widget=None
 
 	def _on_drop_motion(self, drop_motion, x, y):
@@ -2227,11 +2226,18 @@ class PlaylistView(SongList):
 			self.add_css_class("drop-playlist")
 			self._highlighted_widget=self
 		else:
+			row=item.get_first_child()
 			if self._point_in_lower_half(x, y, item):
-				item.add_css_class("drop-bottom")
+				if row.get_property("position") >= self.get_model().get_n_items()-1:
+					self.add_css_class("drop-playlist")
+					self._highlighted_widget=self
+				else:
+					next_item=item.get_next_sibling()
+					next_item.add_css_class("drop-row")
+					self._highlighted_widget=next_item
 			else:
-				item.add_css_class("drop-top")
-			self._highlighted_widget=item
+				item.add_css_class("drop-row")
+				self._highlighted_widget=item
 
 	def _on_drop_leave(self, drop_motion):
 		self._remove_highlight()
