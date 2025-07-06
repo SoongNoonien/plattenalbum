@@ -717,23 +717,22 @@ class Client(MPDClient):
 
 	def tidy_playlist(self):
 		status=self.status()
-		song_number=status.get("song")
-		if song_number is None:
+		if (songid:=status.get("songid")) is None:
 			self.clear()
 		else:
-			self.move(song_number, 0)
+			self.moveid(songid, 0)
 			if int(status["playlistlength"]) > 1:
 				self.delete((1,))
 
 	def file_to_playlist(self, file, mode):  # modes: play, append, as_next
 		if mode == "append":
-			self.addid(file)
+			self.add(file)
 		elif mode == "play":
 			self.clear()
-			self.addid(file)
+			self.add(file)
 			self.play()
 		elif mode == "as_next":
-			self.addid(file, "+0")
+			self.add(file, "+0")
 		else:
 			raise ValueError(f"Unknown mode: {mode}")
 
@@ -2189,7 +2188,7 @@ class PlaylistView(SongList):
 				position=self.get_model().get_n_items()
 			else:
 				position=item.get_first_child().get_property("position")
-			self._client.addid(value["file"], position)
+			self._client.add(value["file"], position)
 			return True
 		return False
 
@@ -2260,7 +2259,7 @@ class PlaylistWindow(Gtk.Stack):
 
 	def _on_drop(self, drop_target, value, x, y):
 		if isinstance(value, Song):
-			self._client.addid(value["file"])
+			self._client.add(value["file"])
 			return True
 		return False
 
