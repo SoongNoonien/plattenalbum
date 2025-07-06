@@ -732,7 +732,10 @@ class Client(MPDClient):
 			self.add(file)
 			self.play()
 		elif mode == "as_next":
-			self.add(file, "+0")
+			try:
+				self.add(file, "+0")
+			except CommandError:
+				self.add(file, "0")
 		else:
 			raise ValueError(f"Unknown mode: {mode}")
 
