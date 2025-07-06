@@ -724,14 +724,14 @@ class Client(MPDClient):
 			if int(status["playlistlength"]) > 1:
 				self.delete((1,))
 
-	def file_to_playlist(self, file, mode):  # modes: play, append, as_next
+	def file_to_playlist(self, file, mode):  # modes: play, append, as-next
 		if mode == "append":
 			self.add(file)
 		elif mode == "play":
 			self.clear()
 			self.add(file)
 			self.play()
-		elif mode == "as_next":
+		elif mode == "as-next":
 			try:
 				self.add(file, "+0")
 			except CommandError:
@@ -1237,8 +1237,8 @@ class SongMenu(Gtk.PopoverMenu):
 		action=Gio.SimpleAction.new("append", None)
 		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "append"))
 		action_group.add_action(action)
-		action=Gio.SimpleAction.new("as_next", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "as_next"))
+		action=Gio.SimpleAction.new("as-next", None)
+		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "as-next"))
 		action_group.add_action(action)
 		if show_album:
 			action=Gio.SimpleAction.new("show-album", None)
@@ -1252,7 +1252,7 @@ class SongMenu(Gtk.PopoverMenu):
 		# menu model
 		menu=Gio.Menu()
 		menu.append(_("_Append"), "menu.append")
-		menu.append(_("As _Next"), "menu.as_next")
+		menu.append(_("As _Next"), "menu.as-next")
 		subsection=Gio.Menu()
 		if show_album:
 			subsection.append(_("Show Al_bum"), "menu.show-album")
