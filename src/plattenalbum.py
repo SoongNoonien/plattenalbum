@@ -2173,14 +2173,6 @@ class PlaylistView(SongList):
 		if (position:=self.get_position(x,y)) is not None:
 			return Gdk.ContentProvider.new_for_value(position)
 
-	def _point_in_lower_half(self, x, y, widget):
-		point=Graphene.Point.zero()
-		point.x,point.y=x,y
-		computed_point,point=self.compute_point(widget, point)
-		if computed_point:
-			return point.y > widget.get_height()/2
-		return False
-
 	def _on_drop(self, drop_target, value, x, y):
 		self._remove_highlight()
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
@@ -2188,26 +2180,15 @@ class PlaylistView(SongList):
 			if item is self:
 				position=self.get_model().get_n_items()-1
 			else:
-				row=item.get_first_child()
-				position=row.get_property("position")
-				if value == position:
-					return False
-				if value < position:
-					position-=1
-				if self._point_in_lower_half(x, y, item):
-					position+=1
-			if value == position:
-				return False
-			self._client.move(value, position)
-			return True
+				position=item.get_first_child().get_property("position")
+			if value != position:
+				self._client.move(value, position)
+				return True
 		elif isinstance(value, Song):
 			if item is self:
 				position=self.get_model().get_n_items()
 			else:
-				row=item.get_first_child()
-				position=row.get_property("position")
-				if self._point_in_lower_half(x, y, item):
-					position+=1
+				position=item.get_first_child().get_property("position")
 			self._client.addid(value["file"], position)
 			return True
 		return False
@@ -2227,19 +2208,14 @@ class PlaylistView(SongList):
 			self._highlighted_widget=self
 		else:
 			row=item.get_first_child()
-			if self._point_in_lower_half(x, y, item):
-				if row.get_property("position") >= self.get_model().get_n_items()-1:
-					self.add_css_class("drop-playlist")
-					self._highlighted_widget=self
-				else:
-					next_item=item.get_next_sibling()
-					next_item.add_css_class("drop-row")
-					self._highlighted_widget=next_item
+			if row.get_property("position") >= self.get_model().get_n_items()-1:
+				self.add_css_class("drop-playlist")
+				self._highlighted_widget=self
 			else:
 				item.add_css_class("drop-row")
 				self._highlighted_widget=item
 
-	def _on_drop_leave(self, drop_motion):
+	def _on_drop_leave(self, drop_target):
 		self._remove_highlight()
 
 	def _on_disconnected(self, *args):
