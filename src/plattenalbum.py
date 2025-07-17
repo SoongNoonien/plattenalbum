@@ -2804,7 +2804,7 @@ class PlayerBar(Gtk.Overlay):
 		# widgets
 		cover=ToolbarCover(client)
 		progress_bar=ProgressBar(client)
-		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["heading"])
+		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
 		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
 
 		# connect
