@@ -1837,7 +1837,6 @@ class MainMenuButton(Gtk.MenuButton):
 		self.set_menu_model(menu)
 
 class Browser(Gtk.Stack):
-	show_search=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
@@ -1848,9 +1847,6 @@ class Browser(Gtk.Stack):
 		self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
 		search_toolbar_view=Adw.ToolbarView(content=self._search_view)
 		search_header_bar=Adw.HeaderBar(title_widget=self.search_entry)
-		search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
-		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
-		search_header_bar.pack_start(search_button)
 		search_toolbar_view.add_top_bar(search_header_bar)
 		search_toolbar_view.add_css_class("content-pane")
 
@@ -1858,8 +1854,8 @@ class Browser(Gtk.Stack):
 		self._artist_list=ArtistList(client)
 		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
 		artist_header_bar=Adw.HeaderBar()
-		search_button=Gtk.ToggleButton(icon_name="system-search-symbolic", tooltip_text=_("Search"))
-		search_button.bind_property("active", self, "show-search", GObject.BindingFlags.BIDIRECTIONAL)
+		search_button=Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
+		search_button.connect("clicked", lambda *args: self.search())
 		artist_header_bar.pack_start(search_button)
 		artist_header_bar.pack_end(MainMenuButton())
 		artist_toolbar_view=Adw.ToolbarView(content=artist_window)
@@ -1895,19 +1891,17 @@ class Browser(Gtk.Stack):
 		status_page_toolbar_view.add_top_bar(status_page_header_bar)
 
 		# navigation view
-		self._stack=Gtk.Stack()
-		self._stack.add_named(breakpoint_bin, "collection")
-		self._stack.add_named(search_toolbar_view, "search")
+		self._navigation_view=Adw.NavigationView()
+		self._navigation_view.add(Adw.NavigationPage(child=breakpoint_bin, title=_("Collection"), tag="collection"))
+		self._navigation_view.add(Adw.NavigationPage(child=search_toolbar_view, title=_("Search"), tag="search"))
 
 		# connect
-		self.connect("notify::show-search", self._on_search_toggled)
 		self._albums_page.connect("album-selected", self._on_album_selected)
 		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
 		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
 		self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
 		self._search_view.connect("album-selected", lambda widget, *args: self._show_album(*args))
-		self.search_entry.connect("search-started", self._on_search_started)
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
 		client.emitter.connect("disconnected", self._on_disconnected)
@@ -1917,29 +1911,23 @@ class Browser(Gtk.Stack):
 		client.emitter.connect("show-album", lambda widget, *args: self._show_album(*args))
 
 		# packing
-		self.add_named(self._stack, "browser")
+		self.add_named(self._navigation_view, "browser")
 		self.add_named(status_page_toolbar_view, "empty-collection")
 
-	def _on_search_toggled(self, *args):
-		if self.get_property("show-search"):
-			self._stack.set_visible_child_name("search")
-			self.search_entry.grab_focus()
-		else:
-			self._stack.set_visible_child_name("collection")
-			self.search_entry.set_text("")
-
-	def _on_search_started(self, entry):
-		self.set_property("show-search", True)
+	def search(self):
+		if self._navigation_view.get_visible_page_tag() != "search":
+			self._navigation_view.push_by_tag("search")
+		self.search_entry.select_region(0, -1)
+		self.search_entry.grab_focus()
 
 	def _on_search_changed(self, entry):
 		if (search_text:=self.search_entry.get_text()):
-			self.search_entry.grab_focus()
 			self._search_view.search(search_text)
 		else:
 			self._search_view.clear()
 
 	def _on_search_stopped(self, widget):
-		self.set_property("show-search", False)
+		self._navigation_view.pop_to_tag("collection")
 
 	def _on_artist_selected(self, model, position):
 		if self._navigation_split_view.get_collapsed():
@@ -1957,26 +1945,26 @@ class Browser(Gtk.Stack):
 
 	def _on_search_artist_selected(self, widget, artist):
 		self._artist_list.select(artist)
-		self.set_property("show-search", False)
+		self.search_entry.emit("stop-search")
 		self._albums_page.grid_view.grab_focus()
 
 	def _show_album(self, album, artist, date):
 		self._artist_list.select(artist)
 		album_page=AlbumPage(self._client, artist, album, date)
 		self._album_navigation_view.replace([self._albums_page, album_page])
-		self.set_property("show-search", False)
+		self.search_entry.emit("stop-search")
 		album_page.play_button.grab_focus()
 
 	def _on_disconnected(self, *args):
 		self._album_navigation_view.pop_to_tag("album_list")
 		self.set_visible_child_name("browser")
-		self.set_property("show-search", False)
+		self.search_entry.emit("stop-search")
 
 	def _on_connection_error(self, *args):
 		self.set_visible_child_name("empty-collection")
 
 	def _on_connected_or_updated_db(self, emitter, database_is_empty):
-		self.set_property("show-search", False)
+		self.search_entry.emit("stop-search")
 		if database_is_empty:
 			self.set_visible_child_name("empty-collection")
 		else:
@@ -2968,20 +2956,19 @@ class MainWindow(Adw.ApplicationWindow):
 		self.set_help_overlay(builder.get_object("shortcuts_window"))
 
 		# widgets
-		browser=Browser(self._client, self._settings)
+		self._browser=Browser(self._client, self._settings)
 		player=Player(self._client, self._settings)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "settings","manual-connect","server-info","help")
+		simple_actions_data=("close", "search", "settings", "manual-connect", "server-info", "help")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
 		self.add_action(Gio.PropertyAction.new("toggle-lyrics", player, "show-lyrics"))
-		self.add_action(Gio.PropertyAction.new("toggle-search", browser, "show-search"))
 
 		# sidebar layout
 		overlay_split_view=Adw.OverlaySplitView(
@@ -3002,7 +2989,7 @@ class MainWindow(Adw.ApplicationWindow):
 		multi_layout_view=Adw.MultiLayoutView()
 		multi_layout_view.add_layout(sidebar_layout)
 		multi_layout_view.add_layout(bottom_sheet_layout)
-		multi_layout_view.set_child("browser", browser)
+		multi_layout_view.set_child("browser", self._browser)
 		multi_layout_view.set_child("player", player)
 		multi_layout_view.set_layout_name("sidebar")
 
@@ -3050,7 +3037,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
-		browser.search_entry.add_controller(controller_focus)
+		self._browser.search_entry.add_controller(controller_focus)
 
 		# connect
 		multi_layout_view.connect("notify::layout-name", self._on_layout_name)
@@ -3096,6 +3083,9 @@ class MainWindow(Adw.ApplicationWindow):
 			self.close()
 		else:
 			dialog.close()
+
+	def _on_search(self, action, param):
+		self._browser.search()
 
 	def _on_settings(self, action, param):
 		if self.get_visible_dialog() is None:
@@ -3231,7 +3221,7 @@ class Plattenalbum(Adw.Application):
 		# accelerators
 		action_accels=(
 			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.help", ["F1"]),("win.settings", ["<Ctrl>comma"]),
-			("win.show-help-overlay", ["<Ctrl>question"]),("win.toggle-lyrics", ["<Ctrl>l"]),("win.toggle-search", ["<Ctrl>f"]),
+			("win.show-help-overlay", ["<Ctrl>question"]),("win.toggle-lyrics", ["<Ctrl>l"]),("win.search", ["<Ctrl>f"]),
 			("win.server-info", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),
 			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),
 			("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),

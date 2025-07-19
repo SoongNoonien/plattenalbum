@@ -75,7 +75,7 @@
 		</child>
 		<child>
 			<object class="GtkShortcutsShortcut">
-			<property name="title" translatable="yes">Toggle Search</property>
+			<property name="title" translatable="yes">Search</property>
 			<property name="accelerator">&lt;Ctrl&gt;f</property>
 			</object>
 		</child>
