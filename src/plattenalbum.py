@@ -2975,8 +2975,6 @@ class MainWindow(Adw.ApplicationWindow):
 			sidebar_position=Gtk.PackType.END, min_sidebar_width=300, max_sidebar_width=500, sidebar_width_fraction=0.30)
 		overlay_split_view.set_content(Adw.LayoutSlot(id="browser"))
 		overlay_split_view.set_sidebar(Adw.LayoutSlot(id="player"))
-		overlay_split_view.get_content().get_parent().set_css_classes(["sidebar-pane"])
-		overlay_split_view.get_sidebar().get_parent().set_css_classes(["content-pane"])
 		sidebar_layout=Adw.Layout(content=overlay_split_view, name="sidebar")
 
 		# bottom sheet layout
