@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-07-05 15:21+0200\n"
-"PO-Revision-Date: 2025-08-22 09:43+0300\n"
+"PO-Revision-Date: 2025-08-23 12:28+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ro\n"
@@ -226,7 +226,7 @@ msgstr "A_jutor"
 
 #: src/plattenalbum.py:1829 src/plattenalbum.py:3063
 msgid "_About Plattenalbum"
-msgstr "Despre _Plattenalbum"
+msgstr "D_espre Plattenalbum"
 
 #: src/plattenalbum.py:1831
 msgid "_Disconnect"
