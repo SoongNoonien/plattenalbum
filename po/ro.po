@@ -1,0 +1,596 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: de.wagnermartin.Plattenalbum\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-07-05 15:21+0200\n"
+"PO-Revision-Date: 2025-08-23 12:28+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n==0 || (n!=1 && n%100>=1 && "
+"n%100<=19) ? 1 : 2);\n"
+"X-Generator: Poedit 3.6\n"
+
+#: src/plattenalbum.py:502
+#, python-brace-format
+msgid "{days} day"
+msgid_plural "{days} days"
+msgstr[0] "{days} zi"
+msgstr[1] "{days} zile"
+msgstr[2] "{days} zile"
+
+#: src/plattenalbum.py:959
+msgid "View"
+msgstr "Vizualizare"
+
+#: src/plattenalbum.py:961
+msgid "_Show Bit Rate"
+msgstr "Afișare _Bitrate"
+
+#: src/plattenalbum.py:970
+msgid "Behavior"
+msgstr "Comportament"
+
+#: src/plattenalbum.py:972
+msgid "Send _Notification on Title Change"
+msgstr "Trimite _Notificare pe Schimbarea Titlului"
+
+#: src/plattenalbum.py:973
+msgid "Re_wind via Previous Button"
+msgstr "_Derulare înapoi cu butonul Anterior"
+
+#: src/plattenalbum.py:974
+msgid "Stop _Playback on Quit"
+msgstr "Oprește _Redarea la închidere"
+
+#: src/plattenalbum.py:975
+msgid "Support “_MPRIS”"
+msgstr "Suport „_MPRIS”"
+
+#: src/plattenalbum.py:975
+msgid "Disable if “MPRIS” is supported by another client"
+msgstr "Dezactivează dacă „MPRIS” este suportat de un alt client"
+
+#: src/plattenalbum.py:994 src/plattenalbum.py:3051
+msgid "_Connect"
+msgstr "_Conectează"
+
+#: src/plattenalbum.py:996
+msgid "Ca_ncel"
+msgstr "_Anulează"
+
+#: src/plattenalbum.py:1004
+msgid "Connection failed"
+msgstr "Conectare eșuată"
+
+#: src/plattenalbum.py:1018
+msgid "Manual Connection"
+msgstr "Conectare manuală"
+
+#: src/plattenalbum.py:1021
+msgid "Host"
+msgstr "Host"
+
+#: src/plattenalbum.py:1025
+msgid "Port"
+msgstr "Port"
+
+#: src/plattenalbum.py:1028
+msgid "Password (optional)"
+msgstr "Parolă (opțională)"
+
+#: src/plattenalbum.py:1046
+msgid "Setup"
+msgstr "Setare"
+
+#: src/plattenalbum.py:1048
+msgid ""
+"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
+"system package manager, and run the following commands to configure and "
+"initialize a basic local instance. After that, Plattenalbum should be able "
+"to seamlessly connect to it."
+msgstr ""
+"Pentru a începe, instalează Music Player Daemon (<tt>mpd</tt>) cu managerul "
+"de pachete al sistemului tău, și rulează comenzile pentru a configura și "
+"inițializa o instanță locală simplă. După aceea, Plattenalbum ar trebui să "
+"se conecteze mai ușor."
+
+#: src/plattenalbum.py:1058 data/ShortcutsWindow.ui:49
+msgid "Server Information"
+msgstr "Informații Server"
+
+#: src/plattenalbum.py:1066
+msgid "Server"
+msgstr "Server"
+
+#: src/plattenalbum.py:1067
+msgid "Protocol"
+msgstr "Protocol"
+
+#: src/plattenalbum.py:1068
+msgid "Uptime"
+msgstr "Uptime"
+
+#: src/plattenalbum.py:1069
+msgid "Playtime"
+msgstr "Timpul Redării"
+
+#: src/plattenalbum.py:1070 src/plattenalbum.py:1478 src/plattenalbum.py:1865
+msgid "Artists"
+msgstr "Artiști"
+
+#: src/plattenalbum.py:1071 src/plattenalbum.py:1481 src/plattenalbum.py:1691
+#: src/plattenalbum.py:1732 src/plattenalbum.py:1873
+msgid "Albums"
+msgstr "Albume"
+
+#: src/plattenalbum.py:1072 src/plattenalbum.py:1484
+msgid "Songs"
+msgstr "Melodii"
+
+#: src/plattenalbum.py:1073
+msgid "Total Playtime"
+msgstr "Total al Timpul Redării"
+
+#: src/plattenalbum.py:1074
+msgid "Database Update"
+msgstr "Database-ul actualizat"
+
+#: src/plattenalbum.py:1229 src/plattenalbum.py:1990
+msgid "Context menu"
+msgstr "Meniu de context"
+
+#: src/plattenalbum.py:1252
+msgid "_Append"
+msgstr "_Adaugă"
+
+#: src/plattenalbum.py:1253
+msgid "As _Next"
+msgstr "_Ca următor"
+
+#: src/plattenalbum.py:1256 src/plattenalbum.py:2011
+msgid "Show Al_bum"
+msgstr "Arată alb_umul"
+
+#: src/plattenalbum.py:1257 src/plattenalbum.py:2012
+msgid "Show _File"
+msgstr "Arată _fișierul"
+
+#: src/plattenalbum.py:1436
+msgid "Current album cover"
+msgstr "Coperta albumului curent"
+
+#. status page
+#: src/plattenalbum.py:1492
+msgid "No Results Found"
+msgstr "Niciun rezultat găsit"
+
+#: src/plattenalbum.py:1492
+msgid "Try a different search"
+msgstr "Încearcă o căutare diferită"
+
+#: src/plattenalbum.py:1580
+msgid "Unknown Artist"
+msgstr "Artist necunoscut"
+
+#: src/plattenalbum.py:1676 src/plattenalbum.py:1805
+#, python-brace-format
+msgid "Album cover of {album}"
+msgstr "Coperta albumului {album}"
+
+#: src/plattenalbum.py:1678 src/plattenalbum.py:1808 src/plattenalbum.py:1810
+msgid "Unknown Album"
+msgstr "Album necunoscut"
+
+#: src/plattenalbum.py:1679 src/plattenalbum.py:1809
+msgid "Album cover of an unknown album"
+msgstr "Coperta unui album necunoscut"
+
+#: src/plattenalbum.py:1747
+#, python-brace-format
+msgid "Albums of {artist}"
+msgstr "Albumele de {artist}"
+
+#. buttons
+#: src/plattenalbum.py:1765 src/plattenalbum.py:2418 src/plattenalbum.py:2427
+msgid "Play"
+msgstr "Redă"
+
+#: src/plattenalbum.py:1767
+msgid "Append"
+msgstr "Adaugă"
+
+#: src/plattenalbum.py:1824 src/plattenalbum.py:3064 data/ShortcutsWindow.ui:31
+msgid "Main Menu"
+msgstr "Meniu Principal"
+
+#: src/plattenalbum.py:1826 src/plattenalbum.py:3060
+msgid "_Preferences"
+msgstr "_Preferințe"
+
+#: src/plattenalbum.py:1827 src/plattenalbum.py:3061
+msgid "_Keyboard Shortcuts"
+msgstr "_Scurtături de tastatură"
+
+#: src/plattenalbum.py:1828 src/plattenalbum.py:3062
+msgid "_Help"
+msgstr "A_jutor"
+
+#: src/plattenalbum.py:1829 src/plattenalbum.py:3063
+msgid "_About Plattenalbum"
+msgstr "D_espre Plattenalbum"
+
+#: src/plattenalbum.py:1831
+msgid "_Disconnect"
+msgstr "_Deconectare"
+
+#: src/plattenalbum.py:1832
+msgid "_Update Database"
+msgstr "_Actualizează Database-ul"
+
+#: src/plattenalbum.py:1833
+msgid "_Server Information"
+msgstr "_Informații Server"
+
+#: src/plattenalbum.py:1845 src/plattenalbum.py:1846
+msgid "Search collection"
+msgstr "Căutare în colecție"
+
+#: src/plattenalbum.py:1849 src/plattenalbum.py:1859
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+msgid "Search"
+msgstr "Caută"
+
+#. status page
+#: src/plattenalbum.py:1889
+msgid "Collection is Empty"
+msgstr "Colecția este goală"
+
+#: src/plattenalbum.py:2010
+msgid "_Remove"
+msgstr "_Elimină"
+
+#: src/plattenalbum.py:2014
+msgid "_Enqueue Album"
+msgstr "_Adaugă albumul în coadă"
+
+#: src/plattenalbum.py:2015
+msgid "_Tidy"
+msgstr "_Curăță"
+
+#: src/plattenalbum.py:2016
+msgid "_Clear"
+msgstr "_Golește"
+
+#: src/plattenalbum.py:2251
+msgid "Playlist is Empty"
+msgstr "Playlist-ul este gol"
+
+#: src/plattenalbum.py:2256
+msgid "Scroll to Current Song"
+msgstr "Derulează la melodia curentă"
+
+#. status pages
+#: src/plattenalbum.py:2349
+msgid "No Lyrics Found"
+msgstr "Nu s-au găsit versuri"
+
+#: src/plattenalbum.py:2352
+msgid "Connection Error"
+msgstr "Eroare la conectare"
+
+#: src/plattenalbum.py:2352
+msgid "Check your network connection"
+msgstr "Vezi conexiunea ta de rețea"
+
+#: src/plattenalbum.py:2354
+msgid "Searching…"
+msgstr "Căutare…"
+
+#: src/plattenalbum.py:2379
+msgid "Lyrics view"
+msgstr "Vezi versuri"
+
+#: src/plattenalbum.py:2401
+#, python-brace-format
+msgid "Lyrics of {song}"
+msgstr "Versuri de {song}"
+
+#: src/plattenalbum.py:2424
+msgid "Pause"
+msgstr "Pauză"
+
+#: src/plattenalbum.py:2432 data/ShortcutsWindow.ui:107
+msgid "Previous"
+msgstr "Înapoi"
+
+#: src/plattenalbum.py:2434 data/ShortcutsWindow.ui:101
+msgid "Next"
+msgstr "Înainte"
+
+#: src/plattenalbum.py:2441
+#, python-brace-format
+msgid "{bitrate} kb/s"
+msgstr "{bitrate} kb/s"
+
+#: src/plattenalbum.py:2501
+msgid "Progress bar"
+msgstr "Bară de Progres"
+
+#: src/plattenalbum.py:2620
+msgid "Volume control"
+msgstr "Control de volum"
+
+#: src/plattenalbum.py:2652
+msgid "_Repeat Mode"
+msgstr "Mod de _Repetare"
+
+#: src/plattenalbum.py:2653
+msgid "R_andom Mode"
+msgstr "Mod de _Aleatorie"
+
+#: src/plattenalbum.py:2654
+msgid "_Single Mode"
+msgstr "Mod de _Singur"
+
+#: src/plattenalbum.py:2655
+msgid "_Pause After Song"
+msgstr "_Pauză după melodia"
+
+#: src/plattenalbum.py:2656
+msgid "_Consume Mode"
+msgstr "Mod de _Consum"
+
+#. split button
+#: src/plattenalbum.py:2706 src/plattenalbum.py:2755
+msgid "Lyrics"
+msgstr "Versuri"
+
+#: src/plattenalbum.py:2707
+msgid "Player Menu"
+msgstr "Meniu de player"
+
+#: src/plattenalbum.py:2747 data/ShortcutsWindow.ui:168
+msgid "Playlist"
+msgstr "Playlist"
+
+#: src/plattenalbum.py:2997
+msgid "Database is being updated"
+msgstr "Database-ul se actualizează"
+
+#: src/plattenalbum.py:2998
+msgid "Database updated"
+msgstr "Database-ul actualizat"
+
+#. status page
+#: src/plattenalbum.py:3048
+msgid "Connect to Your Music"
+msgstr "Conectează-te la Muzica ta"
+
+#: src/plattenalbum.py:3049
+msgid ""
+"To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
+"up and running on this device or another one on the network"
+msgstr ""
+"Pentru a folosi Plattenalbum, o instanță de Music Player Daemon trebuie să "
+"fie setată și rulată pe dispozitivul acesta sau încă una pe rețea"
+
+#: src/plattenalbum.py:3053
+msgid "Connect _Manually"
+msgstr "Conecteză _Manual"
+
+#: src/plattenalbum.py:3152
+msgid "Next Title is Playing"
+msgstr "Titlul următor se redă"
+
+#: src/plattenalbum.py:3154
+#, python-brace-format
+msgid "Now playing “{title}” by “{artist}”"
+msgstr "Acuma redare “{title}” de “{artist}”"
+
+#: src/plattenalbum.py:3156
+#, python-brace-format
+msgid "Now playing “{title}”"
+msgstr "Acuma redare “{title}”"
+
+#: src/plattenalbum.py:3165
+msgid "Playback Finished"
+msgstr "Redare terminată"
+
+#: src/plattenalbum.py:3166
+msgid "The playlist is over"
+msgstr "Playlist-ul este terminat"
+
+#: src/plattenalbum.py:3173
+msgid "Playing music"
+msgstr "Ascultare melodia"
+
+#: src/plattenalbum.py:3210
+msgid "Cleared A‐B loop"
+msgstr "Bucla A-B golită"
+
+#: src/plattenalbum.py:3213
+#, python-brace-format
+msgid "Started A‐B loop at {start}"
+msgstr "Început A-B buclare la {start}"
+
+#: src/plattenalbum.py:3215
+#, python-brace-format
+msgid "Activated A‐B loop from {start} to {end}"
+msgstr "Activat A-B buclare de la {start} până la {end}"
+
+#: src/plattenalbum.py:3236
+msgid "Debug mode"
+msgstr "Mod Debug"
+
+#: src/plattenalbum.py:3293
+msgid "translator-credits"
+msgstr "@UnifeGi <UnifeGi@duck.com>"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.desktop.in:2
+msgid "Plattenalbum"
+msgstr "Plattenalbum"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.desktop.in:4
+msgid "Connect to your music"
+msgstr "Conectează cu melodiile tale"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
+msgid "A client for the Music Player Daemon (MPD)."
+msgstr "Un client pentru Music Player Daemon (MPD)."
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
+msgid ""
+"Browse your collection while viewing large album covers. Play your music "
+"without managing playlists."
+msgstr ""
+"Răsfoiește colecțiile tale când vezi copertele album mari. Redă melodiile "
+"tale fără a gestiona playlist-uri."
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
+msgid "Main window"
+msgstr "Fereastră principală"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
+msgid "Album view"
+msgstr "Afișare album"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
+msgid "Small window"
+msgstr "Fereastră mică"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:36
+msgid "Small window with playlist"
+msgstr "Fereastră mică cu playlist"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:40
+msgid "Small window with cover"
+msgstr "Fereastră mică cu copertă"
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:3
+msgid "Music Browser"
+msgstr "Browser de muzică"
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:11
+msgid "Music;Player;"
+msgstr "Muzică;Player;"
+
+#: data/ShortcutsWindow.ui:10
+msgid "General"
+msgstr "General"
+
+#: data/ShortcutsWindow.ui:13
+msgid "Online Help"
+msgstr "Ajutor Online"
+
+#: data/ShortcutsWindow.ui:19
+msgid "Preferences"
+msgstr "Preferințe"
+
+#: data/ShortcutsWindow.ui:25
+msgid "Shortcuts"
+msgstr "Scurtături"
+
+#: data/ShortcutsWindow.ui:37
+msgid "Disconnect"
+msgstr "Deconectare"
+
+#: data/ShortcutsWindow.ui:43
+msgid "Update Database"
+msgstr "Actualizează Database-ul"
+
+#: data/ShortcutsWindow.ui:55
+msgid "Close"
+msgstr "Închide"
+
+#: data/ShortcutsWindow.ui:61
+msgid "Quit"
+msgstr "Ieșire"
+
+#: data/ShortcutsWindow.ui:69
+msgid "Window"
+msgstr "Fereastră"
+
+#: data/ShortcutsWindow.ui:72
+msgid "Toggle Lyrics"
+msgstr "Comutare versuri"
+
+#: data/ShortcutsWindow.ui:78
+msgid "Toggle Search"
+msgstr "Comutare căutarea"
+
+#: data/ShortcutsWindow.ui:86
+msgid "Playback"
+msgstr "Redare"
+
+#: data/ShortcutsWindow.ui:89
+msgid "Play/Pause"
+msgstr "Redă/Pauză"
+
+#: data/ShortcutsWindow.ui:95
+msgid "Stop"
+msgstr "Oprește"
+
+#: data/ShortcutsWindow.ui:113
+msgid "Seek Forward"
+msgstr "În față"
+
+#: data/ShortcutsWindow.ui:119
+msgid "Seek Backward"
+msgstr "În spate"
+
+#: data/ShortcutsWindow.ui:125
+msgid "A‐B Loop"
+msgstr "A-B Buclare"
+
+#: data/ShortcutsWindow.ui:133
+msgid "Playback Options"
+msgstr "Setări de Redare"
+
+#: data/ShortcutsWindow.ui:136
+msgid "Toggle Repeat Mode"
+msgstr "Comutare Modul de Repetare"
+
+#: data/ShortcutsWindow.ui:142
+msgid "Toggle Random Mode"
+msgstr "Comutare Modul de Aleatorie"
+
+#: data/ShortcutsWindow.ui:148
+msgid "Toggle Single Mode"
+msgstr "Comutare Modul de Singur"
+
+#: data/ShortcutsWindow.ui:154
+msgid "Pause After Song"
+msgstr "Pauză după melodia"
+
+#: data/ShortcutsWindow.ui:160
+msgid "Toggle Consume Mode"
+msgstr "Comutare Modul de Consum"
+
+#: data/ShortcutsWindow.ui:171
+msgid "Clear"
+msgstr "Golește"
+
+#: data/ShortcutsWindow.ui:177
+msgid "Tidy"
+msgstr "Curăță"
+
+#: data/ShortcutsWindow.ui:183
+msgid "Enqueue Album"
+msgstr "Adaugă albumul în coadă"
+
+#~ msgid "_Play"
+#~ msgstr "_Redă"
+
+#~ msgid "_Show"
+#~ msgstr "_Arată"
