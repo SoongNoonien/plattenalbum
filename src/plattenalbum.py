@@ -2353,7 +2353,7 @@ class LyricsWindow(Gtk.Stack):
 
 	def display(self, song):
 		self.set_visible_child_name("searching")
-		update_thread=threading.Thread(target=self._display_lyrics, args=(song["title"][0], song["artist"][0]), daemon=True)
+		update_thread=threading.Thread(target=self._display_lyrics, args=(song["title"][0], str(song["artist"])), daemon=True)
 		update_thread.start()
 
 	def _get_lyrics(self, title, artist):
