@@ -3050,6 +3050,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.emitter.connect("updating-db", self._on_updating_db)
 		self._client.emitter.connect("updated-db", self._on_updated_db)
 		self._client.emitter.connect("a-b-loop", self._on_a_b_loop)
+		self._client.emitter.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
 
 		# packing
 		self._toast_overlay=Adw.ToastOverlay(child=self._status_page_stack)
