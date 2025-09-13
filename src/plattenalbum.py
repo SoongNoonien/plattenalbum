@@ -1965,6 +1965,7 @@ class Browser(Gtk.Stack):
 
 	def _on_connected_or_updated_db(self, emitter, database_is_empty):
 		self.search_entry.emit("stop-search")
+		self.search_entry.set_text("")
 		if database_is_empty:
 			self.set_visible_child_name("empty-collection")
 		else:
