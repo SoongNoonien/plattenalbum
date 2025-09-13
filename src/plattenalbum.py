@@ -1490,6 +1490,10 @@ class SearchView(Gtk.Stack):
 		box.append(self._album_box)
 		box.append(self._song_box)
 
+		# scroll
+		scroll=Gtk.ScrolledWindow(child=Adw.Clamp(child=box))
+		self._adj=scroll.get_vadjustment()
+
 		# status page
 		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results Found"), description=_("Try a different search"))
 
@@ -1499,12 +1503,13 @@ class SearchView(Gtk.Stack):
 
 		# packing
 		self.add_named(status_page, "no-results")
-		self.add_named(Gtk.ScrolledWindow(child=Adw.Clamp(child=box)), "results")
+		self.add_named(scroll, "results")
 
 	def clear(self):
 		self._artist_list.remove_all()
 		self._album_list.remove_all()
 		self._song_list.remove_all()
+		self._adj.set_value(0.0)
 		self.set_visible_child_name("no-results")
 
 	def search(self, search_text):
@@ -2331,8 +2336,11 @@ class LyricsWindow(Gtk.Stack):
 		# text buffer
 		self._text_buffer=self.text_view.get_buffer()
 
-		# packing
+		# scroll
 		scroll=Gtk.ScrolledWindow(child=self.text_view)
+		self._adj=scroll.get_vadjustment()
+
+		# packing
 		self.add_named(scroll, "lyrics")
 		self.add_named(no_lyrics_status_page, "no-lyrics")
 		self.add_named(connection_error_status_page, "connection-error")
@@ -2360,6 +2368,7 @@ class LyricsWindow(Gtk.Stack):
 
 	def _set_lyrics(self, title, artist, text):
 		self._text_buffer.delete(self._text_buffer.get_start_iter(), self._text_buffer.get_end_iter())
+		self._adj.set_value(0.0)
 		title_markup=f"<b><big>{GLib.markup_escape_text(title)}</big>\n<small>{GLib.markup_escape_text(artist)}</small></b>\n\n"
 		self._text_buffer.insert_markup(self._text_buffer.get_end_iter(), title_markup, -1)
 		self._text_buffer.insert(self._text_buffer.get_end_iter(), text, -1)
