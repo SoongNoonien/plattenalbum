@@ -1112,7 +1112,7 @@ class AlbumRow(Adw.ActionRow):
 
 		# packing
 		self.add_suffix(date)
-		self.add_suffix(Gtk.Image(icon_name="go-next-symbolic"))
+		self.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 
 class SongListRow(Gtk.Box):
 	position=GObject.Property(type=int, default=-1)
@@ -1407,7 +1407,7 @@ class BrowserSongList(Gtk.ListBox):
 class AlbumCover(Gtk.Widget):
 	def __init__(self, **kwargs):
 		super().__init__(hexpand=True, **kwargs)
-		self._picture=Gtk.Picture(css_classes=["cover", "frame"])
+		self._picture=Gtk.Picture(css_classes=["cover", "frame"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
 		self._picture.set_parent(self)
 		self.connect("destroy", lambda *args: self._picture.unparent())
 
@@ -1434,7 +1434,7 @@ class AlbumCover(Gtk.Widget):
 
 class ToolbarCover(Gtk.Picture):
 	def __init__(self, client):
-		super().__init__(css_classes=["toolbar-cover", "frame"])
+		super().__init__(css_classes=["toolbar-cover", "frame"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
 		self.set_alternative_text(_("Current album cover"))
 		self._client=client
 
@@ -1530,7 +1530,7 @@ class SearchView(Gtk.Stack):
 			artists=self._client.list("albumartist", self._client.get_search_expression(self._artist_tags, keywords))
 			for artist in itertools.islice(artists, self._results):
 				row=Adw.ActionRow(title=artist["albumartist"], use_markup=False, activatable=True)
-				row.add_suffix(Gtk.Image(icon_name="go-next-symbolic"))
+				row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 				self._artist_list.append(row)
 			self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
 			if self._song_box.get_visible() or self._album_box.get_visible() or self._artist_box.get_visible():
@@ -2606,7 +2606,7 @@ class VolumeControl(Gtk.Box):
 		self._client.emitter.connect("volume", self._refresh)
 
 		# packing
-		self.append(Gtk.Image(icon_name="audio-speakers-symbolic"))
+		self.append(Gtk.Image(icon_name="audio-speakers-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 		self.append(scale)
 
 	def _on_change_value(self, scale, scroll, value):
@@ -2806,6 +2806,7 @@ class PlayerBar(Gtk.Overlay):
 		# widgets
 		cover=ToolbarCover(client)
 		progress_bar=ProgressBar(client)
+		progress_bar.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
 		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
 		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
 
