@@ -2329,7 +2329,8 @@ class LyricsWindow(Gtk.Stack):
 		self.text_view=Gtk.TextView(
 			editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD,
 			justification=Gtk.Justification.CENTER,
-			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9
+			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9,
+			pixels_above_lines=1, pixels_below_lines=2, pixels_inside_wrap=3
 		)
 		self.text_view.add_css_class("inline")
 
