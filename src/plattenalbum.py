@@ -2312,6 +2312,7 @@ class LetrasParser(HTMLParser):
 			self.text+=data+"\n"
 
 class LyricsWindow(Gtk.Stack):
+	song=GObject.Property(type=Song)
 	def __init__(self):
 		super().__init__()
 
@@ -2326,20 +2327,23 @@ class LyricsWindow(Gtk.Stack):
 		searching_status_page.set_paintable(spinner)
 
 		# text view
-		self.text_view=Gtk.TextView(
+		self._text_view=Gtk.TextView(
 			editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD,
 			justification=Gtk.Justification.CENTER,
 			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9,
 			pixels_above_lines=1, pixels_below_lines=2, pixels_inside_wrap=3
 		)
-		self.text_view.add_css_class("inline")
+		self._text_view.add_css_class("inline")
 
 		# text buffer
-		self._text_buffer=self.text_view.get_buffer()
+		self._text_buffer=self._text_view.get_buffer()
 
 		# scroll
-		scroll=Gtk.ScrolledWindow(child=self.text_view)
+		scroll=Gtk.ScrolledWindow(child=self._text_view)
 		self._adj=scroll.get_vadjustment()
+
+		# connect
+		self.connect("notify::song", self._on_song_changed)
 
 		# packing
 		self.add_named(scroll, "lyrics")
@@ -2347,15 +2351,16 @@ class LyricsWindow(Gtk.Stack):
 		self.add_named(connection_error_status_page, "connection-error")
 		self.add_named(searching_status_page, "searching")
 
-	def clear(self):
+	def load(self):
+		if self.get_visible_child_name() != "lyrics" and (song:=self.get_property("song")) is not None:
+			self.set_visible_child_name("searching")
+			threading.Thread(target=self._display_lyrics, args=(song["title"][0], str(song["artist"])), daemon=True).start()
+		self._text_view.grab_focus()
+
+	def _on_song_changed(self, *args):
 		self.set_visible_child_name("no-lyrics")
 		self._text_buffer.delete(self._text_buffer.get_start_iter(), self._text_buffer.get_end_iter())
-		self.text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
-
-	def display(self, song):
-		self.set_visible_child_name("searching")
-		update_thread=threading.Thread(target=self._display_lyrics, args=(song["title"][0], str(song["artist"])), daemon=True)
-		update_thread.start()
+		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 	def _get_lyrics(self, title, artist):
 		title=urllib.parse.quote_plus(title)
@@ -2373,7 +2378,7 @@ class LyricsWindow(Gtk.Stack):
 		title_markup=f"<b><big>{GLib.markup_escape_text(title)}</big>\n<small>{GLib.markup_escape_text(artist)}</small></b>\n\n"
 		self._text_buffer.insert_markup(self._text_buffer.get_end_iter(), title_markup, -1)
 		self._text_buffer.insert(self._text_buffer.get_end_iter(), text, -1)
-		self.text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=title)])
+		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=title)])
 
 	def _display_lyrics(self, title, artist):
 		try:
@@ -2721,15 +2726,12 @@ class Player(Adw.BreakpointBin):
 			self._split_button.set_icon_name("view-list-symbolic")
 			self._split_button.set_tooltip_text(_("Playlist"))
 			self._stack.set_visible_child_name("lyrics")
-			if self._client.connected() and (song:=self._client.currentsong()):
-				self._lyrics_window.display(song)
-				self._lyrics_window.text_view.grab_focus()
+			self._lyrics_window.load()
 		else:
 			self._clamp.set_visible(not self.get_property("show-large-cover"))
 			self._split_button.set_icon_name("lyrics-symbolic")
 			self._split_button.set_tooltip_text(_("Lyrics"))
 			self._stack.set_visible_child_name("playlist")
-			self._lyrics_window.clear()
 
 	def _on_show_large_cover_toggled(self, *args):
 		if not self.get_property("show-lyrics"):
@@ -2752,12 +2754,12 @@ class Player(Adw.BreakpointBin):
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
 			self._window_handle.set_visible(True)
+			self._lyrics_window.set_property("song", song)
 			if self.get_property("show-lyrics"):
-				self._lyrics_window.display(song)
+				self._lyrics_window.load()
 		else:
 			self._window_handle.set_visible(False)
-			if self.get_property("show-lyrics"):
-				self._lyrics_window.clear()
+			self._lyrics_window.set_property("song", None)
 		self._large_cover.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
@@ -2766,6 +2768,7 @@ class Player(Adw.BreakpointBin):
 	def _on_disconnected(self, *args):
 		self._large_cover.set_paintable(FALLBACK_COVER)
 		self._window_handle.set_visible(False)
+		self._lyrics_window.set_property("song", None)
 		self.set_property("show-lyrics", False)
 
 	def _on_connected(self, *args):
