@@ -1831,7 +1831,7 @@ class MainMenuButton(Gtk.MenuButton):
 		super().__init__(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True)
 		app_section=Gio.Menu()
 		app_section.append(_("_Preferences"), "win.settings")
-		app_section.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
+		app_section.append(_("_Keyboard Shortcuts"), "app.shortcuts")
 		app_section.append(_("_Help"), "win.help")
 		app_section.append(_("_About Plattenalbum"), "app.about")
 		menu=Gio.Menu()
@@ -2965,11 +2965,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._settings=settings
 		self._suspend_inhibit=0
 
-		# shortcuts
-		builder=Gtk.Builder()
-		builder.add_from_resource("/de/wagnermartin/Plattenalbum/ShortcutsWindow.ui")
-		self.set_help_overlay(builder.get_object("shortcuts_window"))
-
 		# widgets
 		self._browser=Browser(self._client, self._settings)
 		player=Player(self._client, self._settings)
@@ -3034,7 +3029,7 @@ class MainWindow(Adw.ApplicationWindow):
 		status_page.set_child(button_box)
 		menu=Gio.Menu()
 		menu.append(_("_Preferences"), "win.settings")
-		menu.append(_("_Keyboard Shortcuts"), "win.show-help-overlay")
+		menu.append(_("_Keyboard Shortcuts"), "app.shortcuts")
 		menu.append(_("_Help"), "win.help")
 		menu.append(_("_About Plattenalbum"), "app.about")
 		menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True, menu_model=menu)
@@ -3235,12 +3230,12 @@ class Plattenalbum(Adw.Application):
 		# accelerators
 		action_accels=(
 			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.help", ["F1"]),("win.settings", ["<Ctrl>comma"]),
-			("win.show-help-overlay", ["<Ctrl>question"]),("win.toggle-lyrics", ["<Ctrl>l"]),("win.search", ["<Ctrl>f"]),
-			("win.server-info", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),
-			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),
-			("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),
-			("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),
-			("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
+			("win.toggle-lyrics", ["<Ctrl>l"]),("win.search", ["<Ctrl>f"]),("win.server-info", ["<Ctrl>i"]),
+			("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),
+			("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),("mpd.repeat", ["<Ctrl>r"]),
+			("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),("mpd.single-oneshot", ["<Ctrl>p"]),
+			("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),("mpd.a-b-loop", ["l"]),
+			("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+<object class="AdwShortcutsDialog" id="shortcuts_dialog">
+<child>
+	<object class="AdwShortcutsSection">
+	<property name="title" translatable="yes">General</property>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Online Help</property>
+		<property name="accelerator">F1</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Preferences</property>
+		<property name="accelerator">&lt;Ctrl&gt;comma</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Shortcuts</property>
+		<property name="accelerator">&lt;Ctrl&gt;question</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Main Menu</property>
+		<property name="accelerator">F10</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Disconnect</property>
+		<property name="accelerator">&lt;Ctrl&gt;d</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Update Database</property>
+		<property name="accelerator">F5</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Server Information</property>
+		<property name="accelerator">&lt;Ctrl&gt;i</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Close</property>
+		<property name="accelerator">&lt;Ctrl&gt;w</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Quit</property>
+		<property name="accelerator">&lt;Ctrl&gt;q</property>
+		</object>
+	</child>
+	</object>
+</child>
+<child>
+	<object class="AdwShortcutsSection">
+	<property name="title" translatable="yes">Window</property>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Toggle Lyrics</property>
+		<property name="accelerator">&lt;Ctrl&gt;l</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Search</property>
+		<property name="accelerator">&lt;Ctrl&gt;f</property>
+		</object>
+	</child>
+	</object>
+</child>
+<child>
+	<object class="AdwShortcutsSection">
+	<property name="title" translatable="yes">Playback</property>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Play/Pause</property>
+		<property name="accelerator">space</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Stop</property>
+		<property name="accelerator">&lt;Ctrl&gt;space</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Next</property>
+		<property name="accelerator">&lt;Ctrl&gt;k</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Previous</property>
+		<property name="accelerator">&lt;Shift&gt;&lt;Ctrl&gt;k</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Seek Forward</property>
+		<property name="accelerator">&lt;Ctrl&gt;plus</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Seek Backward</property>
+		<property name="accelerator">&lt;Ctrl&gt;minus</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">A‐B Loop</property>
+		<property name="accelerator">l</property>
+		</object>
+	</child>
+	</object>
+</child>
+<child>
+	<object class="AdwShortcutsSection">
+	<property name="title" translatable="yes">Playback Options</property>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Toggle Repeat Mode</property>
+		<property name="accelerator">&lt;Ctrl&gt;r</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Toggle Random Mode</property>
+		<property name="accelerator">&lt;Ctrl&gt;n</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Toggle Single Mode</property>
+		<property name="accelerator">&lt;Ctrl&gt;s</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Pause After Song</property>
+		<property name="accelerator">&lt;Ctrl&gt;p</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Toggle Consume Mode</property>
+		<property name="accelerator">&lt;Ctrl&gt;o</property>
+		</object>
+	</child>
+	</object>
+</child>
+<child>
+	<object class="AdwShortcutsSection">
+	<property name="title" translatable="yes">Playlist</property>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Clear</property>
+		<property name="accelerator">&lt;Shift&gt;Delete</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Tidy</property>
+		<property name="accelerator">&lt;Ctrl&gt;t</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Enqueue Album</property>
+		<property name="accelerator">&lt;Ctrl&gt;e</property>
+		</object>
+	</child>
+	</object>
+</child>
+</object>
+</interface>

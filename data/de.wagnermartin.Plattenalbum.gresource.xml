@@ -2,7 +2,7 @@
 <gresources>
 	<gresource prefix="/de/wagnermartin/Plattenalbum">
 		<file>de.wagnermartin.Plattenalbum.metainfo.xml</file>
-		<file>ShortcutsWindow.ui</file>
+		<file>shortcuts-dialog.ui</file>
 		<file>style.css</file>
 		<file>style-hc.css</file>
 	</gresource>
