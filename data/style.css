@@ -40,3 +40,13 @@
 .no-drop-highlight:drop(active) {
   box-shadow: unset;
 }
+
+@media (prefers-contrast: more) {
+  .playlist > row:hover {
+    box-shadow: inset 0 0 0 1px var(--border-color);
+  }
+
+  .playlist > row:selected {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 60%, transparent);
+  }
+}

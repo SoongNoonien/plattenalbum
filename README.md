@@ -30,7 +30,7 @@ Install the following dependencies on your system.
 - glib2 (Ubuntu/Debian: libglib2.0-dev-bin, libglib2.0-bin)
 
 ### Runtime Dependencies
-- GTK4 >=4.18.0
+- GTK4 >=4.20.0
 - libadwaita >=1.8.0
 - Python3
 
