@@ -1832,7 +1832,6 @@ class MainMenuButton(Gtk.MenuButton):
 		app_section=Gio.Menu()
 		app_section.append(_("_Preferences"), "win.settings")
 		app_section.append(_("_Keyboard Shortcuts"), "app.shortcuts")
-		app_section.append(_("_Help"), "win.help")
 		app_section.append(_("_About Plattenalbum"), "app.about")
 		menu=Gio.Menu()
 		menu.append(_("_Disconnect"), "mpd.disconnect")
@@ -2973,7 +2972,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "search", "settings", "manual-connect", "server-info", "help")
+		simple_actions_data=("close", "search", "settings", "manual-connect", "server-info")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -3030,7 +3029,6 @@ class MainWindow(Adw.ApplicationWindow):
 		menu=Gio.Menu()
 		menu.append(_("_Preferences"), "win.settings")
 		menu.append(_("_Keyboard Shortcuts"), "app.shortcuts")
-		menu.append(_("_Help"), "win.help")
 		menu.append(_("_About Plattenalbum"), "app.about")
 		menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True, menu_model=menu)
 		header_bar=Adw.HeaderBar()
@@ -3107,9 +3105,6 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_server_info(self, action, param):
 		if self.get_visible_dialog() is None:
 			ServerInfo(self._client, self._settings).present(self)
-
-	def _on_help(self, action, param):
-		Gtk.UriLauncher(uri="https://github.com/SoongNoonien/plattenalbum/wiki/Usage").launch(self, None, None, None)
 
 	def _on_search_entry_focus_event(self, controller, focus):
 		if focus:
@@ -3229,13 +3224,12 @@ class Plattenalbum(Adw.Application):
 		self.add_action(action)
 		# accelerators
 		action_accels=(
-			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.help", ["F1"]),("win.settings", ["<Ctrl>comma"]),
-			("win.toggle-lyrics", ["<Ctrl>l"]),("win.search", ["<Ctrl>f"]),("win.server-info", ["<Ctrl>i"]),
-			("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),
-			("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),("mpd.repeat", ["<Ctrl>r"]),
-			("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),("mpd.single-oneshot", ["<Ctrl>p"]),
-			("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),("mpd.a-b-loop", ["l"]),
-			("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
+			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.settings", ["<Ctrl>comma"]),("win.toggle-lyrics", ["<Ctrl>l"]),
+			("win.search", ["<Ctrl>f"]),("win.server-info", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),
+			("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),
+			("mpd.prev", ["<Shift><Ctrl>k"]),("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),
+			("mpd.consume", ["<Ctrl>o"]),("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),
+			("mpd.seek-backward", ["<Ctrl>minus"]),("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)
