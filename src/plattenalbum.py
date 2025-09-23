@@ -2163,7 +2163,7 @@ class PlaylistView(SongList):
 		self._menu.open(self.get_focus_song()["file"], self.get_focus_position(), *self.get_focus_popup_point())
 
 	def _on_delete(self, action, state):
-		self._delete(self.get_focus_position())
+		self._client.delete(self.get_focus_position())
 
 	def _on_drag_prepare(self, drag_source, x, y):
 		if (position:=self.get_position(x,y)) is not None:
