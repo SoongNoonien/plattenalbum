@@ -2333,6 +2333,7 @@ class LyricsWindow(Gtk.Stack):
 			pixels_above_lines=1, pixels_below_lines=2, pixels_inside_wrap=3
 		)
 		self._text_view.add_css_class("inline")
+		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 		# text buffer
 		self._text_buffer=self._text_view.get_buffer()
@@ -2359,7 +2360,6 @@ class LyricsWindow(Gtk.Stack):
 	def _on_song_changed(self, *args):
 		self.set_visible_child_name("no-lyrics")
 		self._text_buffer.delete(self._text_buffer.get_start_iter(), self._text_buffer.get_end_iter())
-		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 	def _get_lyrics(self, title, artist):
 		title=urllib.parse.quote_plus(title)
@@ -2371,17 +2371,9 @@ class LyricsWindow(Gtk.Stack):
 			raise ValueError("Not found")
 		return parser.text.strip("\n ")
 
-	def _set_lyrics(self, title, artist, text):
-		self._text_buffer.delete(self._text_buffer.get_start_iter(), self._text_buffer.get_end_iter())
-		self._adj.set_value(0.0)
-		title_markup=f"<b><big>{GLib.markup_escape_text(title)}</big>\n<small>{GLib.markup_escape_text(artist)}</small></b>\n\n"
-		self._text_buffer.insert_markup(self._text_buffer.get_end_iter(), title_markup, -1)
-		self._text_buffer.insert(self._text_buffer.get_end_iter(), text, -1)
-		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics of {song}").format(song=title)])
-
 	def _display_lyrics(self, title, artist):
 		try:
-			idle_add(self._set_lyrics, title, artist, self._get_lyrics(title, artist))
+			idle_add(self._text_buffer.set_text, self._get_lyrics(title, artist))
 			idle_add(self.set_visible_child_name, "lyrics")
 		except urllib.error.URLError:
 			idle_add(self.set_visible_child_name, "connection-error")
