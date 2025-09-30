@@ -2713,7 +2713,7 @@ class Player(Adw.BreakpointBin):
 
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
-			self._clamp.set_visible(True)
+			self._clamp.set_visible(False)
 			self._split_button.set_icon_name("view-list-symbolic")
 			self._split_button.set_tooltip_text(_("Playlist"))
 			self._stack.set_visible_child_name("lyrics")
