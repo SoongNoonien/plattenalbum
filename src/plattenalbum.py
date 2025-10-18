@@ -2214,7 +2214,7 @@ class PlaylistWindow(Gtk.Stack):
 
 		# widgets
 		self._playlist_view=PlaylistView(self._client)
-		self.scroll=Gtk.ScrolledWindow(child=self._playlist_view, propagate_natural_height=True, hexpand=True, vexpand=True)
+		self.scroll=Gtk.ScrolledWindow(child=self._playlist_view, propagate_natural_height=True)
 		self._adj=self.scroll.get_vadjustment()
 		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
 		status_page.add_css_class("compact")
@@ -2339,7 +2339,7 @@ class LyricsWindow(Gtk.Stack):
 		self._text_buffer=self._text_view.get_buffer()
 
 		# scroll
-		scroll=Gtk.ScrolledWindow(child=self._text_view)
+		scroll=Gtk.ScrolledWindow(child=self._text_view, propagate_natural_height=True)
 		self._adj=scroll.get_vadjustment()
 
 		# connect
@@ -2646,19 +2646,16 @@ class PlayerMenu(Gtk.PopoverMenu):
 			self._volume_section.remove(0)
 			self._volume_visible=False
 
-class Player(Adw.BreakpointBin):
+class Player(Adw.Bin):
 	show_lyrics=GObject.Property(type=bool, default=False)
-	show_large_cover=GObject.Property(type=bool, default=False)
-	sheet_mode=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__(width_request=300, height_request=200)
 		self._client=client
 
 		# widgets
-		self._large_cover=AlbumCover(visible=False, margin_start=12, margin_end=12, margin_top=6, margin_bottom=18)
+		self._large_cover=Gtk.Picture(css_classes=["cover", "frame"], accessible_role=Gtk.AccessibleRole.PRESENTATION,
+			halign=Gtk.Align.CENTER, margin_start=12, margin_end=12, margin_bottom=6)
 		self._window_handle=Gtk.WindowHandle(child=self._large_cover, visible=False)
-		small_cover=ToolbarCover(client)
-		self._clamp=Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=34, child=small_cover)
 		self._lyrics_window=LyricsWindow()
 		playlist_window=PlaylistWindow(client)
 		playback_controls=PlaybackControls(client, settings)
@@ -2680,25 +2677,10 @@ class Player(Adw.BreakpointBin):
 		# header bar
 		header_bar=Adw.HeaderBar(show_title=False)
 		header_bar.pack_start(self._lyrics_button)
-		header_bar.pack_start(self._clamp)
 		header_bar.pack_end(menu_button)
-
-		# breakpoint bin
-		self._break_point=Adw.Breakpoint()
-		self._break_point.set_condition(Adw.BreakpointCondition.parse(f"min-height: 520px and max-aspect-ratio: 3/5"))
-		self._break_point.connect("apply", self._on_break_point_apply)
-		self._break_point.connect("unapply", self._on_break_point_unapply)
-		self.add_breakpoint(self._break_point)
-
-		# property binding
-		self.bind_property("show-large-cover", self._large_cover, "visible", GObject.BindingFlags.DEFAULT)
-		self.bind_property("sheet-mode", header_bar, "show-end-title-buttons", GObject.BindingFlags.INVERT_BOOLEAN)
-		self.bind_property("sheet-mode", header_bar, "show-start-title-buttons", GObject.BindingFlags.INVERT_BOOLEAN)
 
 		# connect
 		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
-		self.connect("notify::show-large-cover", self._on_show_large_cover_toggled)
-		self.connect("notify::sheet-mode", self._on_sheet_mode_toggled)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -2713,34 +2695,14 @@ class Player(Adw.BreakpointBin):
 
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
-			self._clamp.set_visible(False)
 			self._lyrics_button.set_icon_name("view-list-symbolic")
 			self._lyrics_button.set_tooltip_text(_("Playlist"))
 			self._stack.set_visible_child_name("lyrics")
 			self._lyrics_window.load()
 		else:
-			self._clamp.set_visible(not self.get_property("show-large-cover"))
 			self._lyrics_button.set_icon_name("lyrics-symbolic")
 			self._lyrics_button.set_tooltip_text(_("Lyrics"))
 			self._stack.set_visible_child_name("playlist")
-
-	def _on_show_large_cover_toggled(self, *args):
-		if not self.get_property("show-lyrics"):
-			self._clamp.set_visible(not self.get_property("show-large-cover"))
-
-	def _on_sheet_mode_toggled(self, *args):
-		if self.get_property("sheet-mode"):
-			self.remove_breakpoint(self._break_point)
-		else:
-			self.add_breakpoint(self._break_point)
-
-	def _on_break_point_apply(self, *args):
-		if not self.get_property("sheet-mode"):
-			self.set_property("show-large-cover", True)
-
-	def _on_break_point_unapply(self, *args):
-		if not self.get_property("sheet-mode"):
-			self.set_property("show-large-cover", False)
 
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
@@ -2996,14 +2958,6 @@ class MainWindow(Adw.ApplicationWindow):
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 620sp"))
 		break_point.add_setter(multi_layout_view, "layout-name", "bottom-sheet")
-		break_point.add_setter(player, "sheet-mode", True)
-		break_point.add_setter(player, "show-large-cover", False)
-		self.add_breakpoint(break_point)
-		break_point=Adw.Breakpoint()
-		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 620sp and max-aspect-ratio: 4/7"))
-		break_point.add_setter(multi_layout_view, "layout-name", "bottom-sheet")
-		break_point.add_setter(player, "sheet-mode", True)
-		break_point.add_setter(player, "show-large-cover", True)
 		self.add_breakpoint(break_point)
 
 		# status page
