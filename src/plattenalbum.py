@@ -2673,15 +2673,15 @@ class Player(Adw.BreakpointBin):
 		self._stack.add_named(box, "playlist")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
-		# split button
-		self._split_button=Adw.SplitButton(icon_name="lyrics-symbolic", tooltip_text=_("Lyrics"),
-			dropdown_tooltip=_("Player Menu"), action_name="win.toggle-lyrics")
-		self._split_button.set_popover(PlayerMenu(client))
+		# buttons
+		self._lyrics_button=Gtk.Button(icon_name="lyrics-symbolic", tooltip_text=_("Lyrics"), action_name="win.toggle-lyrics")
+		menu_button=Gtk.MenuButton(icon_name="view-more-symbolic", tooltip_text=_("Player Menu"), popover=PlayerMenu(client))
 
 		# header bar
 		header_bar=Adw.HeaderBar(show_title=False)
+		header_bar.pack_start(self._lyrics_button)
 		header_bar.pack_start(self._clamp)
-		header_bar.pack_end(self._split_button)
+		header_bar.pack_end(menu_button)
 
 		# breakpoint bin
 		self._break_point=Adw.Breakpoint()
@@ -2714,14 +2714,14 @@ class Player(Adw.BreakpointBin):
 	def _on_lyrics_toggled(self, *args):
 		if self.get_property("show-lyrics"):
 			self._clamp.set_visible(False)
-			self._split_button.set_icon_name("view-list-symbolic")
-			self._split_button.set_tooltip_text(_("Playlist"))
+			self._lyrics_button.set_icon_name("view-list-symbolic")
+			self._lyrics_button.set_tooltip_text(_("Playlist"))
 			self._stack.set_visible_child_name("lyrics")
 			self._lyrics_window.load()
 		else:
 			self._clamp.set_visible(not self.get_property("show-large-cover"))
-			self._split_button.set_icon_name("lyrics-symbolic")
-			self._split_button.set_tooltip_text(_("Lyrics"))
+			self._lyrics_button.set_icon_name("lyrics-symbolic")
+			self._lyrics_button.set_tooltip_text(_("Lyrics"))
 			self._stack.set_visible_child_name("playlist")
 
 	def _on_show_large_cover_toggled(self, *args):
