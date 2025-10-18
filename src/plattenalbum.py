@@ -842,17 +842,6 @@ class Client(MPDClient):
 			except:
 				pass
 
-	def conditional_previous(self):
-		if self._settings.get_boolean("rewind-mode"):
-			double_click_time=Gtk.Settings.get_default().get_property("gtk-double-click-time")
-			status=self.status()
-			if float(status.get("elapsed", 0))*1000 > double_click_time:
-				self.seekcur(0)
-			else:
-				self.previous()
-		else:
-			self.previous()
-
 	def restrict_tagtypes(self, *tags):
 		self.command_list_ok_begin()
 		self.tagtypes("clear")
@@ -972,7 +961,6 @@ class BehaviorSettings(Adw.PreferencesGroup):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
 			(_("Send _Notification on Title Change"), "send-notify", ""),
-			(_("Re_wind via Previous Button"), "rewind-mode", ""),
 			(_("Stop _Playback on Quit"), "stop-on-quit", ""),
 			(_("Support “_MPRIS”"), "mpris", _("Disable if “MPRIS” is supported by another client")),
 		)
@@ -2827,7 +2815,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client.next()
 
 	def _on_prev(self, action, param):
-		self._client.conditional_previous()
+		self._client.previous()
 
 	def _on_seek_forward(self, action, param):
 		self._client.seekcur("+10")
