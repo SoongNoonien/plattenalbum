@@ -1,4 +1,4 @@
 src/plattenalbum.py
 data/de.wagnermartin.Plattenalbum.metainfo.xml.in
 data/de.wagnermartin.Plattenalbum.desktop.in
-data/ShortcutsWindow.ui
+data/shortcuts-dialog.ui
