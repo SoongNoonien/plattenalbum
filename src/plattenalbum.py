@@ -1407,7 +1407,7 @@ class BrowserSongList(Gtk.ListBox):
 class AlbumCover(Gtk.Widget):
 	def __init__(self, **kwargs):
 		super().__init__(hexpand=True, **kwargs)
-		self._picture=Gtk.Picture(css_classes=["cover", "frame"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
+		self._picture=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
 		self._picture.set_parent(self)
 		self.connect("destroy", lambda *args: self._picture.unparent())
 
@@ -1431,22 +1431,6 @@ class AlbumCover(Gtk.Widget):
 
 	def set_alternative_text(self, alt_text):
 		self._picture.set_alternative_text(alt_text)
-
-class ToolbarCover(Gtk.Picture):
-	def __init__(self, client):
-		super().__init__(css_classes=["toolbar-cover", "frame"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
-		self.set_alternative_text(_("Current album cover"))
-		self._client=client
-
-		# connect
-		self._client.emitter.connect("current-song", self._refresh)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-
-	def _refresh(self, *args):
-		self.set_paintable(self._client.current_cover.get_paintable())
-
-	def _on_disconnected(self, *args):
-		self.set_paintable(FALLBACK_COVER)
 
 ###########
 # browser #
@@ -1702,6 +1686,7 @@ class AlbumsPage(Adw.NavigationPage):
 		# grid view
 		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
 		self.grid_view.add_css_class("navigation-sidebar")
+		self.grid_view.add_css_class("albums-view")
 		self._selection_model=SelectionModel(Album)
 		self.grid_view.set_model(self._selection_model)
 
@@ -1809,11 +1794,9 @@ class AlbumPage(Adw.NavigationPage):
 		# populate
 		if album:  # TODO unknown album
 			self.set_title(album)
-			album_cover.set_alternative_text(_("Album cover of {album}").format(album=album))
 			title.set_text(album)
 		else:
 			self.set_title(_("Unknown Album"))
-			album_cover.set_alternative_text(_("Album cover of an unknown album"))
 			title.set_text(_("Unknown Album"))
 		suptitle.set_text(albumartist)
 		subtitle.set_text(date)
@@ -2653,7 +2636,7 @@ class Player(Adw.Bin):
 		self._client=client
 
 		# widgets
-		self._large_cover=Gtk.Picture(css_classes=["cover", "frame"], accessible_role=Gtk.AccessibleRole.PRESENTATION,
+		self._large_cover=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION,
 			halign=Gtk.Align.CENTER, margin_start=12, margin_end=12, margin_bottom=6)
 		self._window_handle=Gtk.WindowHandle(child=self._large_cover, visible=False)
 		self._lyrics_window=LyricsWindow()
@@ -2757,7 +2740,7 @@ class PlayerBar(Gtk.Overlay):
 		self._client=client
 
 		# widgets
-		cover=ToolbarCover(client)
+		self._cover=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
 		progress_bar=ProgressBar(client)
 		progress_bar.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
 		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
@@ -2774,7 +2757,7 @@ class PlayerBar(Gtk.Overlay):
 		title_box.append(self._subtitle)
 		box=Gtk.Box()
 		box.add_css_class("toolbar")
-		box.append(Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=34, child=cover))
+		box.append(Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=34, child=self._cover))
 		box.append(title_box)
 		box.append(MediaButtons(client))
 		self.add_overlay(progress_bar)
@@ -2790,9 +2773,11 @@ class PlayerBar(Gtk.Overlay):
 			self._subtitle.set_text(str(song["artist"]))
 		else:
 			self._clear_title()
+		self._cover.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
+		self._cover.set_paintable(FALLBACK_COVER)
 
 ###################
 # MPD gio actions #

@@ -1,5 +1,10 @@
 .cover {
   background-color: var(--window-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+}
+
+.albums-view .cover {
   border-radius: 6px;
 }
 
@@ -7,10 +12,6 @@
   margin-top: -6px;
   margin-bottom: -6px;
   min-height: 12px;
-}
-
-.toolbar-cover {
-  border-radius: 9px;
 }
 
 .playlist {
