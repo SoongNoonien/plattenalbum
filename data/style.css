@@ -4,8 +4,8 @@
   border-radius: 9px;
 }
 
-.albums-view .cover {
-  border-radius: 6px;
+.albums-view > child {
+  border-radius: 15px;
 }
 
 .toolbar-text {
