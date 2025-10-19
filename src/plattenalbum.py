@@ -2637,7 +2637,7 @@ class Player(Adw.Bin):
 		box.append(playlist_window)
 
 		# stack
-		self._stack=Gtk.Stack()
+		self._stack=Gtk.Stack(vhomogeneous=False)
 		self._stack.add_named(box, "playlist")
 		self._stack.add_named(self._lyrics_window, "lyrics")
 
