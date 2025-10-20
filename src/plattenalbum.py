@@ -2180,7 +2180,7 @@ class PlaylistView(SongList):
 
 class PlaylistWindow(Gtk.Stack):
 	def __init__(self, client):
-		super().__init__(vhomogeneous=False)
+		super().__init__(vhomogeneous=False, vexpand=True)
 		self._client=client
 
 		# widgets
@@ -2284,7 +2284,7 @@ class LetrasParser(HTMLParser):
 class LyricsWindow(Gtk.Stack):
 	song=GObject.Property(type=Song)
 	def __init__(self):
-		super().__init__()
+		super().__init__(vhomogeneous=False, vexpand=True)
 
 		# status pages
 		no_lyrics_status_page=Adw.StatusPage(icon_name="lyrics-symbolic", title=_("No Lyrics Found"))
