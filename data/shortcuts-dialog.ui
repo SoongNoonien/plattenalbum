@@ -59,8 +59,14 @@
 	<property name="title" translatable="yes">Window</property>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Toggle Lyrics</property>
+		<property name="title" translatable="yes">Lyrics</property>
 		<property name="accelerator">&lt;Ctrl&gt;l</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Playlist</property>
+		<property name="accelerator">&lt;Ctrl&gt;u</property>
 		</object>
 	</child>
 	<child>

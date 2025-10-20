@@ -2618,7 +2618,6 @@ class PlayerMenu(Gtk.PopoverMenu):
 			self._volume_visible=False
 
 class Player(Adw.Bin):
-	show_lyrics=GObject.Property(type=bool, default=False)
 	def __init__(self, client, settings):
 		super().__init__(width_request=300, height_request=200)
 		self._client=client
@@ -2637,21 +2636,24 @@ class Player(Adw.Bin):
 		box.append(playlist_window)
 
 		# stack
-		self._stack=Gtk.Stack(vhomogeneous=False)
-		self._stack.add_named(box, "playlist")
-		self._stack.add_named(self._lyrics_window, "lyrics")
+		self.stack=Adw.ViewStack(vhomogeneous=False, enable_transitions=True)
+		self.stack.add_titled_with_icon(box, "playlist", _("Playlist"), "view-list-symbolic")
+		self.stack.add_titled_with_icon(self._lyrics_window, "lyrics", _("Lyrics"), "lyrics-symbolic")
 
-		# buttons
-		self._lyrics_button=Gtk.Button(icon_name="lyrics-symbolic", tooltip_text=_("Lyrics"), action_name="win.toggle-lyrics")
-		menu_button=Gtk.MenuButton(icon_name="view-more-symbolic", tooltip_text=_("Player Menu"), popover=PlayerMenu(client))
+		# playlist page
+		self._playlist_page=self.stack.get_page(box)
+
+		# view switcher
+		view_switcher=Adw.InlineViewSwitcher(stack=self.stack, display_mode=Adw.InlineViewSwitcherDisplayMode.ICONS)
+		view_switcher.add_css_class("flat")
 
 		# header bar
 		header_bar=Adw.HeaderBar(show_title=False)
-		header_bar.pack_start(self._lyrics_button)
-		header_bar.pack_end(menu_button)
+		header_bar.pack_start(view_switcher)
+		header_bar.pack_end(Gtk.MenuButton(icon_name="view-more-symbolic", tooltip_text=_("Player Menu"), popover=PlayerMenu(client)))
 
 		# connect
-		self.connect("notify::show-lyrics", self._on_lyrics_toggled)
+		self.stack.connect("notify::visible-child-name", self._on_visible_child_name)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 		self._client.emitter.connect("playlist", self._on_playlist_changed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
@@ -2660,26 +2662,21 @@ class Player(Adw.Bin):
 		# packing
 		self._toolbar_view=Adw.ToolbarView(reveal_bottom_bars=False)
 		self._toolbar_view.add_top_bar(header_bar)
-		self._toolbar_view.set_content(self._stack)
+		self._toolbar_view.set_content(self.stack)
 		self._toolbar_view.add_bottom_bar(playback_controls)
 		self.set_child(self._toolbar_view)
 
-	def _on_lyrics_toggled(self, *args):
-		if self.get_property("show-lyrics"):
-			self._lyrics_button.set_icon_name("view-list-symbolic")
-			self._lyrics_button.set_tooltip_text(_("Playlist"))
-			self._stack.set_visible_child_name("lyrics")
+	def _on_visible_child_name(self, *args):
+		if self.stack.get_visible_child_name() == "lyrics":
 			self._lyrics_window.load()
-		else:
-			self._lyrics_button.set_icon_name("lyrics-symbolic")
-			self._lyrics_button.set_tooltip_text(_("Lyrics"))
-			self._stack.set_visible_child_name("playlist")
+		elif self.stack.get_visible_child_name() == "playlist":
+			self._playlist_page.set_needs_attention(False)
 
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
 			self._window_handle.set_visible(True)
 			self._lyrics_window.set_property("song", song)
-			if self.get_property("show-lyrics"):
+			if self.stack.get_visible_child_name() == "lyrics":
 				self._lyrics_window.load()
 		else:
 			self._window_handle.set_visible(False)
@@ -2688,15 +2685,17 @@ class Player(Adw.Bin):
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
 		self._toolbar_view.set_reveal_bottom_bars(length > 0)
+		if self.stack.get_visible_child_name() != "playlist":
+			self._playlist_page.set_needs_attention(True)
 
 	def _on_disconnected(self, *args):
 		self._large_cover.set_paintable(FALLBACK_COVER)
 		self._window_handle.set_visible(False)
 		self._lyrics_window.set_property("song", None)
-		self.set_property("show-lyrics", False)
+		self.stack.set_visible_child_name("playlist")
 
 	def _on_connected(self, *args):
-		self.set_property("show-lyrics", False)
+		self.stack.set_visible_child_name("playlist")
 
 ##############
 # player bar #
@@ -2893,18 +2892,17 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# widgets
 		self._browser=Browser(self._client, self._settings)
-		player=Player(self._client, self._settings)
+		self._player=Player(self._client, self._settings)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "search", "settings", "manual-connect", "server-info")
+		simple_actions_data=("close", "search", "settings", "manual-connect", "server-info", "lyrics", "playlist")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
-		self.add_action(Gio.PropertyAction.new("toggle-lyrics", player, "show-lyrics"))
 
 		# sidebar layout
 		overlay_split_view=Adw.OverlaySplitView(
@@ -2924,7 +2922,7 @@ class MainWindow(Adw.ApplicationWindow):
 		multi_layout_view.add_layout(sidebar_layout)
 		multi_layout_view.add_layout(bottom_sheet_layout)
 		multi_layout_view.set_child("browser", self._browser)
-		multi_layout_view.set_child("player", player)
+		multi_layout_view.set_child("player", self._player)
 		multi_layout_view.set_layout_name("sidebar")
 
 		# breakpoint
@@ -3012,6 +3010,12 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_search(self, action, param):
 		self._browser.search()
+
+	def _on_lyrics(self, action, param):
+		self._player.stack.set_visible_child_name("lyrics")
+
+	def _on_playlist(self, action, param):
+		self._player.stack.set_visible_child_name("playlist")
 
 	def _on_settings(self, action, param):
 		if self.get_visible_dialog() is None:
@@ -3143,12 +3147,13 @@ class Plattenalbum(Adw.Application):
 		self.add_action(action)
 		# accelerators
 		action_accels=(
-			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.settings", ["<Ctrl>comma"]),("win.toggle-lyrics", ["<Ctrl>l"]),
-			("win.search", ["<Ctrl>f"]),("win.server-info", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),
-			("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),
-			("mpd.prev", ["<Shift><Ctrl>k"]),("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),
-			("mpd.consume", ["<Ctrl>o"]),("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),
-			("mpd.seek-backward", ["<Ctrl>minus"]),("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
+			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.settings", ["<Ctrl>comma"]),("win.lyrics", ["<Ctrl>l"]),
+			("win.playlist", ["<Ctrl>u"]),("win.search", ["<Ctrl>f"]),("win.server-info", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),
+			("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),
+			("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),
+			("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),("mpd.single-oneshot", ["<Ctrl>p"]),
+			("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),("mpd.a-b-loop", ["l"]),
+			("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)
