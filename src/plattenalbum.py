@@ -2623,16 +2623,15 @@ class Player(Adw.Bin):
 		self._client=client
 
 		# widgets
-		self._large_cover=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION,
-			halign=Gtk.Align.CENTER, margin_start=12, margin_end=12, margin_bottom=6)
-		self._window_handle=Gtk.WindowHandle(child=self._large_cover, visible=False)
+		self._cover=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION,
+			halign=Gtk.Align.CENTER, margin_start=12, margin_end=12, margin_bottom=6, visible=False)
 		self._lyrics_window=LyricsWindow()
 		playlist_window=PlaylistWindow(client)
 		playback_controls=PlaybackControls(client, settings)
 
 		# box
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		box.append(self._window_handle)
+		box.append(Gtk.WindowHandle(child=self._cover))
 		box.append(playlist_window)
 
 		# stack
@@ -2674,14 +2673,14 @@ class Player(Adw.Bin):
 
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
-			self._window_handle.set_visible(True)
+			self._cover.set_visible(True)
 			self._lyrics_window.set_property("song", song)
 			if self.stack.get_visible_child_name() == "lyrics":
 				self._lyrics_window.load()
 		else:
-			self._window_handle.set_visible(False)
+			self._cover.set_visible(False)
 			self._lyrics_window.set_property("song", None)
-		self._large_cover.set_paintable(self._client.current_cover.get_paintable())
+		self._cover.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
 		self._toolbar_view.set_reveal_bottom_bars(length > 0)
@@ -2689,8 +2688,8 @@ class Player(Adw.Bin):
 			self._playlist_page.set_needs_attention(True)
 
 	def _on_disconnected(self, *args):
-		self._large_cover.set_paintable(FALLBACK_COVER)
-		self._window_handle.set_visible(False)
+		self._cover.set_paintable(FALLBACK_COVER)
+		self._cover.set_visible(False)
 		self._lyrics_window.set_property("song", None)
 		self.stack.set_visible_child_name("playlist")
 
