@@ -42,6 +42,12 @@
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Search</property>
+		<property name="accelerator">&lt;Ctrl&gt;f</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Close</property>
 		<property name="accelerator">&lt;Ctrl&gt;w</property>
 		</object>
@@ -50,29 +56,6 @@
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Quit</property>
 		<property name="accelerator">&lt;Ctrl&gt;q</property>
-		</object>
-	</child>
-	</object>
-</child>
-<child>
-	<object class="AdwShortcutsSection">
-	<property name="title" translatable="yes">Window</property>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Lyrics</property>
-		<property name="accelerator">&lt;Ctrl&gt;l</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Playlist</property>
-		<property name="accelerator">&lt;Ctrl&gt;u</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Search</property>
-		<property name="accelerator">&lt;Ctrl&gt;f</property>
 		</object>
 	</child>
 	</object>
