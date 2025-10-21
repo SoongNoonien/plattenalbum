@@ -2326,7 +2326,7 @@ class LyricsWindow(Gtk.Stack):
 		if self.get_visible_child_name() != "lyrics" and (song:=self.get_property("song")) is not None:
 			self.set_visible_child_name("searching")
 			threading.Thread(target=self._display_lyrics, args=(song["title"][0], str(song["artist"])), daemon=True).start()
-		self._text_view.grab_focus()
+#		self._text_view.grab_focus()
 
 	def _on_song_changed(self, *args):
 		self.set_visible_child_name("no-lyrics")
