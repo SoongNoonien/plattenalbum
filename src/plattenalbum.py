@@ -2187,7 +2187,7 @@ class PlaylistWindow(Gtk.Stack):
 		self._playlist_view=PlaylistView(self._client)
 		self.scroll=Gtk.ScrolledWindow(child=self._playlist_view, propagate_natural_height=True)
 		self._adj=self.scroll.get_vadjustment()
-		status_page=Adw.StatusPage(icon_name="view-list-symbolic", title=_("Playlist is Empty"))
+		status_page=Adw.StatusPage(icon_name="view-playlist-symbolic", title=_("Playlist is Empty"))
 		status_page.add_css_class("compact")
 		status_page.add_css_class("no-drop-highlight")
 
@@ -2287,7 +2287,7 @@ class LyricsWindow(Gtk.Stack):
 		super().__init__(vhomogeneous=False, vexpand=True)
 
 		# status pages
-		no_lyrics_status_page=Adw.StatusPage(icon_name="lyrics-symbolic", title=_("No Lyrics Found"))
+		no_lyrics_status_page=Adw.StatusPage(icon_name="view-lyrics-symbolic", title=_("No Lyrics Found"))
 		no_lyrics_status_page.add_css_class("compact")
 		connection_error_status_page=Adw.StatusPage(
 			icon_name="network-wired-disconnected-symbolic", title=_("Connection Error"), description=_("Check your network connection"))
@@ -2636,8 +2636,8 @@ class Player(Adw.Bin):
 
 		# stack
 		self.stack=Adw.ViewStack(vhomogeneous=False, enable_transitions=True)
-		self.stack.add_titled_with_icon(box, "playlist", _("Playlist"), "view-list-symbolic")
-		self.stack.add_titled_with_icon(self._lyrics_window, "lyrics", _("Lyrics"), "lyrics-symbolic")
+		self.stack.add_titled_with_icon(box, "playlist", _("Playlist"), "view-playlist-symbolic")
+		self.stack.add_titled_with_icon(self._lyrics_window, "lyrics", _("Lyrics"), "view-lyrics-symbolic")
 
 		# playlist page
 		self._playlist_page=self.stack.get_page(box)

@@ -6,6 +6,7 @@
 		<file>style.css</file>
 	</gresource>
 	<gresource prefix="/de/wagnermartin/Plattenalbum/icons/scalable/actions">
-		<file>lyrics-symbolic.svg</file>
+		<file>view-lyrics-symbolic.svg</file>
+		<file>view-playlist-symbolic.svg</file>
 	</gresource>
 </gresources>
