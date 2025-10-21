@@ -6,18 +6,6 @@
 	<property name="title" translatable="yes">General</property>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Preferences</property>
-		<property name="accelerator">&lt;Ctrl&gt;comma</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Shortcuts</property>
-		<property name="accelerator">&lt;Ctrl&gt;question</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Main Menu</property>
 		<property name="accelerator">F10</property>
 		</object>
@@ -38,6 +26,18 @@
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Server Information</property>
 		<property name="accelerator">&lt;Ctrl&gt;i</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Preferences</property>
+		<property name="accelerator">&lt;Ctrl&gt;comma</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Shortcuts</property>
+		<property name="accelerator">&lt;Ctrl&gt;question</property>
 		</object>
 	</child>
 	<child>
@@ -147,8 +147,8 @@
 	<property name="title" translatable="yes">Playlist</property>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Clear</property>
-		<property name="accelerator">&lt;Shift&gt;Delete</property>
+		<property name="title" translatable="yes">Enqueue Album</property>
+		<property name="accelerator">&lt;Ctrl&gt;e</property>
 		</object>
 	</child>
 	<child>
@@ -159,8 +159,8 @@
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Enqueue Album</property>
-		<property name="accelerator">&lt;Ctrl&gt;e</property>
+		<property name="title" translatable="yes">Clear</property>
+		<property name="accelerator">&lt;Shift&gt;Delete</property>
 		</object>
 	</child>
 	</object>
