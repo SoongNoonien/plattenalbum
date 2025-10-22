@@ -2725,7 +2725,7 @@ class PlayerBar(Gtk.Overlay):
 		self._client=client
 
 		# widgets
-		self._cover=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
+		self._cover=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION, visible=False)
 		progress_bar=ProgressBar(client)
 		progress_bar.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
 		self._title=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
@@ -2754,15 +2754,18 @@ class PlayerBar(Gtk.Overlay):
 
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
+			self._cover.set_visible(True)
 			self._title.set_text(song["title"][0])
 			self._subtitle.set_text(str(song["artist"]))
 		else:
+			self._cover.set_visible(False)
 			self._clear_title()
 		self._cover.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_disconnected(self, *args):
 		self._clear_title()
 		self._cover.set_paintable(FALLBACK_COVER)
+		self._cover.set_visible(False)
 
 ###################
 # MPD gio actions #
