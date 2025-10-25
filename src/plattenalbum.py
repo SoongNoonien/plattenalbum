@@ -1060,8 +1060,8 @@ class ServerInfo(Adw.Dialog):
 			"artists": _("Artists"),
 			"albums": _("Albums"),
 			"songs": _("Songs"),
-			"db_playtime": _("Total Playtime"),
-			"db_update": _("Database Update")
+			"db_playtime": _("Total Database Playtime"),
+			"db_update": _("Last Database Update")
 		}
 		stats=client.stats()
 		stats["server"]=client.server
