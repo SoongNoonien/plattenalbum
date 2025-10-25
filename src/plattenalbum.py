@@ -945,7 +945,7 @@ class Settings(Gio.Settings):
 # dialogs #
 ###########
 
-class ViewSettings(Adw.PreferencesGroup):
+class ViewPreferences(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("View"))
 		toggle_data=(
@@ -956,7 +956,7 @@ class ViewSettings(Adw.PreferencesGroup):
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
-class BehaviorSettings(Adw.PreferencesGroup):
+class BehaviorPreferences(Adw.PreferencesGroup):
 	def __init__(self, settings):
 		super().__init__(title=_("Behavior"))
 		toggle_data=(
@@ -969,12 +969,12 @@ class BehaviorSettings(Adw.PreferencesGroup):
 			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 			self.add(row)
 
-class SettingsDialog(Adw.PreferencesDialog):
+class PreferencesDialog(Adw.PreferencesDialog):
 	def __init__(self, client, settings):
 		super().__init__()
 		page=Adw.PreferencesPage()
-		page.add(ViewSettings(settings))
-		page.add(BehaviorSettings(settings))
+		page.add(ViewPreferences(settings))
+		page.add(BehaviorPreferences(settings))
 		self.add(page)
 
 class ConnectDialog(Adw.Dialog):
@@ -1801,7 +1801,7 @@ class MainMenuButton(Gtk.MenuButton):
 	def __init__(self):
 		super().__init__(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True)
 		app_section=Gio.Menu()
-		app_section.append(_("_Preferences"), "win.settings")
+		app_section.append(_("_Preferences"), "win.preferences")
 		app_section.append(_("_Keyboard Shortcuts"), "app.shortcuts")
 		app_section.append(_("_About Plattenalbum"), "app.about")
 		menu=Gio.Menu()
@@ -2370,7 +2370,7 @@ class PlayButton(Gtk.Button):
 class MediaButtons(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(spacing=6)
-		self.append(Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.prev"))
+		self.append(Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.previous"))
 		self.append(PlayButton(client))
 		self.append(Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next"))
 
@@ -2777,7 +2777,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 		self._client=client
 
 		# actions
-		self._disable_on_stop_data=["next","prev","seek-forward","seek-backward","a-b-loop"]
+		self._disable_on_stop_data=["next","previous","seek-forward","seek-backward","a-b-loop"]
 		self._disable_no_song_data=["tidy","enqueue"]
 		self._enable_disable_on_playlist_data=["toggle-play","clear"]
 		self._enable_on_reconnect_data=["stop","update","disconnect"]
@@ -2814,7 +2814,7 @@ class MPDActionGroup(Gio.SimpleActionGroup):
 	def _on_next(self, action, param):
 		self._client.next()
 
-	def _on_prev(self, action, param):
+	def _on_previous(self, action, param):
 		self._client.previous()
 
 	def _on_seek_forward(self, action, param):
@@ -2899,7 +2899,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "search", "settings", "manual-connect", "server-info")
+		simple_actions_data=("close", "search", "preferences", "manual-connect", "server-info")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
@@ -2945,7 +2945,7 @@ class MainWindow(Adw.ApplicationWindow):
 		button_box.append(manual_connect_button)
 		status_page.set_child(button_box)
 		menu=Gio.Menu()
-		menu.append(_("_Preferences"), "win.settings")
+		menu.append(_("_Preferences"), "win.preferences")
 		menu.append(_("_Keyboard Shortcuts"), "app.shortcuts")
 		menu.append(_("_About Plattenalbum"), "app.about")
 		menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True, menu_model=menu)
@@ -3012,9 +3012,9 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_search(self, action, param):
 		self._browser.search()
 
-	def _on_settings(self, action, param):
+	def _on_preferences(self, action, param):
 		if self.get_visible_dialog() is None:
-			SettingsDialog(self._client, self._settings).present(self)
+			PreferencesDialog(self._client, self._settings).present(self)
 
 	def _on_manual_connect(self, action, param):
 		if self.get_visible_dialog() is None:
@@ -3142,9 +3142,9 @@ class Plattenalbum(Adw.Application):
 		self.add_action(action)
 		# accelerators
 		action_accels=(
-			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.settings", ["<Ctrl>comma"]),("win.search", ["<Ctrl>f"]),
+			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.preferences", ["<Ctrl>comma"]),("win.search", ["<Ctrl>f"]),
 			("win.server-info", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),
-			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.prev", ["<Shift><Ctrl>k"]),
+			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.previous", ["<Shift><Ctrl>k"]),
 			("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),
 			("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),
 			("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])

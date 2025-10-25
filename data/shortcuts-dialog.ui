@@ -31,7 +31,7 @@
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Preferences</property>
-		<property name="action-name">win.settings</property>
+		<property name="action-name">win.preferences</property>
 		</object>
 	</child>
 	<child>
@@ -84,7 +84,7 @@
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Previous</property>
-		<property name="action-name">mpd.prev</property>
+		<property name="action-name">mpd.previous</property>
 		</object>
 	</child>
 	<child>
