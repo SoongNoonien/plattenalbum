@@ -13,25 +13,25 @@
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Disconnect</property>
-		<property name="accelerator">&lt;Ctrl&gt;d</property>
+		<property name="action-name">mpd.disconnect</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Update Database</property>
-		<property name="accelerator">F5</property>
+		<property name="action-name">mpd.update</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Server Information</property>
-		<property name="accelerator">&lt;Ctrl&gt;i</property>
+		<property name="action-name">win.server-info</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Preferences</property>
-		<property name="accelerator">&lt;Ctrl&gt;comma</property>
+		<property name="action-name">win.settings</property>
 		</object>
 	</child>
 	<child>
@@ -43,19 +43,19 @@
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Search</property>
-		<property name="accelerator">&lt;Ctrl&gt;f</property>
+		<property name="action-name">win.search</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Close</property>
-		<property name="accelerator">&lt;Ctrl&gt;w</property>
+		<property name="action-name">win.close</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Quit</property>
-		<property name="accelerator">&lt;Ctrl&gt;q</property>
+		<property name="action-name">app.quit</property>
 		</object>
 	</child>
 	</object>
@@ -66,43 +66,43 @@
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Play/Pause</property>
-		<property name="accelerator">space</property>
+		<property name="action-name">mpd.toggle-play</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Stop</property>
-		<property name="accelerator">&lt;Ctrl&gt;space</property>
+		<property name="action-name">mpd.stop</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Next</property>
-		<property name="accelerator">&lt;Ctrl&gt;k</property>
+		<property name="action-name">mpd.next</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Previous</property>
-		<property name="accelerator">&lt;Shift&gt;&lt;Ctrl&gt;k</property>
+		<property name="action-name">mpd.prev</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Seek Forward</property>
-		<property name="accelerator">&lt;Ctrl&gt;plus</property>
+		<property name="action-name">mpd.seek-forward</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Seek Backward</property>
-		<property name="accelerator">&lt;Ctrl&gt;minus</property>
+		<property name="action-name">mpd.seek-backward</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">A‐B Loop</property>
-		<property name="accelerator">l</property>
+		<property name="action-name">mpd.a-b-loop</property>
 		</object>
 	</child>
 	</object>
@@ -113,31 +113,31 @@
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Toggle Repeat Mode</property>
-		<property name="accelerator">&lt;Ctrl&gt;r</property>
+		<property name="action-name">mpd.repeat</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Toggle Random Mode</property>
-		<property name="accelerator">&lt;Ctrl&gt;n</property>
+		<property name="action-name">mpd.random</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Toggle Single Mode</property>
-		<property name="accelerator">&lt;Ctrl&gt;s</property>
+		<property name="action-name">mpd.single</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Pause After Song</property>
-		<property name="accelerator">&lt;Ctrl&gt;p</property>
+		<property name="action-name">mpd.single-oneshot</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Toggle Consume Mode</property>
-		<property name="accelerator">&lt;Ctrl&gt;o</property>
+		<property name="action-name">mpd.consume</property>
 		</object>
 	</child>
 	</object>
@@ -148,19 +148,19 @@
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Enqueue Album</property>
-		<property name="accelerator">&lt;Ctrl&gt;e</property>
+		<property name="action-name">mpd.enqueue</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Tidy</property>
-		<property name="accelerator">&lt;Ctrl&gt;t</property>
+		<property name="action-name">mpd.tidy</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Clear</property>
-		<property name="accelerator">&lt;Shift&gt;Delete</property>
+		<property name="action-name">mpd.clear</property>
 		</object>
 	</child>
 	</object>
