@@ -2899,6 +2899,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
+		self.insert_action_group("mpd", MPDActionGroup(self._client))
 		simple_actions_data=("close", "search", "preferences", "manual-connect", "server-info")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
@@ -3129,7 +3130,6 @@ class Plattenalbum(Adw.Application):
 		self._client=Client(self._settings)
 		self._window=MainWindow(self._client, self._settings, application=self)
 		self._window.connect("close-request", self._on_quit)
-		self._window.insert_action_group("mpd", MPDActionGroup(self._client))
 		self._window.open()
 		# MPRIS
 		dbus_service=MPRISInterface(self, self._window, self._client, self._settings)
