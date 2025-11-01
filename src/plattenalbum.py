@@ -2499,26 +2499,23 @@ class PlaybackControls(Gtk.Box):
 		self._rest.set_text("")
 
 	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
-		if (scroll == Gtk.ScrollType.STEP_BACKWARD or scroll == Gtk.ScrollType.STEP_FORWARD or
-			scroll == Gtk.ScrollType.PAGE_BACKWARD or scroll == Gtk.ScrollType.PAGE_FORWARD or
-			scroll == Gtk.ScrollType.JUMP):
-			duration=self._adjustment.get_upper()
-			current_pos=self._scale.get_value()
-			if value >= duration:
+		duration=self._adjustment.get_upper()
+		current_pos=self._scale.get_value()
+		if value >= duration:
+			pos=duration
+			self._popover.popdown()
+			if scroll == Gtk.ScrollType.JUMP:  # avoid endless skipping to the next song
 				self._scale.set_sensitive(False)
-				pos=duration
 				self._scale.set_sensitive(True)
-				self._popover.popdown()
-			elif value <= 0:
-				pos=0
-				self._popover.popdown()
-			else:
-				pos=value
-#			if abs(current_pos-pos) > 1:
-			try:
-				self._client.seekcur(pos)
-			except:
-				pass
+		elif value <= 0:
+			pos=0
+			self._popover.popdown()
+		else:
+			pos=value
+		try:
+			self._client.seekcur(pos)
+		except:
+			pass
 
 	def _on_pointer_motion(self, controller, x, y):
 		range_rect=self._scale.get_range_rect()
