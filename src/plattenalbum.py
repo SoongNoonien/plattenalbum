@@ -2337,9 +2337,10 @@ class LyricsWindow(Gtk.Stack):
 		parser=LetrasParser()
 		with urllib.request.urlopen(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}") as response:
 			parser.feed(response.read().decode("utf-8"))
-		if not parser.text:
+		if text:=parser.text.strip("\n "):
+			return text
+		else:
 			raise ValueError("Not found")
-		return parser.text.strip("\n ")
 
 	def _display_lyrics(self, title, artist):
 		try:
