@@ -2430,7 +2430,6 @@ class PlaylistProgress(Gtk.Label):
 class PlaybackControls(Gtk.Box):
 	def __init__(self, client, settings):
 		super().__init__(hexpand=True, orientation=Gtk.Orientation.VERTICAL)
-		self.add_css_class("toolbar")
 		self._client=client
 
 		# labels
@@ -2473,6 +2472,7 @@ class PlaybackControls(Gtk.Box):
 		end_box.append(self._rest)
 		end_box.append(BitRate(client, settings))
 		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
+		center_box.add_css_class("toolbar")
 		center_box.set_center_widget(MediaButtons(client))
 		center_box.set_start_widget(start_box)
 		center_box.set_end_widget(end_box)
