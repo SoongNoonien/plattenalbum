@@ -2500,7 +2500,6 @@ class PlaybackControls(Gtk.Box):
 
 	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
 		duration=self._adjustment.get_upper()
-		current_pos=self._scale.get_value()
 		if value >= duration:
 			pos=duration
 			self._popover.popdown()
