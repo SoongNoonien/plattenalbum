@@ -2514,11 +2514,11 @@ class PlaybackControls(Gtk.Box):
 				self._popover.popdown()
 			else:
 				pos=value
-			if abs(current_pos-pos) > 1:
-				try:
-					self._client.seekcur(pos)
-				except:
-					pass
+#			if abs(current_pos-pos) > 1:
+			try:
+				self._client.seekcur(pos)
+			except:
+				pass
 
 	def _on_pointer_motion(self, controller, x, y):
 		range_rect=self._scale.get_range_rect()
