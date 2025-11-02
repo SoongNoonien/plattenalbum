@@ -1960,7 +1960,7 @@ class PlaylistMenu(Gtk.PopoverMenu):
 
 		# action group
 		action_group=Gio.SimpleActionGroup()
-		self._remove_action=Gio.SimpleAction.new("remove", None)
+		self._remove_action=Gio.SimpleAction.new("delete", None)
 		self._remove_action.connect("activate", lambda *args: self._client.delete(self._position))
 		action_group.add_action(self._remove_action)
 		self._show_album_action=Gio.SimpleAction.new("show-album", None)
@@ -1973,7 +1973,7 @@ class PlaylistMenu(Gtk.PopoverMenu):
 
 		# menu model
 		menu=Gio.Menu()
-		menu.append(_("_Remove"), "menu.remove")
+		menu.append(_("_Remove"), "menu.delete")
 		menu.append(_("Show Al_bum"), "menu.show-album")
 		menu.append(_("Show _File"), "menu.show-file")
 		mpd_section=Gio.Menu()
@@ -3144,7 +3144,7 @@ class Plattenalbum(Adw.Application):
 			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.previous", ["<Shift><Ctrl>k"]),
 			("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),
 			("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),
-			("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"])
+			("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"]),("menu.delete", ["Delete"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)
