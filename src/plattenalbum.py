@@ -2104,7 +2104,6 @@ class PlaylistView(SongList):
 	def _on_playlist_changed(self, emitter, version, length, songpos):
 		self._menu.popdown()
 		self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
-		songs=[]
 		if self._playlist_version is not None:
 			songs=self._client.plchanges(self._playlist_version)
 		else:
