@@ -119,7 +119,11 @@
   <recommends>
     <control>pointing</control>
     <control>keyboard</control>
+    <control>touch</control>
   </recommends>
+  <custom>
+    <value key="Purism::form_factor">mobile</value>
+  </custom>
   <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
   <url type="help">https://github.com/SoongNoonien/plattenalbum/discussions</url>
