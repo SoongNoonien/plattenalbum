@@ -2549,7 +2549,7 @@ class PlaybackControls(Gtk.Box):
 
 class VolumeControl(Gtk.Box):
 	def __init__(self, client):
-		super().__init__(orientation=Gtk.Orientation.HORIZONTAL, margin_start=12, margin_end=3)
+		super().__init__(orientation=Gtk.Orientation.HORIZONTAL, margin_start=12)
 		self._client=client
 
 		# adjustment
