@@ -25,7 +25,7 @@
       }],
       "buildsystem": "simple",
       "build-commands": [
-        "pip3 install --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"python-mpd2\""
+        "pip3 install --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"python-mpd2\" --no-build-isolation"
       ]
     },
     {
