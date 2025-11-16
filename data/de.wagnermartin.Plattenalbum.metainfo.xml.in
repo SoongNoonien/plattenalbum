@@ -16,31 +16,41 @@
   </branding>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/main_window.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/main_window.png</image>
       <caption>Main window</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/album_view.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/album_view.png</image>
       <caption>Album view</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/search.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/search.png</image>
       <caption>Search</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/small.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/small.png</image>
       <caption>Small window</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/small_playlist.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/small_playlist.png</image>
       <caption>Small window with playlist</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.3.0/screenshots/small_cover.png</image>
+      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/small_cover.png</image>
       <caption>Small window with cover</caption>
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.4.0" date="2025-11-16">
+      <description translate="no">
+        <ul>
+          <li>GUI polish</li>
+          <li>New shortcuts dialog</li>
+          <li>Minor bug fixes and translation updates</li>
+          <li>Romanian translation</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.3.1" date="2025-06-29">
       <description translate="no">
         <ul>
