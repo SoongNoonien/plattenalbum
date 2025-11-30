@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Jinzhou Huang <2314662431@qq.com>, 2025.
 #
 #, fuzzy
 msgid ""
