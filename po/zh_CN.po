@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2025 THE plattenalbum's COPYRIGHT HOLDER
+# Copyright (C) 2025 THE Plattenalbum's COPYRIGHT HOLDER
 # This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
 # Jinzhou Huang <2314662431@qq.com>, 2025.
 #
