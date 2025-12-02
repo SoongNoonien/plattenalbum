@@ -1,0 +1,561 @@
+# Croatian translation for de.wagnermartin.Plattenalbum.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
+# Milo Ivir <mail@milotype.de>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: de.wagnermartin.Plattenalbum\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-25 10:40+0200\n"
+"PO-Revision-Date: 2025-12-02 17:45+0100\n"
+"Last-Translator: Milo Ivir <mail@mivirtype.de>\n"
+"Language-Team: \n"
+"Language: hr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Generator: Poedit 3.8\n"
+
+#: src/plattenalbum.py:502
+#, python-brace-format
+msgid "{days} day"
+msgid_plural "{days} days"
+msgstr[0] "{days} dan"
+msgstr[1] "{days} dana"
+msgstr[2] "{days} dana"
+
+#: src/plattenalbum.py:950
+msgid "View"
+msgstr "Prikaz"
+
+#: src/plattenalbum.py:952
+msgid "_Show Bit Rate"
+msgstr "_Pokaži brzinu prijenosa"
+
+#: src/plattenalbum.py:961
+msgid "Behavior"
+msgstr "Ponašanje"
+
+#: src/plattenalbum.py:963
+msgid "Send _Notification on Title Change"
+msgstr "Pošalji _obavijest o promjeni naslova"
+
+#: src/plattenalbum.py:964
+msgid "Stop _Playback on Quit"
+msgstr "_Zaustavi reprodukciju pri zatvaranju aplikacije"
+
+#: src/plattenalbum.py:965
+msgid "Support “_MPRIS”"
+msgstr "Podrži „_MPRIS“"
+
+#: src/plattenalbum.py:965
+msgid "Disable if “MPRIS” is supported by another client"
+msgstr "Deaktiviraj ako jedan drugi klijent podržava „MPRIS“"
+
+#: src/plattenalbum.py:984 src/plattenalbum.py:2939
+msgid "_Connect"
+msgstr "Po_veži"
+
+#: src/plattenalbum.py:986
+msgid "Ca_ncel"
+msgstr "Odusta_ni"
+
+#: src/plattenalbum.py:994
+msgid "Connection failed"
+msgstr "Veza neuspjela"
+
+#: src/plattenalbum.py:1008
+msgid "Manual Connection"
+msgstr "Ručno povezivanje"
+
+#: src/plattenalbum.py:1011
+msgid "Host"
+msgstr "Glavno računalo"
+
+#: src/plattenalbum.py:1015
+msgid "Port"
+msgstr "Priključak"
+
+#: src/plattenalbum.py:1018
+msgid "Password (optional)"
+msgstr "Lozinka (opcionalno)"
+
+#: src/plattenalbum.py:1036
+msgid "Setup"
+msgstr "Postavi"
+
+#: src/plattenalbum.py:1038
+msgid ""
+"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
+"system package manager, and run the following commands to configure and "
+"initialize a basic local instance. After that, Plattenalbum should be able "
+"to seamlessly connect to it."
+msgstr ""
+"Za početak, instaliraj Music Player Daemon (<tt>mpd</tt>) putem upravljača "
+"paketa sustava i pokreni sljedeće naredbe za konfiguraciju i inicijalizaciju "
+"osnovne lokalne instance. Nakon toga bi se Plattenalbum morao moći s njim "
+"povezati."
+
+#: src/plattenalbum.py:1048 data/shortcuts-dialog.ui:27
+msgid "Server Information"
+msgstr "Podaci servera"
+
+#: src/plattenalbum.py:1056
+msgid "Server"
+msgstr "Server"
+
+#: src/plattenalbum.py:1057
+msgid "Protocol"
+msgstr "Protokol"
+
+#: src/plattenalbum.py:1058
+msgid "Uptime"
+msgstr "Vrijeme rada"
+
+#: src/plattenalbum.py:1059
+msgid "Playtime"
+msgstr "Vrijeme reprodukcije"
+
+#: src/plattenalbum.py:1060 src/plattenalbum.py:1452 src/plattenalbum.py:1838
+msgid "Artists"
+msgstr "Izvođači"
+
+#: src/plattenalbum.py:1061 src/plattenalbum.py:1455 src/plattenalbum.py:1670
+#: src/plattenalbum.py:1712 src/plattenalbum.py:1846
+msgid "Albums"
+msgstr "Albumi"
+
+#: src/plattenalbum.py:1062 src/plattenalbum.py:1458
+msgid "Songs"
+msgstr "Pjesme"
+
+#: src/plattenalbum.py:1063
+msgid "Total Database Playtime"
+msgstr "Ukupno vrijeme reprodukcije baze podataka"
+
+#: src/plattenalbum.py:1064
+msgid "Last Database Update"
+msgstr "Zadnje aktualiziranje baze podataka"
+
+#: src/plattenalbum.py:1219 src/plattenalbum.py:1956
+msgid "Context menu"
+msgstr "Kontekstni izbornik"
+
+#: src/plattenalbum.py:1242
+msgid "_Append"
+msgstr "_Pridodaj"
+
+#: src/plattenalbum.py:1243
+msgid "As _Next"
+msgstr "Kao _sljedeći"
+
+#: src/plattenalbum.py:1246 src/plattenalbum.py:1977
+msgid "Show Al_bum"
+msgstr "Pokaži al_bum"
+
+#: src/plattenalbum.py:1247 src/plattenalbum.py:1978
+msgid "Show _File"
+msgstr "Pokaži _datoteku"
+
+#. status page
+#: src/plattenalbum.py:1470
+msgid "No Results Found"
+msgstr "Nije pronađen nijedan rezultat"
+
+#: src/plattenalbum.py:1470
+msgid "Try a different search"
+msgstr "Pokušaj jednu drugačiju pretragu"
+
+#: src/plattenalbum.py:1559
+msgid "Unknown Artist"
+msgstr "Nepoznati izvođač"
+
+#: src/plattenalbum.py:1655
+#, python-brace-format
+msgid "Album cover of {album}"
+msgstr "Omot albuma {album}"
+
+#: src/plattenalbum.py:1657 src/plattenalbum.py:1787 src/plattenalbum.py:1788
+msgid "Unknown Album"
+msgstr "Nepoznati album"
+
+#: src/plattenalbum.py:1658
+msgid "Album cover of an unknown album"
+msgstr "Omot albuma nepoznatog albuma"
+
+#: src/plattenalbum.py:1727
+#, python-brace-format
+msgid "Albums of {artist}"
+msgstr "Albumi od {artist}"
+
+#. buttons
+#: src/plattenalbum.py:1745 src/plattenalbum.py:2359 src/plattenalbum.py:2368
+msgid "Play"
+msgstr "Reproduciraj"
+
+#: src/plattenalbum.py:1747
+msgid "Append"
+msgstr "Pridodaj"
+
+#: src/plattenalbum.py:1802 src/plattenalbum.py:2951 data/shortcuts-dialog.ui:9
+msgid "Main Menu"
+msgstr "Glavni izbornik"
+
+#: src/plattenalbum.py:1804 src/plattenalbum.py:2948
+msgid "_Preferences"
+msgstr "_Postavke"
+
+#: src/plattenalbum.py:1805 src/plattenalbum.py:2949
+msgid "_Keyboard Shortcuts"
+msgstr "_Tipkovni prečaci"
+
+#: src/plattenalbum.py:1806 src/plattenalbum.py:2950
+msgid "_About Plattenalbum"
+msgstr "O _aplikaciji Plattenalbum"
+
+#: src/plattenalbum.py:1808
+msgid "_Disconnect"
+msgstr "_Odspoji"
+
+#: src/plattenalbum.py:1809
+msgid "_Update Database"
+msgstr "_Aktualiziraj bazu podataka"
+
+#: src/plattenalbum.py:1810
+msgid "_Server Information"
+msgstr "Podaci _servera"
+
+#: src/plattenalbum.py:1821 src/plattenalbum.py:1822
+msgid "Search collection"
+msgstr "Pretraži zbirku"
+
+#: src/plattenalbum.py:1832 src/plattenalbum.py:1871
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+#: data/shortcuts-dialog.ui:45
+msgid "Search"
+msgstr "Pretraga"
+
+#. status page
+#: src/plattenalbum.py:1862
+msgid "Collection is Empty"
+msgstr "Zbirka je prazna"
+
+#: src/plattenalbum.py:1870
+msgid "Collection"
+msgstr "Zbirka"
+
+#: src/plattenalbum.py:1976
+msgid "_Remove"
+msgstr "_Ukloni"
+
+#: src/plattenalbum.py:1980
+msgid "_Enqueue Album"
+msgstr "_Dodaj album u red čekanja"
+
+#: src/plattenalbum.py:1981
+msgid "_Tidy"
+msgstr "U_redi"
+
+#: src/plattenalbum.py:1982
+msgid "_Clear"
+msgstr "_Izbriši"
+
+#: src/plattenalbum.py:2190
+msgid "Playlist is Empty"
+msgstr "Playlista je prazna"
+
+#: src/plattenalbum.py:2196
+msgid "Scroll to Current Song"
+msgstr "Klizni na trenutačnu pjesmu"
+
+#. status pages
+#: src/plattenalbum.py:2290
+msgid "No Lyrics Found"
+msgstr "Tekstovi pjesama nisu pronađeni"
+
+#: src/plattenalbum.py:2293
+msgid "Connection Error"
+msgstr "Greška u vezi"
+
+#: src/plattenalbum.py:2293
+msgid "Check your network connection"
+msgstr "Provjeri mrežnu vezu"
+
+#: src/plattenalbum.py:2295
+msgid "Searching…"
+msgstr "Pretraživanje …"
+
+#: src/plattenalbum.py:2307
+msgid "Lyrics view"
+msgstr "Prikaz tekstova pjesama"
+
+#: src/plattenalbum.py:2365
+msgid "Pause"
+msgstr "Pauza"
+
+#: src/plattenalbum.py:2373 data/shortcuts-dialog.ui:86
+msgid "Previous"
+msgstr "Prethodna"
+
+#: src/plattenalbum.py:2375 data/shortcuts-dialog.ui:80
+msgid "Next"
+msgstr "Sljedeća"
+
+#: src/plattenalbum.py:2382
+#, python-brace-format
+msgid "{bitrate} kb/s"
+msgstr "{bitrate} kb/s"
+
+#: src/plattenalbum.py:2442 src/plattenalbum.py:2730
+msgid "Progress bar"
+msgstr "Traka napretka"
+
+#: src/plattenalbum.py:2561
+msgid "Volume control"
+msgstr "Kontrola glasnoće"
+
+#: src/plattenalbum.py:2593
+msgid "_Repeat Mode"
+msgstr "Modus _ponavljanja"
+
+#: src/plattenalbum.py:2594
+msgid "R_andom Mode"
+msgstr "Modus slučajnog izvođenja"
+
+#: src/plattenalbum.py:2595
+msgid "_Single Mode"
+msgstr "_Modus pojedinačnog izvođenja"
+
+#: src/plattenalbum.py:2596
+msgid "_Pause After Song"
+msgstr "_Pauziraj nakon pjesme"
+
+#: src/plattenalbum.py:2597
+msgid "_Consume Mode"
+msgstr "Modus _odslušanih pjesama"
+
+#: src/plattenalbum.py:2638 data/shortcuts-dialog.ui:147
+msgid "Playlist"
+msgstr "Playlista"
+
+#: src/plattenalbum.py:2639
+msgid "Lyrics"
+msgstr "Tekstovi pjesama"
+
+#: src/plattenalbum.py:2651
+msgid "Player Menu"
+msgstr "Izbornik playera"
+
+#: src/plattenalbum.py:2897
+msgid "Database is being updated"
+msgstr "Baza podataka se aktualizira"
+
+#: src/plattenalbum.py:2898
+msgid "Database updated"
+msgstr "Baza podataka je aktualizirana"
+
+#. status page
+#: src/plattenalbum.py:2936
+msgid "Connect to Your Music"
+msgstr "Poveži se sa svojom glazbom"
+
+#: src/plattenalbum.py:2937
+msgid ""
+"To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
+"up and running on this device or another one on the network"
+msgstr ""
+"Za korištenje Plattenalbuma, instanca Music Player Daemona mora biti "
+"postavljena i pokrenuta na ovom ili na jednom drugom uređaju na mreži"
+
+#: src/plattenalbum.py:2941
+msgid "Connect _Manually"
+msgstr "Poveži se _ručno"
+
+#: src/plattenalbum.py:3040
+msgid "Next Title is Playing"
+msgstr "Reproducira se sljedeći naslov"
+
+#: src/plattenalbum.py:3042
+#, python-brace-format
+msgid "Now playing “{title}” by “{artist}”"
+msgstr "Tranutačno se reproducira „{title}“ od „{artist}“"
+
+#: src/plattenalbum.py:3044
+#, python-brace-format
+msgid "Now playing “{title}”"
+msgstr "Tranutačno se reproducira „{title}“"
+
+#: src/plattenalbum.py:3053
+msgid "Playback Finished"
+msgstr "Reprodukcija završena"
+
+#: src/plattenalbum.py:3054
+msgid "The playlist is over"
+msgstr "Playlista je gotova"
+
+#: src/plattenalbum.py:3061
+msgid "Playing music"
+msgstr "Sviranje glazbe"
+
+#: src/plattenalbum.py:3098
+msgid "Cleared A‐B loop"
+msgstr "A‐B petlja je izbrisana"
+
+#: src/plattenalbum.py:3101
+#, python-brace-format
+msgid "Started A‐B loop at {start}"
+msgstr "A‐B petlja je pokrenuta pri {start}"
+
+#: src/plattenalbum.py:3103
+#, python-brace-format
+msgid "Activated A‐B loop from {start} to {end}"
+msgstr "A‐B petlja je pokrenuta od {start} do {end}"
+
+#: src/plattenalbum.py:3124
+msgid "Debug mode"
+msgstr "Modus otklanjanje grešaka"
+
+#: src/plattenalbum.py:3180
+msgid "translator-credits"
+msgstr "Milo Ivir <mail@milotype.de>"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.desktop.in:2
+msgid "Plattenalbum"
+msgstr "Plattenalbum"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.desktop.in:4
+msgid "Connect to your music"
+msgstr "Poveži se sa svojom glazbom"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
+msgid "A client for the Music Player Daemon (MPD)."
+msgstr "Klijent za Music Player Daemon (MPD)."
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
+msgid ""
+"Browse your collection while viewing large album covers. Play your music "
+"without managing playlists."
+msgstr ""
+"Pregledaj svoju zbirku dok gledaš velike omote albuma. Reproduciraj glazbu "
+"bez upravljanja playlistama."
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
+msgid "Main window"
+msgstr "Glavni prozor"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
+msgid "Album view"
+msgstr "Prikaz albuma"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
+msgid "Small window"
+msgstr "Mali prozor"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:36
+msgid "Small window with playlist"
+msgstr "Mali prozor s playlistom"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:40
+msgid "Small window with cover"
+msgstr "Mali prozor s omotom"
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:3
+msgid "Music Browser"
+msgstr "Preglednik glazbe"
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:11
+msgid "Music;Player;"
+msgstr "Glazba;Player;"
+
+#: data/shortcuts-dialog.ui:6
+msgid "General"
+msgstr "Općenito"
+
+#: data/shortcuts-dialog.ui:15
+msgid "Disconnect"
+msgstr "Odspoji"
+
+#: data/shortcuts-dialog.ui:21
+msgid "Update Database"
+msgstr "Aktualiziraj bazu podataka"
+
+#: data/shortcuts-dialog.ui:33
+msgid "Preferences"
+msgstr "Postavke"
+
+#: data/shortcuts-dialog.ui:39
+msgid "Shortcuts"
+msgstr "Prečaci"
+
+#: data/shortcuts-dialog.ui:51
+msgid "Close"
+msgstr "Zatvori"
+
+#: data/shortcuts-dialog.ui:57
+msgid "Quit"
+msgstr "Zatvori aplikaciju"
+
+#: data/shortcuts-dialog.ui:65
+msgid "Playback"
+msgstr "Reprodukcija"
+
+#: data/shortcuts-dialog.ui:68
+msgid "Play/Pause"
+msgstr "Pokreni/Zaustavi"
+
+#: data/shortcuts-dialog.ui:74
+msgid "Stop"
+msgstr "Prekini"
+
+#: data/shortcuts-dialog.ui:92
+msgid "Seek Forward"
+msgstr "Premotaj naprijed"
+
+#: data/shortcuts-dialog.ui:98
+msgid "Seek Backward"
+msgstr "Premotaj natrag"
+
+#: data/shortcuts-dialog.ui:104
+msgid "A‐B Loop"
+msgstr "A‐B petlja"
+
+#: data/shortcuts-dialog.ui:112
+msgid "Playback Options"
+msgstr "Opcije reprodukcije"
+
+#: data/shortcuts-dialog.ui:115
+msgid "Toggle Repeat Mode"
+msgstr "Uključi/Isključi modus ponavljanja"
+
+#: data/shortcuts-dialog.ui:121
+msgid "Toggle Random Mode"
+msgstr "Uključi/Isključi modus slučajnog izvođenja"
+
+#: data/shortcuts-dialog.ui:127
+msgid "Toggle Single Mode"
+msgstr "Uključi/Isključi modus pojedinačnog izvođenja"
+
+#: data/shortcuts-dialog.ui:133
+msgid "Pause After Song"
+msgstr "Pauziraj nakon pjesme"
+
+#: data/shortcuts-dialog.ui:139
+msgid "Toggle Consume Mode"
+msgstr "Uključi/Isključi modus odslušanih pjesama"
+
+#: data/shortcuts-dialog.ui:150
+msgid "Enqueue Album"
+msgstr "Dodaj album u red čekanja"
+
+#: data/shortcuts-dialog.ui:156
+msgid "Tidy"
+msgstr "Uredi"
+
+#: data/shortcuts-dialog.ui:162
+msgid "Clear"
+msgstr "Izbriši"
