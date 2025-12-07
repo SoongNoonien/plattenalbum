@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-25 10:40+0200\n"
-"PO-Revision-Date: 2025-12-02 17:45+0100\n"
+"PO-Revision-Date: 2025-12-07 21:54+0100\n"
 "Last-Translator: Milo Ivir <mail@mivirtype.de>\n"
 "Language-Team: \n"
 "Language: hr\n"
@@ -158,7 +158,7 @@ msgstr "Pokaži al_bum"
 
 #: src/plattenalbum.py:1247 src/plattenalbum.py:1978
 msgid "Show _File"
-msgstr "Pokaži _datoteku"
+msgstr "Pokaži da_toteku"
 
 #. status page
 #: src/plattenalbum.py:1470
@@ -214,11 +214,11 @@ msgstr "_Tipkovni prečaci"
 
 #: src/plattenalbum.py:1806 src/plattenalbum.py:2950
 msgid "_About Plattenalbum"
-msgstr "O _aplikaciji Plattenalbum"
+msgstr "O ap_likaciji Plattenalbum"
 
 #: src/plattenalbum.py:1808
 msgid "_Disconnect"
-msgstr "_Odspoji"
+msgstr "O_dspoji"
 
 #: src/plattenalbum.py:1809
 msgid "_Update Database"
@@ -323,11 +323,11 @@ msgstr "Modus _ponavljanja"
 
 #: src/plattenalbum.py:2594
 msgid "R_andom Mode"
-msgstr "Modus slučajnog izvođenja"
+msgstr "Modus slučaj_nog izvođenja"
 
 #: src/plattenalbum.py:2595
 msgid "_Single Mode"
-msgstr "_Modus pojedinačnog izvođenja"
+msgstr "Modu_s pojedinačnog izvođenja"
 
 #: src/plattenalbum.py:2596
 msgid "_Pause After Song"
