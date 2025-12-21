@@ -1467,7 +1467,7 @@ class SearchView(Gtk.Stack):
 		self._adj=scroll.get_vadjustment()
 
 		# status page
-		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results Found"), description=_("Try a different search"))
+		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results"), description=_("Try a different search"))
 
 		# connect
 		self._artist_list.connect("row-activated", self._on_artist_activate)
@@ -1697,7 +1697,7 @@ class AlbumsPage(Adw.NavigationPage):
 		breakpoint_bin.set_child(Gtk.ScrolledWindow(child=self.grid_view, hscrollbar_policy=Gtk.PolicyType.NEVER))
 
 		# status page
-		status_page=Adw.StatusPage(title=_("No Artist Selected"), icon_name="avatar-default-symbolic")
+		status_page=Adw.StatusPage(icon_name="folder-music-symbolic", title=_("No Albums"), description=_("Select an artist"))
 
 		# stack
 		self._stack=Gtk.Stack()
@@ -1874,7 +1874,7 @@ class Browser(Gtk.Stack):
 		breakpoint_bin.set_child(self._navigation_split_view)
 
 		# status page
-		status_page=Adw.StatusPage(title=_("Collection is Empty"), icon_name="folder-music-symbolic")
+		status_page=Adw.StatusPage(icon_name="folder-music-symbolic", title=_("Collection is Empty"))
 		status_page_header_bar=Adw.HeaderBar(show_title=False)
 		status_page_header_bar.pack_end(MainMenuButton())
 		status_page_toolbar_view=Adw.ToolbarView(content=status_page)
@@ -2301,7 +2301,7 @@ class LyricsWindow(Gtk.Stack):
 		super().__init__(vhomogeneous=False, vexpand=True)
 
 		# status pages
-		no_lyrics_status_page=Adw.StatusPage(icon_name="view-lyrics-symbolic", title=_("No Lyrics Found"))
+		no_lyrics_status_page=Adw.StatusPage(icon_name="view-lyrics-symbolic", title=_("No Lyrics"))
 		no_lyrics_status_page.add_css_class("compact")
 		connection_error_status_page=Adw.StatusPage(
 			icon_name="network-wired-disconnected-symbolic", title=_("Connection Error"), description=_("Check your network connection"))
