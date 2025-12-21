@@ -1614,9 +1614,6 @@ class ArtistList(Gtk.ListView):
 			if (song:=self._client.currentsong()):
 				artist=song["albumartist"][0]
 				self.select(artist)
-			else:
-				self.artist_selection_model.select(0)
-				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _on_updated_db(self, emitter, database_is_empty):
 		if database_is_empty:
@@ -1699,17 +1696,28 @@ class AlbumsPage(Adw.NavigationPage):
 			breakpoint_bin.add_breakpoint(break_point)
 		breakpoint_bin.set_child(Gtk.ScrolledWindow(child=self.grid_view, hscrollbar_policy=Gtk.PolicyType.NEVER))
 
+		# status page
+		status_page=Adw.StatusPage(title=_("No Artist Selected"), icon_name="avatar-default-symbolic")
+
+		# stack
+		self._stack=Gtk.Stack()
+		self._stack.add_named(breakpoint_bin, "albums")
+		self._stack.add_named(status_page, "status-page")
+
 		# connect
 		self.grid_view.connect("activate", self._on_activate)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connection-error", self._on_connection_error)
 
 		# packing
-		toolbar_view=Adw.ToolbarView(content=breakpoint_bin)
+		toolbar_view=Adw.ToolbarView(content=self._stack)
 		toolbar_view.add_top_bar(Adw.HeaderBar())
 		self.set_child(toolbar_view)
 
 	def clear(self, *args):
 		self._selection_model.clear()
 		self.set_title(_("Albums"))
+		self._stack.set_visible_child_name("status-page")
 
 	def _get_albums(self, artist):
 		albums=self._client.list("album", "albumartist", artist, "group", "date")
@@ -1720,6 +1728,7 @@ class AlbumsPage(Adw.NavigationPage):
 		self._settings.set_property("cursor-watch", True)
 		self._selection_model.clear()
 		self.set_title(artist)
+		self._stack.set_visible_child_name("albums")
 		# ensure list is empty
 		main=GLib.main_context_default()
 		while main.pending():
@@ -1731,6 +1740,12 @@ class AlbumsPage(Adw.NavigationPage):
 	def _on_activate(self, widget, pos):
 		album=self._selection_model.get_item(pos)
 		self.emit("album-selected", album.artist, album.name, album.date)
+
+	def _on_disconnected(self, *args):
+		self._stack.set_visible_child_name("albums")
+
+	def _on_connection_error(self, *args):
+		self._stack.set_visible_child_name("albums")
 
 class AlbumPage(Adw.NavigationPage):
 	def __init__(self, client, albumartist, album, date):
@@ -1846,7 +1861,7 @@ class Browser(Gtk.Stack):
 		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
 		# split view
-		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page, show_content=True)
+		self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
 
 		# breakpoint bin
 		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
