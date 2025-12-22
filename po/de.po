@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-25 10:40+0200\n"
-"PO-Revision-Date: 2025-10-25 10:44+0200\n"
+"POT-Creation-Date: 2025-12-21 21:59+0100\n"
+"PO-Revision-Date: 2025-12-21 22:01+0100\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.7\n"
+"X-Generator: Poedit 3.8\n"
 
 #: src/plattenalbum.py:502
 #, python-brace-format
@@ -53,7 +53,7 @@ msgstr "»_MPRIS« unterstützen"
 msgid "Disable if “MPRIS” is supported by another client"
 msgstr "Deaktivieren wenn »MPRIS« von einem anderen Client unterstützt wird"
 
-#: src/plattenalbum.py:984 src/plattenalbum.py:2939
+#: src/plattenalbum.py:984 src/plattenalbum.py:2951
 msgid "_Connect"
 msgstr "_Verbinden"
 
@@ -117,12 +117,12 @@ msgstr "Uptime"
 msgid "Playtime"
 msgstr "Wiedergabezeit"
 
-#: src/plattenalbum.py:1060 src/plattenalbum.py:1452 src/plattenalbum.py:1838
+#: src/plattenalbum.py:1060 src/plattenalbum.py:1452 src/plattenalbum.py:1853
 msgid "Artists"
 msgstr "Künstler"
 
-#: src/plattenalbum.py:1061 src/plattenalbum.py:1455 src/plattenalbum.py:1670
-#: src/plattenalbum.py:1712 src/plattenalbum.py:1846
+#: src/plattenalbum.py:1061 src/plattenalbum.py:1455 src/plattenalbum.py:1667
+#: src/plattenalbum.py:1719 src/plattenalbum.py:1861
 msgid "Albums"
 msgstr "Alben"
 
@@ -138,7 +138,7 @@ msgstr "Gesamtwiedergabezeit der Datenbank"
 msgid "Last Database Update"
 msgstr "Letzte Datenbankaktualisierung"
 
-#: src/plattenalbum.py:1219 src/plattenalbum.py:1956
+#: src/plattenalbum.py:1219 src/plattenalbum.py:1971
 msgid "Context menu"
 msgstr "Kontextmenü"
 
@@ -150,18 +150,18 @@ msgstr "_Anhängen"
 msgid "As _Next"
 msgstr "Als _Nächstes"
 
-#: src/plattenalbum.py:1246 src/plattenalbum.py:1977
+#: src/plattenalbum.py:1246 src/plattenalbum.py:1992
 msgid "Show Al_bum"
 msgstr "Al_bum anzeigen"
 
-#: src/plattenalbum.py:1247 src/plattenalbum.py:1978
+#: src/plattenalbum.py:1247 src/plattenalbum.py:1993
 msgid "Show _File"
 msgstr "_Datei anzeigen"
 
 #. status page
 #: src/plattenalbum.py:1470
-msgid "No Results Found"
-msgstr "Keine Ergebnisse gefunden"
+msgid "No Results"
+msgstr "Keine Ergebnisse"
 
 #: src/plattenalbum.py:1470
 msgid "Try a different search"
@@ -171,196 +171,205 @@ msgstr "Versuchen Sie eine andere Suche"
 msgid "Unknown Artist"
 msgstr "Unbekannter Künstler"
 
-#: src/plattenalbum.py:1655
+#: src/plattenalbum.py:1652
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "Albumcover von {album}"
 
-#: src/plattenalbum.py:1657 src/plattenalbum.py:1787 src/plattenalbum.py:1788
+#: src/plattenalbum.py:1654 src/plattenalbum.py:1802 src/plattenalbum.py:1803
 msgid "Unknown Album"
 msgstr "Unbekanntes Album"
 
-#: src/plattenalbum.py:1658
+#: src/plattenalbum.py:1655
 msgid "Album cover of an unknown album"
 msgstr "Albumcover von unbekanntem Album"
 
-#: src/plattenalbum.py:1727
+#. status page
+#: src/plattenalbum.py:1700
+msgid "No Albums"
+msgstr "Keine Alben"
+
+#: src/plattenalbum.py:1700
+msgid "Select an artist"
+msgstr "Wählen Sie einen Künstler aus"
+
+#: src/plattenalbum.py:1736
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "Alben von {artist}"
 
 #. buttons
-#: src/plattenalbum.py:1745 src/plattenalbum.py:2359 src/plattenalbum.py:2368
+#: src/plattenalbum.py:1760 src/plattenalbum.py:2374 src/plattenalbum.py:2383
 msgid "Play"
 msgstr "Abspielen"
 
-#: src/plattenalbum.py:1747
+#: src/plattenalbum.py:1762
 msgid "Append"
 msgstr "Anhängen"
 
-#: src/plattenalbum.py:1802 src/plattenalbum.py:2951 data/shortcuts-dialog.ui:9
+#: src/plattenalbum.py:1817 src/plattenalbum.py:2963 data/shortcuts-dialog.ui:9
 msgid "Main Menu"
 msgstr "Hauptmenü"
 
-#: src/plattenalbum.py:1804 src/plattenalbum.py:2948
+#: src/plattenalbum.py:1819 src/plattenalbum.py:2960
 msgid "_Preferences"
 msgstr "_Einstellungen"
 
-#: src/plattenalbum.py:1805 src/plattenalbum.py:2949
+#: src/plattenalbum.py:1820 src/plattenalbum.py:2961
 msgid "_Keyboard Shortcuts"
 msgstr "_Tastenkürzel"
 
-#: src/plattenalbum.py:1806 src/plattenalbum.py:2950
+#: src/plattenalbum.py:1821 src/plattenalbum.py:2962
 msgid "_About Plattenalbum"
 msgstr "_Info zu Plattenalbum"
 
-#: src/plattenalbum.py:1808
+#: src/plattenalbum.py:1823
 msgid "_Disconnect"
 msgstr "Tre_nnen"
 
-#: src/plattenalbum.py:1809
+#: src/plattenalbum.py:1824
 msgid "_Update Database"
 msgstr "_Datenbank aktualisieren"
 
-#: src/plattenalbum.py:1810
+#: src/plattenalbum.py:1825
 msgid "_Server Information"
 msgstr "_Serverinformationen"
 
-#: src/plattenalbum.py:1821 src/plattenalbum.py:1822
+#: src/plattenalbum.py:1836 src/plattenalbum.py:1837
 msgid "Search collection"
 msgstr "Sammlung durchsuchen"
 
-#: src/plattenalbum.py:1832 src/plattenalbum.py:1871
+#: src/plattenalbum.py:1847 src/plattenalbum.py:1886
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
 #: data/shortcuts-dialog.ui:45
 msgid "Search"
 msgstr "Suchen"
 
 #. status page
-#: src/plattenalbum.py:1862
+#: src/plattenalbum.py:1877
 msgid "Collection is Empty"
 msgstr "Sammlung ist leer"
 
-#: src/plattenalbum.py:1870
+#: src/plattenalbum.py:1885
 msgid "Collection"
 msgstr "Sammlung"
 
-#: src/plattenalbum.py:1976
+#: src/plattenalbum.py:1991
 msgid "_Remove"
 msgstr "_Entfernen"
 
-#: src/plattenalbum.py:1980
+#: src/plattenalbum.py:1995
 msgid "_Enqueue Album"
 msgstr "Album ei_nreihen"
 
-#: src/plattenalbum.py:1981
+#: src/plattenalbum.py:1996
 msgid "_Tidy"
 msgstr "_Aufräumen"
 
-#: src/plattenalbum.py:1982
+#: src/plattenalbum.py:1997
 msgid "_Clear"
 msgstr "_Leeren"
 
-#: src/plattenalbum.py:2190
+#: src/plattenalbum.py:2204
 msgid "Playlist is Empty"
 msgstr "Wiedergabeliste ist leer"
 
-#: src/plattenalbum.py:2196
+#: src/plattenalbum.py:2210
 msgid "Scroll to Current Song"
 msgstr "Gehe zu aktuellem Lied"
 
 #. status pages
-#: src/plattenalbum.py:2290
-msgid "No Lyrics Found"
-msgstr "Kein Liedtext gefunden"
+#: src/plattenalbum.py:2304
+msgid "No Lyrics"
+msgstr "Kein Liedtext"
 
-#: src/plattenalbum.py:2293
+#: src/plattenalbum.py:2307
 msgid "Connection Error"
 msgstr "Verbindungsfehler"
 
-#: src/plattenalbum.py:2293
+#: src/plattenalbum.py:2307
 msgid "Check your network connection"
 msgstr "Überprüfen Sie Ihre Netzwerkverbindung"
 
-#: src/plattenalbum.py:2295
+#: src/plattenalbum.py:2309
 msgid "Searching…"
 msgstr "Suche…"
 
-#: src/plattenalbum.py:2307
+#: src/plattenalbum.py:2321
 msgid "Lyrics view"
 msgstr "Liedtextansicht"
 
-#: src/plattenalbum.py:2365
+#: src/plattenalbum.py:2380
 msgid "Pause"
 msgstr "Pausieren"
 
-#: src/plattenalbum.py:2373 data/shortcuts-dialog.ui:86
+#: src/plattenalbum.py:2388 data/shortcuts-dialog.ui:86
 msgid "Previous"
 msgstr "Vorheriges"
 
-#: src/plattenalbum.py:2375 data/shortcuts-dialog.ui:80
+#: src/plattenalbum.py:2390 data/shortcuts-dialog.ui:80
 msgid "Next"
 msgstr "Nächstes"
 
-#: src/plattenalbum.py:2382
+#: src/plattenalbum.py:2397
 #, python-brace-format
 msgid "{bitrate} kb/s"
 msgstr "{bitrate} kb/s"
 
-#: src/plattenalbum.py:2442 src/plattenalbum.py:2730
+#: src/plattenalbum.py:2456 src/plattenalbum.py:2741
 msgid "Progress bar"
 msgstr "Fortschrittsbalken"
 
-#: src/plattenalbum.py:2561
+#: src/plattenalbum.py:2572
 msgid "Volume control"
 msgstr "Lautstärkeregler"
 
-#: src/plattenalbum.py:2593
+#: src/plattenalbum.py:2604
 msgid "_Repeat Mode"
 msgstr "_Dauerschleife"
 
-#: src/plattenalbum.py:2594
+#: src/plattenalbum.py:2605
 msgid "R_andom Mode"
 msgstr "_Zufallsmodus"
 
-#: src/plattenalbum.py:2595
+#: src/plattenalbum.py:2606
 msgid "_Single Mode"
 msgstr "_Einzelmodus"
 
-#: src/plattenalbum.py:2596
+#: src/plattenalbum.py:2607
 msgid "_Pause After Song"
 msgstr "_Pausieren nach Lied"
 
-#: src/plattenalbum.py:2597
+#: src/plattenalbum.py:2608
 msgid "_Consume Mode"
 msgstr "_Verbrauchsmodus"
 
-#: src/plattenalbum.py:2638 data/shortcuts-dialog.ui:147
+#: src/plattenalbum.py:2649 data/shortcuts-dialog.ui:147
 msgid "Playlist"
 msgstr "Wiedergabeliste"
 
-#: src/plattenalbum.py:2639
+#: src/plattenalbum.py:2650
 msgid "Lyrics"
 msgstr "Liedtext"
 
-#: src/plattenalbum.py:2651
+#: src/plattenalbum.py:2662
 msgid "Player Menu"
 msgstr "Playermenü"
 
-#: src/plattenalbum.py:2897
+#: src/plattenalbum.py:2908
 msgid "Database is being updated"
 msgstr "Datenbank wird aktualisiert"
 
-#: src/plattenalbum.py:2898
+#: src/plattenalbum.py:2909
 msgid "Database updated"
 msgstr "Datenbank aktualisiert"
 
 #. status page
-#: src/plattenalbum.py:2936
+#: src/plattenalbum.py:2948
 msgid "Connect to Your Music"
 msgstr "Mit Ihrer Musik verbinden"
 
-#: src/plattenalbum.py:2937
+#: src/plattenalbum.py:2949
 msgid ""
 "To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
 "up and running on this device or another one on the network"
@@ -368,55 +377,55 @@ msgstr ""
 "Um Plattenalbum benutzen zu können muss eine Instanz des Music Player Daemon "
 "auf diesem oder einem anderen Gerät im Netzwerk eingerichtet sein und laufen"
 
-#: src/plattenalbum.py:2941
+#: src/plattenalbum.py:2953
 msgid "Connect _Manually"
 msgstr "_Manuell verbinden"
 
-#: src/plattenalbum.py:3040
+#: src/plattenalbum.py:3052
 msgid "Next Title is Playing"
 msgstr "Nächster Titel läuft"
 
-#: src/plattenalbum.py:3042
+#: src/plattenalbum.py:3054
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "Jetzt läuft »{title}« von »{artist}«"
 
-#: src/plattenalbum.py:3044
+#: src/plattenalbum.py:3056
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "Jetzt läuft »{title}«"
 
-#: src/plattenalbum.py:3053
+#: src/plattenalbum.py:3065
 msgid "Playback Finished"
 msgstr "Wiedergabe beendet"
 
-#: src/plattenalbum.py:3054
+#: src/plattenalbum.py:3066
 msgid "The playlist is over"
 msgstr "Die Wiedergabeliste ist zu Ende"
 
-#: src/plattenalbum.py:3061
+#: src/plattenalbum.py:3073
 msgid "Playing music"
 msgstr "Musik wird abgespielt"
 
-#: src/plattenalbum.py:3098
+#: src/plattenalbum.py:3110
 msgid "Cleared A‐B loop"
 msgstr "A‐B‐Schleife geleert"
 
-#: src/plattenalbum.py:3101
+#: src/plattenalbum.py:3113
 #, python-brace-format
 msgid "Started A‐B loop at {start}"
 msgstr "A‐B‐Schleife bei {start} begonnen"
 
-#: src/plattenalbum.py:3103
+#: src/plattenalbum.py:3115
 #, python-brace-format
 msgid "Activated A‐B loop from {start} to {end}"
 msgstr "A‐B‐Schleife von {start} bis {end} aktiviert"
 
-#: src/plattenalbum.py:3124
+#: src/plattenalbum.py:3136
 msgid "Debug mode"
 msgstr "Debugmodus"
 
-#: src/plattenalbum.py:3180
+#: src/plattenalbum.py:3191
 msgid "translator-credits"
 msgstr "Martin Wagner <martin.wagner.dev@gmail.com>"
 
@@ -557,6 +566,9 @@ msgstr "Aufräumen"
 #: data/shortcuts-dialog.ui:162
 msgid "Clear"
 msgstr "Leeren"
+
+#~ msgid "No Lyrics Found"
+#~ msgstr "Kein Liedtext gefunden"
 
 #~ msgid "Re_wind via Previous Button"
 #~ msgstr "_Klassischer Rück­spul­knopf"
@@ -707,9 +719,6 @@ msgstr "Leeren"
 
 #~ msgid "Music library"
 #~ msgstr "Musikverzeichnis"
-
-#~ msgid "Select a Folder"
-#~ msgstr "Einen Ordner auswählen"
 
 #~ msgid "Connect via _Unix domain socket"
 #~ msgstr "Über »_Unix domain socket« verbinden"
