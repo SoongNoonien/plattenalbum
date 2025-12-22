@@ -2637,7 +2637,8 @@ class Player(Adw.Bin):
 			halign=Gtk.Align.CENTER, margin_start=12, margin_end=12, margin_bottom=6, visible=False)
 		self._lyrics_window=LyricsWindow()
 		playlist_window=PlaylistWindow(client)
-		playback_controls=PlaybackControls(client, settings)
+		self._playback_controls=PlaybackControls(client, settings)
+		self._playback_controls.set_visible(False)
 
 		# box
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -2669,11 +2670,11 @@ class Player(Adw.Bin):
 		self._client.emitter.connect("connected", self._on_connected)
 
 		# packing
-		self._toolbar_view=Adw.ToolbarView(reveal_bottom_bars=False)
-		self._toolbar_view.add_top_bar(header_bar)
-		self._toolbar_view.set_content(self._stack)
-		self._toolbar_view.add_bottom_bar(playback_controls)
-		self.set_child(self._toolbar_view)
+		toolbar_view=Adw.ToolbarView()
+		toolbar_view.add_top_bar(header_bar)
+		toolbar_view.set_content(self._stack)
+		toolbar_view.add_bottom_bar(self._playback_controls)
+		self.set_child(toolbar_view)
 
 	def _on_visible_child_name(self, *args):
 		if self._stack.get_visible_child_name() == "lyrics":
@@ -2693,7 +2694,7 @@ class Player(Adw.Bin):
 		self._cover.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
-		self._toolbar_view.set_reveal_bottom_bars(length > 0)
+		self._playback_controls.set_visible(length > 0)
 		if self._stack.get_visible_child_name() != "playlist":
 			self._playlist_page.set_needs_attention(True)
 
