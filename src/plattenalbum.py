@@ -1920,14 +1920,12 @@ class Browser(Gtk.Stack):
 		self._navigation_view.pop_to_tag("collection")
 
 	def _on_artist_selected(self, model, position):
-		if self._navigation_split_view.get_collapsed():
-			self._navigation_split_view.set_show_content(True)
+		self._navigation_split_view.set_show_content(True)
 		self._album_navigation_view.replace_with_tags(["album_list"])
 		self._albums_page.display(model.get_artist(position))
 
 	def _on_artist_reselected(self, model):
-		if self._navigation_split_view.get_collapsed():
-			self._navigation_split_view.set_show_content(True)
+		self._navigation_split_view.set_show_content(True)
 		self._album_navigation_view.pop_to_tag("album_list")
 
 	def _on_album_selected(self, widget, *tags):
@@ -1948,6 +1946,7 @@ class Browser(Gtk.Stack):
 	def _on_disconnected(self, *args):
 		self._album_navigation_view.pop_to_tag("album_list")
 		self.set_visible_child_name("browser")
+		self._navigation_split_view.set_show_content(False)
 		self.search_entry.emit("stop-search")
 
 	def _on_connection_error(self, *args):
@@ -3125,7 +3124,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_layout_name(self, obj, *args):
 		if obj.get_layout_name() == "bottom-sheet":
-			self._bottom_sheet.set_open(True)
+			self._bottom_sheet.set_open(False)
 
 ###############
 # application #
