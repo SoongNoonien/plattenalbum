@@ -808,15 +808,17 @@ class Client(MPDClient):
 
 	def can_show_file(self, uri):
 		has_owner,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
-			GLib.Variant("(s)",("org.freedesktop.FileManager1",)), GLib.VariantType("(b)"), Gio.DBusCallFlags.NONE, -1, None)
+			GLib.Variant("(s)",("org.freedesktop.portal.Desktop",)), GLib.VariantType("(b)"), Gio.DBusCallFlags.NONE, -1, None)
 		activatable,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "ListActivatableNames",
 			None, GLib.VariantType("(as)"), Gio.DBusCallFlags.NONE, -1, None)
-		return (has_owner or "org.freedesktop.FileManager1" in activatable) and self.get_absolute_path(uri) is not None
+		return (has_owner or "org.freedesktop.portal.Desktop" in activatable) and self.get_absolute_path(uri) is not None
 
 	def show_file(self, uri):
-		file=Gio.File.new_for_path(self.get_absolute_path(uri))
-		self._bus.call_sync("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1",
-			"ShowItems", GLib.Variant("(ass)", ((file.get_uri(),),"")), None, Gio.DBusCallFlags.NONE, -1, None)
+		with open(self.get_absolute_path(uri)) as f:
+			fd_list=Gio.UnixFDList()
+			self._bus.call_with_unix_fd_list_sync("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+				"org.freedesktop.portal.OpenURI", "OpenDirectory", GLib.Variant("(sha{sv})", ("", fd_list.append(f.fileno()), {})),
+				None, Gio.DBusCallFlags.NONE, -1, fd_list)
 
 	def can_show_album(self, uri):
 		self.tagtypes("clear")
