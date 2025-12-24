@@ -11,8 +11,8 @@
     "--device=dri",
     "--share=network",
     "--filesystem=xdg-music:ro",
-    "--filesystem=xdg-run/mpd",
-    "--filesystem=/run/mpd"
+    "--filesystem=xdg-run/mpd:ro",
+    "--filesystem=/run/mpd:ro"
   ],
   "modules": [
     {
