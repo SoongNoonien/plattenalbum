@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Plattenalbum - MPD Client.
-# Copyright (C) 2020-2025 Martin Wagner <martin.wagner.dev@gmail.com>
+# Copyright (C) 2020-2026 Martin Wagner <martin.wagner.dev@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -3188,7 +3188,7 @@ class Plattenalbum(Adw.Application):
 
 	def _on_about(self, *args):
 		dialog=Adw.AboutDialog.new_from_appdata("/de/wagnermartin/Plattenalbum/de.wagnermartin.Plattenalbum.metainfo.xml")
-		dialog.set_copyright("© 2020-2025 Martin Wagner")
+		dialog.set_copyright("© 2020-2026 Martin Wagner")
 		dialog.set_developers(["Martin Wagner <martin.wagner.dev@gmail.com>"])
 		dialog.set_translator_credits(_("translator-credits"))
 		dialog.present(self._window)
