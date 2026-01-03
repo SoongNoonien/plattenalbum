@@ -144,9 +144,9 @@
     <value key="Purism::form_factor">mobile</value>
   </custom>
   <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
-  <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
-  <url type="help">https://github.com/SoongNoonien/plattenalbum/discussions</url>
   <url type="bugtracker">https://github.com/SoongNoonien/plattenalbum/issues</url>
+  <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
+  <url type="vcs-browser">https://github.com/SoongNoonien/plattenalbum</url>
   <content_rating type="oars-1.1" />
   <translation type="gettext">de.wagnermartin.Plattenalbum</translation>
   <provides>
