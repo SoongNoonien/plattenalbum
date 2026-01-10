@@ -727,6 +727,7 @@ class Client(MPDClient):
 	def file_to_playlist(self, file, mode):  # modes: play, append, as-next
 		if mode == "append":
 			self.add(file)
+			self.emitter.emit("appended-file")
 		elif mode == "play":
 			self.clear()
 			self.add(file)
@@ -734,8 +735,10 @@ class Client(MPDClient):
 		elif mode == "as-next":
 			try:
 				self.add(file, "+0")
+				self.emitter.emit("added-as-next")
 			except CommandError:
 				self.add(file, "0")
+				self.emitter.emit("added-as-next")
 		else:
 			raise ValueError(f"Unknown mode: {mode}")
 
@@ -2909,6 +2912,8 @@ class MainWindow(Adw.ApplicationWindow):
 		player=Player(self._client, self._settings)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
+		self._file_appended_toast=Adw.Toast(title=_("Appended to queue"))
+		self._as_next_toast=Adw.Toast(title=_("Added as next"))
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
@@ -2989,6 +2994,8 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.emitter.connect("connection_error", self._on_connection_error)
 		self._client.emitter.connect("updating-db", self._on_updating_db)
 		self._client.emitter.connect("updated-db", self._on_updated_db)
+		self._client.emitter.connect("appended-file", self._on_append_file)
+		self.client.emitter.connect("added-as-next", self._on_add_as_next)
 		self._client.emitter.connect("a-b-loop", self._on_a_b_loop)
 		self._client.emitter.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
 
@@ -3106,6 +3113,12 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_updated_db(self, *args):
 		self._updating_toast.dismiss()
 		self._toast_overlay.add_toast(self._updated_toast)
+
+	def _on_append_file(self, *args):
+		self._toast_overlay.add_toast(self._file_appended_toast)
+
+	def _on_add_as_next(self, *args):
+		self._toast_overlay.add_toast(self._as_next_toast)
 
 	def _on_a_b_loop(self, emitter, first_mark, second_mark):
 		if first_mark < 0.0:
