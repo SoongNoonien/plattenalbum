@@ -149,8 +149,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		</interface>
 	</node>
 	"""
-	def __init__(self, application, window, client, settings):
-		self._application=application
+	def __init__(self, window, client, settings):
 		self._window=window
 		self._client=client
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
@@ -329,7 +328,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._window.present()
 
 	def Quit(self):
-		self._application.quit()
+		self._window.get_application().quit()
 
 	# player methods
 	def Next(self):
@@ -2904,6 +2903,9 @@ class MainWindow(Adw.ApplicationWindow):
 		self._settings=settings
 		self._suspend_inhibit=0
 
+		# MPRIS
+		MPRISInterface(self, self._client, self._settings)
+
 		# widgets
 		self._browser=Browser(self._client, self._settings)
 		player=Player(self._client, self._settings)
@@ -3136,16 +3138,10 @@ class Plattenalbum(Adw.Application):
 	def __init__(self):
 		super().__init__(application_id="de.wagnermartin.Plattenalbum", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
 		self.add_main_option("debug", ord("d"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _("Debug mode"), None)
-
-	def do_startup(self):
-		Adw.Application.do_startup(self)
 		self._settings=Settings()
 		self._client=Client(self._settings)
-		self._window=MainWindow(self._client, self._settings, application=self)
-		self._window.connect("close-request", self._on_quit)
-		self._window.open()
-		# MPRIS
-		dbus_service=MPRISInterface(self, self._window, self._client, self._settings)
+		self._window=None
+
 		# actions
 		action=Gio.SimpleAction.new("about", None)
 		action.connect("activate", self._on_about)
@@ -3166,10 +3162,12 @@ class Plattenalbum(Adw.Application):
 			self.set_accels_for_action(action, accels)
 
 	def do_activate(self):
-		try:
+		if self._window is None:
+			self._window=MainWindow(self._client, self._settings, application=self)
+			self._window.connect("close-request", self._on_quit)
+			self._window.open()
+		else:
 			self._window.present()
-		except:  # failed to show window so the user can't see anything
-			self.quit()
 
 	def do_shutdown(self):
 		Adw.Application.do_shutdown(self)
