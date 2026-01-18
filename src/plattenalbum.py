@@ -152,7 +152,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def __init__(self, window, client, settings):
 		self._window=window
 		self._client=client
-		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)
+		self._bus=self._window.get_application().get_dbus_connection()
 		self._node_info=Gio.DBusNodeInfo.new_for_xml(self._INTERFACES_XML)
 		self._metadata={}
 		self._handlers=[]
