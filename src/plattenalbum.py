@@ -982,7 +982,7 @@ class ConnectDialog(Adw.Dialog):
 	def __init__(self, title, target):
 		super().__init__(title=title, width_request=360, follows_content_size=True)
 		self._clamp=Adw.Clamp(margin_top=24, margin_bottom=24, margin_start=12, margin_end=12)
-		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="mpd.connect", action_target=target)
+		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="app.connect", action_target=target)
 		connect_button.set_css_classes(["suggested-action"])
 		cancel_button=Gtk.Button(label=_("Ca_ncel"), use_underline=True)
 		cancel_button.connect("clicked", lambda *args: self.close())
@@ -1821,8 +1821,8 @@ class MainMenuButton(Gtk.MenuButton):
 		app_section.append(_("_Keyboard Shortcuts"), "app.shortcuts")
 		app_section.append(_("_About Plattenalbum"), "app.about")
 		menu=Gio.Menu()
-		menu.append(_("_Disconnect"), "mpd.disconnect")
-		menu.append(_("_Update Database"), "mpd.update")
+		menu.append(_("_Disconnect"), "app.disconnect")
+		menu.append(_("_Update Database"), "app.update")
 		menu.append(_("_Server Information"), "win.server-info")
 		menu.append_section(None, app_section)
 		self.set_menu_model(menu)
@@ -1992,9 +1992,9 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		menu.append(_("Show Al_bum"), "menu.show-album")
 		menu.append(_("Show _File"), "menu.show-file")
 		mpd_section=Gio.Menu()
-		mpd_section.append(_("_Enqueue Album"), "mpd.enqueue")
-		mpd_section.append(_("_Tidy"), "mpd.tidy")
-		mpd_section.append(_("_Clear"), "mpd.clear")
+		mpd_section.append(_("_Enqueue Album"), "app.enqueue")
+		mpd_section.append(_("_Tidy"), "app.tidy")
+		mpd_section.append(_("_Clear"), "app.clear")
 		menu.append_section(None, mpd_section)
 		self.set_menu_model(menu)
 
@@ -2371,7 +2371,7 @@ class LyricsWindow(Gtk.Stack):
 
 class PlayButton(Gtk.Button):
 	def __init__(self, client):
-		super().__init__(icon_name="media-playback-start-symbolic", action_name="mpd.toggle-play", tooltip_text=_("Play"))
+		super().__init__(icon_name="media-playback-start-symbolic", action_name="app.toggle-play", tooltip_text=_("Play"))
 		client.emitter.connect("state", self._on_state)
 
 	def _on_state(self, emitter, state):
@@ -2385,9 +2385,9 @@ class PlayButton(Gtk.Button):
 class MediaButtons(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(spacing=6)
-		self.append(Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="mpd.previous"))
+		self.append(Gtk.Button(icon_name="media-skip-backward-symbolic", tooltip_text=_("Previous"), action_name="app.previous"))
 		self.append(PlayButton(client))
-		self.append(Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="mpd.next"))
+		self.append(Gtk.Button(icon_name="media-skip-forward-symbolic", tooltip_text=_("Next"), action_name="app.next"))
 
 class BitRate(Gtk.Label):
 	def __init__(self, client, settings):
@@ -2601,11 +2601,11 @@ class PlayerMenu(Gtk.PopoverMenu):
 		# menu model
 		self._volume_section=Gio.Menu()
 		menu=Gio.Menu()
-		menu.append(_("_Repeat Mode"), "mpd.repeat")
-		menu.append(_("R_andom Mode"), "mpd.random")
-		menu.append(_("_Single Mode"), "mpd.single")
-		menu.append(_("_Pause After Song"), "mpd.single-oneshot")
-		menu.append(_("_Consume Mode"), "mpd.consume")
+		menu.append(_("_Repeat Mode"), "app.repeat")
+		menu.append(_("R_andom Mode"), "app.random")
+		menu.append(_("_Single Mode"), "app.single")
+		menu.append(_("_Pause After Song"), "app.single-oneshot")
+		menu.append(_("_Consume Mode"), "app.consume")
 		menu.append_section(None, self._volume_section)
 		self.set_menu_model(menu)
 
@@ -2779,118 +2779,6 @@ class PlayerBar(Gtk.Overlay):
 		self._cover.set_paintable(FALLBACK_COVER)
 		self._cover.set_visible(False)
 
-###################
-# MPD gio actions #
-###################
-
-class MPDActionGroup(Gio.SimpleActionGroup):
-	def __init__(self, client):
-		super().__init__()
-		self._client=client
-
-		# actions
-		self._disable_on_stop_data=["next","previous","seek-forward","seek-backward","a-b-loop"]
-		self._disable_no_song_data=["tidy","enqueue"]
-		self._enable_disable_on_playlist_data=["toggle-play","clear"]
-		self._enable_on_reconnect_data=["stop","update","disconnect"]
-		self._data=self._disable_on_stop_data+self._disable_no_song_data+self._enable_on_reconnect_data+self._enable_disable_on_playlist_data
-		for name in self._data:
-			action=Gio.SimpleAction.new(name, None)
-			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
-			self.add_action(action)
-		playback_data=["repeat","random","single","single-oneshot","consume"]
-		self._enable_on_reconnect_data+=playback_data
-		self._data+=playback_data
-		for name in playback_data:
-			action=Gio.SimpleAction.new_stateful(name , None, GLib.Variant("b", False))
-			handler=action.connect("notify::state", self._on_mode_change, name)
-			self.add_action(action)
-			self._client.emitter.connect(name, self._update_action, action, handler)
-		self._connect_action=Gio.SimpleAction.new("connect", GLib.VariantType.new("b"))
-		self._connect_action.connect("activate", self._on_connect)
-		self.add_action(self._connect_action)
-
-		# connect
-		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("playlist", self._on_playlist_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
-
-	def _on_toggle_play(self, action, param):
-		self._client.toggle_play()
-
-	def _on_stop(self, action, param):
-		self._client.stop()
-
-	def _on_next(self, action, param):
-		self._client.next()
-
-	def _on_previous(self, action, param):
-		self._client.previous()
-
-	def _on_seek_forward(self, action, param):
-		self._client.seekcur("+10")
-
-	def _on_seek_backward(self, action, param):
-		self._client.seekcur("-10")
-
-	def _on_a_b_loop(self, action, param):
-		self._client.a_b_loop()
-
-	def _on_tidy(self, action, param):
-		self._client.tidy_playlist()
-
-	def _on_enqueue(self, action, param):
-		song=self._client.currentsong()
-		self._client.album_to_playlist(song["albumartist"][0], song["album"][0], song["date"][0], "enqueue")
-
-	def _on_clear(self, action, param):
-		self._client.clear()
-
-	def _on_update(self, action, param):
-		self._client.update()
-
-	def _update_action(self, emitter, value, action, handler):
-		action.handler_block(handler)
-		action.set_state(GLib.Variant("b", value))
-		action.handler_unblock(handler)
-
-	def _on_mode_change(self, action, typestring, name):
-		if name == "single-oneshot":
-			self._client.single("oneshot" if action.get_state() else "0")
-		else:
-			getattr(self._client, name)("1" if action.get_state() else "0")
-
-	def _on_disconnect(self, action, param):
-		self._client.disconnect()
-
-	def _on_connect(self, action, param):
-		self._client.try_connect(param.get_boolean())
-
-	def _on_state(self, emitter, state):
-		state_dict={"play": True, "pause": True, "stop": False}
-		for action in self._disable_on_stop_data:
-			self.lookup_action(action).set_enabled(state_dict[state])
-
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
-		for action in self._disable_no_song_data:
-			self.lookup_action(action).set_enabled(songpos is not None)
-
-	def _on_playlist_changed(self, emitter, version, length, songpos):
-		for action in self._enable_disable_on_playlist_data:
-			self.lookup_action(action).set_enabled(length > 0)
-
-	def _on_disconnected(self, *args):
-		self._connect_action.set_enabled(True)
-		for action in self._data:
-			self.lookup_action(action).set_enabled(False)
-
-	def _on_connected(self, *args):
-		self._connect_action.set_enabled(False)
-		for action in self._enable_on_reconnect_data:
-			self.lookup_action(action).set_enabled(True)
-
 ###############
 # main window #
 ###############
@@ -2914,7 +2802,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		self.insert_action_group("mpd", MPDActionGroup(self._client))
 		simple_actions_data=("close", "search", "preferences", "manual-connect", "server-info")
 		for name in simple_actions_data:
 			action=Gio.SimpleAction.new(name, None)
@@ -2952,7 +2839,7 @@ class MainWindow(Adw.ApplicationWindow):
 		status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
 		status_page.set_description(_("To use Plattenalbum, an instance of the Music Player Daemon "\
 			"needs to be set up and running on this device or another one on the network"))
-		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="mpd.connect", action_target=GLib.Variant("b", False))
+		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="app.connect", action_target=GLib.Variant("b", False))
 		connect_button.set_css_classes(["suggested-action", "pill"])
 		manual_connect_button=Gtk.Button(label=_("Connect _Manually"), use_underline=True, action_name="win.manual-connect")
 		manual_connect_button.add_css_class("pill")
@@ -3042,11 +2929,11 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_search_entry_focus_event(self, controller, focus):
 		if focus:
-			self.get_application().set_accels_for_action("mpd.toggle-play", [])
-			self.get_application().set_accels_for_action("mpd.a-b-loop", [])
+			self.get_application().set_accels_for_action("app.toggle-play", [])
+			self.get_application().set_accels_for_action("app.a-b-loop", [])
 		else:
-			self.get_application().set_accels_for_action("mpd.toggle-play", ["space"])
-			self.get_application().set_accels_for_action("mpd.a-b-loop", ["l"])
+			self.get_application().set_accels_for_action("app.toggle-play", ["space"])
+			self.get_application().set_accels_for_action("app.a-b-loop", ["l"])
 
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
@@ -3149,17 +3036,47 @@ class Plattenalbum(Adw.Application):
 		action=Gio.SimpleAction.new("quit", None)
 		action.connect("activate", self._on_quit)
 		self.add_action(action)
+
+		# mpd actions
+		self._disable_on_stop_data=["next","previous","seek-forward","seek-backward","a-b-loop"]
+		self._disable_no_song_data=["tidy","enqueue"]
+		self._enable_disable_on_playlist_data=["toggle-play","clear"]
+		self._enable_on_reconnect_data=["stop","update","disconnect"]
+		self._data=self._disable_on_stop_data+self._disable_no_song_data+self._enable_on_reconnect_data+self._enable_disable_on_playlist_data
+		for name in self._data:
+			action=Gio.SimpleAction.new(name, None)
+			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
+			self.add_action(action)
+		playback_data=["repeat","random","single","single-oneshot","consume"]
+		self._enable_on_reconnect_data+=playback_data
+		self._data+=playback_data
+		for name in playback_data:
+			action=Gio.SimpleAction.new_stateful(name , None, GLib.Variant("b", False))
+			handler=action.connect("notify::state", self._on_mode_change, name)
+			self.add_action(action)
+			self._client.emitter.connect(name, self._update_action, action, handler)
+		self._connect_action=Gio.SimpleAction.new("connect", GLib.VariantType.new("b"))
+		self._connect_action.connect("activate", self._on_connect)
+		self.add_action(self._connect_action)
+
 		# accelerators
 		action_accels=(
 			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.preferences", ["<Ctrl>comma"]),("win.search", ["<Ctrl>f"]),
-			("win.server-info", ["<Ctrl>i"]),("mpd.disconnect", ["<Ctrl>d"]),("mpd.update", ["F5"]),("mpd.clear", ["<Shift>Delete"]),
-			("mpd.toggle-play", ["space"]),("mpd.stop", ["<Ctrl>space"]),("mpd.next", ["<Ctrl>k"]),("mpd.previous", ["<Shift><Ctrl>k"]),
-			("mpd.repeat", ["<Ctrl>r"]),("mpd.random", ["<Ctrl>n"]),("mpd.single", ["<Ctrl>s"]),("mpd.consume", ["<Ctrl>o"]),
-			("mpd.single-oneshot", ["<Ctrl>p"]),("mpd.seek-forward", ["<Ctrl>plus"]),("mpd.seek-backward", ["<Ctrl>minus"]),
-			("mpd.a-b-loop", ["l"]),("mpd.enqueue", ["<Ctrl>e"]),("mpd.tidy", ["<Ctrl>t"]),("menu.delete", ["Delete"])
+			("win.server-info", ["<Ctrl>i"]),("app.disconnect", ["<Ctrl>d"]),("app.update", ["F5"]),("app.clear", ["<Shift>Delete"]),
+			("app.toggle-play", ["space"]),("app.stop", ["<Ctrl>space"]),("app.next", ["<Ctrl>k"]),("app.previous", ["<Shift><Ctrl>k"]),
+			("app.repeat", ["<Ctrl>r"]),("app.random", ["<Ctrl>n"]),("app.single", ["<Ctrl>s"]),("app.consume", ["<Ctrl>o"]),
+			("app.single-oneshot", ["<Ctrl>p"]),("app.seek-forward", ["<Ctrl>plus"]),("app.seek-backward", ["<Ctrl>minus"]),
+			("app.a-b-loop", ["l"]),("app.enqueue", ["<Ctrl>e"]),("app.tidy", ["<Ctrl>t"]),("menu.delete", ["Delete"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)
+
+		# connect
+		self._client.emitter.connect("state", self._on_state)
+		self._client.emitter.connect("current-song", self._on_song_changed)
+		self._client.emitter.connect("playlist", self._on_playlist_changed)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.emitter.connect("connected", self._on_connected)
 
 	def do_activate(self):
 		if self._window is None:
@@ -3193,6 +3110,80 @@ class Plattenalbum(Adw.Application):
 
 	def _on_quit(self, *args):
 		self.quit()
+
+	def _on_toggle_play(self, action, param):
+		self._client.toggle_play()
+
+	def _on_stop(self, action, param):
+		self._client.stop()
+
+	def _on_next(self, action, param):
+		self._client.next()
+
+	def _on_previous(self, action, param):
+		self._client.previous()
+
+	def _on_seek_forward(self, action, param):
+		self._client.seekcur("+10")
+
+	def _on_seek_backward(self, action, param):
+		self._client.seekcur("-10")
+
+	def _on_a_b_loop(self, action, param):
+		self._client.a_b_loop()
+
+	def _on_tidy(self, action, param):
+		self._client.tidy_playlist()
+
+	def _on_enqueue(self, action, param):
+		song=self._client.currentsong()
+		self._client.album_to_playlist(song["albumartist"][0], song["album"][0], song["date"][0], "enqueue")
+
+	def _on_clear(self, action, param):
+		self._client.clear()
+
+	def _on_update(self, action, param):
+		self._client.update()
+
+	def _update_action(self, emitter, value, action, handler):
+		action.handler_block(handler)
+		action.set_state(GLib.Variant("b", value))
+		action.handler_unblock(handler)
+
+	def _on_mode_change(self, action, typestring, name):
+		if name == "single-oneshot":
+			self._client.single("oneshot" if action.get_state() else "0")
+		else:
+			getattr(self._client, name)("1" if action.get_state() else "0")
+
+	def _on_disconnect(self, action, param):
+		self._client.disconnect()
+
+	def _on_connect(self, action, param):
+		self._client.try_connect(param.get_boolean())
+
+	def _on_state(self, emitter, state):
+		state_dict={"play": True, "pause": True, "stop": False}
+		for action in self._disable_on_stop_data:
+			self.lookup_action(action).set_enabled(state_dict[state])
+
+	def _on_song_changed(self, emitter, song, songpos, songid, state):
+		for action in self._disable_no_song_data:
+			self.lookup_action(action).set_enabled(songpos is not None)
+
+	def _on_playlist_changed(self, emitter, version, length, songpos):
+		for action in self._enable_disable_on_playlist_data:
+			self.lookup_action(action).set_enabled(length > 0)
+
+	def _on_disconnected(self, *args):
+		self._connect_action.set_enabled(True)
+		for action in self._data:
+			self.lookup_action(action).set_enabled(False)
+
+	def _on_connected(self, *args):
+		self._connect_action.set_enabled(False)
+		for action in self._enable_on_reconnect_data:
+			self.lookup_action(action).set_enabled(True)
 
 if __name__ == "__main__":
 	app=Plattenalbum()
