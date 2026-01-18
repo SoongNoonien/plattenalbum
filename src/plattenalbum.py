@@ -2938,26 +2938,8 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
 			self.set_title(song["title"][0])
-			if self._settings.get_boolean("send-notify") and not self.is_active() and state == "play":
-				notify=Gio.Notification()
-				notify.set_title(_("Next Title is Playing"))
-				if artist:=song["artist"]:
-					body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
-				else:
-					body=_("Now playing “{title}”").format(title=song["title"][0])
-				notify.set_body(body)
-				self.get_application().send_notification("title-change", notify)
-			else:
-				self.get_application().withdraw_notification("title-change")
 		else:
 			self._clear_title()
-			if self._settings.get_boolean("send-notify") and not self.is_active():
-				notify=Gio.Notification()
-				notify.set_title(_("Playback Finished"))
-				notify.set_body(_("The playlist is over"))
-				self.get_application().send_notification("title-change", notify)
-			else:
-				self.get_application().withdraw_notification("title-change")
 
 	def _on_state(self, emitter, state):
 		if state == "play":
@@ -3170,6 +3152,27 @@ class Plattenalbum(Adw.Application):
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		for action in self._disable_no_song_data:
 			self.lookup_action(action).set_enabled(songpos is not None)
+		if song:
+			if self._settings.get_boolean("send-notify") and not self._window.is_active() and state == "play":
+				notify=Gio.Notification()
+				notify.set_title(_("Next Title is Playing"))
+				if artist:=song["artist"]:
+					body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
+				else:
+					body=_("Now playing “{title}”").format(title=song["title"][0])
+				notify.set_body(body)
+				notify.add_button(_("Skip"), "app.next")
+				self.send_notification("title-change", notify)
+			else:
+				self.withdraw_notification("title-change")
+		else:
+			if self._settings.get_boolean("send-notify") and not self._window.is_active():
+				notify=Gio.Notification()
+				notify.set_title(_("Playback Finished"))
+				notify.set_body(_("The playlist is over"))
+				self.send_notification("title-change", notify)
+			else:
+				self.withdraw_notification("title-change")
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
 		for action in self._enable_disable_on_playlist_data:
