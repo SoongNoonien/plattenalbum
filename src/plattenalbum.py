@@ -1930,7 +1930,9 @@ class Browser(Gtk.Stack):
 		self._album_navigation_view.pop_to_tag("album_list")
 
 	def _on_album_selected(self, widget, *tags):
-		self._album_navigation_view.push(AlbumPage(self._client, *tags))
+		album_page=AlbumPage(self._client, *tags)
+		self._album_navigation_view.push(album_page)
+		album_page.play_button.grab_focus()
 
 	def _on_search_artist_selected(self, widget, artist):
 		self._artist_list.select(artist)
