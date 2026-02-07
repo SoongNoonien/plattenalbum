@@ -1796,7 +1796,7 @@ class AlbumPage(Adw.NavigationPage):
 		self.set_child(toolbar_view)
 
 		# populate
-		if album:  # TODO unknown album
+		if album:
 			self.set_title(album)
 			title.set_text(album)
 		else:
