@@ -1352,6 +1352,7 @@ class BrowserSongList(Gtk.ListBox):
 
 		# connect
 		self.connect("row-activated", self._on_row_activated)
+		self.connect("keynav-failed", self._on_keynav_failed)
 		button_controller.connect("pressed", self._on_button_pressed)
 		long_press_controller.connect("pressed", self._on_long_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
@@ -1371,6 +1372,10 @@ class BrowserSongList(Gtk.ListBox):
 
 	def _on_row_activated(self, list_box, row):
 		self._client.file_to_playlist(row.song["file"], "play")
+
+	def _on_keynav_failed(self, list_box, direction):
+		if (root:=list_box.get_root()) is not None and direction == Gtk.DirectionType.UP:
+			root.child_focus(Gtk.DirectionType.TAB_BACKWARD)
 
 	def _on_button_pressed(self, controller, n_press, x, y):
 		if (row:=self.get_row_at_y(y)) is not None:
@@ -1472,7 +1477,9 @@ class SearchView(Gtk.Stack):
 
 		# connect
 		self._artist_list.connect("row-activated", self._on_artist_activate)
+		self._artist_list.connect("keynav-failed", self._on_keynav_failed)
 		self._album_list.connect("row-activated", self._on_album_activate)
+		self._album_list.connect("keynav-failed", self._on_keynav_failed)
 
 		# packing
 		self.add_named(status_page, "no-results")
@@ -1514,6 +1521,13 @@ class SearchView(Gtk.Stack):
 
 	def _on_album_activate(self, list_box, row):
 		self.emit("album-selected", row.album, row.artist, row.date)
+
+	def _on_keynav_failed(self, list_box, direction):
+		if (root:=list_box.get_root()) is not None:
+			if direction == Gtk.DirectionType.UP:
+				root.child_focus(Gtk.DirectionType.TAB_BACKWARD)
+			elif direction == Gtk.DirectionType.DOWN:
+				root.child_focus(Gtk.DirectionType.TAB_FORWARD)
 
 class Artist(GObject.Object):
 	def __init__(self, name):
