@@ -3,7 +3,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gdk, Gio, Gtk, Graphene
 from .song import SongMenu
-from .lookup_icon import lookup_icon
+from .functions import lookup_icon
 
 class BrowserSongRow(Adw.ActionRow):
 	def __init__(self, song, show_track=True, hide_artist="", **kwargs):
