@@ -40,11 +40,11 @@ try:
 	locale.setlocale(locale.LC_ALL, "")
 except locale.Error as e:
 	print(e)
-locale.bindtextdomain("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@")
+locale.bindtextdomain("de.wagnermartin.Plattenalbum", "builddir/po/fr")
 locale.textdomain("de.wagnermartin.Plattenalbum")
-bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
+bindtextdomain("de.wagnermartin.Plattenalbum", localedir="builddir/po/fr")
 textdomain("de.wagnermartin.Plattenalbum")
-Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
+Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["/usr/local/share/de.wagnermartin.Plattenalbum", "de.wagnermartin.Plattenalbum.gresource"])))
 
 FALLBACK_COVER=Gdk.Paintable.new_empty(1, 1)
 
