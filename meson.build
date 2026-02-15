@@ -5,6 +5,7 @@ gnome = import('gnome')
 
 resources_dir = join_paths(get_option('prefix'), get_option('datadir'), 'de.wagnermartin.Plattenalbum')
 
+subdir('lib')
 subdir('data')
 subdir('src')
 subdir('po')

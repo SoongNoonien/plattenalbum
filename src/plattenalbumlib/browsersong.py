@@ -6,7 +6,7 @@ from .song import SongMenu
 from .functions import lookup_icon
 
 class BrowserSongRow(Adw.ActionRow):
-	def __init__(self, song, show_track=True, hide_artist="", **kwargs):
+	def __init__(self, song, show_track=True, hide_artist="",  hide_composer="", **kwargs):
 		super().__init__(use_markup=False, activatable=True, **kwargs)
 		self.song=song
 

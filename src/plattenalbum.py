@@ -31,20 +31,20 @@ try:
 	locale.setlocale(locale.LC_ALL, "")
 except locale.Error as e:
 	print(e)
-locale.bindtextdomain("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@")
+locale.bindtextdomain("de.wagnermartin.Plattenalbum", "builddir/po/fr")
 locale.textdomain("de.wagnermartin.Plattenalbum")
-bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
+bindtextdomain("de.wagnermartin.Plattenalbum", localedir="builddir/po/fr")
 textdomain("de.wagnermartin.Plattenalbum")
-Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
+Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["/usr/local/share/de.wagnermartin.Plattenalbum", "de.wagnermartin.Plattenalbum.gresource"])))
 
-from lib.mpris import MPRISInterface
-from lib.duration import Duration
-from lib.client import Client
-from lib.settings import Settings
-from lib.dialogs import  ConnectDialog, ManualConnectDialog, PreferencesDialog, SetupDialog, ServerInfo
-from lib.browser import Browser
-from lib.player import Player
-from lib.player_bar import PlayerBar
+from plattenalbumlib.mpris import MPRISInterface
+from plattenalbumlib.duration import Duration
+from plattenalbumlib.client import Client
+from plattenalbumlib.settings import Settings
+from plattenalbumlib.dialogs import  ConnectDialog, ManualConnectDialog, PreferencesDialog, SetupDialog, ServerInfo
+from plattenalbumlib.browser import Browser
+from plattenalbumlib.player import Player
+from plattenalbumlib.player_bar import PlayerBar
 
 ###############
 # main window #

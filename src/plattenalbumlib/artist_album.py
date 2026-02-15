@@ -10,7 +10,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GLib, Gtk, GObject, Pango
 
 
-class Album(GObject.Object):
+class ArtistAlbum(GObject.Object):
 	def __init__(self, artist, name, date):
 		GObject.Object.__init__(self)
 		self.artist=artist
@@ -19,7 +19,7 @@ class Album(GObject.Object):
 		self.cover=None
 
 
-class AlbumCover(Gtk.Widget):
+class ArtistAlbumCover(Gtk.Widget):
 	def __init__(self, **kwargs):
 		super().__init__(hexpand=True, **kwargs)
 		self._picture=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
@@ -48,11 +48,11 @@ class AlbumCover(Gtk.Widget):
 		self._picture.set_alternative_text(alt_text)
 
 
-class AlbumListRow(Gtk.Box):
+class ArtistAlbumListRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
 		self._client=client
-		self._cover=AlbumCover()
+		self._cover=ArtistAlbumCover()
 		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, margin_top=3)
 		self._date=Gtk.Label(single_line_mode=True, css_classes=["dimmed", "caption"])
 		self.append(self._cover)
@@ -74,7 +74,7 @@ class AlbumListRow(Gtk.Box):
 			album.cover=self._client.get_cover(song["file"]).get_paintable()
 		self._cover.set_paintable(album.cover)
 
-class AlbumRow(Adw.ActionRow):
+class ArtistAlbumRow(Adw.ActionRow):
 	def __init__(self, album):
 		super().__init__(use_markup=False, activatable=True, css_classes=["property"])
 		self.album = album["album"]
@@ -92,7 +92,7 @@ class AlbumRow(Adw.ActionRow):
 		self.add_suffix(
 			Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 
-class AlbumsPage(Adw.NavigationPage):
+class ArtistAlbumsPage(Adw.NavigationPage):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
 	def __init__(self, client, settings):
 		super().__init__(title=_("Albums"), tag="album_list")
@@ -103,12 +103,12 @@ class AlbumsPage(Adw.NavigationPage):
 		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
 		self.grid_view.add_css_class("navigation-sidebar")
 		self.grid_view.add_css_class("albums-view")
-		self._selection_model=SelectionModel(Album)
+		self._selection_model=SelectionModel(ArtistAlbum)
 		self.grid_view.set_model(self._selection_model)
 
 		# factory
 		def setup(factory, item):
-			row=AlbumListRow(self._client)
+			row=ArtistAlbumListRow(self._client)
 			item.set_child(row)
 		def bind(factory, item):
 			row=item.get_child()
@@ -153,7 +153,7 @@ class AlbumsPage(Adw.NavigationPage):
 	def _get_albums(self, artist):
 		albums=self._client.list("album", "albumartist", artist, "group", "date")
 		for album in albums:
-			yield Album(artist, album["album"], album["date"])
+			yield ArtistAlbum(artist, album["album"], album["date"])
 
 	def display(self, artist):
 		self._settings.set_property("cursor-watch", True)
@@ -179,8 +179,7 @@ class AlbumsPage(Adw.NavigationPage):
 		self._stack.set_visible_child_name("albums")
 
 
-
-class AlbumPage(Adw.NavigationPage):
+class ArtistAlbumPage(Adw.NavigationPage):
 	def __init__(self, client, albumartist, album, date):
 		super().__init__()
 		tag_filter=("albumartist", albumartist, "album", album, "date", date)
@@ -214,7 +213,7 @@ class AlbumPage(Adw.NavigationPage):
 		label_box.append(length)
 
 		# cover
-		album_cover=AlbumCover()
+		album_cover=ArtistAlbumCover()
 
 		# packing
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_start=12, margin_end=12, margin_top=6, margin_bottom=24)
