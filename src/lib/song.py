@@ -20,7 +20,7 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 	def __setitem__(self, key, value):
 		if key == "time":  # time is deprecated https://mpd.readthedocs.io/en/latest/protocol.html#other-metadata
 			pass
-		elif key == "duration.py":
+		elif key == "duration":
 			super().__setitem__(key, Duration(value))
 		elif key in ("range", "file", "pos", "id", "format", "last-modified"):
 			super().__setitem__(key, value)
@@ -40,7 +40,7 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 				return self["artist"]
 			elif key == "title":
 				return MultiTag([GLib.path_get_basename(self.data["file"])])
-			elif key == "duration.py":
+			elif key == "duration":
 				return Duration()
 			else:
 				return MultiTag([""])
@@ -70,7 +70,7 @@ class SongListRow(Gtk.Box):
 		self._title.set_text(song["title"][0])
 		self._subtitle.set_visible(bool(subtitle))
 		self._subtitle.set_text(subtitle)
-		self._length.set_text(str(song["duration.py"]))
+		self._length.set_text(str(song["duration"]))
 
 	def unset_song(self):
 		self._title.set_text("")

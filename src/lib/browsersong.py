@@ -14,7 +14,7 @@ class BrowserSongRow(Adw.ActionRow):
 		self.set_title(song["title"][0])
 		if subtitle:=", ".join(artist for artist in song["artist"] if artist != hide_artist):
 			self.set_subtitle(subtitle)
-		length=Gtk.Label(label=str(song["duration.py"]), xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
+		length=Gtk.Label(label=str(song["duration"]), xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
 		self.add_suffix(length)
 		if show_track:
 			track=Gtk.Label(label=song["track"][0], xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric", "dimmed"])

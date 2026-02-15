@@ -126,6 +126,7 @@ class MainMenuButton(Gtk.MenuButton):
 		menu.append_section(None, app_section)
 		self.set_menu_model(menu)
 
+
 class Browser(Gtk.Stack):
 	def __init__(self, client, settings):
 		super().__init__()

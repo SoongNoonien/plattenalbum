@@ -309,7 +309,7 @@ class Client(MPDClient):
 				self._clear_marks()
 			if "elapsed" in diff:
 				elapsed=float(diff["elapsed"])
-				self.emitter.emit("elapsed", elapsed, float(status.get("duration.py", 0.0)))
+				self.emitter.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
 				if self._second_mark is not None:
 					if elapsed > self._second_mark:
 						self.seekcur(self._first_mark)

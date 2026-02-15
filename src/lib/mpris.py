@@ -303,7 +303,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		if str(trackid).split("/")[-1] != song["id"]:
 			return
 		mpd_pos=position/1000000
-		if 0 <= mpd_pos <= float(song["duration.py"]):
+		if 0 <= mpd_pos <= float(song["duration"]):
 			self._client.seekcur(str(mpd_pos))
 
 	def OpenUri(self, uri):
@@ -333,8 +333,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("as", song[tag])
 		if "id" in song:
 			self._metadata["mpris:trackid"]=GLib.Variant("o", f"{self._MPRIS_PATH}/Track/{song['id']}")
-		if "duration.py" in song:
-			self._metadata["mpris:length"]=GLib.Variant("x", float(song["duration.py"])*1000000)
+		if "duration" in song:
+			self._metadata["mpris:length"]=GLib.Variant("x", float(song["duration"])*1000000)
 		if "file" in song:
 			if "://" in (song_file:=song["file"]):  # remote file
 				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
