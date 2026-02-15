@@ -8,8 +8,9 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import threading
-
+from .functions import idle_add
 from .song import Song
+
 
 class LetrasParser(HTMLParser):
 	def __init__(self):
