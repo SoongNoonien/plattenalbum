@@ -17,7 +17,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: flatpak/flatpak-github-actions/flatpak-builder@master
       with:
-        bundle: plattenalbum.flatpak
+        bundle: lib.flatpak
         manifest-path: de.wagnermartin.Plattenalbum.json
         run-tests: true
         cache-key: flatpak-builder-${{ github.sha }}

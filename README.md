@@ -41,7 +41,7 @@ Install the following dependencies on your system.
 Execute the following commands to build and install the program.
 ```bash
 git clone https://github.com/SoongNoonien/plattenalbum.git
-cd plattenalbum
+cd lib
 meson setup builddir --prefix=/usr/local
 sudo ninja -C builddir install
 ```
