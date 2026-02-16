@@ -25,6 +25,7 @@ class BehaviorPreferences(Adw.PreferencesGroup):
 			(_("Send _Notification on Title Change"), "send-notify", ""),
 			(_("Stop _Playback on Quit"), "stop-on-quit", ""),
 			(_("Support “_MPRIS”"), "mpris", _("Disable if “MPRIS” is supported by another client")),
+			(_("Browse by composer"), "composer", _("Instead by artist")),
 		)
 		for title, key, subtitle in toggle_data:
 			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)

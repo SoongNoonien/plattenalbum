@@ -46,5 +46,9 @@
 			<default>true</default>
 			<summary>Provide MPRIS</summary>
 		</key>
+		<key type="b" name="composer">
+			<default>false</default>
+			<summary>Browse by composer</summary>
+		</key>
 	</schema>
 </schemalist>
