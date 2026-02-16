@@ -147,7 +147,11 @@ class SearchView(Gtk.Stack):
 		self.emit("artist-selected", row.get_title())
 
 	def _on_album_activate(self, list_box, row):
-		self.emit("album-selected", row.album, row.artist, row.date)
+		if self.browse_by_composer:
+			self.emit("album-selected", row.album, row.composer, row.date)
+		else:
+			self.emit("album-selected", row.album, row.artist, row.date)
+
 
 	def _on_keynav_failed(self, list_box, direction):
 		if (root:=list_box.get_root()) is not None:
