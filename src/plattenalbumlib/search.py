@@ -19,22 +19,25 @@ class SearchView(Gtk.Stack):
 		"composer-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))
 	}
-	def __init__(self, client):
+	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
+		self.browse_by_composer = settings['composer']
+
 		self._results=20  # TODO adjust number of results
 		self._song_tags=("title", "artist", "composer", "album", "date")
 		self._artist_tags=("albumartist", "albumartistsort")
 		self._composer_tags=("composer", "composersort")
 		self._album_tags=("album", "albumartist", "albumartistsort", "date")
 
-		# artist list
-		self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
-		self._artist_list.add_css_class("boxed-list")
-
-		# composer list
-		self._composer_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
-		self._composer_list.add_css_class("boxed-list")
+		if self.browse_by_composer:
+			# composer list
+			self._composer_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
+			self._composer_list.add_css_class("boxed-list")
+		else:
+			# artist list
+			self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
+			self._artist_list.add_css_class("boxed-list")
 
 		# album list
 		self._album_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
@@ -45,12 +48,15 @@ class SearchView(Gtk.Stack):
 		self._song_list.add_css_class("boxed-list")
 
 		# boxes
-		self._artist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		self._artist_box.append(Gtk.Label(label=_("Artists"), xalign=0, css_classes=["heading"]))
-		self._artist_box.append(self._artist_list)
-		self._composer_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		self._composer_box.append(Gtk.Label(label=_("Composers"), xalign=0, css_classes=["heading"]))
-		self._composer_box.append(self._composer_list)
+		if self.browse_by_composer:
+			self._composer_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+			self._composer_box.append(Gtk.Label(label=_("Composers"), xalign=0, css_classes=["heading"]))
+			self._composer_box.append(self._composer_list)
+		else:
+			self._artist_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+			self._artist_box.append(Gtk.Label(label=_("Artists"), xalign=0, css_classes=["heading"]))
+			self._artist_box.append(self._artist_list)
+
 		self._album_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
 		self._album_box.append(Gtk.Label(label=_("Albums"), xalign=0, css_classes=["heading"]))
 		self._album_box.append(self._album_list)
@@ -58,8 +64,10 @@ class SearchView(Gtk.Stack):
 		self._song_box.append(Gtk.Label(label=_("Songs"), xalign=0, css_classes=["heading"]))
 		self._song_box.append(self._song_list)
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
-		box.append(self._artist_box)
-		box.append(self._composer_box)
+		if self.browse_by_composer:
+			box.append(self._composer_box)
+		else:
+			box.append(self._artist_box)
 		box.append(self._album_box)
 		box.append(self._song_box)
 
@@ -71,10 +79,12 @@ class SearchView(Gtk.Stack):
 		status_page=Adw.StatusPage(icon_name="edit-find-symbolic", title=_("No Results"), description=_("Try a different search"))
 
 		# connect
-		self._composer_list.connect("row-activated", self._on_composer_activate)
-		self._composer_list.connect("keynav-failed", self._on_keynav_failed)
-		self._artist_list.connect("row-activated", self._on_artist_activate)
-		self._artist_list.connect("keynav-failed", self._on_keynav_failed)
+		if self.browse_by_composer:
+			self._composer_list.connect("row-activated", self._on_composer_activate)
+			self._composer_list.connect("keynav-failed", self._on_keynav_failed)
+		else:
+			self._artist_list.connect("row-activated", self._on_artist_activate)
+			self._artist_list.connect("keynav-failed", self._on_keynav_failed)
 		self._album_list.connect("row-activated", self._on_album_activate)
 		self._album_list.connect("keynav-failed", self._on_keynav_failed)
 
@@ -83,8 +93,10 @@ class SearchView(Gtk.Stack):
 		self.add_named(scroll, "results")
 
 	def clear(self):
-		self._composer_list.remove_all()
-		self._artist_list.remove_all()
+		if self.browse_by_composer:
+			self._composer_list.remove_all()
+		else:
+			self._artist_list.remove_all()
 		self._album_list.remove_all()
 		self._song_list.remove_all()
 		self._adj.set_value(0.0)
@@ -102,25 +114,29 @@ class SearchView(Gtk.Stack):
 			self._song_box.set_visible(self._song_list.get_first_child() is not None)
 			albums=self._client.list("album", self._client.get_search_expression(self._album_tags, keywords), "group", "date", "group", "albumartist", "group", "composer")
 			for album in itertools.islice(albums, self._results):
-				# album_row=ArtistAlbumRow(album)
-				album_row=ComposerAlbumRow(album)
+				if self.browse_by_composer:
+					album_row = ComposerAlbumRow(album)
+				else:
+					album_row = ArtistAlbumRow(album)
 				self._album_list.append(album_row)
+
 			self._album_box.set_visible(self._album_list.get_first_child() is not None)
-			artists=self._client.list("albumartist", self._client.get_search_expression(self._artist_tags, keywords))
-			composers=self._client.list("composer", self._client.get_search_expression(self._composer_tags, keywords))
 
-			for artist in itertools.islice(artists, self._results):
-				row=Adw.ActionRow(title=artist["albumartist"], use_markup=False, activatable=True)
-				row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
-				self._artist_list.append(row)
+			if self.browse_by_composer:
+				composers=self._client.list("composer", self._client.get_search_expression(self._composer_tags, keywords))
+				for composer in itertools.islice(composers, self._results):
+					row = Adw.ActionRow(title=composer["composer"], use_markup=False, activatable=True)
+					row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
+					self._composer_list.append(row)
+				self._composer_box.set_visible(self._composer_list.get_first_child() is not None)
+			else:
+				artists = self._client.list("albumartist", self._client.get_search_expression(self._artist_tags, keywords))
+				for artist in itertools.islice(artists, self._results):
+					row=Adw.ActionRow(title=artist["albumartist"], use_markup=False, activatable=True)
+					row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
+					self._artist_list.append(row)
+				self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
 
-			for composer in itertools.islice(composers, self._results):
-				row=Adw.ActionRow(title=composer["composer"], use_markup=False, activatable=True)
-				row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
-				self._composer_list.append(row)
-
-			self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
-			self._composer_box.set_visible(self._composer_list.get_first_child() is not None)
 			if self._song_box.get_visible() or self._album_box.get_visible() or self._artist_box.get_visible():
 				self.set_visible_child_name("results")
 

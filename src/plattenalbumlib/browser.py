@@ -30,9 +30,9 @@ class Browser(Gtk.Stack):
 	def __init__(self, client, settings):
 		super().__init__()
 		self._client=client
-
+		self.browse_by_composer = settings['composer']
 		# search
-		self._search_view=SearchView(client)
+		self._search_view=SearchView(client, settings)
 		self.search_entry=Gtk.SearchEntry(placeholder_text=_("Search collection"), max_width_chars=25)
 		self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
 		search_toolbar_view=Adw.ToolbarView(content=self._search_view)
@@ -40,18 +40,25 @@ class Browser(Gtk.Stack):
 		search_toolbar_view.add_top_bar(search_header_bar)
 		search_toolbar_view.add_css_class("content-pane")
 
-		artist_page = self._artist_list_setup(client)
-		composer_page = self._composer_list_setup(client)
 		# album list
-		#self._albums_page=ArtistAlbumsPage(client, settings)
-		self._albums_page = ComposerAlbumsPage(client, settings)
+		if self.browse_by_composer:
+			composer_page = self._composer_list_setup(client)
+			self._albums_page = ComposerAlbumsPage(client, settings)
+		else:
+			artist_page = self._artist_list_setup(client)
+			self._albums_page = ArtistAlbumsPage(client, settings)
+
 		# navigation view
 		self._album_navigation_view=Adw.NavigationView()
 		self._album_navigation_view.add(self._albums_page)
 		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
 		# split view
-		self._navigation_split_view=Adw.NavigationSplitView(sidebar=composer_page, content=album_navigation_view_page)
+		if self.browse_by_composer:
+			self._navigation_split_view=Adw.NavigationSplitView(sidebar=composer_page, content=album_navigation_view_page)
+		else:
+			self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
+
 		# breakpoint bin
 		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
 		break_point=Adw.Breakpoint()
@@ -76,8 +83,10 @@ class Browser(Gtk.Stack):
 
 		# connect
 		self._albums_page.connect("album-selected", self._on_album_selected)
-		self._artist_list_connect()
-		self._composer_list_connect()
+		if self.browse_by_composer:
+			self._composer_list_connect()
+		else:
+			self._artist_list_connect()
 		self._search_view.connect("album-selected", lambda widget, *args: self._show_album(*args))
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
@@ -165,8 +174,10 @@ class Browser(Gtk.Stack):
 		self._album_navigation_view.pop_to_tag("album_list")
 
 	def _on_album_selected(self, widget, *tags):
-		# album_page=ArtistAlbumPage(self._client, *tags)
-		album_page = ComposerAlbumPage(self._client, *tags)
+		if self.browse_by_composer:
+			album_page = ComposerAlbumPage(self._client, *tags)
+		else:
+			album_page = ArtistAlbumPage(self._client, *tags)
 		self._album_navigation_view.push(album_page)
 		album_page.play_button.grab_focus()
 
@@ -181,10 +192,13 @@ class Browser(Gtk.Stack):
 		self._albums_page.grid_view.grab_focus()
 
 	def _show_album(self, album, artist, date):
-		#self._artist_list.select(artist)
-		self._composer_list.select(artist)
-		#album_page=ArtistAlbumPage(self._client, artist, album, date)
-		album_page=ComposerAlbumPage(self._client, artist, album, date)
+		if self.browse_by_composer:
+			self._composer_list.select(artist)
+			album_page = ComposerAlbumPage(self._client, artist, album, date)
+		else:
+			self._artist_list.select(artist)
+			album_page = ArtistAlbumPage(self._client, artist, album, date)
+
 		self._album_navigation_view.replace([self._albums_page, album_page])
 		self.search_entry.emit("stop-search")
 		album_page.play_button.grab_focus()
