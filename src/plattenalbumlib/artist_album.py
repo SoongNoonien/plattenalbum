@@ -9,6 +9,7 @@ from .browsersong import BrowserSongList
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GLib, Gtk, GObject, Pango
 
+from .album_cover import AlbumCover
 
 class ArtistAlbum(GObject.Object):
 	def __init__(self, artist, name, date):
@@ -19,40 +20,11 @@ class ArtistAlbum(GObject.Object):
 		self.cover=None
 
 
-class ArtistAlbumCover(Gtk.Widget):
-	def __init__(self, **kwargs):
-		super().__init__(hexpand=True, **kwargs)
-		self._picture=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
-		self._picture.set_parent(self)
-		self.connect("destroy", lambda *args: self._picture.unparent())
-
-	def do_get_request_mode(self):
-		return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
-
-	def do_size_allocate(self, width, height, baseline):
-		self._picture.allocate(width, height, baseline, None)
-
-	def do_measure(self, orientation, for_size):
-		return (for_size, for_size, -1, -1)
-
-	def set_paintable(self, paintable):
-		if paintable.get_intrinsic_width()/paintable.get_intrinsic_height() >= 1:
-			self._picture.set_halign(Gtk.Align.FILL)
-			self._picture.set_valign(Gtk.Align.CENTER)
-		else:
-			self._picture.set_halign(Gtk.Align.CENTER)
-			self._picture.set_valign(Gtk.Align.FILL)
-		self._picture.set_paintable(paintable)
-
-	def set_alternative_text(self, alt_text):
-		self._picture.set_alternative_text(alt_text)
-
-
 class ArtistAlbumListRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
 		self._client=client
-		self._cover=ArtistAlbumCover()
+		self._cover=AlbumCover()
 		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, margin_top=3)
 		self._date=Gtk.Label(single_line_mode=True, css_classes=["dimmed", "caption"])
 		self.append(self._cover)
@@ -74,6 +46,7 @@ class ArtistAlbumListRow(Gtk.Box):
 			album.cover=self._client.get_cover(song["file"]).get_paintable()
 		self._cover.set_paintable(album.cover)
 
+
 class ArtistAlbumRow(Adw.ActionRow):
 	def __init__(self, album):
 		super().__init__(use_markup=False, activatable=True, css_classes=["property"])
@@ -91,6 +64,7 @@ class ArtistAlbumRow(Adw.ActionRow):
 		self.add_suffix(date)
 		self.add_suffix(
 			Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
+
 
 class ArtistAlbumsPage(Adw.NavigationPage):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
@@ -213,7 +187,7 @@ class ArtistAlbumPage(Adw.NavigationPage):
 		label_box.append(length)
 
 		# cover
-		album_cover=ArtistAlbumCover()
+		album_cover=AlbumCover()
 
 		# packing
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_start=12, margin_end=12, margin_top=6, margin_bottom=24)
