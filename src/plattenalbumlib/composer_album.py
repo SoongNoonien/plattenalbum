@@ -1,14 +1,13 @@
 from gettext import gettext as _
 import gi
-
-from .duration import Duration
-from .models import SelectionModel
-from .browsersong import BrowserSongRow
-from .browsersong import BrowserSongList
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GLib, Gtk, GObject, Pango
 
 from .album_cover import AlbumCover
+from .album_page import AlbumPage
+from .browsersong import BrowserSongRow
+from .duration import Duration
+from .models import SelectionModel
 
 class ComposerAlbum(GObject.Object):
 	def __init__(self, composer, name, date):
@@ -150,67 +149,20 @@ class ComposerAlbumsPage(Adw.NavigationPage):
 		self._stack.set_visible_child_name("albums")
 
 
-class ComposerAlbumPage(Adw.NavigationPage):
+class ComposerAlbumPage(AlbumPage):
 	def __init__(self, client, albumcomposer, album, date):
-		super().__init__()
-		tag_filter=("composer", albumcomposer, "album", album, "date", date)
+		super().__init__(client, album, date)
+		tag_filter = ("composer", albumcomposer, "album", album, "date", date)
 
-		# songs list
-		song_list=BrowserSongList(client)
-		song_list.add_css_class("boxed-list")
-
-		# buttons
-		self.play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"))
 		self.play_button.connect("clicked", lambda *args: client.filter_to_playlist(tag_filter, "play"))
-		append_button=Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Append"))
-		append_button.connect("clicked", lambda *args: client.filter_to_playlist(tag_filter, "append"))
+		self.append_button.connect("clicked", lambda *args: client.filter_to_playlist(tag_filter, "append"))
 
-		# header bar
-		header_bar=Adw.HeaderBar(show_title=False)
-		header_bar.pack_end(self.play_button)
-		header_bar.pack_end(append_button)
-
-		# labels
-		suptitle=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
-		title=Gtk.Label(wrap=True, justify=Gtk.Justification.CENTER, css_classes=["title-4"])
-		subtitle=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, visible=bool(date))
-		length=Gtk.Label(single_line_mode=True, css_classes=["numeric", "dimmed", "caption"])
-
-		# label box
-		label_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3, margin_top=9, margin_bottom=18)
-		label_box.append(suptitle)
-		label_box.append(title)
-		label_box.append(subtitle)
-		label_box.append(length)
-
-		# cover
-		album_cover=AlbumCover()
-
-		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_start=12, margin_end=12, margin_top=6, margin_bottom=24)
-		box.append(Adw.Clamp(child=album_cover, maximum_size=200))
-		box.append(label_box)
-		box.append(Adw.Clamp(child=song_list))
-		self._scroll=Gtk.ScrolledWindow(child=box)
-		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-		toolbar_view=Adw.ToolbarView(content=self._scroll)
-		toolbar_view.add_top_bar(header_bar)
-		self.set_child(toolbar_view)
-
-		# populate
-		if album:
-			self.set_title(album)
-			title.set_text(album)
-		else:
-			self.set_title(_("Unknown Album"))
-			title.set_text(_("Unknown Album"))
-		suptitle.set_text(albumcomposer)
-		subtitle.set_text(date)
-		length.set_text(str(Duration(client.count(*tag_filter)["playtime"])))
-		client.restrict_tagtypes("track", "title", "composer")
-		songs=client.find(*tag_filter)
+		self.suptitle.set_text(albumcomposer)
+		self.length.set_text(str(Duration(client.count(*tag_filter)["playtime"])))
+		client.restrict_tagtypes("track", "title", "artist")
+		songs = client.find(*tag_filter)
 		client.tagtypes("all")
-		album_cover.set_paintable(client.get_cover(songs[0]["file"]).get_paintable())
+		self.album_cover.set_paintable(client.get_cover(songs[0]["file"]).get_paintable())
 		for song in songs:
-			row=BrowserSongRow(song, hide_composer=albumcomposer)
-			song_list.append(row)
+			row = BrowserSongRow(song, hide_composer=albumcomposer)
+			self.song_list.append(row)
