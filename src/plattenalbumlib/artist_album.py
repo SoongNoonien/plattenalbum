@@ -5,7 +5,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GLib, Gtk, GObject, Pango
 
 from .album import Album
-from .album_cover import AlbumCover
+from .album_list_row import AlbumListRow
 from .album_page import AlbumPage
 from .browsersong import BrowserSongRow
 from .duration import Duration
@@ -18,25 +18,12 @@ class ArtistAlbum(Album):
 		self.artist=artist
 
 
-class ArtistAlbumListRow(Gtk.Box):
+class ArtistAlbumListRow(AlbumListRow):
 	def __init__(self, client):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
-		self._client=client
-		self._cover=AlbumCover()
-		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, margin_top=3)
-		self._date=Gtk.Label(single_line_mode=True, css_classes=["dimmed", "caption"])
-		self.append(self._cover)
-		self.append(self._title)
-		self.append(self._date)
+		super().__init__(client)
 
 	def set_album(self, album):
-		if album.name:
-			self._title.set_text(album.name)
-			self._cover.set_alternative_text(_("Album cover of {album}").format(album=album.name))
-		else:
-			self._title.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Album"))}</i>')
-			self._cover.set_alternative_text(_("Album cover of an unknown album"))
-		self._date.set_text(album.date)
+		super().set_album(album)
 		if album.cover is None:
 			self._client.tagtypes("clear")
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
