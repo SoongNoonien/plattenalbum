@@ -4,19 +4,18 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GLib, Gtk, GObject, Pango
 
+from .album import Album
 from .album_cover import AlbumCover
 from .album_page import AlbumPage
 from .browsersong import BrowserSongRow
 from .duration import Duration
 from .models import SelectionModel
 
-class ArtistAlbum(GObject.Object):
+
+class ArtistAlbum(Album):
 	def __init__(self, artist, name, date):
-		GObject.Object.__init__(self)
+		super().__init__(name, date)
 		self.artist=artist
-		self.name=name
-		self.date=date
-		self.cover=None
 
 
 class ArtistAlbumListRow(Gtk.Box):
