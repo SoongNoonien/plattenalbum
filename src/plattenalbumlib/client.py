@@ -9,59 +9,59 @@ from .cover import FallbackCover, FileCover, BinaryCover
 from .song import Song
 
 class Client(MPDClient):
-	def __init__(self, settings):
-		super().__init__()
-		self.add_command("config", MPDClient._parse_object)  # Work around https://github.com/Mic92/python-mpd2/issues/244
-		self._settings=settings
-		self.emitter=EventEmitter()
-		self._last_status={}
-		self._main_timeout_id=None
-		self._start_idle_id=None
-		self._music_directory=None
-		self.current_cover=FallbackCover()
-		self._first_mark=None
-		self._second_mark=None
-		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
-		self._socket_path=GLib.build_filenamev([GLib.get_user_runtime_dir(), "mpd", "socket"])
-		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
-		self.server=""
+    def __init__(self, settings):
+        super().__init__()
+        self.add_command("config", MPDClient._parse_object)  # Work around https://github.com/Mic92/python-mpd2/issues/244
+        self._settings=settings
+        self.emitter=EventEmitter()
+        self._last_status={}
+        self._main_timeout_id=None
+        self._start_idle_id=None
+        self._music_directory=None
+        self.current_cover=FallbackCover()
+        self._first_mark=None
+        self._second_mark=None
+        self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
+        self._socket_path=GLib.build_filenamev([GLib.get_user_runtime_dir(), "mpd", "socket"])
+        self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
+        self.server=""
 
-	# overloads to use Song class
-	def currentsong(self, *args):
-		return Song(super().currentsong(*args))
-	def search(self, *args):
-		return [Song(song) for song in super().search(*args)]
-	def find(self, *args):
-		return [Song(song) for song in super().find(*args)]
-	def playlistinfo(self):
-		return [Song(song) for song in super().playlistinfo()]
-	def plchanges(self, version):
-		return [Song(song) for song in super().plchanges(version)]
-	def lsinfo(self, uri):
-		return [Song(song) for song in super().lsinfo(uri)]
-	def listplaylistinfo(self, name):
-		return [Song(song) for song in super().listplaylistinfo(name)]
-	def update(self):
-		# This is a rather ugly workaround for database updates that are quicker
-		# than around a tenth of a second and therefore can't be detected by _main_loop.
-		job_id=super().update()
-		self._last_status["updating_db"]=job_id
-		self.emitter.emit("updating-db")
-		return job_id
+    # overloads to use Song class
+    def currentsong(self, *args):
+        return Song(super().currentsong(*args))
+    def search(self, *args):
+        return [Song(song) for song in super().search(*args)]
+    def find(self, *args):
+        return [Song(song) for song in super().find(*args)]
+    def playlistinfo(self):
+        return [Song(song) for song in super().playlistinfo()]
+    def plchanges(self, version):
+        return [Song(song) for song in super().plchanges(version)]
+    def lsinfo(self, uri):
+        return [Song(song) for song in super().lsinfo(uri)]
+    def listplaylistinfo(self, name):
+        return [Song(song) for song in super().listplaylistinfo(name)]
+    def update(self):
+        # This is a rather ugly workaround for database updates that are quicker
+        # than around a tenth of a second and therefore can't be detected by _main_loop.
+        job_id=super().update()
+        self._last_status["updating_db"]=job_id
+        self.emitter.emit("updating-db")
+        return job_id
 
-	def try_connect(self, manual):
-		self.emitter.emit("connecting")
-		def callback():
-			# connect
-			if manual:
-				try:
-					self.connect(self._settings.get_string("host"), self._settings.get_int("port"))
-					self.server=f'{self._settings.get_string("host")}:{self._settings.get_int("port")}'
-				except:
-					self.emitter.emit("connection_error")
-					self._start_idle_id=None
-					return False
-				# set password
+    def try_connect(self, manual):
+        self.emitter.emit("connecting")
+        def callback():
+            # connect
+            if manual:
+                try:
+                    self.connect(self._settings.get_string("host"), self._settings.get_int("port"))
+                    self.server=f'{self._settings.get_string("host")}:{self._settings.get_int("port")}'
+                except:
+                    self.emitter.emit("connection_error")
+                    self._start_idle_id=None
+                    return False
+            	# set password
 				if password:=self._settings.get_string("password"):
 					try:
 						self.password(password)

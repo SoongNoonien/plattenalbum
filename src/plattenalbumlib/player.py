@@ -13,62 +13,62 @@ from .media_buttons import MediaButtons
 from .cover import FALLBACK_COVER
 
 class PlaybackControls(Gtk.Box):
-	def __init__(self, client, settings):
-		super().__init__(hexpand=True, orientation=Gtk.Orientation.VERTICAL)
-		self._client=client
+    def __init__(self, client, settings):
+        super().__init__(hexpand=True, orientation=Gtk.Orientation.VERTICAL)
+        self._client=client
 
-		# labels
-		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
-		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
+        # labels
+        self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
+        self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
 
-		# progress bar
-		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True)
-		self._scale.set_increments(10, 10)
-		self._scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
-		self._adjustment=self._scale.get_adjustment()
+        # progress bar
+        self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True)
+        self._scale.set_increments(10, 10)
+        self._scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
+        self._adjustment=self._scale.get_adjustment()
 
-		# popover
-		self._popover=Gtk.Popover(autohide=False, has_arrow=False)
-		self._time_label=Gtk.Label(single_line_mode=True, css_classes=["numeric"])
-		self._popover.set_child(self._time_label)
-		self._popover.set_parent(self)
-		self._popover.set_position(Gtk.PositionType.TOP)
+        # popover
+        self._popover=Gtk.Popover(autohide=False, has_arrow=False)
+        self._time_label=Gtk.Label(single_line_mode=True, css_classes=["numeric"])
+        self._popover.set_child(self._time_label)
+        self._popover.set_parent(self)
+        self._popover.set_position(Gtk.PositionType.TOP)
 
-		# event controllers
-		controller_motion=Gtk.EventControllerMotion()
-		self._scale.add_controller(controller_motion)
+        # event controllers
+        controller_motion=Gtk.EventControllerMotion()
+        self._scale.add_controller(controller_motion)
 
-		# connect
-		self._scale.connect("change-value", self._on_change_value)
-		controller_motion.connect("motion", self._on_pointer_motion)
-		controller_motion.connect("leave", self._on_pointer_leave)
-		self._client.emitter.connect("disconnected", self._disable)
-		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("elapsed", self._refresh)
-		self._client.emitter.connect("current-song", self._on_song_changed)
+        # connect
+        self._scale.connect("change-value", self._on_change_value)
+        controller_motion.connect("motion", self._on_pointer_motion)
+        controller_motion.connect("leave", self._on_pointer_leave)
+        self._client.emitter.connect("disconnected", self._disable)
+        self._client.emitter.connect("state", self._on_state)
+        self._client.emitter.connect("elapsed", self._refresh)
+        self._client.emitter.connect("current-song", self._on_song_changed)
 
-		# packing
-		start_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START)
-		start_box.add_css_class("toolbar-text")
-		start_box.append(self._elapsed)
-		start_box.append(PlaylistProgress(client))
-		end_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START)
-		end_box.add_css_class("toolbar-text")
-		end_box.append(self._rest)
-		end_box.append(BitRate(client, settings))
-		center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
-		center_box.add_css_class("toolbar")
-		center_box.set_center_widget(MediaButtons(client))
-		center_box.set_start_widget(start_box)
-		center_box.set_end_widget(end_box)
-		self.append(self._scale)
-		self.append(center_box)
+        # packing
+        start_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START)
+        start_box.add_css_class("toolbar-text")
+        start_box.append(self._elapsed)
+        start_box.append(PlaylistProgress(client))
+        end_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START)
+        end_box.add_css_class("toolbar-text")
+        end_box.append(self._rest)
+        end_box.append(BitRate(client, settings))
+        center_box=Gtk.CenterBox(margin_start=6, margin_end=6)
+        center_box.add_css_class("toolbar")
+        center_box.set_center_widget(MediaButtons(client))
+        center_box.set_start_widget(start_box)
+        center_box.set_end_widget(end_box)
+        self.append(self._scale)
+        self.append(center_box)
 
-	def _refresh(self, emitter, elapsed, duration):
-		self._scale.set_visible(True)
-		if duration > 0:
-			if elapsed > duration:  # fix display error
-				elapsed=duration
+    def _refresh(self, emitter, elapsed, duration):
+        self._scale.set_visible(True)
+        if duration > 0:
+            if elapsed > duration:  # fix display error
+    			elapsed=duration
 			self._adjustment.set_upper(duration)
 			self._scale.set_value(elapsed)
 			self._elapsed.set_text(str(Duration(elapsed)))

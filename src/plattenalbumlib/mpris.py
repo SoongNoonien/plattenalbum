@@ -6,57 +6,57 @@ from gi.repository import GLib, Gio
 from .cover import FileCover
 
 class MPRISInterface:  # TODO emit Seeked if needed
-	"""
-	based on 'Lollypop' (master 22.12.2020) by Cedric Bellegarde <cedric.bellegarde@adishatz.org>
-	and 'mpDris2' (master 19.03.2020) by Jean-Philippe Braun <eon@patapon.info>, Mantas Mikulėnas <grawity@gmail.com>
-	"""
-	_MPRIS_IFACE="org.mpris.MediaPlayer2"
-	_MPRIS_PLAYER_IFACE="org.mpris.MediaPlayer2.Player"
-	_MPRIS_NAME="org.mpris.MediaPlayer2.de.wagnermartin.Plattenalbum"
-	_MPRIS_PATH="/org/mpris/MediaPlayer2"
-	_INTERFACES_XML="""
-	<!DOCTYPE node PUBLIC
-	"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
-	"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-	<node>
-		<interface name="org.freedesktop.DBus.Introspectable">
-			<method name="Introspect">
-				<arg name="data" direction="out" type="s"/>
-			</method>
-		</interface>
-		<interface name="org.freedesktop.DBus.Properties">
-			<method name="Get">
-				<arg name="interface" direction="in" type="s"/>
-				<arg name="property" direction="in" type="s"/>
-				<arg name="value" direction="out" type="v"/>
-			</method>
-			<method name="Set">
-				<arg name="interface_name" direction="in" type="s"/>
-				<arg name="property_name" direction="in" type="s"/>
-				<arg name="value" direction="in" type="v"/>
-			</method>
-			<method name="GetAll">
-				<arg name="interface" direction="in" type="s"/>
-				<arg name="properties" direction="out" type="a{sv}"/>
-			</method>
-		</interface>
-		<interface name="org.mpris.MediaPlayer2">
-			<method name="Raise">
-			</method>
-			<method name="Quit">
-			</method>
-			<property name="CanQuit" type="b" access="read" />
-			<property name="CanRaise" type="b" access="read" />
-			<property name="HasTrackList" type="b" access="read"/>
-			<property name="Identity" type="s" access="read"/>
-			<property name="DesktopEntry" type="s" access="read"/>
-			<property name="SupportedUriSchemes" type="as" access="read"/>
-			<property name="SupportedMimeTypes" type="as" access="read"/>
-		</interface>
-		<interface name="org.mpris.MediaPlayer2.Player">
-			<method name="Next"/>
-			<method name="Previous"/>
-			<method name="Pause"/>
+    """
+    based on 'Lollypop' (master 22.12.2020) by Cedric Bellegarde <cedric.bellegarde@adishatz.org>
+    and 'mpDris2' (master 19.03.2020) by Jean-Philippe Braun <eon@patapon.info>, Mantas Mikulėnas <grawity@gmail.com>
+    """
+    _MPRIS_IFACE="org.mpris.MediaPlayer2"
+    _MPRIS_PLAYER_IFACE="org.mpris.MediaPlayer2.Player"
+    _MPRIS_NAME="org.mpris.MediaPlayer2.de.wagnermartin.Plattenalbum"
+    _MPRIS_PATH="/org/mpris/MediaPlayer2"
+    _INTERFACES_XML="""
+    <!DOCTYPE node PUBLIC
+    "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+    "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+    <node>
+        <interface name="org.freedesktop.DBus.Introspectable">
+            <method name="Introspect">
+                <arg name="data" direction="out" type="s"/>
+            </method>
+        </interface>
+        <interface name="org.freedesktop.DBus.Properties">
+            <method name="Get">
+                <arg name="interface" direction="in" type="s"/>
+                <arg name="property" direction="in" type="s"/>
+                <arg name="value" direction="out" type="v"/>
+            </method>
+            <method name="Set">
+                <arg name="interface_name" direction="in" type="s"/>
+                <arg name="property_name" direction="in" type="s"/>
+                <arg name="value" direction="in" type="v"/>
+            </method>
+            <method name="GetAll">
+                <arg name="interface" direction="in" type="s"/>
+                <arg name="properties" direction="out" type="a{sv}"/>
+            </method>
+        </interface>
+        <interface name="org.mpris.MediaPlayer2">
+            <method name="Raise">
+            </method>
+            <method name="Quit">
+            </method>
+            <property name="CanQuit" type="b" access="read" />
+            <property name="CanRaise" type="b" access="read" />
+            <property name="HasTrackList" type="b" access="read"/>
+            <property name="Identity" type="s" access="read"/>
+            <property name="DesktopEntry" type="s" access="read"/>
+            <property name="SupportedUriSchemes" type="as" access="read"/>
+            <property name="SupportedMimeTypes" type="as" access="read"/>
+        </interface>
+        <interface name="org.mpris.MediaPlayer2.Player">
+            <method name="Next"/>
+            <method name="Previous"/>
+    		<method name="Pause"/>
 			<method name="PlayPause"/>
 			<method name="Stop"/>
 			<method name="Play"/>

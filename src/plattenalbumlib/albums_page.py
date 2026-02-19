@@ -8,29 +8,29 @@ from .models import SelectionModel
 
 
 class AlbumsPage(Adw.NavigationPage):
-	def __init__(self, client, settings):
-		super().__init__(title=_("Albums"), tag="album_list")
-		self._settings=settings
-		self._client=client
+    def __init__(self, client, settings):
+        super().__init__(title=_("Albums"), tag="album_list")
+        self._settings=settings
+        self._client=client
 
-		# grid view
-		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
-		self.grid_view.add_css_class("navigation-sidebar")
-		self.grid_view.add_css_class("albums-view")
+        # grid view
+        self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
+        self.grid_view.add_css_class("navigation-sidebar")
+        self.grid_view.add_css_class("albums-view")
 
-		self.factory = Gtk.SignalListItemFactory()
-		def bind(factory, item):
-			row=item.get_child()
-			row.set_album(item.get_item())
-		self.factory.connect("bind", bind)
+        self.factory = Gtk.SignalListItemFactory()
+        def bind(factory, item):
+            row=item.get_child()
+            row.set_album(item.get_item())
+        self.factory.connect("bind", bind)
 
-		# breakpoint bin
-		self.breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
-		for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
-			break_point=Adw.Breakpoint()
-			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
-			break_point.add_setter(self.grid_view, "max-columns", columns)
-			self.breakpoint_bin.add_breakpoint(break_point)
+        # breakpoint bin
+        self.breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
+        for width, columns in ((500,3), (850,4), (1200,5), (1500,6)):
+            break_point=Adw.Breakpoint()
+            break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
+            break_point.add_setter(self.grid_view, "max-columns", columns)
+    		self.breakpoint_bin.add_breakpoint(break_point)
 		self.breakpoint_bin.set_child(Gtk.ScrolledWindow(child=self.grid_view, hscrollbar_policy=Gtk.PolicyType.NEVER))
 
 		# stack

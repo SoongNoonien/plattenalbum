@@ -13,54 +13,54 @@ from gettext import gettext as _
 class SongMetaclass(type(GObject.Object), type(collections.UserDict)): pass
 
 class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
-	widget=GObject.Property(type=Gtk.Widget, default=None)  # current widget representing the song in the UI
-	def __init__(self, data):
-		collections.UserDict.__init__(self, data)
-		GObject.Object.__init__(self)
-	def __setitem__(self, key, value):
-		if key == "time":  # time is deprecated https://mpd.readthedocs.io/en/latest/protocol.html#other-metadata
-			pass
-		elif key == "duration":
-			super().__setitem__(key, Duration(value))
-		elif key in ("range", "file", "pos", "id", "format", "last-modified"):
-			super().__setitem__(key, value)
-		else:
-			if isinstance(value, list):
-				super().__setitem__(key, MultiTag(value))
-			else:
-				super().__setitem__(key, MultiTag([value]))
+    widget=GObject.Property(type=Gtk.Widget, default=None)  # current widget representing the song in the UI
+    def __init__(self, data):
+        collections.UserDict.__init__(self, data)
+        GObject.Object.__init__(self)
+    def __setitem__(self, key, value):
+        if key == "time":  # time is deprecated https://mpd.readthedocs.io/en/latest/protocol.html#other-metadata
+            pass
+        elif key == "duration":
+            super().__setitem__(key, Duration(value))
+        elif key in ("range", "file", "pos", "id", "format", "last-modified"):
+            super().__setitem__(key, value)
+        else:
+            if isinstance(value, list):
+                super().__setitem__(key, MultiTag(value))
+            else:
+                super().__setitem__(key, MultiTag([value]))
 
-	def __missing__(self, key):
-		if self.data:
-			if key == "albumartist":
-				return self["artist"]
-			elif key == "albumartistsort":
-				return self["albumartist"]
-			elif key == "artistsort":
-				return self["artist"]
-			elif key == "title":
-				return MultiTag([GLib.path_get_basename(self.data["file"])])
-			elif key == "duration":
-				return Duration()
-			else:
-				return MultiTag([""])
-		else:
-			return None
+    def __missing__(self, key):
+        if self.data:
+            if key == "albumartist":
+                return self["artist"]
+            elif key == "albumartistsort":
+                return self["albumartist"]
+            elif key == "artistsort":
+                return self["artist"]
+            elif key == "title":
+                return MultiTag([GLib.path_get_basename(self.data["file"])])
+            elif key == "duration":
+                return Duration()
+            else:
+                return MultiTag([""])
+        else:
+            return None
 
 class SongListRow(Gtk.Box):
-	position=GObject.Property(type=int, default=-1)
-	def __init__(self, show_track=True, **kwargs):
-		# can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
-		super().__init__(can_target=False, **kwargs)
+    position=GObject.Property(type=int, default=-1)
+    def __init__(self, show_track=True, **kwargs):
+        # can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
+        super().__init__(can_target=False, **kwargs)
 
-		# labels
-		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
-		self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
-		self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
+        # labels
+        self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
+        self._subtitle=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
+        self._length=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
 
-		# packing
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
-		box.append(self._title)
+        # packing
+        box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
+    	box.append(self._title)
 		box.append(self._subtitle)
 		self.append(box)
 		self.append(self._length)

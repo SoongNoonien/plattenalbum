@@ -15,50 +15,50 @@ from .models import SelectionModel
 
 
 class ComposerAlbum(Album):
-	def __init__(self, composer, name, date):
-		super().__init__(name, date)
-		self.composer=composer
+    def __init__(self, composer, name, date):
+        super().__init__(name, date)
+        self.composer=composer
 
 
 class ComposerAlbumListRow(AlbumListRow):
-	def __init__(self, client):
-		super().__init__(client)
+    def __init__(self, client):
+        super().__init__(client)
 
-	def set_album(self, album):
-		super().set_album(album)
-		if album.cover is None:
-			self._client.tagtypes("clear")
-			song=self._client.find("composer", album.composer, "album", album.name, "date", album.date, "window", "0:1")[0]
-			self._client.tagtypes("all")
-			album.cover=self._client.get_cover(song["file"]).get_paintable()
-		self._cover.set_paintable(album.cover)
+    def set_album(self, album):
+        super().set_album(album)
+        if album.cover is None:
+            self._client.tagtypes("clear")
+            song=self._client.find("composer", album.composer, "album", album.name, "date", album.date, "window", "0:1")[0]
+            self._client.tagtypes("all")
+            album.cover=self._client.get_cover(song["file"]).get_paintable()
+        self._cover.set_paintable(album.cover)
 
 
 class ComposerAlbumRow(Adw.ActionRow):
-	def __init__(self, album):
-		super().__init__(use_markup=False, activatable=True, css_classes=["property"])
-		self.album = album["album"]
-		self.composer = album["composer"]
-		self.date = album["date"]
+    def __init__(self, album):
+        super().__init__(use_markup=False, activatable=True, css_classes=["property"])
+        self.album = album["album"]
+        self.composer = album["composer"]
+        self.date = album["date"]
 
-		# fill
-		self.set_title(self.composer)
-		self.set_subtitle(self.album)
-		date = Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
-		date.set_text(self.date)
+        # fill
+        self.set_title(self.composer)
+        self.set_subtitle(self.album)
+        date = Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
+        date.set_text(self.date)
 
-		# packing
-		self.add_suffix(date)
-		self.add_suffix(
-			Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
+        # packing
+        self.add_suffix(date)
+        self.add_suffix(
+            Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 
 
 class ComposerAlbumsPage(AlbumsPage):
-	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
-	def __init__(self, client, settings):
-		super().__init__(client, settings)
+    __gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
+    def __init__(self, client, settings):
+        super().__init__(client, settings)
 
-		self._selection_model=SelectionModel(ComposerAlbum)
+    	self._selection_model=SelectionModel(ComposerAlbum)
 		self.grid_view.set_model(self._selection_model)
 
 		# factory

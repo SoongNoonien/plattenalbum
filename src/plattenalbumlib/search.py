@@ -14,58 +14,58 @@ from .composer_album import ComposerAlbumRow
 
 
 class SearchView(Gtk.Stack):
-	__gsignals__={
-		"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-		"composer-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-		"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))
-	}
-	def __init__(self, client, settings):
-		super().__init__()
-		self._client=client
-		self.browse_by_composer = settings['composer']
+    __gsignals__={
+        "artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        "composer-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        "album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))
+    }
+    def __init__(self, client, settings):
+        super().__init__()
+        self._client=client
+        self.browse_by_composer = settings['composer']
 
-		self._results=20  # TODO adjust number of results
-		self._song_tags=("title", "artist", "composer", "album", "date")
-		self._artist_tags=("albumartist", "albumartistsort")
-		self._composer_tags=("composer", "composersort")
-		self._album_tags=("album", "albumartist", "albumartistsort", "date")
+        self._results=20  # TODO adjust number of results
+        self._song_tags=("title", "artist", "composer", "album", "date")
+        self._artist_tags=("albumartist", "albumartistsort")
+        self._composer_tags=("composer", "composersort")
+        self._album_tags=("album", "albumartist", "albumartistsort", "date")
 
-		if self.browse_by_composer:
-			# composer list
-			self._composer_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
-			self._composer_list.add_css_class("boxed-list")
-		else:
-			# artist list
-			self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
-			self._artist_list.add_css_class("boxed-list")
+        if self.browse_by_composer:
+            # composer list
+            self._composer_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
+            self._composer_list.add_css_class("boxed-list")
+        else:
+            # artist list
+            self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
+            self._artist_list.add_css_class("boxed-list")
 
-		# album list
-		self._album_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
-		self._album_list.add_css_class("boxed-list")
+        # album list
+        self._album_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
+        self._album_list.add_css_class("boxed-list")
 
-		# song list
-		self._song_list=BrowserSongList(client, show_album=True)
-		self._song_list.add_css_class("boxed-list")
+        # song list
+        self._song_list=BrowserSongList(client, show_album=True)
+        self._song_list.add_css_class("boxed-list")
 
-		# boxes
-		if self.browse_by_composer:
-			self._composer_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-			self._composer_box.append(Gtk.Label(label=_("Composers"), xalign=0, css_classes=["heading"]))
-			self._composer_box.append(self._composer_list)
-		else:
-			self._artist_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-			self._artist_box.append(Gtk.Label(label=_("Artists"), xalign=0, css_classes=["heading"]))
-			self._artist_box.append(self._artist_list)
+        # boxes
+        if self.browse_by_composer:
+            self._composer_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            self._composer_box.append(Gtk.Label(label=_("Composers"), xalign=0, css_classes=["heading"]))
+            self._composer_box.append(self._composer_list)
+        else:
+            self._artist_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            self._artist_box.append(Gtk.Label(label=_("Artists"), xalign=0, css_classes=["heading"]))
+            self._artist_box.append(self._artist_list)
 
-		self._album_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		self._album_box.append(Gtk.Label(label=_("Albums"), xalign=0, css_classes=["heading"]))
-		self._album_box.append(self._album_list)
-		self._song_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		self._song_box.append(Gtk.Label(label=_("Songs"), xalign=0, css_classes=["heading"]))
-		self._song_box.append(self._song_list)
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
-		if self.browse_by_composer:
-			box.append(self._composer_box)
+        self._album_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self._album_box.append(Gtk.Label(label=_("Albums"), xalign=0, css_classes=["heading"]))
+        self._album_box.append(self._album_list)
+        self._song_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self._song_box.append(Gtk.Label(label=_("Songs"), xalign=0, css_classes=["heading"]))
+        self._song_box.append(self._song_list)
+        box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+        if self.browse_by_composer:
+            box.append(self._composer_box)
 		else:
 			box.append(self._artist_box)
 		box.append(self._album_box)

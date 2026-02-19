@@ -8,70 +8,70 @@ from gi.repository import Gtk, Adw, Gio, Pango, GLib
 from gettext import gettext as _
 
 class ViewPreferences(Adw.PreferencesGroup):
-	def __init__(self, settings):
-		super().__init__(title=_("View"))
-		toggle_data=(
-			(_("_Show Bit Rate"), "show-bit-rate", ""),
-		)
-		for title, key, subtitle in toggle_data:
-			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
-			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
-			self.add(row)
+    def __init__(self, settings):
+        super().__init__(title=_("View"))
+        toggle_data=(
+            (_("_Show Bit Rate"), "show-bit-rate", ""),
+        )
+        for title, key, subtitle in toggle_data:
+            row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
+            settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
+            self.add(row)
 
 class BehaviorPreferences(Adw.PreferencesGroup):
-	def __init__(self, settings):
-		super().__init__(title=_("Behavior"))
-		toggle_data=(
-			(_("Send _Notification on Title Change"), "send-notify", ""),
-			(_("Stop _Playback on Quit"), "stop-on-quit", ""),
-			(_("Support “_MPRIS”"), "mpris", _("Disable if “MPRIS” is supported by another client")),
-			(_("Browse by composer, (requires to restart the app)"), "composer", _("Choose sidebar navigation")),
-		)
-		for title, key, subtitle in toggle_data:
-			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
-			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
-			self.add(row)
+    def __init__(self, settings):
+        super().__init__(title=_("Behavior"))
+        toggle_data=(
+            (_("Send _Notification on Title Change"), "send-notify", ""),
+            (_("Stop _Playback on Quit"), "stop-on-quit", ""),
+            (_("Support “_MPRIS”"), "mpris", _("Disable if “MPRIS” is supported by another client")),
+            (_("Browse by composer, (requires to restart the app)"), "composer", _("Choose sidebar navigation")),
+        )
+        for title, key, subtitle in toggle_data:
+            row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
+            settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
+            self.add(row)
 
 class PreferencesDialog(Adw.PreferencesDialog):
-	def __init__(self, client, settings):
-		super().__init__()
-		page=Adw.PreferencesPage()
-		page.add(ViewPreferences(settings))
-		page.add(BehaviorPreferences(settings))
-		self.add(page)
+    def __init__(self, client, settings):
+        super().__init__()
+        page=Adw.PreferencesPage()
+        page.add(ViewPreferences(settings))
+        page.add(BehaviorPreferences(settings))
+        self.add(page)
 
 class ConnectDialog(Adw.Dialog):
-	def __init__(self, title, target):
-		super().__init__(title=title, width_request=360, follows_content_size=True)
-		self._clamp=Adw.Clamp(margin_top=24, margin_bottom=24, margin_start=12, margin_end=12)
-		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="app.connect", action_target=target)
-		connect_button.set_css_classes(["suggested-action"])
-		cancel_button=Gtk.Button(label=_("Ca_ncel"), use_underline=True)
-		cancel_button.connect("clicked", lambda *args: self.close())
-		scroll=Gtk.ScrolledWindow(child=self._clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
-		header_bar=Adw.HeaderBar(show_start_title_buttons=False, show_end_title_buttons=False)
-		header_bar.pack_start(cancel_button)
-		header_bar.pack_end(connect_button)
-		toolbar_view=Adw.ToolbarView(content=scroll)
-		toolbar_view.add_top_bar(header_bar)
-		self._connection_toast=Adw.Toast(title=_("Connection failed"))
-		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
-		self.set_child(self._toast_overlay)
-		self.set_default_widget(connect_button)
-		self.set_focus(connect_button)
+    def __init__(self, title, target):
+        super().__init__(title=title, width_request=360, follows_content_size=True)
+        self._clamp=Adw.Clamp(margin_top=24, margin_bottom=24, margin_start=12, margin_end=12)
+        connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="app.connect", action_target=target)
+        connect_button.set_css_classes(["suggested-action"])
+        cancel_button=Gtk.Button(label=_("Ca_ncel"), use_underline=True)
+        cancel_button.connect("clicked", lambda *args: self.close())
+        scroll=Gtk.ScrolledWindow(child=self._clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+        header_bar=Adw.HeaderBar(show_start_title_buttons=False, show_end_title_buttons=False)
+        header_bar.pack_start(cancel_button)
+        header_bar.pack_end(connect_button)
+        toolbar_view=Adw.ToolbarView(content=scroll)
+        toolbar_view.add_top_bar(header_bar)
+        self._connection_toast=Adw.Toast(title=_("Connection failed"))
+        self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
+        self.set_child(self._toast_overlay)
+        self.set_default_widget(connect_button)
+        self.set_focus(connect_button)
 
-	def set_content(self, widget):
-		self._clamp.set_child(widget)
+    def set_content(self, widget):
+        self._clamp.set_child(widget)
 
-	def connection_error(self):
-		self._toast_overlay.add_toast(self._connection_toast)
+    def connection_error(self):
+        self._toast_overlay.add_toast(self._connection_toast)
 
 class ManualConnectDialog(ConnectDialog):
-	def __init__(self, settings):
-		super().__init__(_("Manual Connection"), GLib.Variant("b", True))
-		list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
-		list_box.add_css_class("boxed-list")
-		hostname_row=Adw.EntryRow(title=_("Host"))
+    def __init__(self, settings):
+        super().__init__(_("Manual Connection"), GLib.Variant("b", True))
+        list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+        list_box.add_css_class("boxed-list")
+    	hostname_row=Adw.EntryRow(title=_("Host"))
 		settings.bind("host", hostname_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		list_box.append(hostname_row)
 		port_row=Adw.SpinRow.new_with_range(0, 65535, 1)

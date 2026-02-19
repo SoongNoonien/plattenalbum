@@ -9,68 +9,68 @@ from .models import SelectionModel
 
 
 class Artist(GObject.Object):
-	def __init__(self, name):
-		GObject.Object.__init__(self)
-		self.name=name
+    def __init__(self, name):
+        GObject.Object.__init__(self)
+        self.name=name
 
 class ArtistSelectionModel(SelectionModel):
-	def __init__(self):
-		super().__init__(Artist)
+    def __init__(self):
+        super().__init__(Artist)
 
-	def set_artists(self, artists):
-		self.clear()
-		self.append((Artist(item[0]) for item in sorted(artists, key=lambda item: locale.strxfrm(item[1]))))
+    def set_artists(self, artists):
+        self.clear()
+        self.append((Artist(item[0]) for item in sorted(artists, key=lambda item: locale.strxfrm(item[1]))))
 
-	def select_artist(self, name):
-		for i, artist in enumerate(self.data):
-			if artist.name == name:
-				self.select(i)
-				return
+    def select_artist(self, name):
+        for i, artist in enumerate(self.data):
+            if artist.name == name:
+                self.select(i)
+                return
 
-	def get_artist(self, position):
-		return self.get_item(position).name
+    def get_artist(self, position):
+        return self.get_item(position).name
 
-	def get_selected_artist(self):
-		if (selected:=self.get_selected()) is None:
-			return None
-		else:
-			return self.get_artist(selected)
+    def get_selected_artist(self):
+        if (selected:=self.get_selected()) is None:
+            return None
+        else:
+            return self.get_artist(selected)
 
 class ArtistList(Gtk.ListView):
-	def __init__(self, client):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["navigation-sidebar"])
-		self._client=client
+    def __init__(self, client):
+        super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["navigation-sidebar"])
+        self._client=client
 
-		# factory
-		def setup(factory, item):
-			label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
-			item.set_child(label)
-		def bind(factory, item):
-			label=item.get_child()
-			if name:=item.get_item().name:
-				label.set_text(name)
-			else:
-				label.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Artist"))}</i>')
-		factory=Gtk.SignalListItemFactory()
-		factory.connect("setup", setup)
-		factory.connect("bind", bind)
-		self.set_factory(factory)
+        # factory
+        def setup(factory, item):
+            label=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
+            item.set_child(label)
+        def bind(factory, item):
+            label=item.get_child()
+            if name:=item.get_item().name:
+                label.set_text(name)
+            else:
+                label.set_markup(f'<i>{GLib.markup_escape_text(_("Unknown Artist"))}</i>')
+        factory=Gtk.SignalListItemFactory()
+        factory.connect("setup", setup)
+        factory.connect("bind", bind)
+        self.set_factory(factory)
 
-		# header factory
-		def header_setup(factory, item):
-			label=Gtk.Label(xalign=0, single_line_mode=True)
-			item.set_child(label)
-		def header_bind(factory, item):
-			label=item.get_child()
-			label.set_text(item.get_item().section_name)
-		header_factory=Gtk.SignalListItemFactory()
-		header_factory.connect("setup", header_setup)
-		header_factory.connect("bind", header_bind)
-		self.set_header_factory(header_factory)
+        # header factory
+        def header_setup(factory, item):
+            label=Gtk.Label(xalign=0, single_line_mode=True)
+            item.set_child(label)
+        def header_bind(factory, item):
+            label=item.get_child()
+            label.set_text(item.get_item().section_name)
+        header_factory=Gtk.SignalListItemFactory()
+        header_factory.connect("setup", header_setup)
+        header_factory.connect("bind", header_bind)
+        self.set_header_factory(header_factory)
 
-		# model
-		self.artist_selection_model=ArtistSelectionModel()
-		self.set_model(self.artist_selection_model)
+        # model
+        self.artist_selection_model=ArtistSelectionModel()
+    	self.set_model(self.artist_selection_model)
 
 		# connect
 		self.connect("activate", self._on_activate)

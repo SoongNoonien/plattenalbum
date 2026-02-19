@@ -12,67 +12,67 @@ from .composer_album import ComposerAlbumsPage, ComposerAlbumPage
 
 
 class MainMenuButton(Gtk.MenuButton):
-	def __init__(self):
-		super().__init__(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True)
-		app_section=Gio.Menu()
-		app_section.append(_("_Preferences"), "win.preferences")
-		app_section.append(_("_Keyboard Shortcuts"), "app.shortcuts")
-		app_section.append(_("_About Plattenalbum"), "app.about")
-		menu=Gio.Menu()
-		menu.append(_("_Disconnect"), "app.disconnect")
-		menu.append(_("_Update Database"), "app.update")
-		menu.append(_("_Server Information"), "win.server-info")
-		menu.append_section(None, app_section)
-		self.set_menu_model(menu)
+    def __init__(self):
+        super().__init__(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True)
+        app_section=Gio.Menu()
+        app_section.append(_("_Preferences"), "win.preferences")
+        app_section.append(_("_Keyboard Shortcuts"), "app.shortcuts")
+        app_section.append(_("_About Plattenalbum"), "app.about")
+        menu=Gio.Menu()
+        menu.append(_("_Disconnect"), "app.disconnect")
+        menu.append(_("_Update Database"), "app.update")
+        menu.append(_("_Server Information"), "win.server-info")
+        menu.append_section(None, app_section)
+        self.set_menu_model(menu)
 
 
 class Browser(Gtk.Stack):
-	def __init__(self, client, settings):
-		super().__init__()
-		self._client=client
-		self.browse_by_composer = settings['composer']
-		# search
-		self._search_view=SearchView(client, settings)
-		self.search_entry=Gtk.SearchEntry(placeholder_text=_("Search collection"), max_width_chars=25)
-		self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
-		search_toolbar_view=Adw.ToolbarView(content=self._search_view)
-		search_header_bar=Adw.HeaderBar(title_widget=self.search_entry)
-		search_toolbar_view.add_top_bar(search_header_bar)
-		search_toolbar_view.add_css_class("content-pane")
+    def __init__(self, client, settings):
+        super().__init__()
+        self._client=client
+        self.browse_by_composer = settings['composer']
+        # search
+        self._search_view=SearchView(client, settings)
+        self.search_entry=Gtk.SearchEntry(placeholder_text=_("Search collection"), max_width_chars=25)
+        self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search collection")])
+        search_toolbar_view=Adw.ToolbarView(content=self._search_view)
+        search_header_bar=Adw.HeaderBar(title_widget=self.search_entry)
+        search_toolbar_view.add_top_bar(search_header_bar)
+        search_toolbar_view.add_css_class("content-pane")
 
-		# album list
-		if self.browse_by_composer:
-			composer_page = self._composer_list_setup(client)
-			self._albums_page = ComposerAlbumsPage(client, settings)
-		else:
-			artist_page = self._artist_list_setup(client)
-			self._albums_page = ArtistAlbumsPage(client, settings)
+        # album list
+        if self.browse_by_composer:
+            composer_page = self._composer_list_setup(client)
+            self._albums_page = ComposerAlbumsPage(client, settings)
+        else:
+            artist_page = self._artist_list_setup(client)
+            self._albums_page = ArtistAlbumsPage(client, settings)
 
-		# navigation view
-		self._album_navigation_view=Adw.NavigationView()
-		self._album_navigation_view.add(self._albums_page)
-		album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
+        # navigation view
+        self._album_navigation_view=Adw.NavigationView()
+        self._album_navigation_view.add(self._albums_page)
+        album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
-		# split view
-		if self.browse_by_composer:
-			self._navigation_split_view=Adw.NavigationSplitView(sidebar=composer_page, content=album_navigation_view_page)
-		else:
-			self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
+        # split view
+        if self.browse_by_composer:
+            self._navigation_split_view=Adw.NavigationSplitView(sidebar=composer_page, content=album_navigation_view_page)
+        else:
+            self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
 
-		# breakpoint bin
-		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
-		break_point=Adw.Breakpoint()
-		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
-		break_point.add_setter(self._navigation_split_view, "collapsed", True)
-		break_point.connect("apply", lambda *args: self._navigation_split_view.add_css_class("content-pane"))
-		break_point.connect("unapply", lambda *args: self._navigation_split_view.remove_css_class("content-pane"))
-		breakpoint_bin.add_breakpoint(break_point)
-		breakpoint_bin.set_child(self._navigation_split_view)
+        # breakpoint bin
+        breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
+        break_point=Adw.Breakpoint()
+        break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
+        break_point.add_setter(self._navigation_split_view, "collapsed", True)
+        break_point.connect("apply", lambda *args: self._navigation_split_view.add_css_class("content-pane"))
+        break_point.connect("unapply", lambda *args: self._navigation_split_view.remove_css_class("content-pane"))
+        breakpoint_bin.add_breakpoint(break_point)
+        breakpoint_bin.set_child(self._navigation_split_view)
 
-		# status page
-		status_page=Adw.StatusPage(icon_name="folder-music-symbolic", title=_("Collection is Empty"))
-		status_page_header_bar=Adw.HeaderBar(show_title=False)
-		status_page_header_bar.pack_end(MainMenuButton())
+        # status page
+        status_page=Adw.StatusPage(icon_name="folder-music-symbolic", title=_("Collection is Empty"))
+        status_page_header_bar=Adw.HeaderBar(show_title=False)
+        status_page_header_bar.pack_end(MainMenuButton())
 		status_page_toolbar_view=Adw.ToolbarView(content=status_page)
 		status_page_toolbar_view.add_top_bar(status_page_header_bar)
 

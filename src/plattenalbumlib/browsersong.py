@@ -6,42 +6,42 @@ from .song import SongMenu
 from .functions import lookup_icon
 
 class BrowserSongRow(Adw.ActionRow):
-	def __init__(self, song, show_track=True, hide_artist="",  hide_composer="", **kwargs):
-		super().__init__(use_markup=False, activatable=True, **kwargs)
-		self.song=song
+    def __init__(self, song, show_track=True, hide_artist="",  hide_composer="", **kwargs):
+        super().__init__(use_markup=False, activatable=True, **kwargs)
+        self.song=song
 
-		# populate
-		self.set_title(song["title"][0])
-		if subtitle:=", ".join(artist for artist in song["artist"] if artist != hide_artist):
-			self.set_subtitle(subtitle)
-		length=Gtk.Label(label=str(song["duration"]), xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
-		self.add_suffix(length)
-		if show_track:
-			track=Gtk.Label(label=song["track"][0], xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric", "dimmed"])
-			self.add_prefix(track)
+        # populate
+        self.set_title(song["title"][0])
+        if subtitle:=", ".join(artist for artist in song["artist"] if artist != hide_artist):
+            self.set_subtitle(subtitle)
+        length=Gtk.Label(label=str(song["duration"]), xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
+        self.add_suffix(length)
+        if show_track:
+            track=Gtk.Label(label=song["track"][0], xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric", "dimmed"])
+            self.add_prefix(track)
 
 
 class BrowserSongList(Gtk.ListBox):
-	def __init__(self, client, show_album=False):
-		super().__init__(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
-		self._client=client
+    def __init__(self, client, show_album=False):
+        super().__init__(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
+        self._client=client
 
-		# menu
-		self._menu=SongMenu(client, show_album=show_album)
+        # menu
+        self._menu=SongMenu(client, show_album=show_album)
 
-		# action group
-		action_group=Gio.SimpleActionGroup()
-		action=Gio.SimpleAction.new("menu", None)
-		action.connect("activate", self._on_menu)
-		action_group.add_action(action)
-		self.insert_action_group("view", action_group)
+        # action group
+        action_group=Gio.SimpleActionGroup()
+        action=Gio.SimpleAction.new("menu", None)
+        action.connect("activate", self._on_menu)
+        action_group.add_action(action)
+        self.insert_action_group("view", action_group)
 
-		# shortcuts
-		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Menu, 0), Gtk.NamedAction.new("view.menu")))
-		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_F10, Gdk.ModifierType.SHIFT_MASK), Gtk.NamedAction.new("view.menu")))
+        # shortcuts
+        self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Menu, 0), Gtk.NamedAction.new("view.menu")))
+        self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_F10, Gdk.ModifierType.SHIFT_MASK), Gtk.NamedAction.new("view.menu")))
 
-		# event controller
-		button_controller=Gtk.GestureClick(button=0)
+        # event controller
+    	button_controller=Gtk.GestureClick(button=0)
 		self.add_controller(button_controller)
 		long_press_controller=Gtk.GestureLongPress()
 		self.add_controller(long_press_controller)
