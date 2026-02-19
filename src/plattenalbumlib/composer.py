@@ -65,59 +65,59 @@ class ComposerList(Gtk.ListView):
             label.set_text(item.get_item().section_name)
         header_factory=Gtk.SignalListItemFactory()
         header_factory.connect("setup", header_setup)
-    	header_factory.connect("bind", header_bind)
-		self.set_header_factory(header_factory)
+        header_factory.connect("bind", header_bind)
+        self.set_header_factory(header_factory)
 
-		# model
-		self.composer_selection_model=ComposerSelectionModel()
-		self.set_model(self.composer_selection_model)
+        # model
+        self.composer_selection_model=ComposerSelectionModel()
+        self.set_model(self.composer_selection_model)
 
-		# connect
-		self.connect("activate", self._on_activate)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
-		self._client.emitter.connect("updated-db", self._on_updated_db)
+        # connect
+        self.connect("activate", self._on_activate)
+        self._client.emitter.connect("disconnected", self._on_disconnected)
+        self._client.emitter.connect("connected", self._on_connected)
+        self._client.emitter.connect("updated-db", self._on_updated_db)
 
-	def select(self, name):
-		self.composer_selection_model.select_composer(name)
-		if (selected:=self.composer_selection_model.get_selected()) is None:
-			self.composer_selection_model.select(0)
-			self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
-		else:
-			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+    def select(self, name):
+        self.composer_selection_model.select_composer(name)
+        if (selected:=self.composer_selection_model.get_selected()) is None:
+            self.composer_selection_model.select(0)
+            self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
+        else:
+            self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 
-	def _refresh(self):
-		composers=self._client.list("composersort", "group", "composer")
-		filtered_composers=[]
-		for name, composer in itertools.groupby(((composer["composer"], composer["composersort"]) for composer in composers), key=lambda x: x[0]):
-			if len(name) > 0:
-				filtered_composers.append(next(composer))
-				# ignore multiple albumcomposersort values
-				if next(composer, None) is not None:
-					filtered_composers[-1]=(name, name)
-		self.composer_selection_model.set_composers(filtered_composers)
+    def _refresh(self):
+        composers=self._client.list("composersort", "group", "composer")
+        filtered_composers=[]
+        for name, composer in itertools.groupby(((composer["composer"], composer["composersort"]) for composer in composers), key=lambda x: x[0]):
+            if len(name) > 0:
+                filtered_composers.append(next(composer))
+                # ignore multiple albumcomposersort values
+                if next(composer, None) is not None:
+                    filtered_composers[-1]=(name, name)
+        self.composer_selection_model.set_composers(filtered_composers)
 
-	def _on_activate(self, widget, pos):
-		self.composer_selection_model.select(pos)
+    def _on_activate(self, widget, pos):
+        self.composer_selection_model.select(pos)
 
-	def _on_disconnected(self, *args):
-		self.composer_selection_model.clear()
+    def _on_disconnected(self, *args):
+        self.composer_selection_model.clear()
 
-	def _on_connected(self, emitter, database_is_empty):
-		if not database_is_empty:
-			self._refresh()
-			if (song:=self._client.currentsong()):
-				composer=song["albumcomposer"][0]
-				self.select(composer)
+    def _on_connected(self, emitter, database_is_empty):
+        if not database_is_empty:
+            self._refresh()
+            if (song:=self._client.currentsong()):
+                composer=song["albumcomposer"][0]
+                self.select(composer)
 
-	def _on_updated_db(self, emitter, database_is_empty):
-		if database_is_empty:
-			self.composer_selection_model.clear()
-		else:
-			if (composer:=self.composer_selection_model.get_selected_composer()) is None:
-				self._refresh()
-				self.composer_selection_model.select(0)
-				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
-			else:
-				self._refresh()
-				self.select(composer)
+    def _on_updated_db(self, emitter, database_is_empty):
+        if database_is_empty:
+            self.composer_selection_model.clear()
+        else:
+            if (composer:=self.composer_selection_model.get_selected_composer()) is None:
+                self._refresh()
+                self.composer_selection_model.select(0)
+                self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
+            else:
+                self._refresh()
+                self.select(composer)

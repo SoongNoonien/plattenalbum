@@ -57,7 +57,7 @@ class AlbumPage(Adw.NavigationPage):
             self.title.set_text(album)
         else:
             self.set_title(_("Unknown Album"))
-    		self.title.set_text(_("Unknown Album"))
-		self.subtitle.set_text(date)
-		client.restrict_tagtypes("track", "title")
-		client.tagtypes("all")
+            self.title.set_text(_("Unknown Album"))
+        self.subtitle.set_text(date)
+        client.restrict_tagtypes("track", "title")
+        client.tagtypes("all")

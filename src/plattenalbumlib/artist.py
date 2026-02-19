@@ -70,53 +70,53 @@ class ArtistList(Gtk.ListView):
 
         # model
         self.artist_selection_model=ArtistSelectionModel()
-    	self.set_model(self.artist_selection_model)
+        self.set_model(self.artist_selection_model)
 
-		# connect
-		self.connect("activate", self._on_activate)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
-		self._client.emitter.connect("updated-db", self._on_updated_db)
+        # connect
+        self.connect("activate", self._on_activate)
+        self._client.emitter.connect("disconnected", self._on_disconnected)
+        self._client.emitter.connect("connected", self._on_connected)
+        self._client.emitter.connect("updated-db", self._on_updated_db)
 
-	def select(self, name):
-		self.artist_selection_model.select_artist(name)
-		if (selected:=self.artist_selection_model.get_selected()) is None:
-			self.artist_selection_model.select(0)
-			self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
-		else:
-			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+    def select(self, name):
+        self.artist_selection_model.select_artist(name)
+        if (selected:=self.artist_selection_model.get_selected()) is None:
+            self.artist_selection_model.select(0)
+            self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
+        else:
+            self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 
-	def _refresh(self):
-		artists=self._client.list("albumartistsort", "group", "albumartist")
-		filtered_artists=[]
-		for name, artist in itertools.groupby(((artist["albumartist"], artist["albumartistsort"]) for artist in artists), key=lambda x: x[0]):
-			filtered_artists.append(next(artist))
-			# ignore multiple albumartistsort values
-			if next(artist, None) is not None:
-				filtered_artists[-1]=(name, name)
-		self.artist_selection_model.set_artists(filtered_artists)
+    def _refresh(self):
+        artists=self._client.list("albumartistsort", "group", "albumartist")
+        filtered_artists=[]
+        for name, artist in itertools.groupby(((artist["albumartist"], artist["albumartistsort"]) for artist in artists), key=lambda x: x[0]):
+            filtered_artists.append(next(artist))
+            # ignore multiple albumartistsort values
+            if next(artist, None) is not None:
+                filtered_artists[-1]=(name, name)
+        self.artist_selection_model.set_artists(filtered_artists)
 
-	def _on_activate(self, widget, pos):
-		self.artist_selection_model.select(pos)
+    def _on_activate(self, widget, pos):
+        self.artist_selection_model.select(pos)
 
-	def _on_disconnected(self, *args):
-		self.artist_selection_model.clear()
+    def _on_disconnected(self, *args):
+        self.artist_selection_model.clear()
 
-	def _on_connected(self, emitter, database_is_empty):
-		if not database_is_empty:
-			self._refresh()
-			if (song:=self._client.currentsong()):
-				artist=song["albumartist"][0]
-				self.select(artist)
+    def _on_connected(self, emitter, database_is_empty):
+        if not database_is_empty:
+            self._refresh()
+            if (song:=self._client.currentsong()):
+                artist=song["albumartist"][0]
+                self.select(artist)
 
-	def _on_updated_db(self, emitter, database_is_empty):
-		if database_is_empty:
-			self.artist_selection_model.clear()
-		else:
-			if (artist:=self.artist_selection_model.get_selected_artist()) is None:
-				self._refresh()
-				self.artist_selection_model.select(0)
-				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
-			else:
-				self._refresh()
-				self.select(artist)
+    def _on_updated_db(self, emitter, database_is_empty):
+        if database_is_empty:
+            self.artist_selection_model.clear()
+        else:
+            if (artist:=self.artist_selection_model.get_selected_artist()) is None:
+                self._refresh()
+                self.artist_selection_model.select(0)
+                self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
+            else:
+                self._refresh()
+                self.select(artist)

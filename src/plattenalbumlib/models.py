@@ -79,5 +79,5 @@ class SelectionModel(ListModel, Gtk.SelectionModel):
     def do_unselect_range(self, position, n_items): return False
     def do_get_selection_in_range(self, position, n_items): return False
 
-	def do_is_selected(self, position):
-		return position == self._selected
+    def do_is_selected(self, position):
+        return position == self._selected

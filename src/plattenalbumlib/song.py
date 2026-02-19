@@ -60,113 +60,113 @@ class SongListRow(Gtk.Box):
 
         # packing
         box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
-    	box.append(self._title)
-		box.append(self._subtitle)
-		self.append(box)
-		self.append(self._length)
+        box.append(self._title)
+        box.append(self._subtitle)
+        self.append(box)
+        self.append(self._length)
 
-	def set_song(self, song):
-		subtitle=str(song["artist"])
-		self._title.set_text(song["title"][0])
-		self._subtitle.set_visible(bool(subtitle))
-		self._subtitle.set_text(subtitle)
-		self._length.set_text(str(song["duration"]))
+    def set_song(self, song):
+        subtitle=str(song["artist"])
+        self._title.set_text(song["title"][0])
+        self._subtitle.set_visible(bool(subtitle))
+        self._subtitle.set_text(subtitle)
+        self._length.set_text(str(song["duration"]))
 
-	def unset_song(self):
-		self._title.set_text("")
-		self._subtitle.set_text("")
-		self._length.set_text("")
+    def unset_song(self):
+        self._title.set_text("")
+        self._subtitle.set_text("")
+        self._length.set_text("")
 
 class SongMenu(Gtk.PopoverMenu):
-	def __init__(self, client, show_album=False):
-		super().__init__(has_arrow=False, halign=Gtk.Align.START)
-		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
-		self._client=client
-		self._file=None
+    def __init__(self, client, show_album=False):
+        super().__init__(has_arrow=False, halign=Gtk.Align.START)
+        self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
+        self._client=client
+        self._file=None
 
-		# action group
-		action_group=Gio.SimpleActionGroup()
-		action=Gio.SimpleAction.new("append", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "append"))
-		action_group.add_action(action)
-		action=Gio.SimpleAction.new("as-next", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "as-next"))
-		action_group.add_action(action)
-		if show_album:
-			action=Gio.SimpleAction.new("show-album", None)
-			action.connect("activate", lambda *args: self._client.show_album(self._file))
-			action_group.add_action(action)
-		self._show_file_action=Gio.SimpleAction.new("show-file", None)
-		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._file))
-		action_group.add_action(self._show_file_action)
-		self.insert_action_group("menu", action_group)
+        # action group
+        action_group=Gio.SimpleActionGroup()
+        action=Gio.SimpleAction.new("append", None)
+        action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "append"))
+        action_group.add_action(action)
+        action=Gio.SimpleAction.new("as-next", None)
+        action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "as-next"))
+        action_group.add_action(action)
+        if show_album:
+            action=Gio.SimpleAction.new("show-album", None)
+            action.connect("activate", lambda *args: self._client.show_album(self._file))
+            action_group.add_action(action)
+        self._show_file_action=Gio.SimpleAction.new("show-file", None)
+        self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._file))
+        action_group.add_action(self._show_file_action)
+        self.insert_action_group("menu", action_group)
 
-		# menu model
-		menu=Gio.Menu()
-		menu.append(_("_Append"), "menu.append")
-		menu.append(_("As _Next"), "menu.as-next")
-		subsection=Gio.Menu()
-		if show_album:
-			subsection.append(_("Show Al_bum"), "menu.show-album")
-		subsection.append(_("Show _File"), "menu.show-file")
-		menu.append_section(None, subsection)
-		self.set_menu_model(menu)
+        # menu model
+        menu=Gio.Menu()
+        menu.append(_("_Append"), "menu.append")
+        menu.append(_("As _Next"), "menu.as-next")
+        subsection=Gio.Menu()
+        if show_album:
+            subsection.append(_("Show Al_bum"), "menu.show-album")
+        subsection.append(_("Show _File"), "menu.show-file")
+        menu.append_section(None, subsection)
+        self.set_menu_model(menu)
 
-	def open(self, file, x, y):
-		self._file=file
-		rect=Gdk.Rectangle()
-		rect.x,rect.y=x,y
-		self.set_pointing_to(rect)
-		self._show_file_action.set_enabled(self._client.can_show_file(file))
-		self.popup()
+    def open(self, file, x, y):
+        self._file=file
+        rect=Gdk.Rectangle()
+        rect.x,rect.y=x,y
+        self.set_pointing_to(rect)
+        self._show_file_action.set_enabled(self._client.can_show_file(file))
+        self.popup()
 
 
 class SongList(Gtk.ListView):
-	def __init__(self):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM)
-		self.set_model(SelectionModel(Song))
+    def __init__(self):
+        super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM)
+        self.set_model(SelectionModel(Song))
 
-		# factory
-		def setup(factory, item):
-			item.set_child(SongListRow())
-		def bind(factory, item):
-			row=item.get_child()
-			song=item.get_item()
-			row.set_song(song)
-			song.set_property("widget", row)
-			row.set_property("position", item.get_position())
-		def unbind(factory, item):
-			row=item.get_child()
-			song=item.get_item()
-			row.unset_song()
-			song.set_property("widget", None)
-			row.set_property("position", -1)
-		factory=Gtk.SignalListItemFactory()
-		factory.connect("setup", setup)
-		factory.connect("bind", bind)
-		factory.connect("unbind", unbind)
-		self.set_factory(factory)
+        # factory
+        def setup(factory, item):
+            item.set_child(SongListRow())
+        def bind(factory, item):
+            row=item.get_child()
+            song=item.get_item()
+            row.set_song(song)
+            song.set_property("widget", row)
+            row.set_property("position", item.get_position())
+        def unbind(factory, item):
+            row=item.get_child()
+            song=item.get_item()
+            row.unset_song()
+            song.set_property("widget", None)
+            row.set_property("position", -1)
+        factory=Gtk.SignalListItemFactory()
+        factory.connect("setup", setup)
+        factory.connect("bind", bind)
+        factory.connect("unbind", unbind)
+        self.set_factory(factory)
 
-	def _get_focus_row(self):
-		return self.get_focus_child().get_first_child()
+    def _get_focus_row(self):
+        return self.get_focus_child().get_first_child()
 
-	def get_focus_popup_point(self):
-		computed_point,point=self._get_focus_row().compute_point(self, Graphene.Point.zero())
-		if computed_point:
-			return (point.x, point.y)
-		return (0, 0)
+    def get_focus_popup_point(self):
+        computed_point,point=self._get_focus_row().compute_point(self, Graphene.Point.zero())
+        if computed_point:
+            return (point.x, point.y)
+        return (0, 0)
 
-	def get_focus_position(self):
-		return self._get_focus_row().get_property("position")
+    def get_focus_position(self):
+        return self._get_focus_row().get_property("position")
 
-	def get_focus_song(self):
-		return self.get_model().get_item(self.get_focus_position())
+    def get_focus_song(self):
+        return self.get_model().get_item(self.get_focus_position())
 
-	def get_position(self, x, y):
-		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is self or item is None:
-			return None
-		return item.get_first_child().get_property("position")
+    def get_position(self, x, y):
+        item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+        if item is self or item is None:
+            return None
+        return item.get_first_child().get_property("position")
 
-	def get_song(self, position):
-		return self.get_model().get_item(position)
+    def get_song(self, position):
+        return self.get_model().get_item(position)

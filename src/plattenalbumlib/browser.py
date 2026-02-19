@@ -73,149 +73,149 @@ class Browser(Gtk.Stack):
         status_page=Adw.StatusPage(icon_name="folder-music-symbolic", title=_("Collection is Empty"))
         status_page_header_bar=Adw.HeaderBar(show_title=False)
         status_page_header_bar.pack_end(MainMenuButton())
-		status_page_toolbar_view=Adw.ToolbarView(content=status_page)
-		status_page_toolbar_view.add_top_bar(status_page_header_bar)
+        status_page_toolbar_view=Adw.ToolbarView(content=status_page)
+        status_page_toolbar_view.add_top_bar(status_page_header_bar)
 
-		# navigation view
-		self._navigation_view=Adw.NavigationView()
-		self._navigation_view.add(Adw.NavigationPage(child=breakpoint_bin, title=_("Collection"), tag="collection"))
-		self._navigation_view.add(Adw.NavigationPage(child=search_toolbar_view, title=_("Search"), tag="search"))
+        # navigation view
+        self._navigation_view=Adw.NavigationView()
+        self._navigation_view.add(Adw.NavigationPage(child=breakpoint_bin, title=_("Collection"), tag="collection"))
+        self._navigation_view.add(Adw.NavigationPage(child=search_toolbar_view, title=_("Search"), tag="search"))
 
-		# connect
-		self._albums_page.connect("album-selected", self._on_album_selected)
-		if self.browse_by_composer:
-			self._composer_list_connect()
-		else:
-			self._artist_list_connect()
-		self._search_view.connect("album-selected", lambda widget, *args: self._show_album(*args))
-		self.search_entry.connect("search-changed", self._on_search_changed)
-		self.search_entry.connect("stop-search", self._on_search_stopped)
-		client.emitter.connect("disconnected", self._on_disconnected)
-		client.emitter.connect("connection-error", self._on_connection_error)
-		client.emitter.connect("connected", self._on_connected_or_updated_db)
-		client.emitter.connect("updated-db", self._on_connected_or_updated_db)
-		client.emitter.connect("show-album", lambda widget, *args: self._show_album(*args))
+        # connect
+        self._albums_page.connect("album-selected", self._on_album_selected)
+        if self.browse_by_composer:
+            self._composer_list_connect()
+        else:
+            self._artist_list_connect()
+        self._search_view.connect("album-selected", lambda widget, *args: self._show_album(*args))
+        self.search_entry.connect("search-changed", self._on_search_changed)
+        self.search_entry.connect("stop-search", self._on_search_stopped)
+        client.emitter.connect("disconnected", self._on_disconnected)
+        client.emitter.connect("connection-error", self._on_connection_error)
+        client.emitter.connect("connected", self._on_connected_or_updated_db)
+        client.emitter.connect("updated-db", self._on_connected_or_updated_db)
+        client.emitter.connect("show-album", lambda widget, *args: self._show_album(*args))
 
-		# packing
-		self.add_named(self._navigation_view, "browser")
-		self.add_named(status_page_toolbar_view, "empty-collection")
+        # packing
+        self.add_named(self._navigation_view, "browser")
+        self.add_named(status_page_toolbar_view, "empty-collection")
 
-	def _composer_list_connect(self):
-		self._composer_list.composer_selection_model.connect("selected", self._on_composer_selected)
-		self._composer_list.composer_selection_model.connect("reselected", self._on_composer_reselected)
-		self._composer_list.composer_selection_model.connect("clear", self._albums_page.clear)
-		self._search_view.connect("composer-selected", self._on_search_composer_selected)
+    def _composer_list_connect(self):
+        self._composer_list.composer_selection_model.connect("selected", self._on_composer_selected)
+        self._composer_list.composer_selection_model.connect("reselected", self._on_composer_reselected)
+        self._composer_list.composer_selection_model.connect("clear", self._albums_page.clear)
+        self._search_view.connect("composer-selected", self._on_search_composer_selected)
 
-	def _composer_list_setup(self, client):
-		# composer list
-		self._composer_list = ComposerList(client)
-		composer_window = Gtk.ScrolledWindow(child=self._composer_list)
-		composer_header_bar = Adw.HeaderBar()
-		search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
-		search_button.connect("clicked", lambda *args: self.search())
-		composer_header_bar.pack_start(search_button)
-		composer_header_bar.pack_end(MainMenuButton())
-		composer_toolbar_view = Adw.ToolbarView(content=composer_window)
-		composer_toolbar_view.add_top_bar(composer_header_bar)
-		composer_page = Adw.NavigationPage(child=composer_toolbar_view, title=_("Composers"), tag="composers")
-		return composer_page
+    def _composer_list_setup(self, client):
+        # composer list
+        self._composer_list = ComposerList(client)
+        composer_window = Gtk.ScrolledWindow(child=self._composer_list)
+        composer_header_bar = Adw.HeaderBar()
+        search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
+        search_button.connect("clicked", lambda *args: self.search())
+        composer_header_bar.pack_start(search_button)
+        composer_header_bar.pack_end(MainMenuButton())
+        composer_toolbar_view = Adw.ToolbarView(content=composer_window)
+        composer_toolbar_view.add_top_bar(composer_header_bar)
+        composer_page = Adw.NavigationPage(child=composer_toolbar_view, title=_("Composers"), tag="composers")
+        return composer_page
 
-	def _artist_list_connect(self):
-		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
-		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
-		self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
-		self._search_view.connect("artist-selected", self._on_search_artist_selected)
+    def _artist_list_connect(self):
+        self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
+        self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
+        self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
+        self._search_view.connect("artist-selected", self._on_search_artist_selected)
 
-	def _artist_list_setup(self, client):
-		# artist list
-		self._artist_list = ArtistList(client)
-		artist_window = Gtk.ScrolledWindow(child=self._artist_list)
-		artist_header_bar = Adw.HeaderBar()
-		search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
-		search_button.connect("clicked", lambda *args: self.search())
-		artist_header_bar.pack_start(search_button)
-		artist_header_bar.pack_end(MainMenuButton())
-		artist_toolbar_view = Adw.ToolbarView(content=artist_window)
-		artist_toolbar_view.add_top_bar(artist_header_bar)
-		artist_page = Adw.NavigationPage(child=artist_toolbar_view, title=_("Artists"), tag="artists")
-		return artist_page
+    def _artist_list_setup(self, client):
+        # artist list
+        self._artist_list = ArtistList(client)
+        artist_window = Gtk.ScrolledWindow(child=self._artist_list)
+        artist_header_bar = Adw.HeaderBar()
+        search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
+        search_button.connect("clicked", lambda *args: self.search())
+        artist_header_bar.pack_start(search_button)
+        artist_header_bar.pack_end(MainMenuButton())
+        artist_toolbar_view = Adw.ToolbarView(content=artist_window)
+        artist_toolbar_view.add_top_bar(artist_header_bar)
+        artist_page = Adw.NavigationPage(child=artist_toolbar_view, title=_("Artists"), tag="artists")
+        return artist_page
 
-	def search(self):
-		if self._navigation_view.get_visible_page_tag() != "search":
-			self._navigation_view.push_by_tag("search")
-		self.search_entry.select_region(0, -1)
-		self.search_entry.grab_focus()
+    def search(self):
+        if self._navigation_view.get_visible_page_tag() != "search":
+            self._navigation_view.push_by_tag("search")
+        self.search_entry.select_region(0, -1)
+        self.search_entry.grab_focus()
 
-	def _on_search_changed(self, entry):
-		if (search_text:=self.search_entry.get_text()):
-			self._search_view.search(search_text)
-		else:
-			self._search_view.clear()
+    def _on_search_changed(self, entry):
+        if (search_text:=self.search_entry.get_text()):
+            self._search_view.search(search_text)
+        else:
+            self._search_view.clear()
 
-	def _on_search_stopped(self, widget):
-		self._navigation_view.pop_to_tag("collection")
+    def _on_search_stopped(self, widget):
+        self._navigation_view.pop_to_tag("collection")
 
-	def _on_composer_selected(self, model, position):
-		self._navigation_split_view.set_show_content(True)
-		self._album_navigation_view.replace_with_tags(["album_list"])
-		self._albums_page.display(model.get_composer(position))
+    def _on_composer_selected(self, model, position):
+        self._navigation_split_view.set_show_content(True)
+        self._album_navigation_view.replace_with_tags(["album_list"])
+        self._albums_page.display(model.get_composer(position))
 
-	def _on_composer_reselected(self, model):
-		self._navigation_split_view.set_show_content(True)
-		self._album_navigation_view.pop_to_tag("album_list")
+    def _on_composer_reselected(self, model):
+        self._navigation_split_view.set_show_content(True)
+        self._album_navigation_view.pop_to_tag("album_list")
 
-	def _on_artist_selected(self, model, position):
-		self._navigation_split_view.set_show_content(True)
-		self._album_navigation_view.replace_with_tags(["album_list"])
-		self._albums_page.display(model.get_artist(position))
+    def _on_artist_selected(self, model, position):
+        self._navigation_split_view.set_show_content(True)
+        self._album_navigation_view.replace_with_tags(["album_list"])
+        self._albums_page.display(model.get_artist(position))
 
-	def _on_artist_reselected(self, model):
-		self._navigation_split_view.set_show_content(True)
-		self._album_navigation_view.pop_to_tag("album_list")
+    def _on_artist_reselected(self, model):
+        self._navigation_split_view.set_show_content(True)
+        self._album_navigation_view.pop_to_tag("album_list")
 
-	def _on_album_selected(self, widget, *tags):
-		if self.browse_by_composer:
-			album_page = ComposerAlbumPage(self._client, *tags)
-		else:
-			album_page = ArtistAlbumPage(self._client, *tags)
-		self._album_navigation_view.push(album_page)
-		album_page.play_button.grab_focus()
+    def _on_album_selected(self, widget, *tags):
+        if self.browse_by_composer:
+            album_page = ComposerAlbumPage(self._client, *tags)
+        else:
+            album_page = ArtistAlbumPage(self._client, *tags)
+        self._album_navigation_view.push(album_page)
+        album_page.play_button.grab_focus()
 
-	def _on_search_composer_selected(self, widget, composer):
-		self._composer_list.select(composer)
-		self.search_entry.emit("stop-search")
-		self._albums_page.grid_view.grab_focus()
+    def _on_search_composer_selected(self, widget, composer):
+        self._composer_list.select(composer)
+        self.search_entry.emit("stop-search")
+        self._albums_page.grid_view.grab_focus()
 
-	def _on_search_artist_selected(self, widget, artist):
-		self._artist_list.select(artist)
-		self.search_entry.emit("stop-search")
-		self._albums_page.grid_view.grab_focus()
+    def _on_search_artist_selected(self, widget, artist):
+        self._artist_list.select(artist)
+        self.search_entry.emit("stop-search")
+        self._albums_page.grid_view.grab_focus()
 
-	def _show_album(self, album, artist, date):
-		if self.browse_by_composer:
-			self._composer_list.select(artist)
-			album_page = ComposerAlbumPage(self._client, artist, album, date)
-		else:
-			self._artist_list.select(artist)
-			album_page = ArtistAlbumPage(self._client, artist, album, date)
+    def _show_album(self, album, artist, date):
+        if self.browse_by_composer:
+            self._composer_list.select(artist)
+            album_page = ComposerAlbumPage(self._client, artist, album, date)
+        else:
+            self._artist_list.select(artist)
+            album_page = ArtistAlbumPage(self._client, artist, album, date)
 
-		self._album_navigation_view.replace([self._albums_page, album_page])
-		self.search_entry.emit("stop-search")
-		album_page.play_button.grab_focus()
+        self._album_navigation_view.replace([self._albums_page, album_page])
+        self.search_entry.emit("stop-search")
+        album_page.play_button.grab_focus()
 
-	def _on_disconnected(self, *args):
-		self._album_navigation_view.pop_to_tag("album_list")
-		self.set_visible_child_name("browser")
-		self._navigation_split_view.set_show_content(False)
-		self.search_entry.emit("stop-search")
+    def _on_disconnected(self, *args):
+        self._album_navigation_view.pop_to_tag("album_list")
+        self.set_visible_child_name("browser")
+        self._navigation_split_view.set_show_content(False)
+        self.search_entry.emit("stop-search")
 
-	def _on_connection_error(self, *args):
-		self.set_visible_child_name("empty-collection")
+    def _on_connection_error(self, *args):
+        self.set_visible_child_name("empty-collection")
 
-	def _on_connected_or_updated_db(self, emitter, database_is_empty):
-		self.search_entry.emit("stop-search")
-		self.search_entry.set_text("")
-		if database_is_empty:
-			self.set_visible_child_name("empty-collection")
-		else:
-			self.set_visible_child_name("browser")
+    def _on_connected_or_updated_db(self, emitter, database_is_empty):
+        self.search_entry.emit("stop-search")
+        self.search_entry.set_text("")
+        if database_is_empty:
+            self.set_visible_child_name("empty-collection")
+        else:
+            self.set_visible_child_name("browser")

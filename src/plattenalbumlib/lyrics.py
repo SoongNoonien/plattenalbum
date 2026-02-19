@@ -85,21 +85,21 @@ class LyricsWindow(Gtk.Stack):
         self._text_buffer.delete(self._text_buffer.get_start_iter(), self._text_buffer.get_end_iter())
 
     def _get_lyrics(self, title, artist):
-    	title=urllib.parse.quote_plus(title)
-		artist=urllib.parse.quote_plus(artist)
-		parser=LetrasParser()
-		with urllib.request.urlopen(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}") as response:
-			parser.feed(response.read().decode("utf-8"))
-		if text:=parser.text.strip("\n "):
-			return text
-		else:
-			raise ValueError("Not found")
+        title=urllib.parse.quote_plus(title)
+        artist=urllib.parse.quote_plus(artist)
+        parser=LetrasParser()
+        with urllib.request.urlopen(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}") as response:
+            parser.feed(response.read().decode("utf-8"))
+        if text:=parser.text.strip("\n "):
+            return text
+        else:
+            raise ValueError("Not found")
 
-	def _display_lyrics(self, title, artist):
-		try:
-			idle_add(self._text_buffer.set_text, self._get_lyrics(title, artist))
-			idle_add(self.set_visible_child_name, "lyrics")
-		except urllib.error.URLError:
-			idle_add(self.set_visible_child_name, "connection-error")
-		except ValueError:
-			idle_add(self.set_visible_child_name, "no-lyrics")
+    def _display_lyrics(self, title, artist):
+        try:
+            idle_add(self._text_buffer.set_text, self._get_lyrics(title, artist))
+            idle_add(self.set_visible_child_name, "lyrics")
+        except urllib.error.URLError:
+            idle_add(self.set_visible_child_name, "connection-error")
+        except ValueError:
+            idle_add(self.set_visible_child_name, "no-lyrics")

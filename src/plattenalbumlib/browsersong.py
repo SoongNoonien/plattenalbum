@@ -41,58 +41,58 @@ class BrowserSongList(Gtk.ListBox):
         self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_F10, Gdk.ModifierType.SHIFT_MASK), Gtk.NamedAction.new("view.menu")))
 
         # event controller
-    	button_controller=Gtk.GestureClick(button=0)
-		self.add_controller(button_controller)
-		long_press_controller=Gtk.GestureLongPress()
-		self.add_controller(long_press_controller)
-		drag_source=Gtk.DragSource()
-		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
-		self.add_controller(drag_source)
+        button_controller=Gtk.GestureClick(button=0)
+        self.add_controller(button_controller)
+        long_press_controller=Gtk.GestureLongPress()
+        self.add_controller(long_press_controller)
+        drag_source=Gtk.DragSource()
+        drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
+        self.add_controller(drag_source)
 
-		# connect
-		self.connect("row-activated", self._on_row_activated)
-		self.connect("keynav-failed", self._on_keynav_failed)
-		button_controller.connect("pressed", self._on_button_pressed)
-		long_press_controller.connect("pressed", self._on_long_pressed)
-		drag_source.connect("prepare", self._on_drag_prepare)
+        # connect
+        self.connect("row-activated", self._on_row_activated)
+        self.connect("keynav-failed", self._on_keynav_failed)
+        button_controller.connect("pressed", self._on_button_pressed)
+        long_press_controller.connect("pressed", self._on_long_pressed)
+        drag_source.connect("prepare", self._on_drag_prepare)
 
-	def remove_all(self):
-		self._menu.unparent()
-		super().remove_all()
+    def remove_all(self):
+        self._menu.unparent()
+        super().remove_all()
 
-	def _open_menu(self, row, x, y):
-		self._menu.unparent()
-		self._menu.set_parent(row)
-		point=Graphene.Point.zero()
-		point.x,point.y=x,y
-		computed_point,point=self.compute_point(row, point)
-		if computed_point:
-			self._menu.open(row.song["file"], point.x, point.y)
+    def _open_menu(self, row, x, y):
+        self._menu.unparent()
+        self._menu.set_parent(row)
+        point=Graphene.Point.zero()
+        point.x,point.y=x,y
+        computed_point,point=self.compute_point(row, point)
+        if computed_point:
+            self._menu.open(row.song["file"], point.x, point.y)
 
-	def _on_row_activated(self, list_box, row):
-		self._client.file_to_playlist(row.song["file"], "play")
+    def _on_row_activated(self, list_box, row):
+        self._client.file_to_playlist(row.song["file"], "play")
 
-	def _on_keynav_failed(self, list_box, direction):
-		if (root:=list_box.get_root()) is not None and direction == Gtk.DirectionType.UP:
-			root.child_focus(Gtk.DirectionType.TAB_BACKWARD)
+    def _on_keynav_failed(self, list_box, direction):
+        if (root:=list_box.get_root()) is not None and direction == Gtk.DirectionType.UP:
+            root.child_focus(Gtk.DirectionType.TAB_BACKWARD)
 
-	def _on_button_pressed(self, controller, n_press, x, y):
-		if (row:=self.get_row_at_y(y)) is not None:
-			if controller.get_current_button() == 2 and n_press == 1:
-				self._client.file_to_playlist(row.song["file"], "append")
-			elif controller.get_current_button() == 3 and n_press == 1:
-				self._open_menu(row, x, y)
+    def _on_button_pressed(self, controller, n_press, x, y):
+        if (row:=self.get_row_at_y(y)) is not None:
+            if controller.get_current_button() == 2 and n_press == 1:
+                self._client.file_to_playlist(row.song["file"], "append")
+            elif controller.get_current_button() == 3 and n_press == 1:
+                self._open_menu(row, x, y)
 
-	def _on_long_pressed(self, controller, x, y):
-		if (row:=self.get_row_at_y(y)) is not None:
-			self._open_menu(row, x, y)
+    def _on_long_pressed(self, controller, x, y):
+        if (row:=self.get_row_at_y(y)) is not None:
+            self._open_menu(row, x, y)
 
-	def _on_menu(self, action, state):
-		row=self.get_focus_child()
-		self._menu.unparent()
-		self._menu.set_parent(row)
-		self._menu.open(row.song["file"], 0, 0)
+    def _on_menu(self, action, state):
+        row=self.get_focus_child()
+        self._menu.unparent()
+        self._menu.set_parent(row)
+        self._menu.open(row.song["file"], 0, 0)
 
-	def _on_drag_prepare(self, drag_source, x, y):
-		if (row:=self.get_row_at_y(y)) is not None:
-			return Gdk.ContentProvider.new_for_value(row.song)
+    def _on_drag_prepare(self, drag_source, x, y):
+        if (row:=self.get_row_at_y(y)) is not None:
+            return Gdk.ContentProvider.new_for_value(row.song)

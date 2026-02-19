@@ -55,26 +55,26 @@ class PlayerBar(Gtk.Overlay):
         box=Gtk.Box()
         box.add_css_class("toolbar")
         box.append(Adw.Clamp(orientation=Gtk.Orientation.VERTICAL, unit=Adw.LengthUnit.PX, maximum_size=34, child=self._cover))
-		box.append(title_box)
-		box.append(MediaButtons(client))
-		self.add_overlay(progress_bar)
-		self.set_child(box)
+        box.append(title_box)
+        box.append(MediaButtons(client))
+        self.add_overlay(progress_bar)
+        self.set_child(box)
 
-	def _clear_title(self):
-		self._title.set_text("")
-		self._subtitle.set_text("")
+    def _clear_title(self):
+        self._title.set_text("")
+        self._subtitle.set_text("")
 
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
-		if song:
-			self._cover.set_visible(True)
-			self._title.set_text(song["title"][0])
-			self._subtitle.set_text(str(song["artist"]))
-		else:
-			self._cover.set_visible(False)
-			self._clear_title()
-		self._cover.set_paintable(self._client.current_cover.get_paintable())
+    def _on_song_changed(self, emitter, song, songpos, songid, state):
+        if song:
+            self._cover.set_visible(True)
+            self._title.set_text(song["title"][0])
+            self._subtitle.set_text(str(song["artist"]))
+        else:
+            self._cover.set_visible(False)
+            self._clear_title()
+        self._cover.set_paintable(self._client.current_cover.get_paintable())
 
-	def _on_disconnected(self, *args):
-		self._clear_title()
-		self._cover.set_paintable(FALLBACK_COVER)
-		self._cover.set_visible(False)
+    def _on_disconnected(self, *args):
+        self._clear_title()
+        self._cover.set_paintable(FALLBACK_COVER)
+        self._cover.set_visible(False)
