@@ -31,11 +31,11 @@ try:
     locale.setlocale(locale.LC_ALL, "")
 except locale.Error as e:
     print(e)
-locale.bindtextdomain("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@")
+locale.bindtextdomain("de.wagnermartin.Plattenalbum", "/usr/local/share/locale")
 locale.textdomain("de.wagnermartin.Plattenalbum")
-bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
+bindtextdomain("de.wagnermartin.Plattenalbum", localedir="/usr/local/share/locale")
 textdomain("de.wagnermartin.Plattenalbum")
-Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
+Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["/usr/local/share/de.wagnermartin.Plattenalbum", "de.wagnermartin.Plattenalbum.gresource"])))
 
 from plattenalbumlib.mpris import MPRISInterface
 from plattenalbumlib.duration import Duration

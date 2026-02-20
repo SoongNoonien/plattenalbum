@@ -8,8 +8,6 @@ from gettext import gettext as _
 
 from .browsersong import BrowserSongList, BrowserSongRow
 from .artist_album import ArtistAlbumRow
-from .artist import ArtistList
-from .composer import ComposerList
 from .composer_album import ComposerAlbumRow
 
 
@@ -151,7 +149,6 @@ class SearchView(Gtk.Stack):
             self.emit("album-selected", row.album, row.composer, row.date)
         else:
             self.emit("album-selected", row.album, row.artist, row.date)
-
 
     def _on_keynav_failed(self, list_box, direction):
         if (root:=list_box.get_root()) is not None:
