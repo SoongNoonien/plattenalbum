@@ -101,23 +101,29 @@ class Browser(Gtk.Stack):
         self.add_named(self._navigation_view, "browser")
         self.add_named(status_page_toolbar_view, "empty-collection")
 
-    def _composer_list_connect(self):
-        self._composer_list.selection_model.connect("selected", self._on_composer_selected)
-        self._composer_list.selection_model.connect("reselected", self._on_composer_reselected)
-        self._composer_list.selection_model.connect("clear", self._albums_page.clear)
-        self._search_view.connect("composer-selected", self._on_search_composer_selected)
+    def _header_bar_setup(self, composer_window):
+        header_bar = Adw.HeaderBar()
+        search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
+        search_button.connect("clicked", lambda *args: self.search())
+        header_bar.pack_start(search_button)
+        header_bar.pack_end(MainMenuButton())
+        toolbar_view = Adw.ToolbarView(content=composer_window)
+        toolbar_view.add_top_bar(header_bar)
+        return toolbar_view
+
+    def _artist_list_setup(self, client):
+        # artist list
+        self._artist_list = ArtistList(client, ArtistSelectionModel)
+        artist_window = Gtk.ScrolledWindow(child=self._artist_list)
+        artist_toolbar_view = self._header_bar_setup(artist_window)
+        artist_page = Adw.NavigationPage(child=artist_toolbar_view, title=_("Artists"), tag="artists")
+        return artist_page
 
     def _composer_list_setup(self, client):
         # composer list
         self._composer_list = ComposerList(client, ComposerSelectionModel)
         composer_window = Gtk.ScrolledWindow(child=self._composer_list)
-        composer_header_bar = Adw.HeaderBar()
-        search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
-        search_button.connect("clicked", lambda *args: self.search())
-        composer_header_bar.pack_start(search_button)
-        composer_header_bar.pack_end(MainMenuButton())
-        composer_toolbar_view = Adw.ToolbarView(content=composer_window)
-        composer_toolbar_view.add_top_bar(composer_header_bar)
+        composer_toolbar_view = self._header_bar_setup(composer_window)
         composer_page = Adw.NavigationPage(child=composer_toolbar_view, title=_("Composers"), tag="composers")
         return composer_page
 
@@ -127,19 +133,11 @@ class Browser(Gtk.Stack):
         self._artist_list.selection_model.connect("clear", self._albums_page.clear)
         self._search_view.connect("artist-selected", self._on_search_artist_selected)
 
-    def _artist_list_setup(self, client):
-        # artist list
-        self._artist_list = ArtistList(client, ArtistSelectionModel)
-        artist_window = Gtk.ScrolledWindow(child=self._artist_list)
-        artist_header_bar = Adw.HeaderBar()
-        search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
-        search_button.connect("clicked", lambda *args: self.search())
-        artist_header_bar.pack_start(search_button)
-        artist_header_bar.pack_end(MainMenuButton())
-        artist_toolbar_view = Adw.ToolbarView(content=artist_window)
-        artist_toolbar_view.add_top_bar(artist_header_bar)
-        artist_page = Adw.NavigationPage(child=artist_toolbar_view, title=_("Artists"), tag="artists")
-        return artist_page
+    def _composer_list_connect(self):
+        self._composer_list.selection_model.connect("selected", self._on_composer_selected)
+        self._composer_list.selection_model.connect("reselected", self._on_composer_reselected)
+        self._composer_list.selection_model.connect("clear", self._albums_page.clear)
+        self._search_view.connect("composer-selected", self._on_search_composer_selected)
 
     def search(self):
         if self._navigation_view.get_visible_page_tag() != "search":
