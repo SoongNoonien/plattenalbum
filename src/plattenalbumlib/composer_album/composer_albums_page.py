@@ -4,10 +4,10 @@ from gettext import gettext as _
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GObject, Gtk
 
-from ..albums_page import AlbumsPage
+from ..album import AlbumsPage
 from ..models import SelectionModel
 from ..composer_album import ComposerAlbum
-from ..composer_album.composer_album_list_row import ComposerAlbumListRow
+from ..composer_album import ComposerAlbumListRow
 
 
 class ComposerAlbumsPage(AlbumsPage):

@@ -1,4 +1,4 @@
-from ..album_list_row import AlbumListRow
+from ..album import AlbumListRow
 
 
 class ComposerAlbumListRow(AlbumListRow):

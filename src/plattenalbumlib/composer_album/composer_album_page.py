@@ -1,4 +1,4 @@
-from ..album_page import AlbumPage
+from ..album import AlbumPage
 from ..browsersong import BrowserSongRow
 from ..duration import Duration
 

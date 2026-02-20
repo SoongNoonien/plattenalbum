@@ -4,7 +4,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GLib, Gtk, GObject, Pango
 
 from .album_cover import AlbumCover
-from .browsersong import BrowserSongList
+from ..browsersong import BrowserSongList
 
 
 class AlbumPage(Adw.NavigationPage):
