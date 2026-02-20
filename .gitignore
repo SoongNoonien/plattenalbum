@@ -1,3 +1,4 @@
 /builddir/
 /repo/
 /.flatpak-builder/
+*__pycache__/
