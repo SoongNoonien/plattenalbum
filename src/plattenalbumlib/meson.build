@@ -10,5 +10,5 @@ subdir('playlist')
 install_headers(
 '__init__.py', 'bitrate.py',
 'browser.py', 'browsersong.py', 'client.py', 'cover.py', 'duration.py', 'event_emitter.py', 'functions.py',
-'lyrics.py', 'media_buttons.py', 'models.py', 'mpris.py', 'multitag.py', 'progress.py', 'search.py', 'settings.py', 'song.py'
-, install_dir: 'bin/plattenalbumlib')
+'lyrics.py', 'media_buttons.py', 'models.py', 'mpris.py', 'multitag.py', 'progress.py', 'search.py', 'settings.py',
+'sidebar_list_view.py', 'song.py', install_dir: 'bin/plattenalbumlib')
