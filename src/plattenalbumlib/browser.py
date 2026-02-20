@@ -1,16 +1,13 @@
 import gi
 
-from.artist.artist import ArtistSelectionModel
-from .composer.composer import ComposerSelectionModel
-
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, GObject, Pango, GLib
 from gettext import gettext as _
 
-from .artist import ArtistList
+from .artist import ArtistList, ArtistSelectionModel
 from .artist_album import ArtistAlbumsPage, ArtistAlbumPage
-from .composer import ComposerList
+from .composer import Composer, ComposerList, ComposerSelectionModel
 from .composer_album import ComposerAlbumsPage, ComposerAlbumPage
 from .search import SearchView
 
@@ -162,7 +159,7 @@ class Browser(Gtk.Stack):
     def _on_composer_selected(self, model, position):
         self._navigation_split_view.set_show_content(True)
         self._album_navigation_view.replace_with_tags(["album_list"])
-        self._albums_page.display(model.get_composer(position))
+        self._albums_page.display(model.get_item_name(position))
 
     def _on_composer_reselected(self, model):
         self._navigation_split_view.set_show_content(True)
@@ -171,7 +168,7 @@ class Browser(Gtk.Stack):
     def _on_artist_selected(self, model, position):
         self._navigation_split_view.set_show_content(True)
         self._album_navigation_view.replace_with_tags(["album_list"])
-        self._albums_page.display(model.get_artist(position))
+        self._albums_page.display(model.get_item_name(position))
 
     def _on_artist_reselected(self, model):
         self._navigation_split_view.set_show_content(True)

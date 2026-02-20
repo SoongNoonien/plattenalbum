@@ -50,7 +50,7 @@ class ComposerList(Gtk.ListView):
         self._client.emitter.connect("updated-db", self._on_updated_db)
 
     def select(self, name):
-        self.selection_model.select_composer(name)
+        self.selection_model.select_item(name)
         if (selected:=self.selection_model.get_selected()) is None:
             self.selection_model.select(0)
             self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
@@ -66,7 +66,7 @@ class ComposerList(Gtk.ListView):
                 # ignore multiple albumcomposersort values
                 if next(composer, None) is not None:
                     filtered_composers[-1]=(name, name)
-        self.selection_model.set_composers(filtered_composers)
+        self.selection_model.set_list(filtered_composers)
 
     def _on_activate(self, widget, pos):
         self.selection_model.select(pos)
@@ -85,7 +85,7 @@ class ComposerList(Gtk.ListView):
         if database_is_empty:
             self.selection_model.clear()
         else:
-            if (composer:=self.selection_model.get_selected_composer()) is None:
+            if (composer:=self.selection_model.get_selected_item()) is None:
                 self._refresh()
                 self.selection_model.select(0)
                 self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)

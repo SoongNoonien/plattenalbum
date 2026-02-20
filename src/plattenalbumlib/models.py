@@ -1,4 +1,5 @@
 from gi.repository import Gtk, GObject, Gio
+import locale
 
 
 class ListModel(GObject.Object, Gio.ListModel):
@@ -81,3 +82,22 @@ class SelectionModel(ListModel, Gtk.SelectionModel):
 
     def do_is_selected(self, position):
         return position == self._selected
+
+    def set_list(self, items):
+        self.clear()
+        self.append((self.do_get_item_type()(item[0]) for item in sorted(items, key=lambda item: locale.strxfrm(item[1]))))
+
+    def select_item(self, name):
+        for i, item in enumerate(self.data):
+            if item.name == name:
+                self.select(i)
+                return
+
+    def get_item_name(self, position):
+        return self.get_item(position).name
+
+    def get_selected_item(self):
+        if (selected:=self.get_selected()) is None:
+            return None
+        else:
+            return self.get_item_name(selected)

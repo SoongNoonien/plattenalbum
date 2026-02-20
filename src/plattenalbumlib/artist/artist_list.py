@@ -50,7 +50,7 @@ class ArtistList(Gtk.ListView):
         self._client.emitter.connect("updated-db", self._on_updated_db)
 
     def select(self, name):
-        self.selection_model.select_artist(name)
+        self.selection_model.select_item(name)
         if (selected:=self.selection_model.get_selected()) is None:
             self.selection_model.select(0)
             self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
@@ -65,7 +65,7 @@ class ArtistList(Gtk.ListView):
             # ignore multiple albumartistsort values
             if next(artist, None) is not None:
                 filtered_artists[-1]=(name, name)
-        self.selection_model.set_artists(filtered_artists)
+        self.selection_model.set_list(filtered_artists)
 
     def _on_activate(self, widget, pos):
         self.selection_model.select(pos)
@@ -84,7 +84,7 @@ class ArtistList(Gtk.ListView):
         if database_is_empty:
             self.selection_model.clear()
         else:
-            if (artist:=self.selection_model.get_selected_artist()) is None:
+            if (artist:=self.selection_model.get_selected_item()) is None:
                 self._refresh()
                 self.selection_model.select(0)
                 self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
