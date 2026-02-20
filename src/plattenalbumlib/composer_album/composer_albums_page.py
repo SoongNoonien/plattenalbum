@@ -1,5 +1,4 @@
 import gi
-from gettext import gettext as _
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GObject, Gtk
