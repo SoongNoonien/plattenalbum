@@ -4,11 +4,11 @@ gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, GObject, Pango, GLib
 from gettext import gettext as _
 
-from .search import SearchView
 from .artist import ArtistList
 from .artist_album import ArtistAlbumsPage, ArtistAlbumPage
 from .composer import ComposerList
 from .composer_album import ComposerAlbumsPage, ComposerAlbumPage
+from .search import SearchView
 
 
 class MainMenuButton(Gtk.MenuButton):

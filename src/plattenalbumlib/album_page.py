@@ -6,6 +6,7 @@ from gi.repository import Adw, GLib, Gtk, GObject, Pango
 from .album_cover import AlbumCover
 from .browsersong import BrowserSongList
 
+
 class AlbumPage(Adw.NavigationPage):
     def __init__(self, client, album, date):
         super().__init__()

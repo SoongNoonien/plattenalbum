@@ -4,8 +4,6 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GLib, Gtk, GObject, Pango
 
-from .models import SelectionModel
-
 
 class AlbumsPage(Adw.NavigationPage):
     def __init__(self, client, settings):

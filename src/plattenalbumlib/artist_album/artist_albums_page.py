@@ -9,6 +9,7 @@ from ..artist_album.artist_album import ArtistAlbum
 from ..artist_album.artist_album_list_row import ArtistAlbumListRow
 from ..models import SelectionModel
 
+
 class ArtistAlbumsPage(AlbumsPage):
     __gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
     def __init__(self, client, settings):
