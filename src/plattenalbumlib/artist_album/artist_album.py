@@ -5,13 +5,13 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GObject, Gtk
 
-from .album import Album
-from .album_list_row import AlbumListRow
-from .album_page import AlbumPage
-from .albums_page import AlbumsPage
-from .browsersong import BrowserSongRow
-from .duration import Duration
-from .models import SelectionModel
+from src.plattenalbumlib.album import Album
+from src.plattenalbumlib.album_list_row import AlbumListRow
+from src.plattenalbumlib.album_page import AlbumPage
+from src.plattenalbumlib.albums_page import AlbumsPage
+from src.plattenalbumlib.browsersong import BrowserSongRow
+from src.plattenalbumlib.duration import Duration
+from src.plattenalbumlib.models import SelectionModel
 
 
 class ArtistAlbum(Album):
