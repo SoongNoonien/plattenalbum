@@ -25,7 +25,7 @@ from gi.repository import Gtk, Adw, Gio, GObject, GLib
 import sys
 import signal
 import locale
-from gettext import gettext as _, ngettext, textdomain, bindtextdomain
+from gettext import gettext as _, textdomain, bindtextdomain
 
 try:
     locale.setlocale(locale.LC_ALL, "")
@@ -43,8 +43,7 @@ from plattenalbumlib.client import Client
 from plattenalbumlib.settings import Settings
 from plattenalbumlib.dialogs import  ConnectDialog, ManualConnectDialog, PreferencesDialog, SetupDialog, ServerInfo
 from plattenalbumlib.browser import Browser
-from plattenalbumlib.player import Player
-from plattenalbumlib.player_bar import PlayerBar
+from plattenalbumlib.player import Player, PlayerBar
 
 ###############
 # main window #
