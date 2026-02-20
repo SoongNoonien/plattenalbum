@@ -1,4 +1,8 @@
 import gi
+
+from.artist.artist import ArtistSelectionModel
+from .composer.composer import ComposerSelectionModel
+
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, GObject, Pango, GLib
@@ -101,14 +105,14 @@ class Browser(Gtk.Stack):
         self.add_named(status_page_toolbar_view, "empty-collection")
 
     def _composer_list_connect(self):
-        self._composer_list.composer_selection_model.connect("selected", self._on_composer_selected)
-        self._composer_list.composer_selection_model.connect("reselected", self._on_composer_reselected)
-        self._composer_list.composer_selection_model.connect("clear", self._albums_page.clear)
+        self._composer_list.selection_model.connect("selected", self._on_composer_selected)
+        self._composer_list.selection_model.connect("reselected", self._on_composer_reselected)
+        self._composer_list.selection_model.connect("clear", self._albums_page.clear)
         self._search_view.connect("composer-selected", self._on_search_composer_selected)
 
     def _composer_list_setup(self, client):
         # composer list
-        self._composer_list = ComposerList(client)
+        self._composer_list = ComposerList(client, ComposerSelectionModel)
         composer_window = Gtk.ScrolledWindow(child=self._composer_list)
         composer_header_bar = Adw.HeaderBar()
         search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
@@ -121,14 +125,14 @@ class Browser(Gtk.Stack):
         return composer_page
 
     def _artist_list_connect(self):
-        self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
-        self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
-        self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
+        self._artist_list.selection_model.connect("selected", self._on_artist_selected)
+        self._artist_list.selection_model.connect("reselected", self._on_artist_reselected)
+        self._artist_list.selection_model.connect("clear", self._albums_page.clear)
         self._search_view.connect("artist-selected", self._on_search_artist_selected)
 
     def _artist_list_setup(self, client):
         # artist list
-        self._artist_list = ArtistList(client)
+        self._artist_list = ArtistList(client, ArtistSelectionModel)
         artist_window = Gtk.ScrolledWindow(child=self._artist_list)
         artist_header_bar = Adw.HeaderBar()
         search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))

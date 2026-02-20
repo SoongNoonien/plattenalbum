@@ -2,14 +2,13 @@ import itertools
 import gi
 from gettext import gettext as _
 
-from .composer import ComposerSelectionModel
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GObject, Pango, GLib
 
 
 class ComposerList(Gtk.ListView):
-    def __init__(self, client):
+    def __init__(self, client, SelectionModel):
         super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["navigation-sidebar"])
         self._client=client
 
@@ -41,8 +40,8 @@ class ComposerList(Gtk.ListView):
         self.set_header_factory(header_factory)
 
         # model
-        self.composer_selection_model=ComposerSelectionModel()
-        self.set_model(self.composer_selection_model)
+        self.selection_model=SelectionModel()
+        self.set_model(self.selection_model)
 
         # connect
         self.connect("activate", self._on_activate)
@@ -51,9 +50,9 @@ class ComposerList(Gtk.ListView):
         self._client.emitter.connect("updated-db", self._on_updated_db)
 
     def select(self, name):
-        self.composer_selection_model.select_composer(name)
-        if (selected:=self.composer_selection_model.get_selected()) is None:
-            self.composer_selection_model.select(0)
+        self.selection_model.select_composer(name)
+        if (selected:=self.selection_model.get_selected()) is None:
+            self.selection_model.select(0)
             self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
         else:
             self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
@@ -67,13 +66,13 @@ class ComposerList(Gtk.ListView):
                 # ignore multiple albumcomposersort values
                 if next(composer, None) is not None:
                     filtered_composers[-1]=(name, name)
-        self.composer_selection_model.set_composers(filtered_composers)
+        self.selection_model.set_composers(filtered_composers)
 
     def _on_activate(self, widget, pos):
-        self.composer_selection_model.select(pos)
+        self.selection_model.select(pos)
 
     def _on_disconnected(self, *args):
-        self.composer_selection_model.clear()
+        self.selection_model.clear()
 
     def _on_connected(self, emitter, database_is_empty):
         if not database_is_empty:
@@ -84,11 +83,11 @@ class ComposerList(Gtk.ListView):
 
     def _on_updated_db(self, emitter, database_is_empty):
         if database_is_empty:
-            self.composer_selection_model.clear()
+            self.selection_model.clear()
         else:
-            if (composer:=self.composer_selection_model.get_selected_composer()) is None:
+            if (composer:=self.selection_model.get_selected_composer()) is None:
                 self._refresh()
-                self.composer_selection_model.select(0)
+                self.selection_model.select(0)
                 self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
             else:
                 self._refresh()
