@@ -85,7 +85,7 @@ class SelectionModel(ListModel, Gtk.SelectionModel):
 
     def set_list(self, items):
         self.clear()
-        self.append((self.do_get_item_type()(item[0]) for item in sorted(items, key=lambda item: locale.strxfrm(item[1]))))
+        self.append((self.do_get_item_type()(item[0], item[2]) for item in sorted(items, key=lambda item: locale.strxfrm(item[1]))))
 
     def select_item(self, name):
         for i, item in enumerate(self.data):

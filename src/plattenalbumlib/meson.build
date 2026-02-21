@@ -2,8 +2,6 @@
 subdir('album')
 subdir('artist')
 subdir('artist_album')
-subdir('composer')
-subdir('composer_album')
 subdir('dialogs')
 subdir('player')
 subdir('playlist')

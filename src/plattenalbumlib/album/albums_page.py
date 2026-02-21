@@ -64,7 +64,7 @@ class AlbumsPage(Adw.NavigationPage):
         self.set_title(_("Albums"))
         self._stack.set_visible_child_name("status-page")
 
-    def display(self, item):
+    def display(self, item, role):
         self._settings.set_property("cursor-watch", True)
         self._selection_model.clear()
         self.set_title(item)
@@ -74,12 +74,12 @@ class AlbumsPage(Adw.NavigationPage):
         while main.pending():
             main.iteration()
         self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {item}").format(item=item)])
-        self._selection_model.append(sorted(self._get_albums(item), key=lambda item: item.date))
+        self._selection_model.append(sorted(self._get_albums(item, role), key=lambda item: item.date))
         self._settings.set_property("cursor-watch", False)
 
     def _on_activate(self, widget, pos):
         album=self._selection_model.get_item(pos)
-        self.emit("album-selected", album.artist, album.name, album.date)
+        self.emit("album-selected", album.artist, album.role, album.name, album.date)
 
     def _on_disconnected(self, *args):
         self._stack.set_visible_child_name("albums")

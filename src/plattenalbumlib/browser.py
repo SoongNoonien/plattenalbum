@@ -7,8 +7,6 @@ from gettext import gettext as _
 
 from .artist import ArtistList, ArtistSelectionModel
 from .artist_album import ArtistAlbumsPage, ArtistAlbumPage
-from .composer import Composer, ComposerList, ComposerSelectionModel
-from .composer_album import ComposerAlbumsPage, ComposerAlbumPage
 from .search import SearchView
 
 
@@ -31,7 +29,8 @@ class Browser(Gtk.Stack):
     def __init__(self, client, settings):
         super().__init__()
         self._client=client
-        self.browse_by_composer = settings['composer']
+        self.artist_role='artist'
+        self.artist_page=None
         # search
         self._search_view=SearchView(client, settings)
         self.search_entry=Gtk.SearchEntry(placeholder_text=_("Search collection"), max_width_chars=25)
@@ -41,13 +40,9 @@ class Browser(Gtk.Stack):
         search_toolbar_view.add_top_bar(search_header_bar)
         search_toolbar_view.add_css_class("content-pane")
 
-        # album list
-        if self.browse_by_composer:
-            composer_page = self._composer_list_setup(client)
-            self._albums_page = ComposerAlbumsPage(client, settings)
-        else:
-            artist_page = self._artist_list_setup(client)
-            self._albums_page = ArtistAlbumsPage(client, settings)
+        self.artist_page = self._artist_page_setup(client)
+
+        self._albums_page = ArtistAlbumsPage(client, settings)
 
         # navigation view
         self._album_navigation_view=Adw.NavigationView()
@@ -55,10 +50,7 @@ class Browser(Gtk.Stack):
         album_navigation_view_page=Adw.NavigationPage(child=self._album_navigation_view, title=_("Albums"), tag="albums")
 
         # split view
-        if self.browse_by_composer:
-            self._navigation_split_view=Adw.NavigationSplitView(sidebar=composer_page, content=album_navigation_view_page)
-        else:
-            self._navigation_split_view=Adw.NavigationSplitView(sidebar=artist_page, content=album_navigation_view_page)
+        self._navigation_split_view=Adw.NavigationSplitView(sidebar=self.artist_page, content=album_navigation_view_page)
 
         # breakpoint bin
         breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
@@ -84,10 +76,8 @@ class Browser(Gtk.Stack):
 
         # connect
         self._albums_page.connect("album-selected", self._on_album_selected)
-        if self.browse_by_composer:
-            self._composer_list_connect()
-        else:
-            self._artist_list_connect()
+        self._artist_list_connect()
+        self._search_view.connect("artist-selected", self._on_search_artist_selected)
         self._search_view.connect("album-selected", lambda widget, *args: self._show_album(*args))
         self.search_entry.connect("search-changed", self._on_search_changed)
         self.search_entry.connect("stop-search", self._on_search_stopped)
@@ -101,43 +91,36 @@ class Browser(Gtk.Stack):
         self.add_named(self._navigation_view, "browser")
         self.add_named(status_page_toolbar_view, "empty-collection")
 
-    def _header_bar_setup(self, composer_window):
+    def _toolbar_view_setup(self, sidebar_window):
         header_bar = Adw.HeaderBar()
         search_button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
         search_button.connect("clicked", lambda *args: self.search())
+        self.role_dropdown = Gtk.DropDown()
+        self.role_dropdown.connect("notify::selected-item", self.on_role_selected)
+        items = Gtk.StringList()
+        self.role_dropdown.props.model = items
+        for item in ArtistSelectionModel().do_get_item_type().ROLES:
+            items.append(item)
         header_bar.pack_start(search_button)
+        header_bar.pack_start(self.role_dropdown)
         header_bar.pack_end(MainMenuButton())
-        toolbar_view = Adw.ToolbarView(content=composer_window)
+        toolbar_view = Adw.ToolbarView(content=sidebar_window)
         toolbar_view.add_top_bar(header_bar)
         return toolbar_view
 
-    def _artist_list_setup(self, client):
+    def _artist_page_setup(self, client):
         # artist list
-        self._artist_list = ArtistList(client, ArtistSelectionModel)
+        self._artist_list = ArtistList(client, ArtistSelectionModel, self.artist_role)
         artist_window = Gtk.ScrolledWindow(child=self._artist_list)
-        artist_toolbar_view = self._header_bar_setup(artist_window)
-        artist_page = Adw.NavigationPage(child=artist_toolbar_view, title=_("Artists"), tag="artists")
+        artist_toolbar_view = self._toolbar_view_setup(artist_window)
+        #artist_page = Adw.NavigationPage(child=artist_toolbar_view, title=_("Artists"), tag="artists")
+        artist_page = Adw.NavigationPage(child=artist_toolbar_view, title="", tag="artists")
         return artist_page
-
-    def _composer_list_setup(self, client):
-        # composer list
-        self._composer_list = ComposerList(client, ComposerSelectionModel)
-        composer_window = Gtk.ScrolledWindow(child=self._composer_list)
-        composer_toolbar_view = self._header_bar_setup(composer_window)
-        composer_page = Adw.NavigationPage(child=composer_toolbar_view, title=_("Composers"), tag="composers")
-        return composer_page
 
     def _artist_list_connect(self):
         self._artist_list.selection_model.connect("selected", self._on_artist_selected)
         self._artist_list.selection_model.connect("reselected", self._on_artist_reselected)
         self._artist_list.selection_model.connect("clear", self._albums_page.clear)
-        self._search_view.connect("artist-selected", self._on_search_artist_selected)
-
-    def _composer_list_connect(self):
-        self._composer_list.selection_model.connect("selected", self._on_composer_selected)
-        self._composer_list.selection_model.connect("reselected", self._on_composer_reselected)
-        self._composer_list.selection_model.connect("clear", self._albums_page.clear)
-        self._search_view.connect("composer-selected", self._on_search_composer_selected)
 
     def search(self):
         if self._navigation_view.get_visible_page_tag() != "search":
@@ -154,50 +137,48 @@ class Browser(Gtk.Stack):
     def _on_search_stopped(self, widget):
         self._navigation_view.pop_to_tag("collection")
 
-    def _on_composer_selected(self, model, position):
-        self._navigation_split_view.set_show_content(True)
-        self._album_navigation_view.replace_with_tags(["album_list"])
-        self._albums_page.display(model.get_item_name(position))
-
-    def _on_composer_reselected(self, model):
-        self._navigation_split_view.set_show_content(True)
-        self._album_navigation_view.pop_to_tag("album_list")
+    def on_role_selected(self, dropdown, _pspec):
+        # Selected Gtk.StringObject
+        selected = dropdown.props.selected_item
+        if self.artist_page is not None and selected is not None and selected.props.string != self.artist_role:
+            self._change_artist_list_according_to_new_role(selected.props.string)
 
     def _on_artist_selected(self, model, position):
         self._navigation_split_view.set_show_content(True)
         self._album_navigation_view.replace_with_tags(["album_list"])
-        self._albums_page.display(model.get_item_name(position))
+        artist=model.get_item_name(position)
+        self._albums_page.display(artist, self.artist_role)
 
     def _on_artist_reselected(self, model):
         self._navigation_split_view.set_show_content(True)
         self._album_navigation_view.pop_to_tag("album_list")
 
     def _on_album_selected(self, widget, *tags):
-        if self.browse_by_composer:
-            album_page = ComposerAlbumPage(self._client, *tags)
-        else:
-            album_page = ArtistAlbumPage(self._client, *tags)
+        album_page = ArtistAlbumPage(self._client, *tags)
         self._album_navigation_view.push(album_page)
         album_page.play_button.grab_focus()
 
-    def _on_search_composer_selected(self, widget, composer):
-        self._composer_list.select(composer)
-        self.search_entry.emit("stop-search")
-        self._albums_page.grid_view.grab_focus()
-
-    def _on_search_artist_selected(self, widget, artist):
+    def _on_search_artist_selected(self, widget, artist, role):
+        if role != self.artist_role:
+            self._change_artist_list_according_to_new_role(role)
+            for no, known_role in enumerate(ArtistSelectionModel().do_get_item_type().ROLES):
+                if role == known_role:
+                    self.role_dropdown.set_selected(no)
         self._artist_list.select(artist)
         self.search_entry.emit("stop-search")
         self._albums_page.grid_view.grab_focus()
 
-    def _show_album(self, album, artist, date):
-        if self.browse_by_composer:
-            self._composer_list.select(artist)
-            album_page = ComposerAlbumPage(self._client, artist, album, date)
-        else:
-            self._artist_list.select(artist)
-            album_page = ArtistAlbumPage(self._client, artist, album, date)
+    def _change_artist_list_according_to_new_role(self, role):
+        self._artist_list = ArtistList(self._client, ArtistSelectionModel, role)
+        self._artist_list_connect()
+        self._artist_list._refresh()
+        # print(len(self._artist_list.selection_model.data))
+        self.artist_page.props.child.props.content.props.child = self._artist_list
+        self.artist_role = role
 
+    def _show_album(self, album, artist, date):
+        self._artist_list.select(artist)
+        album_page = ArtistAlbumPage(self._client, '', artist,  album, date)
         self._album_navigation_view.replace([self._albums_page, album_page])
         self.search_entry.emit("stop-search")
         album_page.play_button.grab_focus()
