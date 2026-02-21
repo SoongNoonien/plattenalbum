@@ -41,6 +41,14 @@
     </screenshot>
   </screenshots>
   <releases>
+  <release version="2.4.1b" date="2026-01-03">
+      <description translate="no">
+        <ul>
+          <li>Allow search by composer</li>
+          <li>fork from original project</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.4.1" date="2026-01-03">
       <description translate="no">
         <ul>
