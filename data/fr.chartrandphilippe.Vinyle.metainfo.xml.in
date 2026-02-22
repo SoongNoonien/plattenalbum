@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (C) 2020-2026 Martin Wagner <martin.wagner.dev@gmail.com> -->
 <component type="desktop-application">
-  <id>de.wagnermartin.Plattenalbum</id>
+  <id>fr.chartrand.Vinyle</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
-  <name>Plattenalbum</name>
+  <name>Vinyle</name>
   <summary>Connect to your music</summary>
   <description>
     <p>A client for the Music Player Daemon (MPD).</p>
@@ -16,32 +16,40 @@
   </branding>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/main_window.png</image>
+      <image>https://raw.githubusercontent.com/philippe-chartrand/plattenalbum/v2.5.0/screenshots/main_window.png</image>
       <caption>Main window</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/album_view.png</image>
+      <image>https://raw.githubusercontent.com/philippe-chartrand/plattenalbum/v2.5.0/screenshots/album_view.png</image>
       <caption>Album view</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/search.png</image>
+      <image>https://raw.githubusercontent.com/philippe-chartrand/plattenalbum/v2.5.0/screenshots/search.png</image>
       <caption>Search</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/small.png</image>
+      <image>https://raw.githubusercontent.com/philippe-chartrand/plattenalbum/v2.5.0/screenshots/small.png</image>
       <caption>Small window</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/small_playlist.png</image>
+      <image>https://raw.githubusercontent.com/philippe-chartrand/plattenalbum/v2.5.0/screenshots/small_playlist.png</image>
       <caption>Small window with playlist</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/SoongNoonien/plattenalbum/v2.4.0/screenshots/small_cover.png</image>
+      <image>https://raw.githubusercontent.com/philippe-chartrand/plattenalbum/v2.5.0/screenshots/small_cover.png</image>
       <caption>Small window with cover</caption>
     </screenshot>
   </screenshots>
   <releases>
-  <release version="2.4.1b" date="2026-01-03">
+    <release version="2.5.0" date="2026-02-22">
+      <description translate="no">
+        <ul>
+          <li>Renamed from Plattenalbum to Vinyle</li>
+          <li>Allow search by conductor</li>
+        </ul>
+      </description>
+    </release>
+  <release version="2.4.1b" date="2026-02-20">
       <description translate="no">
         <ul>
           <li>Allow search by composer</li>
@@ -151,18 +159,18 @@
   <custom>
     <value key="Purism::form_factor">mobile</value>
   </custom>
-  <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
-  <url type="bugtracker">https://github.com/SoongNoonien/plattenalbum/issues</url>
-  <url type="homepage">https://github.com/SoongNoonien/plattenalbum</url>
-  <url type="vcs-browser">https://github.com/SoongNoonien/plattenalbum</url>
+  <launchable type="desktop-id">fr.chartrandphilippe/Vinyle.desktop</launchable>
+  <url type="bugtracker">https://github.com/philippe-chartrand/plattenalbum/issues</url>
+  <url type="homepage">https://github.com/philippe-chartrand/plattenalbum</url>
+  <url type="vcs-browser">https://github.com/philippe-chartrand/plattenalbum</url>
   <content_rating type="oars-1.1" />
-  <translation type="gettext">de.wagnermartin.Plattenalbum</translation>
+  <translation type="gettext">fr.chartrandphilippe.VInyle</translation>
   <provides>
     <binary>plattenalbum</binary>
   </provides>
-  <developer id="wagnermartin.de">
-    <name translate="no">Martin Wagner</name>
+  <developer id="chartrandphilippe.fr">
+    <name translate="no">Philippe Chartrand</name>
   </developer>
-  <update_contact>martin.wagner.dev@gmail.com</update_contact>
+  <update_contact>philippe.e.chartrand@gmail.com</update_contact>
 </component>
 

@@ -1,9 +1,9 @@
 {
-  "app-id": "de.wagnermartin.Plattenalbum",
+  "app-id": "fr.philippechartrand.Vinyle",
   "runtime": "org.gnome.Platform",
   "runtime-version": "master",
   "sdk": "org.gnome.Sdk",
-  "command": "plattenalbum",
+  "command": "vinyle",
   "finish-args": [
     "--share=ipc",
     "--socket=fallback-x11",
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "name": "plattenalbum",
+      "name": "vinyle",
       "sources": [{
         "type": "dir",
         "path": "."

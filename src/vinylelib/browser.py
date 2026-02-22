@@ -16,7 +16,7 @@ class MainMenuButton(Gtk.MenuButton):
         app_section=Gio.Menu()
         app_section.append(_("_Preferences"), "win.preferences")
         app_section.append(_("_Keyboard Shortcuts"), "app.shortcuts")
-        app_section.append(_("_About Plattenalbum"), "app.about")
+        app_section.append(_("_About Vinyle"), "app.about")
         menu=Gio.Menu()
         menu.append(_("_Disconnect"), "app.disconnect")
         menu.append(_("_Update Database"), "app.update")

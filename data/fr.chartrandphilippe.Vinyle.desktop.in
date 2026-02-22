@@ -3,8 +3,8 @@ Type=Application
 Name=Plattenalbum
 GenericName=Music Browser
 Comment=Connect to your music
-Icon=de.wagnermartin.Plattenalbum
-Exec=plattenalbum
+Icon=fr.chartrandphilippe.Vinyle
+Exec=vinyle
 Terminal=false
 Categories=GNOME;GTK;Music;Audio;AudioVideo;
 # Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!

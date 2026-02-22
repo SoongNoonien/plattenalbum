@@ -11,4 +11,4 @@ install_headers(
 'browser.py', 'browsersong.py', 'client.py', 'cover.py', 'duration.py', 'event_emitter.py', 'functions.py', 'lyrics.py',
 'main_window.py', 'media_buttons.py', 'models.py', 'mpris.py', 'multitag.py', 'progress.py', 'search.py', 'settings.py',
 'sidebar_list_view.py',
-install_dir: 'bin/plattenalbumlib')
+install_dir: 'bin/vinylelib')

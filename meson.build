@@ -1,11 +1,11 @@
-project('plattenalbum', version: '2.4.1b')
+project('vinyle', version: '2.5.0')
 
 i18n = import('i18n')
 gnome = import('gnome')
 
-resources_dir = join_paths(get_option('prefix'), get_option('datadir'), 'de.wagnermartin.Plattenalbum')
+resources_dir = join_paths(get_option('prefix'), get_option('datadir'), 'fr.chartrandphilippe.Vinyle')
 
-subdir('src/plattenalbumlib')
+subdir('src/vinylelib')
 subdir('data')
 subdir('src')
 subdir('po')

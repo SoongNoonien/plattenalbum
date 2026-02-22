@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-	<gresource prefix="/de/wagnermartin/Plattenalbum">
-		<file>de.wagnermartin.Plattenalbum.metainfo.xml</file>
+	<gresource prefix="/fr/chartrandphilippe/Vinyle">
+		<file>fr.chartrandphilippe.Vinyle.metainfo.xml</file>
 		<file>shortcuts-dialog.ui</file>
 		<file>style.css</file>
 	</gresource>
-	<gresource prefix="/de/wagnermartin/Plattenalbum/icons/scalable/actions">
+	<gresource prefix="/fr/chartrandphilippe/Vinyle/icons/scalable/actions">
 		<file>view-lyrics-symbolic.svg</file>
 		<file>view-playlist-symbolic.svg</file>
 	</gresource>

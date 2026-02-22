@@ -10,9 +10,9 @@ from .settings import Settings
 from .main_window import MainWindow
 
 
-class Plattenalbum(Adw.Application):
+class Vinyle(Adw.Application):
     def __init__(self):
-        super().__init__(application_id="de.wagnermartin.Plattenalbum", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        super().__init__(application_id="fr.chartrandphilippe.Vinyle", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.add_main_option("debug", ord("d"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _("Debug mode"), None)
         self._settings=Settings()
         self._client=Client(self._settings)
@@ -91,9 +91,9 @@ class Plattenalbum(Adw.Application):
         return 0
 
     def _on_about(self, *args):
-        dialog=Adw.AboutDialog.new_from_appdata("/de/wagnermartin/Plattenalbum/de.wagnermartin.Plattenalbum.metainfo.xml")
+        dialog=Adw.AboutDialog.new_from_appdata("/fr/chartrandphilippe/Vinyle/fr.chartrandphilippe.Vinyle.metainfo.xml")
         dialog.set_copyright("© 2020-2026 Martin Wagner")
-        dialog.set_developers(["Martin Wagner <martin.wagner.dev@gmail.com>"])
+        dialog.set_developers(["Philippe Chartrand <philippe.e.chartrand@gmail.com>", "Martin Wagner <martin.wagner.dev@gmail.com>"])
         dialog.set_translator_credits(_("translator-credits"))
         dialog.present(self._window)
 

@@ -1,340 +1,337 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
+"Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2026-02-22 14:06-0500\n"
-"PO-Revision-Date: 2026-02-22 14:16-0500\n"
-"Last-Translator: Philippe Chartrand <philippe.e.chartrand@gmail.com>\n"
-"Language-Team: \n"
-"Language: de\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.7\n"
+"Generated-By: Babel 2.17.0\n"
 
 #: src/vinylelib/application.py:16
 msgid "Debug mode"
-msgstr "Debugmodus"
+msgstr ""
 
 #: src/vinylelib/application.py:97
 msgid "translator-credits"
-msgstr "Martin Wagner <martin.wagner.dev@gmail.com>"
+msgstr ""
 
 #: src/vinylelib/application.py:165
 msgid "Next Title is Playing"
-msgstr "Nächster Titel läuft"
+msgstr ""
 
 #: src/vinylelib/application.py:167
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
-msgstr "Jetzt läuft »{title}« von »{artist}«"
+msgstr ""
 
 #: src/vinylelib/application.py:169
 #, python-brace-format
 msgid "Now playing “{title}”"
-msgstr "Jetzt läuft »{title}«"
+msgstr ""
 
 #: src/vinylelib/application.py:171
 msgid "Skip"
-msgstr "Überspringen"
+msgstr ""
 
 #: src/vinylelib/application.py:178
 msgid "Playback Finished"
-msgstr "Wiedergabe beendet"
+msgstr ""
 
 #: src/vinylelib/application.py:179
 msgid "The playlist is over"
-msgstr "Die Wiedergabeliste ist zu Ende"
+msgstr ""
 
 #: src/vinylelib/bitrate.py:12
 #, python-brace-format
 msgid "{bitrate} kb/s"
-msgstr "{bitrate} kb/s"
+msgstr ""
 
 #: src/vinylelib/browser.py:15 src/vinylelib/main_window.py:82
 msgid "Main Menu"
-msgstr "Hauptmenü"
+msgstr ""
 
 #: src/vinylelib/browser.py:17 src/vinylelib/main_window.py:79
 msgid "_Preferences"
-msgstr "_Einstellungen"
+msgstr ""
 
 #: src/vinylelib/browser.py:18 src/vinylelib/main_window.py:80
 msgid "_Keyboard Shortcuts"
-msgstr "_Tastenkürzel"
+msgstr ""
 
 #: src/vinylelib/browser.py:19 src/vinylelib/main_window.py:81
 msgid "_About Vinyle"
-msgstr "Übrigens Vinyle"
+msgstr ""
 
 #: src/vinylelib/browser.py:21
 msgid "_Disconnect"
-msgstr "Tre_nnen"
+msgstr ""
 
 #: src/vinylelib/browser.py:22
 msgid "_Update Database"
-msgstr "_Datenbank aktualisieren"
+msgstr ""
 
 #: src/vinylelib/browser.py:23
 msgid "_Server Information"
-msgstr "_Serverinformationen"
+msgstr ""
 
 #: src/vinylelib/browser.py:36 src/vinylelib/browser.py:37
 msgid "Search collection"
-msgstr "Sammlung durchsuchen"
+msgstr ""
 
 #: src/vinylelib/album/albums_page.py:11 src/vinylelib/album/albums_page.py:64
 #: src/vinylelib/browser.py:50 src/vinylelib/dialogs/server_info.py:24
 #: src/vinylelib/search.py:64
 msgid "Albums"
-msgstr "Alben"
+msgstr ""
 
 #: src/vinylelib/browser.py:66
 msgid "Collection is Empty"
-msgstr "Sammlung ist leer"
+msgstr ""
 
 #: src/vinylelib/browser.py:74
 msgid "Collection"
-msgstr "Sammlung"
+msgstr ""
 
 #: src/vinylelib/browser.py:75 src/vinylelib/browser.py:96
 msgid "Search"
-msgstr "Suchen"
+msgstr ""
 
 #: src/vinylelib/duration.py:22
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
-msgstr[0] "{days} Tag"
-msgstr[1] "{days} Tage"
+msgstr[0] ""
+msgstr[1] ""
 
 #: src/vinylelib/lyrics.py:43
 msgid "No Lyrics"
-msgstr "Kein Liedtext"
+msgstr ""
 
 #: src/vinylelib/lyrics.py:46
 msgid "Connection Error"
-msgstr "Verbindungsfehler"
+msgstr ""
 
 #: src/vinylelib/lyrics.py:46
 msgid "Check your network connection"
-msgstr "Überprüfen Sie Ihre Netzwerkverbindung"
+msgstr ""
 
 #: src/vinylelib/lyrics.py:48
 msgid "Searching…"
-msgstr "Suche…"
+msgstr ""
 
 #: src/vinylelib/lyrics.py:60
 msgid "Lyrics view"
-msgstr "Liedtextansicht"
+msgstr ""
 
 #: src/vinylelib/main_window.py:28
 msgid "Database is being updated"
-msgstr "Datenbank wird aktualisiert"
+msgstr ""
 
 #: src/vinylelib/main_window.py:29
 msgid "Database updated"
-msgstr "Datenbank aktualisiert"
+msgstr ""
 
 #: src/vinylelib/main_window.py:67
 msgid "Connect to Your Music"
-msgstr "Mit Ihrer Musik verbinden"
+msgstr ""
 
 #: src/vinylelib/main_window.py:68
 msgid ""
-"To use Vinyle, an instance of the Music Player Daemon needs to be set up and "
-"running on this device or another one on the network"
+"To use Vinyle, an instance of the Music Player Daemon needs to be set up "
+"and running on this device or another one on the network"
 msgstr ""
-"Um Vinyle benutzen zu können muss eine Instanz des Music Player Daemon auf "
-"diesem oder einem anderen Gerät im Netzwerk eingerichtet sein und laufen"
 
 #: src/vinylelib/dialogs/connect_dialog.py:13 src/vinylelib/main_window.py:70
 msgid "_Connect"
-msgstr "_Verbinden"
+msgstr ""
 
 #: src/vinylelib/main_window.py:72
 msgid "Connect _Manually"
-msgstr "_Manuell verbinden"
+msgstr ""
 
 #: src/vinylelib/main_window.py:174
 msgid "Playing music"
-msgstr "Musik wird abgespielt"
+msgstr ""
 
 #: src/vinylelib/main_window.py:211
 msgid "Cleared A‐B loop"
-msgstr "A‐B‐Schleife geleert"
+msgstr ""
 
 #: src/vinylelib/main_window.py:214
 #, python-brace-format
 msgid "Started A‐B loop at {start}"
-msgstr "A‐B‐Schleife bei {start} begonnen"
+msgstr ""
 
 #: src/vinylelib/main_window.py:216
 #, python-brace-format
 msgid "Activated A‐B loop from {start} to {end}"
-msgstr "A‐B‐Schleife von {start} bis {end} aktiviert"
+msgstr ""
 
 #: src/vinylelib/album/album_page.py:20 src/vinylelib/media_buttons.py:9
 #: src/vinylelib/media_buttons.py:18
 msgid "Play"
-msgstr "Abspielen"
+msgstr ""
 
 #: src/vinylelib/media_buttons.py:15
 msgid "Pause"
-msgstr "Pausieren"
+msgstr ""
 
 #: src/vinylelib/media_buttons.py:24
 msgid "Previous"
-msgstr "Vorheriges"
+msgstr ""
 
 #: src/vinylelib/media_buttons.py:26
 msgid "Next"
-msgstr "Nächstes"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:23 src/vinylelib/search.py:52
 msgid "Artists"
-msgstr "Künstler"
+msgstr ""
 
 #: src/vinylelib/search.py:56
 msgid "Composers"
-msgstr "Komponists"
+msgstr ""
 
 #: src/vinylelib/search.py:60
 msgid "Conductors"
-msgstr "Dirigents"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:25 src/vinylelib/search.py:67
 msgid "Songs"
-msgstr "Lieder"
+msgstr ""
 
 #: src/vinylelib/search.py:81
 msgid "No Results"
-msgstr "Keine Ergebnisse"
+msgstr ""
 
 #: src/vinylelib/search.py:81
 msgid "Try a different search"
-msgstr "Versuchen Sie eine andere Suche"
+msgstr ""
 
 #: src/vinylelib/sidebar_list_view.py:24
 msgid "Unknown Artist"
-msgstr "Unbekannter Künstler"
+msgstr ""
 
 #: src/vinylelib/album/album_list_row.py:23
 #, python-brace-format
 msgid "Album cover of {album}"
-msgstr "Albumcover von {album}"
+msgstr ""
 
 #: src/vinylelib/album/album_list_row.py:25
 #: src/vinylelib/album/album_page.py:60 src/vinylelib/album/album_page.py:61
 msgid "Unknown Album"
-msgstr "Unbekanntes Album"
+msgstr ""
 
 #: src/vinylelib/album/album_list_row.py:26
 msgid "Album cover of an unknown album"
-msgstr "Albumcover von unbekanntem Album"
+msgstr ""
 
 #: src/vinylelib/album/album_page.py:21
 msgid "Append"
-msgstr "Anhängen"
+msgstr ""
 
 #: src/vinylelib/album/albums_page.py:56
 msgid "No Albums"
-msgstr "Keine Alben"
+msgstr ""
 
 #: src/vinylelib/album/albums_page.py:76
 #, python-brace-format
 msgid "Albums of {item}"
-msgstr "Alben von {item}"
+msgstr ""
 
 #: src/vinylelib/dialogs/behaviour_preferences.py:11
 msgid "Behavior"
-msgstr "Verhalten"
+msgstr ""
 
 #: src/vinylelib/dialogs/behaviour_preferences.py:13
 msgid "Send _Notification on Title Change"
-msgstr "Über _Titelwechsel benachrichtigen"
+msgstr ""
 
 #: src/vinylelib/dialogs/behaviour_preferences.py:14
 msgid "Stop _Playback on Quit"
-msgstr "_Wiedergabe beim Beenden stoppen"
+msgstr ""
 
 #: src/vinylelib/dialogs/behaviour_preferences.py:15
 msgid "Support “_MPRIS”"
-msgstr "»_MPRIS« unterstützen"
+msgstr ""
 
 #: src/vinylelib/dialogs/behaviour_preferences.py:15
 msgid "Disable if “MPRIS” is supported by another client"
-msgstr "Deaktivieren wenn »MPRIS« von einem anderen Client unterstützt wird"
+msgstr ""
 
 #: src/vinylelib/dialogs/behaviour_preferences.py:16
 msgid "Browse by composer, (requires to restart the app)"
-msgstr "Nach Komponisten durchsuchen (Erfordert einen Neustart der App)"
+msgstr ""
 
 #: src/vinylelib/dialogs/behaviour_preferences.py:16
 msgid "Choose sidebar navigation"
-msgstr "Wählen Sie die Seitenleistennavigation"
+msgstr ""
 
 #: src/vinylelib/dialogs/connect_dialog.py:15
 msgid "Ca_ncel"
-msgstr "_Abbrechen"
+msgstr ""
 
 #: src/vinylelib/dialogs/connect_dialog.py:23
 msgid "Connection failed"
-msgstr "Verbindung fehlgeschlagen"
+msgstr ""
 
 #: src/vinylelib/dialogs/manual_connect_dialog.py:13
 msgid "Manual Connection"
-msgstr "Manuelle Verbindung"
+msgstr ""
 
 #: src/vinylelib/dialogs/manual_connect_dialog.py:16
 msgid "Host"
-msgstr "Host"
+msgstr ""
 
 #: src/vinylelib/dialogs/manual_connect_dialog.py:20
 msgid "Port"
-msgstr "Port"
+msgstr ""
 
 #: src/vinylelib/dialogs/manual_connect_dialog.py:23
 msgid "Password (optional)"
-msgstr "Passwort (optional)"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:11
 msgid "Server Information"
-msgstr "Serverinformationen"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:19
 msgid "Server"
-msgstr "Server"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:20
 msgid "Protocol"
-msgstr "Protokoll"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:21
 msgid "Uptime"
-msgstr "Uptime"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:22
 msgid "Playtime"
-msgstr "Wiedergabezeit"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:26
 msgid "Total Database Playtime"
-msgstr "Gesamtwiedergabezeit der Datenbank"
+msgstr ""
 
 #: src/vinylelib/dialogs/server_info.py:27
 msgid "Last Database Update"
-msgstr "Letzte Datenbankaktualisierung"
+msgstr ""
 
 #: src/vinylelib/dialogs/setup_dialog.py:25
 msgid "Setup"
-msgstr "Einrichtung"
+msgstr ""
 
 #: src/vinylelib/dialogs/setup_dialog.py:27
 msgid ""
@@ -343,212 +340,100 @@ msgid ""
 "initialize a basic local instance. After that, Vinyle should be able to "
 "seamlessly connect to it."
 msgstr ""
-"Um loszulegen, installieren Sie den Music Player Daemon (<tt>mpd</tt>) mit "
-"Ihrem Systempaketmanager und führen die folgenden Befehle aus um eine "
-"einfache lokale Instanz zu konfigurieren und initialisieren. Danach sollte "
-"sich Vinyle direkt damit verbinden können."
 
 #: src/vinylelib/dialogs/view_preferences.py:11
 msgid "View"
-msgstr "Ansicht"
+msgstr ""
 
 #: src/vinylelib/dialogs/view_preferences.py:13
 msgid "_Show Bit Rate"
-msgstr "_Bitrate anzeigen"
+msgstr ""
 
 #: src/vinylelib/player/playback_controls.py:24
 #: src/vinylelib/player/player_bar.py:42
 msgid "Progress bar"
-msgstr "Fortschrittsbalken"
+msgstr ""
 
 #: src/vinylelib/player/player.py:32
 msgid "Playlist"
-msgstr "Wiedergabeliste"
+msgstr ""
 
 #: src/vinylelib/player/player.py:33
 msgid "Lyrics"
-msgstr "Liedtext"
+msgstr ""
 
 #: src/vinylelib/player/player.py:45
 msgid "Player Menu"
-msgstr "Playermenü"
+msgstr ""
 
 #: src/vinylelib/player/player_menu.py:23
 msgid "_Repeat Mode"
-msgstr "_Dauerschleife"
+msgstr ""
 
 #: src/vinylelib/player/player_menu.py:24
 msgid "R_andom Mode"
-msgstr "_Zufallsmodus"
+msgstr ""
 
 #: src/vinylelib/player/player_menu.py:25
 msgid "_Single Mode"
-msgstr "_Einzelmodus"
+msgstr ""
 
 #: src/vinylelib/player/player_menu.py:26
 msgid "_Pause After Song"
-msgstr "_Pausieren nach Lied"
+msgstr ""
 
 #: src/vinylelib/player/player_menu.py:27
 msgid "_Consume Mode"
-msgstr "_Verbrauchsmodus"
+msgstr ""
 
 #: src/vinylelib/player/volume_control.py:14
 msgid "Volume control"
-msgstr "Lautstärkeregler"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_menu.py:12
 #: src/vinylelib/song/song_menu.py:11
 msgid "Context menu"
-msgstr "Kontextmenü"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_menu.py:32
 msgid "_Remove"
-msgstr "_Entfernen"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_menu.py:33
 #: src/vinylelib/song/song_menu.py:38
 msgid "Show Al_bum"
-msgstr "Al_bum anzeigen"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_menu.py:34
 #: src/vinylelib/song/song_menu.py:39
 msgid "Show _File"
-msgstr "_Datei anzeigen"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_menu.py:36
 msgid "_Enqueue Album"
-msgstr "Album ei_nreihen"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_menu.py:37
 msgid "_Tidy"
-msgstr "_Aufräumen"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_menu.py:38
 msgid "_Clear"
-msgstr "_Leeren"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_window.py:21
 msgid "Playlist is Empty"
-msgstr "Wiedergabeliste ist leer"
+msgstr ""
 
 #: src/vinylelib/playlist/playlist_window.py:27
 msgid "Scroll to Current Song"
-msgstr "Gehe zu aktuellem Lied"
+msgstr ""
 
 #: src/vinylelib/song/song_menu.py:34
 msgid "_Append"
-msgstr "_Anhängen"
+msgstr ""
 
 #: src/vinylelib/song/song_menu.py:35
 msgid "As _Next"
-msgstr "Als _Nächstes"
+msgstr ""
 
-#~ msgid "Select an artist"
-#~ msgstr "Wählen Sie einen Künstler aus"
-
-#~ msgid "_About Plattenalbum"
-#~ msgstr "_Info zu Plattenalbum"
-
-#~ msgid "Plattenalbum"
-#~ msgstr "Plattenalbum"
-
-#~ msgid "Connect to your music"
-#~ msgstr "Mit Ihrer Musik verbinden"
-
-#~ msgid "A client for the Music Player Daemon (MPD)."
-#~ msgstr "Ein Client für den Music Player Daemon (MPD)."
-
-#~ msgid ""
-#~ "Browse your collection while viewing large album covers. Play your music "
-#~ "without managing playlists."
-#~ msgstr ""
-#~ "Browsen Sie in Ihrer Sammlung mit großen Albumcovern. Spielen Sie Ihre "
-#~ "Musik ab, ohne Wiedergabelisten zu verwalten."
-
-#~ msgid "Main window"
-#~ msgstr "Hauptfenster"
-
-#~ msgid "Album view"
-#~ msgstr "Albumansicht"
-
-#~ msgid "Small window"
-#~ msgstr "Kleines Fenster"
-
-#~ msgid "Small window with playlist"
-#~ msgstr "Kleines Fenster mit Wiedergabeliste"
-
-#~ msgid "Small window with cover"
-#~ msgstr "Kleines Fenster mit Cover"
-
-#~ msgid "Music Browser"
-#~ msgstr "Musikbrowser"
-
-#~ msgid "music;player;audio;MPD;"
-#~ msgstr "Musik;Player;Audio;MPD;"
-
-#~ msgid "General"
-#~ msgstr "Allgemein"
-
-#~ msgid "Disconnect"
-#~ msgstr "Trennen"
-
-#~ msgid "Update Database"
-#~ msgstr "Datenbank aktualisieren"
-
-#~ msgid "Preferences"
-#~ msgstr "Einstellungen"
-
-#~ msgid "Shortcuts"
-#~ msgstr "Tastenkürzel"
-
-#~ msgid "Close"
-#~ msgstr "Schließen"
-
-#~ msgid "Quit"
-#~ msgstr "Beenden"
-
-#~ msgid "Playback"
-#~ msgstr "Wiedergabe"
-
-#~ msgid "Play/Pause"
-#~ msgstr "Wiedergabe/Pause"
-
-#~ msgid "Stop"
-#~ msgstr "Stopp"
-
-#~ msgid "Seek Forward"
-#~ msgstr "Vorspulen"
-
-#~ msgid "Seek Backward"
-#~ msgstr "Zurückspulen"
-
-#~ msgid "A‐B Loop"
-#~ msgstr "A‐B‐Schleife"
-
-#~ msgid "Playback Options"
-#~ msgstr "Wiedergabeoptionen"
-
-#~ msgid "Toggle Repeat Mode"
-#~ msgstr "Dauerschleife ein-/ausschalten"
-
-#~ msgid "Toggle Random Mode"
-#~ msgstr "Zufallsmodus ein-/ausschalten"
-
-#~ msgid "Toggle Single Mode"
-#~ msgstr "Einzelmodus ein-/ausschalten"
-
-#~ msgid "Pause After Song"
-#~ msgstr "Pausieren nach Lied"
-
-#~ msgid "Toggle Consume Mode"
-#~ msgstr "Verbrauchsmodus ein-/ausschalten"
-
-#~ msgid "Enqueue Album"
-#~ msgstr "Album einreihen"
-
-#~ msgid "Tidy"
-#~ msgstr "Aufräumen"
-
-#~ msgid "Clear"
-#~ msgstr "Leeren"

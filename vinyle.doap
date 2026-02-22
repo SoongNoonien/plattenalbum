@@ -4,10 +4,10 @@
          xmlns:gnome="http://api.gnome.org/doap-extensions#"
          xmlns="http://usefulinc.com/ns/doap#">
 
-  <name xml:lang="en">Plattenalbum</name>
+  <name xml:lang="en">Vinyle</name>
   <shortdesc xml:lang="en">Connect to your music</shortdesc>
-  <homepage rdf:resource="https://github.com/SoongNoonien/plattenalbum" />
-  <bug-database rdf:resource="https://github.com/SoongNoonien/plattenalbum/issues"/>
+  <homepage rdf:resource="https://github.com/philippe-chartrand/vinyle" />
+  <bug-database rdf:resource="https://github.com/philippe-chartrand/vinyle/issues"/>
 
   <programming-language>Python</programming-language>
   <platform>GTK 4</platform>
@@ -15,12 +15,12 @@
 
   <maintainer>
     <foaf:Person>
-      <foaf:name>Martin Wagner</foaf:name>
-      <foaf:mbox rdf:resource="mailto:martin.wagner.dev@gmail.com" />
+      <foaf:name>Philippe Chartrand</foaf:name>
+      <foaf:mbox rdf:resource="mailto:philippe.e.chartrand@gmail.com" />
       <foaf:account>
         <foaf:OnlineAccount>
           <foaf:accountServiceHomepage rdf:resource="https://github.com"/>
-          <foaf:accountName>SoongNoonien</foaf:accountName>
+          <foaf:accountName>philippe-chartrand</foaf:accountName>
         </foaf:OnlineAccount>
       </foaf:account>
     </foaf:Person>

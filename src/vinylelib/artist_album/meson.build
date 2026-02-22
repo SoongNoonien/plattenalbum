@@ -2,5 +2,5 @@
 install_headers(
 '__init__.py',
 'artist_album.py', 'artist_album_list_row.py', 'artist_album_page.py','artist_album_row.py', 'artist_albums_page.py',
-install_dir: 'bin/plattenalbumlib/artist_album'
+install_dir: 'bin/vinylelib/artist_album'
 )

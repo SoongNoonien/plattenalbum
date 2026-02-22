@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-22 10:40-0500\n"
-"PO-Revision-Date: 2026-02-22 10:54-0500\n"
+"POT-Creation-Date: 2026-02-22 14:06-0500\n"
+"PO-Revision-Date: 2026-02-22 14:09-0500\n"
 "Last-Translator: Philippe Chartrand <philippe.e.chartrand@gmail.com>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -18,438 +18,435 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Poedit 3.7\n"
 
-#: src/plattenalbum.py:66
-msgid "Database is being updated"
-msgstr "La base de données se met à jour"
-
-#: src/plattenalbum.py:67
-msgid "Database updated"
-msgstr "Base de donnée mise à jour"
-
-#: src/plattenalbum.py:105
-msgid "Connect to Your Music"
-msgstr "Connectez-vous à votre musique"
-
-#: src/plattenalbum.py:106
-msgid ""
-"To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
-"up and running on this device or another one on the network"
-msgstr ""
-"Pour utiliser Plattenalbum, une instance de Music Player Daemon doit "
-"configurée et exécutée sur ce périphérique ou sur un autre accessible par le "
-"réseau"
-
-#: src/plattenalbum.py:108 src/plattenalbumlib/dialogs/connect_dialog.py:13
-msgid "_Connect"
-msgstr "_Connexion"
-
-#: src/plattenalbum.py:110
-msgid "Connect _Manually"
-msgstr "Se connecter manuellement"
-
-#: src/plattenalbum.py:117 src/plattenalbumlib/browser.py:17
-msgid "_Preferences"
-msgstr "_Préférences"
-
-#: src/plattenalbum.py:118 src/plattenalbumlib/browser.py:18
-msgid "_Keyboard Shortcuts"
-msgstr "_Raccourcis clavier"
-
-#: src/plattenalbum.py:119 src/plattenalbumlib/browser.py:19
-msgid "_About Plattenalbum"
-msgstr "À pr_opos de Plattenalbum"
-
-#: src/plattenalbum.py:120 src/plattenalbumlib/browser.py:15
-msgid "Main Menu"
-msgstr "Menu principal"
-
-#: src/plattenalbum.py:212
-msgid "Playing music"
-msgstr "Jouer la musique"
-
-#: src/plattenalbum.py:249
-msgid "Cleared A‐B loop"
-msgstr "Boucle A-B effacée"
-
-#: src/plattenalbum.py:252
-#, python-brace-format
-msgid "Started A‐B loop at {start}"
-msgstr "Boucle A-B démarrée à {start}"
-
-#: src/plattenalbum.py:254
-#, python-brace-format
-msgid "Activated A‐B loop from {start} to {end}"
-msgstr "Boucle A-B activée de {start} à {end}"
-
-#: src/plattenalbum.py:275
+#: src/vinylelib/application.py:16
 msgid "Debug mode"
 msgstr "Mode debug"
 
-#: src/plattenalbum.py:356
+#: src/vinylelib/application.py:97
 msgid "translator-credits"
 msgstr "Emmanuel Averty"
 
-#: src/plattenalbum.py:424
+#: src/vinylelib/application.py:165
 msgid "Next Title is Playing"
 msgstr "Le prochain titre est en cours"
 
-#: src/plattenalbum.py:426
+#: src/vinylelib/application.py:167
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "En cours «{title}» par «{artist}»"
 
-#: src/plattenalbum.py:428
+#: src/vinylelib/application.py:169
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "En cours «{title}»"
 
-#: src/plattenalbum.py:430
+#: src/vinylelib/application.py:171
 msgid "Skip"
 msgstr "Sauter"
 
-#: src/plattenalbum.py:437
+#: src/vinylelib/application.py:178
 msgid "Playback Finished"
 msgstr "Lecture terminée"
 
-#: src/plattenalbum.py:438
+#: src/vinylelib/application.py:179
 msgid "The playlist is over"
 msgstr "La liste est terminée"
 
-#: src/plattenalbumlib/bitrate.py:12
+#: src/vinylelib/bitrate.py:12
 #, python-brace-format
 msgid "{bitrate} kb/s"
 msgstr "{bitrate} kb/s"
 
-#: src/plattenalbumlib/browser.py:21
+#: src/vinylelib/browser.py:15 src/vinylelib/main_window.py:82
+msgid "Main Menu"
+msgstr "Menu principal"
+
+#: src/vinylelib/browser.py:17 src/vinylelib/main_window.py:79
+msgid "_Preferences"
+msgstr "_Préférences"
+
+#: src/vinylelib/browser.py:18 src/vinylelib/main_window.py:80
+msgid "_Keyboard Shortcuts"
+msgstr "_Raccourcis clavier"
+
+#: src/vinylelib/browser.py:19 src/vinylelib/main_window.py:81
+msgid "_About Vinyle"
+msgstr "À propos de Vinyle"
+
+#: src/vinylelib/browser.py:21
 msgid "_Disconnect"
 msgstr "_Déconnecter"
 
-#: src/plattenalbumlib/browser.py:22
+#: src/vinylelib/browser.py:22
 msgid "_Update Database"
 msgstr "_Mettre à jour la base"
 
-#: src/plattenalbumlib/browser.py:23
+#: src/vinylelib/browser.py:23
 msgid "_Server Information"
 msgstr "_Informations du serveur"
 
-#: src/plattenalbumlib/browser.py:36 src/plattenalbumlib/browser.py:37
+#: src/vinylelib/browser.py:36 src/vinylelib/browser.py:37
 msgid "Search collection"
 msgstr "Rechercher une collection"
 
-#: src/plattenalbumlib/album/albums_page.py:11
-#: src/plattenalbumlib/album/albums_page.py:64
-#: src/plattenalbumlib/browser.py:50
-#: src/plattenalbumlib/dialogs/server_info.py:24
-#: src/plattenalbumlib/search.py:64
+#: src/vinylelib/album/albums_page.py:11 src/vinylelib/album/albums_page.py:64
+#: src/vinylelib/browser.py:50 src/vinylelib/dialogs/server_info.py:24
+#: src/vinylelib/search.py:64
 msgid "Albums"
 msgstr "Albums"
 
-#: src/plattenalbumlib/browser.py:66
+#: src/vinylelib/browser.py:66
 msgid "Collection is Empty"
 msgstr "La collection est vide"
 
-#: src/plattenalbumlib/browser.py:74
+#: src/vinylelib/browser.py:74
 msgid "Collection"
 msgstr "Collection"
 
-#: src/plattenalbumlib/browser.py:75 src/plattenalbumlib/browser.py:96
+#: src/vinylelib/browser.py:75 src/vinylelib/browser.py:96
 msgid "Search"
 msgstr "Rechercher"
 
-#: src/plattenalbumlib/duration.py:22
+#: src/vinylelib/duration.py:22
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days} jour"
 msgstr[1] "{days} jours"
 
-#: src/plattenalbumlib/lyrics.py:43
+#: src/vinylelib/lyrics.py:43
 msgid "No Lyrics"
 msgstr "Paroles introuvables"
 
-#: src/plattenalbumlib/lyrics.py:46
+#: src/vinylelib/lyrics.py:46
 msgid "Connection Error"
 msgstr "Erreur de connexion"
 
-#: src/plattenalbumlib/lyrics.py:46
+#: src/vinylelib/lyrics.py:46
 msgid "Check your network connection"
 msgstr "Vérifiez votre connexion réseau"
 
-#: src/plattenalbumlib/lyrics.py:48
+#: src/vinylelib/lyrics.py:48
 msgid "Searching…"
 msgstr "Recherche…"
 
-#: src/plattenalbumlib/lyrics.py:60
+#: src/vinylelib/lyrics.py:60
 msgid "Lyrics view"
 msgstr "Voir les paroles"
 
-#: src/plattenalbumlib/album/album_page.py:20
-#: src/plattenalbumlib/media_buttons.py:9
-#: src/plattenalbumlib/media_buttons.py:18
+#: src/vinylelib/main_window.py:28
+msgid "Database is being updated"
+msgstr "La base de données se met à jour"
+
+#: src/vinylelib/main_window.py:29
+msgid "Database updated"
+msgstr "Base de donnée mise à jour"
+
+#: src/vinylelib/main_window.py:67
+msgid "Connect to Your Music"
+msgstr "Connectez-vous à votre musique"
+
+#: src/vinylelib/main_window.py:68
+msgid ""
+"To use Vinyle, an instance of the Music Player Daemon needs to be set up and "
+"running on this device or another one on the network"
+msgstr ""
+"Pour utiliser Vinyle, une instance de Music Player Daemon doit configurée et "
+"exécutée sur ce périphérique ou sur un autre accessible par le réseau"
+
+#: src/vinylelib/dialogs/connect_dialog.py:13 src/vinylelib/main_window.py:70
+msgid "_Connect"
+msgstr "_Connexion"
+
+#: src/vinylelib/main_window.py:72
+msgid "Connect _Manually"
+msgstr "Se connecter manuellement"
+
+#: src/vinylelib/main_window.py:174
+msgid "Playing music"
+msgstr "Jouer la musique"
+
+#: src/vinylelib/main_window.py:211
+msgid "Cleared A‐B loop"
+msgstr "Boucle A-B effacée"
+
+#: src/vinylelib/main_window.py:214
+#, python-brace-format
+msgid "Started A‐B loop at {start}"
+msgstr "Boucle A-B démarrée à {start}"
+
+#: src/vinylelib/main_window.py:216
+#, python-brace-format
+msgid "Activated A‐B loop from {start} to {end}"
+msgstr "Boucle A-B activée de {start} à {end}"
+
+#: src/vinylelib/album/album_page.py:20 src/vinylelib/media_buttons.py:9
+#: src/vinylelib/media_buttons.py:18
 msgid "Play"
 msgstr "Jouer"
 
-#: src/plattenalbumlib/media_buttons.py:15
+#: src/vinylelib/media_buttons.py:15
 msgid "Pause"
 msgstr "Pause"
 
-#: src/plattenalbumlib/media_buttons.py:24
+#: src/vinylelib/media_buttons.py:24
 msgid "Previous"
 msgstr "Précédent"
 
-#: src/plattenalbumlib/media_buttons.py:26
+#: src/vinylelib/media_buttons.py:26
 msgid "Next"
 msgstr "Suivant"
 
-#: src/plattenalbumlib/dialogs/server_info.py:23
-#: src/plattenalbumlib/search.py:52
+#: src/vinylelib/dialogs/server_info.py:23 src/vinylelib/search.py:52
 msgid "Artists"
 msgstr "Artistes"
 
-#: src/plattenalbumlib/search.py:56
+#: src/vinylelib/search.py:56
 msgid "Composers"
 msgstr "Compositeurs"
 
-#: src/plattenalbumlib/search.py:60
+#: src/vinylelib/search.py:60
 msgid "Conductors"
 msgstr "Chefs d'orchestre"
 
-#: src/plattenalbumlib/dialogs/server_info.py:25
-#: src/plattenalbumlib/search.py:67
+#: src/vinylelib/dialogs/server_info.py:25 src/vinylelib/search.py:67
 msgid "Songs"
 msgstr "Titres"
 
-#: src/plattenalbumlib/search.py:81
+#: src/vinylelib/search.py:81
 msgid "No Results"
 msgstr "Aucun résultat"
 
-#: src/plattenalbumlib/search.py:81
+#: src/vinylelib/search.py:81
 msgid "Try a different search"
 msgstr "Essayez une recherche différente"
 
-#: src/plattenalbumlib/sidebar_list_view.py:24
+#: src/vinylelib/sidebar_list_view.py:24
 msgid "Unknown Artist"
 msgstr "Artiste inconnu"
 
-#: src/plattenalbumlib/album/album_list_row.py:23
+#: src/vinylelib/album/album_list_row.py:23
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "Pochette de l'album {album}"
 
-#: src/plattenalbumlib/album/album_list_row.py:25
-#: src/plattenalbumlib/album/album_page.py:60
-#: src/plattenalbumlib/album/album_page.py:61
+#: src/vinylelib/album/album_list_row.py:25
+#: src/vinylelib/album/album_page.py:60 src/vinylelib/album/album_page.py:61
 msgid "Unknown Album"
 msgstr "Album inconnu"
 
-#: src/plattenalbumlib/album/album_list_row.py:26
+#: src/vinylelib/album/album_list_row.py:26
 msgid "Album cover of an unknown album"
 msgstr "Pochette d'un album inconnu"
 
-#: src/plattenalbumlib/album/album_page.py:21
+#: src/vinylelib/album/album_page.py:21
 msgid "Append"
 msgstr "Ajouter"
 
-#: src/plattenalbumlib/album/albums_page.py:56
+#: src/vinylelib/album/albums_page.py:56
 msgid "No Albums"
 msgstr "Pas d'albums"
 
-#: src/plattenalbumlib/album/albums_page.py:76
+#: src/vinylelib/album/albums_page.py:76
 #, python-brace-format
 msgid "Albums of {item}"
 msgstr "Albums de {item}"
 
-#: src/plattenalbumlib/dialogs/behaviour_preferences.py:11
+#: src/vinylelib/dialogs/behaviour_preferences.py:11
 msgid "Behavior"
 msgstr "Comportement"
 
-#: src/plattenalbumlib/dialogs/behaviour_preferences.py:13
+#: src/vinylelib/dialogs/behaviour_preferences.py:13
 msgid "Send _Notification on Title Change"
 msgstr "_Notifier lors du changement de titre"
 
-#: src/plattenalbumlib/dialogs/behaviour_preferences.py:14
+#: src/vinylelib/dialogs/behaviour_preferences.py:14
 msgid "Stop _Playback on Quit"
 msgstr "_Arrêt de la lecture en quittant"
 
-#: src/plattenalbumlib/dialogs/behaviour_preferences.py:15
+#: src/vinylelib/dialogs/behaviour_preferences.py:15
 msgid "Support “_MPRIS”"
 msgstr "Support du \"_MPRIS\""
 
-#: src/plattenalbumlib/dialogs/behaviour_preferences.py:15
+#: src/vinylelib/dialogs/behaviour_preferences.py:15
 msgid "Disable if “MPRIS” is supported by another client"
 msgstr "Désactiver si \"MPRIS\" est supporté par un autre client"
 
-#: src/plattenalbumlib/dialogs/behaviour_preferences.py:16
+#: src/vinylelib/dialogs/behaviour_preferences.py:16
 msgid "Browse by composer, (requires to restart the app)"
 msgstr "Parcourir par compositeur, (requiert un redémarrage)"
 
-#: src/plattenalbumlib/dialogs/behaviour_preferences.py:16
+#: src/vinylelib/dialogs/behaviour_preferences.py:16
 msgid "Choose sidebar navigation"
 msgstr "Choisir la navigation par liste"
 
-#: src/plattenalbumlib/dialogs/connect_dialog.py:15
+#: src/vinylelib/dialogs/connect_dialog.py:15
 msgid "Ca_ncel"
 msgstr "Annuler"
 
-#: src/plattenalbumlib/dialogs/connect_dialog.py:23
+#: src/vinylelib/dialogs/connect_dialog.py:23
 msgid "Connection failed"
 msgstr "Connexion échoué"
 
-#: src/plattenalbumlib/dialogs/manual_connect_dialog.py:13
+#: src/vinylelib/dialogs/manual_connect_dialog.py:13
 msgid "Manual Connection"
 msgstr "Connexion manuelle"
 
-#: src/plattenalbumlib/dialogs/manual_connect_dialog.py:16
+#: src/vinylelib/dialogs/manual_connect_dialog.py:16
 msgid "Host"
 msgstr "Hôte"
 
-#: src/plattenalbumlib/dialogs/manual_connect_dialog.py:20
+#: src/vinylelib/dialogs/manual_connect_dialog.py:20
 msgid "Port"
 msgstr "Port"
 
-#: src/plattenalbumlib/dialogs/manual_connect_dialog.py:23
+#: src/vinylelib/dialogs/manual_connect_dialog.py:23
 msgid "Password (optional)"
 msgstr "Mot de passe (optionnel)"
 
-#: src/plattenalbumlib/dialogs/server_info.py:11
+#: src/vinylelib/dialogs/server_info.py:11
 msgid "Server Information"
 msgstr "Informations du serveur"
 
-#: src/plattenalbumlib/dialogs/server_info.py:19
+#: src/vinylelib/dialogs/server_info.py:19
 msgid "Server"
 msgstr "Serveur"
 
-#: src/plattenalbumlib/dialogs/server_info.py:20
+#: src/vinylelib/dialogs/server_info.py:20
 msgid "Protocol"
 msgstr "Protocole"
 
-#: src/plattenalbumlib/dialogs/server_info.py:21
+#: src/vinylelib/dialogs/server_info.py:21
 msgid "Uptime"
 msgstr "Durée d’activité"
 
-#: src/plattenalbumlib/dialogs/server_info.py:22
+#: src/vinylelib/dialogs/server_info.py:22
 msgid "Playtime"
 msgstr "Durée de lecture"
 
-#: src/plattenalbumlib/dialogs/server_info.py:26
+#: src/vinylelib/dialogs/server_info.py:26
 msgid "Total Database Playtime"
 msgstr "Temps total de lecture"
 
-#: src/plattenalbumlib/dialogs/server_info.py:27
+#: src/vinylelib/dialogs/server_info.py:27
 msgid "Last Database Update"
 msgstr "Dernière mise à jour de la base"
 
-#: src/plattenalbumlib/dialogs/setup_dialog.py:25
+#: src/vinylelib/dialogs/setup_dialog.py:25
 msgid "Setup"
 msgstr "Configuration"
 
-#: src/plattenalbumlib/dialogs/setup_dialog.py:27
+#: src/vinylelib/dialogs/setup_dialog.py:27
+#, fuzzy
 msgid ""
 "To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
 "system package manager, and run the following commands to configure and "
-"initialize a basic local instance. After that, Plattenalbum should be able "
-"to seamlessly connect to it."
+"initialize a basic local instance. After that, Vinyle should be able to "
+"seamlessly connect to it."
 msgstr ""
 "Pour commencer, installez Music Player Daemon (<tt>mpd</tt>) avec votre "
 "gestionnaire de paquets, et exécutez la commande suivante pour configurer et "
-"initialiser une instance basique locale. Ensuite, Plattenalbum devrait s'y "
+"initialiser une instance basique locale. Ensuite, Vinyle devrait s'y "
 "connecter."
 
-#: src/plattenalbumlib/dialogs/view_preferences.py:11
+#: src/vinylelib/dialogs/view_preferences.py:11
 msgid "View"
 msgstr "Vue"
 
-#: src/plattenalbumlib/dialogs/view_preferences.py:13
+#: src/vinylelib/dialogs/view_preferences.py:13
 msgid "_Show Bit Rate"
 msgstr "Affiche le débit"
 
-#: src/plattenalbumlib/player/playback_controls.py:24
-#: src/plattenalbumlib/player/player_bar.py:42
+#: src/vinylelib/player/playback_controls.py:24
+#: src/vinylelib/player/player_bar.py:42
 msgid "Progress bar"
 msgstr "Barre de progression"
 
-#: src/plattenalbumlib/player/player.py:32
+#: src/vinylelib/player/player.py:32
 msgid "Playlist"
 msgstr "Liste de lecture"
 
-#: src/plattenalbumlib/player/player.py:33
+#: src/vinylelib/player/player.py:33
 msgid "Lyrics"
 msgstr "Paroles"
 
-#: src/plattenalbumlib/player/player.py:45
+#: src/vinylelib/player/player.py:45
 msgid "Player Menu"
 msgstr "Menu du lecteur"
 
-#: src/plattenalbumlib/player/player_menu.py:23
+#: src/vinylelib/player/player_menu.py:23
 msgid "_Repeat Mode"
 msgstr "Mode _répétition"
 
-#: src/plattenalbumlib/player/player_menu.py:24
+#: src/vinylelib/player/player_menu.py:24
 msgid "R_andom Mode"
 msgstr "Mode _aléatoire"
 
-#: src/plattenalbumlib/player/player_menu.py:25
+#: src/vinylelib/player/player_menu.py:25
 msgid "_Single Mode"
 msgstr "Mode chanson _unique"
 
-#: src/plattenalbumlib/player/player_menu.py:26
+#: src/vinylelib/player/player_menu.py:26
 msgid "_Pause After Song"
 msgstr "_Pause après le titre"
 
-#: src/plattenalbumlib/player/player_menu.py:27
+#: src/vinylelib/player/player_menu.py:27
 msgid "_Consume Mode"
 msgstr "Mode _consommer"
 
-#: src/plattenalbumlib/player/volume_control.py:14
+#: src/vinylelib/player/volume_control.py:14
 msgid "Volume control"
 msgstr "Volume"
 
-#: src/plattenalbumlib/playlist/playlist_menu.py:12
-#: src/plattenalbumlib/song/song_menu.py:11
+#: src/vinylelib/playlist/playlist_menu.py:12
+#: src/vinylelib/song/song_menu.py:11
 msgid "Context menu"
 msgstr "Menu contextuel"
 
-#: src/plattenalbumlib/playlist/playlist_menu.py:32
+#: src/vinylelib/playlist/playlist_menu.py:32
 msgid "_Remove"
 msgstr "_Supprimer"
 
-#: src/plattenalbumlib/playlist/playlist_menu.py:33
-#: src/plattenalbumlib/song/song_menu.py:38
+#: src/vinylelib/playlist/playlist_menu.py:33
+#: src/vinylelib/song/song_menu.py:38
 msgid "Show Al_bum"
 msgstr "Montrer l'album"
 
-#: src/plattenalbumlib/playlist/playlist_menu.py:34
-#: src/plattenalbumlib/song/song_menu.py:39
+#: src/vinylelib/playlist/playlist_menu.py:34
+#: src/vinylelib/song/song_menu.py:39
 msgid "Show _File"
 msgstr "Montre le fichier"
 
-#: src/plattenalbumlib/playlist/playlist_menu.py:36
+#: src/vinylelib/playlist/playlist_menu.py:36
 msgid "_Enqueue Album"
 msgstr "_Ajouter l'album"
 
-#: src/plattenalbumlib/playlist/playlist_menu.py:37
+#: src/vinylelib/playlist/playlist_menu.py:37
 msgid "_Tidy"
 msgstr "_Épurer"
 
-#: src/plattenalbumlib/playlist/playlist_menu.py:38
+#: src/vinylelib/playlist/playlist_menu.py:38
 msgid "_Clear"
 msgstr "_Vider"
 
-#: src/plattenalbumlib/playlist/playlist_window.py:21
+#: src/vinylelib/playlist/playlist_window.py:21
 msgid "Playlist is Empty"
 msgstr "Liste de lecture"
 
-#: src/plattenalbumlib/playlist/playlist_window.py:27
+#: src/vinylelib/playlist/playlist_window.py:27
 msgid "Scroll to Current Song"
 msgstr "Défiler jusqu'à la chanson courante"
 
-#: src/plattenalbumlib/song/song_menu.py:34
+#: src/vinylelib/song/song_menu.py:34
 msgid "_Append"
 msgstr "_Ajouter"
 
-#: src/plattenalbumlib/song/song_menu.py:35
+#: src/vinylelib/song/song_menu.py:35
 msgid "As _Next"
 msgstr "_Suivant"
+
+#~ msgid "_About Plattenalbum"
+#~ msgstr "À pr_opos de Plattenalbum"
 
 #~ msgid "Re_wind via Previous Button"
 #~ msgstr "Retour au _début via bouton précédent"
@@ -726,9 +723,6 @@ msgstr "_Suivant"
 
 #~ msgid "Back"
 #~ msgstr "Retour"
-
-#~ msgid "About mpdevil"
-#~ msgstr "À propos de mpdevil"
 
 #~ msgid "Genre Filter"
 #~ msgstr "Filtre genre"

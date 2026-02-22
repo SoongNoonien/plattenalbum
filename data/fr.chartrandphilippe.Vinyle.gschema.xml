@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-	<schema id="de.wagnermartin.Plattenalbum" path="/de/wagnermartin/Plattenalbum/">
+	<schema id="fr.chartrandphilippe.Vinyle" path="/fr/chartrandphilippe/Vinyle/">
 		<key type="b" name="maximize">
 			<default>false</default>
 			<summary>Maximize window on startup</summary>

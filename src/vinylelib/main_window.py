@@ -13,8 +13,8 @@ from .player import Player, PlayerBar
 
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, client, settings, **kwargs):
-        super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=294, width_request=360, **kwargs)
-        self.set_default_icon_name("de.wagnermartin.Plattenalbum")
+        super().__init__(title="Vinyle", icon_name="fr.chartrandphilippe.Vinyle", height_request=294, width_request=360, **kwargs)
+        self.set_default_icon_name("fr.chartrandphilippe.Vinyle")
         self._client=client
         self._settings=settings
         self._suspend_inhibit=0
@@ -64,8 +64,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.add_breakpoint(break_point)
 
         # status page
-        status_page=Adw.StatusPage(icon_name="de.wagnermartin.Plattenalbum", title=_("Connect to Your Music"))
-        status_page.set_description(_("To use Plattenalbum, an instance of the Music Player Daemon "\
+        status_page=Adw.StatusPage(icon_name="fr.chartrandphilippe.Vinyle", title=_("Connect to Your Music"))
+        status_page.set_description(_("To use Vinyle, an instance of the Music Player Daemon "\
             "needs to be set up and running on this device or another one on the network"))
         connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="app.connect", action_target=GLib.Variant("b", False))
         connect_button.set_css_classes(["suggested-action", "pill"])
@@ -78,7 +78,7 @@ class MainWindow(Adw.ApplicationWindow):
         menu=Gio.Menu()
         menu.append(_("_Preferences"), "win.preferences")
         menu.append(_("_Keyboard Shortcuts"), "app.shortcuts")
-        menu.append(_("_About Plattenalbum"), "app.about")
+        menu.append(_("_About Vinyle"), "app.about")
         menu_button=Gtk.MenuButton(icon_name="open-menu-symbolic", tooltip_text=_("Main Menu"), primary=True, menu_model=menu)
         header_bar=Adw.HeaderBar()
         header_bar.pack_end(menu_button)
@@ -132,7 +132,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._client.try_connect(self._settings.get_boolean("manual-connection"))
 
     def _clear_title(self):
-        self.set_title("Plattenalbum")
+        self.set_title("Vinyle")
 
     def _on_close(self, action, param):
         if (dialog:=self.get_visible_dialog()) is None:

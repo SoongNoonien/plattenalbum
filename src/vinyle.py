@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# Plattenalbum - MPD Client.
+# Vinyle - MPD Client.
 # Copyright (C) 2020-2026 Martin Wagner <martin.wagner.dev@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -31,17 +31,17 @@ try:
     locale.setlocale(locale.LC_ALL, "")
 except locale.Error as e:
     print(e)
-locale.bindtextdomain("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@")
-locale.textdomain("de.wagnermartin.Plattenalbum")
-bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
-textdomain("de.wagnermartin.Plattenalbum")
-Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
+locale.bindtextdomain("fr.chartrandphilippe.Vinyle", "@LOCALE_DIR@")
+locale.textdomain("fr.chartrandphilippe.Vinyle")
+bindtextdomain("fr.chartrandphilippe.Vinyle", localedir="@LOCALE_DIR@")
+textdomain("fr.chartrandphilippe.Vinyle")
+Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "fr.chartrandphilippe.Vinyle.gresource"])))
 
 
-from plattenalbumlib.application import Plattenalbum
+from vinylelib.application import Vinyle
 
 if __name__ == "__main__":
-    app=Plattenalbum()
+    app=Vinyle()
     signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
     app.run(sys.argv)
 

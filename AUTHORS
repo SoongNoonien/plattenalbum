@@ -1,5 +1,8 @@
-Maintainer:
+Original Author:
 	Martin Wagner <martin.wagner.dev@gmail.com>
+
+Maintainer:
+    Philippe Chartrand <philippe.e.chartrand@gmail.com>
 
 Translators:
 	Martin Wagner <martin.wagner.dev@gmail.com> (German)
@@ -15,8 +18,5 @@ Translators:
 	Tiago Lucas Flach <tiagolucas9830@gmail.com> (Brazilian Portuguese)
 	UnifeGi <UnifeGi@duck.com> (Romanian)
 
-Gentoo ebuild:
-	Martin Wagner <martin.wagner.dev@gmail.com>
-
 Icons + Logo:
-	Martin Wagner <martin.wagner.dev@gmail.com>
+	Martin Wagner <philippe.e.chartrand@gmail.com>

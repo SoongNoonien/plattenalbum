@@ -1,6 +1,6 @@
 i18n.merge_file(
-        input: 'de.wagnermartin.Plattenalbum.desktop.in',
-       output: 'de.wagnermartin.Plattenalbum.desktop',
+        input: 'fr.chartrandphilippe.Vinyle.desktop.in',
+       output: 'fr.chartrandphilippe.Vinyle.desktop',
          type: 'desktop',
        po_dir: '../po',
       install: true,
@@ -8,15 +8,15 @@ i18n.merge_file(
 )
 
 metainfo_file = i18n.merge_file(
-        input: 'de.wagnermartin.Plattenalbum.metainfo.xml.in',
-       output: 'de.wagnermartin.Plattenalbum.metainfo.xml',
+        input: 'fr.chartrandphilippe.Vinyle.metainfo.xml.in',
+       output: 'fr.chartrandphilippe.Vinyle.metainfo.xml',
        po_dir: '../po',
       install: true,
   install_dir: join_paths(get_option('datadir'), 'metainfo')
 )
 
 gnome.compile_resources(
-  'de.wagnermartin.Plattenalbum', 'de.wagnermartin.Plattenalbum.gresource.xml',
+  'fr.chartrandphilippe.Vinyle', 'fr.chartrandphilippe.Vinyle.gresource.xml',
   gresource_bundle: true,
         source_dir: '.',
        install_dir: resources_dir,
@@ -24,7 +24,7 @@ gnome.compile_resources(
       dependencies: metainfo_file
 )
 
-install_data('de.wagnermartin.Plattenalbum.gschema.xml', install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas'))
+install_data('fr.chartrandphilippe.Vinyle.gschema.xml', install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas'))
 
-install_data('de.wagnermartin.Plattenalbum.svg', install_dir: join_paths(get_option('datadir'), 'icons/hicolor/scalable/apps'))
-install_data('de.wagnermartin.Plattenalbum-symbolic.svg', install_dir: join_paths(get_option('datadir'), 'icons/hicolor/symbolic/apps'))
+install_data('fr.chartrandphilippe.Vinyle.svg', install_dir: join_paths(get_option('datadir'), 'icons/hicolor/scalable/apps'))
+install_data('fr.chartrandphilippe.Vinyle-symbolic.svg', install_dir: join_paths(get_option('datadir'), 'icons/hicolor/symbolic/apps'))
