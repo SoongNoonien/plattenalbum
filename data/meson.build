@@ -4,7 +4,7 @@ i18n.merge_file(
          type: 'desktop',
        po_dir: '../po',
       install: true,
-  install_dir: join_paths(get_option('datadir'), 'applications')
+  install_dir: get_option('datadir')/'applications'
 )
 
 metainfo_file = i18n.merge_file(
@@ -12,7 +12,7 @@ metainfo_file = i18n.merge_file(
        output: 'de.wagnermartin.Plattenalbum.metainfo.xml',
        po_dir: '../po',
       install: true,
-  install_dir: join_paths(get_option('datadir'), 'metainfo')
+  install_dir: get_option('datadir')/'metainfo'
 )
 
 gnome.compile_resources(
@@ -24,7 +24,7 @@ gnome.compile_resources(
       dependencies: metainfo_file
 )
 
-install_data('de.wagnermartin.Plattenalbum.gschema.xml', install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas'))
+install_data('de.wagnermartin.Plattenalbum.gschema.xml', install_dir: get_option('datadir')/'glib-2.0/schemas')
 
-install_data('de.wagnermartin.Plattenalbum.svg', install_dir: join_paths(get_option('datadir'), 'icons/hicolor/scalable/apps'))
-install_data('de.wagnermartin.Plattenalbum-symbolic.svg', install_dir: join_paths(get_option('datadir'), 'icons/hicolor/symbolic/apps'))
+install_data('de.wagnermartin.Plattenalbum.svg', install_dir: get_option('datadir')/'icons/hicolor/scalable/apps')
+install_data('de.wagnermartin.Plattenalbum-symbolic.svg', install_dir: get_option('datadir')/'icons/hicolor/symbolic/apps')

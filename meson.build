@@ -3,7 +3,7 @@ project('plattenalbum', version: '2.4.1')
 i18n = import('i18n')
 gnome = import('gnome')
 
-resources_dir = join_paths(get_option('prefix'), get_option('datadir'), 'de.wagnermartin.Plattenalbum')
+resources_dir = get_option('prefix')/get_option('datadir')/'de.wagnermartin.Plattenalbum'
 
 subdir('data')
 subdir('src')
