@@ -2801,8 +2801,7 @@ class PlayerBar(Gtk.Overlay):
 
 class MainWindow(Adw.ApplicationWindow):
 	def __init__(self, client, settings, **kwargs):
-		super().__init__(title="Plattenalbum", icon_name="de.wagnermartin.Plattenalbum", height_request=294, width_request=360, **kwargs)
-		self.set_default_icon_name("de.wagnermartin.Plattenalbum")
+		super().__init__(title="Plattenalbum", height_request=294, width_request=360, **kwargs)
 		self._client=client
 		self._settings=settings
 		self._suspend_inhibit=0
