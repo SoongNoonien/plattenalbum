@@ -2466,7 +2466,10 @@ class PlaybackControls(Gtk.Box):
 		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
 
 		# progress bar
-		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, visible=False)
+		self._scale=Gtk.Scale(
+			orientation=Gtk.Orientation.HORIZONTAL, draw_value=False,
+			restrict_to_fill_level=False, show_fill_level=True, fill_level=0, visible=False
+		)
 		self._scale.set_increments(10, 10)
 		self._scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
 		self._adjustment=self._scale.get_adjustment()
@@ -2474,12 +2477,15 @@ class PlaybackControls(Gtk.Box):
 		# event controllers
 		button_controller=Gtk.GestureClick(button=0)
 		self._scale.add_controller(button_controller)
+		key_controller=Gtk.EventControllerKey()
+		self._scale.add_controller(key_controller)
 
 		# connect
 		self._scale.connect("change-value", self._on_change_value)
 		self._scale.connect("value-changed", self._on_value_changed)
-		button_controller.connect("pressed", self._on_pressed)
+		button_controller.connect("pressed", self._on_button_pressed)
 		button_controller.connect("unpaired-release", self._on_unpaired_release)
+		key_controller.connect("key-pressed", self._on_key_pressed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("state", self._on_state)
 		self._elapsed_handler=self._client.emitter.connect("elapsed", self._on_elapsed)
@@ -2502,13 +2508,8 @@ class PlaybackControls(Gtk.Box):
 		self.append(self._scale)
 		self.append(center_box)
 
-	def _on_pressed(self, *args):
-		if self._seeking:
-			self._client.emitter.handler_unblock(self._elapsed_handler)
-			self._seeking=False
-		else:
-			self._client.emitter.handler_block(self._elapsed_handler)
-			self._seeking=True
+	def _on_button_pressed(self, *args):
+		self._seeking=not self._seeking
 
 	def _on_unpaired_release(self, *args):
 		if self._seeking:
@@ -2517,15 +2518,20 @@ class PlaybackControls(Gtk.Box):
 				self._client.seekcur(pos)
 			except:
 				pass
-			self._client.emitter.handler_unblock(self._elapsed_handler)
 			self._seeking=False
+
+	def _on_key_pressed(self, controller, keyval, keycode, state):
+		if keyval == Gdk.KEY_Escape and self._seeking:
+			self._seeking=False
+			self._adjustment.set_value(self._scale.get_fill_level())
 
 	def _on_elapsed(self, emitter, elapsed, duration):
 		if duration > 0:
-			if elapsed > duration:  # fix display error
-				elapsed=duration
-			self._adjustment.set_upper(duration)
-			self._adjustment.set_value(elapsed)
+			elapsed=min(elapsed, duration)  # fix display error
+			if not self._seeking:
+				self._adjustment.set_upper(duration)
+				self._adjustment.set_value(elapsed)
+			self._scale.set_fill_level(elapsed)
 		else:
 			self._scale.set_range(0, 0)
 
@@ -2537,6 +2543,7 @@ class PlaybackControls(Gtk.Box):
 			self._rest.set_text(str(Duration(duration-elapsed)))
 		else:
 			self._scale.set_visible(False)
+			self._scale.set_fill_level(0)
 			self._elapsed.set_text("")
 			self._rest.set_text("")
 
@@ -2559,7 +2566,6 @@ class PlaybackControls(Gtk.Box):
 		if self._seeking:
 			self._scale.set_sensitive(False)
 			self._scale.set_sensitive(True)
-			self._client.emitter.handler_unblock(self._elapsed_handler)
 			self._seeking=False
 
 	def _on_disconnected(self, *args):
