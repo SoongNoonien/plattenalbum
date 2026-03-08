@@ -2459,35 +2459,30 @@ class PlaybackControls(Gtk.Box):
 	def __init__(self, client, settings):
 		super().__init__(hexpand=True, orientation=Gtk.Orientation.VERTICAL)
 		self._client=client
+		self._seeking=False
 
 		# labels
 		self._elapsed=Gtk.Label(xalign=0, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
 		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
 
 		# progress bar
-		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, hexpand=True)
+		self._scale=Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, draw_value=False, visible=False)
 		self._scale.set_increments(10, 10)
 		self._scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
 		self._adjustment=self._scale.get_adjustment()
 
-		# popover
-		self._popover=Gtk.Popover(autohide=False, has_arrow=False)
-		self._time_label=Gtk.Label(single_line_mode=True, css_classes=["numeric"])
-		self._popover.set_child(self._time_label)
-		self._popover.set_parent(self)
-		self._popover.set_position(Gtk.PositionType.TOP)
-
 		# event controllers
-		controller_motion=Gtk.EventControllerMotion()
-		self._scale.add_controller(controller_motion)
+		button_controller=Gtk.GestureClick(button=0)
+		self._scale.add_controller(button_controller)
 
 		# connect
 		self._scale.connect("change-value", self._on_change_value)
-		controller_motion.connect("motion", self._on_pointer_motion)
-		controller_motion.connect("leave", self._on_pointer_leave)
-		self._client.emitter.connect("disconnected", self._disable)
+		self._scale.connect("value-changed", self._on_value_changed)
+		button_controller.connect("pressed", self._on_pressed)
+		button_controller.connect("unpaired-release", self._on_unpaired_release)
+		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("elapsed", self._refresh)
+		self._elapsed_handler=self._client.emitter.connect("elapsed", self._on_elapsed)
 		self._client.emitter.connect("current-song", self._on_song_changed)
 
 		# packing
@@ -2507,74 +2502,68 @@ class PlaybackControls(Gtk.Box):
 		self.append(self._scale)
 		self.append(center_box)
 
-	def _refresh(self, emitter, elapsed, duration):
-		self._scale.set_visible(True)
+	def _on_pressed(self, *args):
+		if self._seeking:
+			self._client.emitter.handler_unblock(self._elapsed_handler)
+			self._seeking=False
+		else:
+			self._client.emitter.handler_block(self._elapsed_handler)
+			self._seeking=True
+
+	def _on_unpaired_release(self, *args):
+		if self._seeking:
+			pos=self._adjustment.get_value()
+			try:
+				self._client.seekcur(pos)
+			except:
+				pass
+			self._client.emitter.handler_unblock(self._elapsed_handler)
+			self._seeking=False
+
+	def _on_elapsed(self, emitter, elapsed, duration):
 		if duration > 0:
 			if elapsed > duration:  # fix display error
 				elapsed=duration
 			self._adjustment.set_upper(duration)
-			self._scale.set_value(elapsed)
+			self._adjustment.set_value(elapsed)
+		else:
+			self._scale.set_range(0, 0)
+
+	def _on_value_changed(self, scale):
+		if (duration:=self._adjustment.get_upper()) > 0:
+			self._scale.set_visible(True)
+			elapsed=self._adjustment.get_value()
 			self._elapsed.set_text(str(Duration(elapsed)))
 			self._rest.set_text(str(Duration(duration-elapsed)))
 		else:
-			self._disable()
-			self._elapsed.set_text(str(Duration(elapsed)))
+			self._scale.set_visible(False)
+			self._elapsed.set_text("")
+			self._rest.set_text("")
 
-	def _disable(self, *args):
-		self._popover.popdown()
-		self._scale.set_visible(False)
-		self._scale.set_range(0, 0)
-		self._elapsed.set_text("")
-		self._rest.set_text("")
-
-	def _on_change_value(self, range, scroll, value):  # value is inaccurate (can be above upper limit)
+	def _on_change_value(self, scale, scroll, value):  # value is inaccurate (can be above upper limit)
+		if scroll == Gtk.ScrollType.JUMP:
+			return False
 		duration=self._adjustment.get_upper()
-		if value >= duration:
-			pos=duration
-			self._popover.popdown()
-			if scroll == Gtk.ScrollType.JUMP:  # avoid endless skipping to the next song
-				self._scale.set_sensitive(False)
-				self._scale.set_sensitive(True)
-		elif value <= 0:
-			pos=0
-			self._popover.popdown()
-		else:
-			pos=value
+		pos=max(min(value, duration), 0)
 		try:
 			self._client.seekcur(pos)
 		except:
 			pass
-
-	def _on_pointer_motion(self, controller, x, y):
-		range_rect=self._scale.get_range_rect()
-		duration=self._adjustment.get_upper()
-		if self._scale.get_direction() == Gtk.TextDirection.RTL:
-			elapsed=int(((range_rect.width-x)/range_rect.width*duration))
-		else:
-			elapsed=int((x/range_rect.width*duration))
-		if elapsed > duration:  # fix display error
-			elapsed=int(duration)
-		elif elapsed < 0:
-			elapsed=0
-		self._time_label.set_text(str(Duration(elapsed)))
-		point=Graphene.Point.zero()
-		point.x=x
-		computed_point,point=self._scale.compute_point(self, point)
-		if computed_point:
-			rect=Gdk.Rectangle()
-			rect.x,rect.y=point.x,0
-			self._popover.set_pointing_to(rect)
-			self._popover.popup()
-
-	def _on_pointer_leave(self, *args):
-		self._popover.popdown()
+		return True
 
 	def _on_state(self, emitter, state):
 		if state == "stop":
-			self._disable()
+			self._scale.set_range(0, 0)
 
 	def _on_song_changed(self, *args):
-		self._popover.popdown()
+		if self._seeking:
+			self._scale.set_sensitive(False)
+			self._scale.set_sensitive(True)
+			self._client.emitter.handler_unblock(self._elapsed_handler)
+			self._seeking=False
+
+	def _on_disconnected(self, *args):
+		self._scale.set_range(0, 0)
 
 class VolumeControl(Gtk.Box):
 	def __init__(self, client):
