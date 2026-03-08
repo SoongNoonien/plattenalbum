@@ -2466,10 +2466,7 @@ class PlaybackControls(Gtk.Box):
 		self._rest=Gtk.Label(xalign=1, single_line_mode=True, valign=Gtk.Align.START, css_classes=["numeric"])
 
 		# progress bar
-		self._scale=Gtk.Scale(
-			orientation=Gtk.Orientation.HORIZONTAL, draw_value=False,
-			restrict_to_fill_level=False, show_fill_level=True, fill_level=0, visible=False
-		)
+		self._scale=Gtk.Scale(restrict_to_fill_level=False, fill_level=0, visible=False)
 		self._scale.set_increments(10, 10)
 		self._scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Progress bar")])
 		self._adjustment=self._scale.get_adjustment()
