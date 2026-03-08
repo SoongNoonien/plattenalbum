@@ -491,7 +491,7 @@ class Duration():
 
 	def __str__(self):
 		if self._fallback:
-			return "‒‒:‒‒"
+			return ""
 		else:
 			seconds=int(self._seconds)
 			days,seconds=divmod(seconds, 86400) # 86400 seconds make a day
