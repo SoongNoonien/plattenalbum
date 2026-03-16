@@ -10,6 +10,14 @@ A client for the Music Player Daemon (MPD).
 
 Browse your collection while viewing large album covers. Play your music without managing playlists.</p>
 
+## Tags
+
+Plattenalbum exclusively uses tags to structure your music. The artist names you see in the left pane are all distinct values of the `albumartist` tag in your collection. If a file does not have an `albumartist` tag, its `artist` tag is used instead. This fallback is done by MPD automatically. If all files sharing a common `albumartist` tag also share a common `albumartistsort` tag, its value is used for sorting in the left pane. If you wonder why, for example, "The Beatles" appear next to other artists starting with the letter "B" you might want to check your tags again. It this case, your files probably have an `albumartistsort` tag with a value like "Beatles, The". Without an `albumartist` tag, no special treatment of artist names is done for sorting.
+
+An album in the middle pane represents all files in your collection sharing a common `albumartist`, `album` and `date` tag. The `albumsort` tags are ignored and the albums are sorted according to their `date` tag. The usual `artist` tag is considered as a property of individual songs. So, tagging compilation albums is quite easy. Just choose an `albumartist` like "Various" for the respective album and it will show up under "Various" while the individual songs still have the correct artist attached to them.
+
+It is also possible to store multiple values in the same tag. For example the `artist` tag of a song could contain two artists involved in the creation. They get displayed as a comma separated list in the player. Similarly, if all songs of an album contain the values "A" and "B" for the `albumartist` tag, this album will appear in the album list of "A" and "B".
+
 ## Installation
 
 ### Flatpak
