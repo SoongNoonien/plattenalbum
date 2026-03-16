@@ -2472,16 +2472,13 @@ class PlaybackControls(Gtk.Box):
 		self._adjustment=self._scale.get_adjustment()
 
 		# event controllers
-		button_controller=Gtk.GestureClick(button=0)
-		self._scale.add_controller(button_controller)
 		key_controller=Gtk.EventControllerKey()
 		self._scale.add_controller(key_controller)
 
 		# connect
 		self._scale.connect("change-value", self._on_change_value)
 		self._scale.connect("value-changed", self._on_value_changed)
-		button_controller.connect("pressed", self._on_button_pressed)
-		button_controller.connect("unpaired-release", self._on_unpaired_release)
+		self._scale.connect("notify::css-classes", self._on_css_classes)
 		key_controller.connect("key-pressed", self._on_key_pressed)
 		self._client.emitter.connect("disconnected", self._on_disconnected)
 		self._client.emitter.connect("state", self._on_state)
@@ -2505,17 +2502,14 @@ class PlaybackControls(Gtk.Box):
 		self.append(self._scale)
 		self.append(center_box)
 
-	def _on_button_pressed(self, *args):
-		self._seeking=not self._seeking
-
-	def _on_unpaired_release(self, *args):
-		if self._seeking:
+	def _on_css_classes(self, *args):
+		if not (seeking:=self._scale.has_css_class("dragging")) and self._seeking:
 			pos=self._adjustment.get_value()
 			try:
 				self._client.seekcur(pos)
 			except:
 				pass
-			self._seeking=False
+		self._seeking=seeking
 
 	def _on_key_pressed(self, controller, keyval, keycode, state):
 		if keyval == Gdk.KEY_Escape and self._seeking:
@@ -2561,9 +2555,9 @@ class PlaybackControls(Gtk.Box):
 
 	def _on_song_changed(self, *args):
 		if self._seeking:
+			self._seeking=False
 			self._scale.set_sensitive(False)
 			self._scale.set_sensitive(True)
-			self._seeking=False
 
 	def _on_disconnected(self, *args):
 		self._scale.set_range(0, 0)
