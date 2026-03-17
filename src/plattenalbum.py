@@ -1056,8 +1056,6 @@ class ServerInfo(Adw.Dialog):
 			"protocol": _("Protocol"),
 			"uptime": _("Uptime"),
 			"playtime": _("Playtime"),
-			"artists": _("Artists"),
-			"albums": _("Albums"),
 			"songs": _("Songs"),
 			"db_playtime": _("Total Database Playtime"),
 			"db_update": _("Last Database Update")
@@ -1068,7 +1066,7 @@ class ServerInfo(Adw.Dialog):
 		for key in ("uptime","playtime","db_playtime"):
 			stats[key]=str(Duration(stats[key]))
 		stats["db_update"]=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%x, %X")
-		for key in ("server","protocol","uptime","playtime","db_update","db_playtime","artists","albums","songs"):
+		for key in ("server","protocol","uptime","playtime","db_update","db_playtime","songs"):
 			row=Adw.ActionRow(activatable=False, selectable=False, subtitle_selectable=True, title=display_str[key], subtitle=stats[key])
 			row.add_css_class("property")
 			list_box.append(row)
