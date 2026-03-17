@@ -598,8 +598,6 @@ class Client(MPDClient):
 		self._settings=settings
 		self.emitter=EventEmitter()
 		self._last_status={}
-		self._main_timeout_id=None
-		self._start_idle_id=None
 		self._music_directory=None
 		self.current_cover=FallbackCover()
 		self._first_mark=None
@@ -642,7 +640,6 @@ class Client(MPDClient):
 					self.server=f'{self._settings.get_string("host")}:{self._settings.get_int("port")}'
 				except:
 					self.emitter.emit("connection_error")
-					self._start_idle_id=None
 					return False
 				# set password
 				if password:=self._settings.get_string("password"):
@@ -651,7 +648,6 @@ class Client(MPDClient):
 					except:
 						self.disconnect()
 						self.emitter.emit("connection_error")
-						self._start_idle_id=None
 						return False
 			else:
 				host=GLib.getenv("MPD_HOST")
@@ -676,7 +672,6 @@ class Client(MPDClient):
 							self.server="/run/mpd/socket"
 						except:
 							self.emitter.emit("connection_error")
-							self._start_idle_id=None
 							return False
 			# connected
 			commands=self.commands()
@@ -689,15 +684,14 @@ class Client(MPDClient):
 					self.enableoutput(0)
 			if "status" in commands:
 				self.emitter.emit("connected", self._database_is_empty())
-				self._main_timeout_id=GLib.timeout_add(100, self._main_loop)
+				GLib.timeout_add(100, self._main_loop)
 			else:
 				self.disconnect()
 				self.emitter.emit("connection_error")
 			# connect successful
 			self._settings.set_boolean("manual-connection", manual)
-			self._start_idle_id=None
 			return False
-		self._start_idle_id=GLib.idle_add(callback)
+		GLib.idle_add(callback)
 
 	def disconnect(self):
 		super().disconnect()
@@ -927,7 +921,6 @@ class Client(MPDClient):
 		except (ConnectionError, ConnectionResetError) as e:
 			self.disconnect()
 			self.emitter.emit("connection_error")
-			self._main_timeout_id=None
 			return False
 		return True
 
