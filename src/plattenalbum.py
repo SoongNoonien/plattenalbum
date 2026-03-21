@@ -2943,6 +2943,8 @@ class MainWindow(Adw.ApplicationWindow):
 		self._clear_title()
 		self.lookup_action("server-info").set_enabled(False)
 		self._updating_toast.dismiss()
+		if isinstance(dialog:=self.get_visible_dialog(), ServerInfo):
+			dialog.close()
 		if self._suspend_inhibit:
 			self.get_application().uninhibit(self._suspend_inhibit)
 			self._suspend_inhibit=0
@@ -2961,6 +2963,8 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_updated_db(self, *args):
 		self._updating_toast.dismiss()
+		if isinstance(dialog:=self.get_visible_dialog(), ServerInfo):
+			dialog.close()
 		self._toast_overlay.add_toast(self._updated_toast)
 
 	def _on_a_b_loop(self, emitter, first_mark, second_mark):
