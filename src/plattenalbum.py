@@ -1049,15 +1049,9 @@ class ServerInfo(Adw.Dialog):
 		database_list.add_css_class("boxed-list")
 
 		# boxes
-		server_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		server_box.append(Gtk.Label(label=_("Server"), xalign=0, css_classes=["heading"]))
-		server_box.append(server_list)
-		database_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		database_box.append(Gtk.Label(label=_("Database"), xalign=0, css_classes=["heading"]))
-		database_box.append(database_list)
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
-		box.append(server_box)
-		box.append(database_box)
+		box.append(HeadingBox(_("Server"), server_list))
+		box.append(HeadingBox(_("Database"), database_list))
 
 		# populate
 		stats=client.stats()
@@ -1077,6 +1071,12 @@ class ServerInfo(Adw.Dialog):
 ###########################
 # general purpose widgets #
 ###########################
+
+class HeadingBox(Gtk.Box):
+	def __init__(self, heading, widget):
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		self.append(Gtk.Label(label=heading, xalign=0, css_classes=["heading"]))
+		self.append(widget)
 
 class AlbumRow(Adw.ActionRow):
 	def __init__(self, album):
@@ -1444,15 +1444,9 @@ class SearchView(Gtk.Stack):
 		self._song_list.add_css_class("boxed-list")
 
 		# boxes
-		self._artist_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		self._artist_box.append(Gtk.Label(label=_("Artists"), xalign=0, css_classes=["heading"]))
-		self._artist_box.append(self._artist_list)
-		self._album_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		self._album_box.append(Gtk.Label(label=_("Albums"), xalign=0, css_classes=["heading"]))
-		self._album_box.append(self._album_list)
-		self._song_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		self._song_box.append(Gtk.Label(label=_("Songs"), xalign=0, css_classes=["heading"]))
-		self._song_box.append(self._song_list)
+		self._artist_box=HeadingBox(_("Artists"), self._artist_list)
+		self._album_box=HeadingBox(_("Albums"), self._album_list)
+		self._song_box=HeadingBox(_("Songs"), self._song_list)
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
 		box.append(self._artist_box)
 		box.append(self._album_box)
