@@ -514,7 +514,6 @@ class MultiTag(list):
 
 class SongMetaclass(type(GObject.Object), type(collections.UserDict)): pass
 class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
-	widget=GObject.Property(type=Gtk.Widget, default=None)  # current widget representing the song in the UI
 	def __init__(self, data):
 		collections.UserDict.__init__(self, data)
 		GObject.Object.__init__(self)
@@ -1262,13 +1261,11 @@ class SongList(Gtk.ListView):
 			row=item.get_child()
 			song=item.get_item()
 			row.set_song(song)
-			song.set_property("widget", row)
 			row.set_property("position", item.get_position())
 		def unbind(factory, item):
 			row=item.get_child()
 			song=item.get_item()
 			row.unset_song()
-			song.set_property("widget", None)
 			row.set_property("position", -1)
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
