@@ -1035,38 +1035,42 @@ class SetupDialog(ConnectDialog):
 		box.append(CommandLabel("systemctl --user enable --now mpd.socket"))
 		self.set_content(box)
 
+class PropertyRow(Adw.ActionRow):
+	def __init__(self, **kwargs):
+		super().__init__(activatable=False, selectable=False, css_classes=["property"], **kwargs)
+
 class ServerInfo(Adw.Dialog):
 	def __init__(self, client, settings):
-		super().__init__(title=_("Server Information"), width_request=360, follows_content_size=True)
+		super().__init__(title=_("Information"), width_request=360, follows_content_size=True)
 
-		# list box
-		list_box=Gtk.ListBox(valign=Gtk.Align.START)
-		list_box.add_css_class("boxed-list")
+		# lists
+		server_list=Gtk.ListBox(valign=Gtk.Align.START)
+		server_list.add_css_class("boxed-list")
+		database_list=Gtk.ListBox(valign=Gtk.Align.START)
+		database_list.add_css_class("boxed-list")
+
+		# boxes
+		server_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		server_box.append(Gtk.Label(label=_("Server"), xalign=0, css_classes=["heading"]))
+		server_box.append(server_list)
+		database_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		database_box.append(Gtk.Label(label=_("Database"), xalign=0, css_classes=["heading"]))
+		database_box.append(database_list)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+		box.append(server_box)
+		box.append(database_box)
 
 		# populate
-		display_str={
-			"server": _("Server"),
-			"protocol": _("Protocol"),
-			"uptime": _("Uptime"),
-			"playtime": _("Playtime"),
-			"songs": _("Songs"),
-			"db_playtime": _("Total Database Playtime"),
-			"db_update": _("Last Database Update")
-		}
 		stats=client.stats()
-		stats["server"]=client.server
-		stats["protocol"]=str(client.mpd_version)
-		for key in ("uptime","playtime","db_playtime"):
-			stats[key]=str(Duration(stats[key]))
-		stats["db_update"]=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%x, %X")
-		for key in ("server","protocol","uptime","playtime","db_update","db_playtime","songs"):
-			row=Adw.ActionRow(activatable=False, selectable=False, subtitle_selectable=True, title=display_str[key], subtitle=stats[key])
-			row.add_css_class("property")
-			list_box.append(row)
+		server_list.append(PropertyRow(title=_("Address"), subtitle=client.server, subtitle_selectable=True))
+		server_list.append(PropertyRow(title=_("Protocol"), subtitle=client.mpd_version))
+		database_list.append(PropertyRow(title=_("Songs"), subtitle=stats["songs"]))
+		database_list.append(PropertyRow(title=_("Total Playtime"), subtitle=str(Duration(stats["db_playtime"]))))
+		last_update=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%x, %X")
+		database_list.append(PropertyRow(title=_("Last Update"), subtitle=last_update))
 
 		# packing
-		clamp=Adw.Clamp(child=list_box, margin_top=24, margin_bottom=24, margin_start=12, margin_end=12)
-		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+		scroll=Gtk.ScrolledWindow(child=Adw.Clamp(child=box), propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
 		toolbar_view=Adw.ToolbarView(content=scroll)
 		toolbar_view.add_top_bar(Adw.HeaderBar())
 		self.set_child(toolbar_view)
