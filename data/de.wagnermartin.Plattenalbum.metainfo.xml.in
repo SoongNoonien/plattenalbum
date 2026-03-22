@@ -41,6 +41,16 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.5.0" date="2026-03-22">
+      <description translate="no">
+        <ul>
+          <li>Reworked seek bar</li>
+          <li>Polished server info dialog</li>
+          <li>Skip button in notifications</li>
+          <li>Minor cleanups</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.4.1" date="2026-01-03">
       <description translate="no">
         <ul>
