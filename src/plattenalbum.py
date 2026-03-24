@@ -859,7 +859,8 @@ class Client(MPDClient):
 			self._clear_marks()
 
 	def get_search_expression(self, tags, keywords):
-		return "("+(" AND ".join("(!("+(" AND ".join(f"({tag} !contains_ci '{keyword}')" for tag in tags))+"))" for keyword in keywords))+")"
+		return "("+(" AND ".join("(!("+(" AND ".join(f"({tag} !contains_ci '{keyword.replace("'", "\\'")}')"
+			for tag in tags))+"))" for keyword in keywords))+")"
 
 	def _clear_marks(self):
 		if self._first_mark is not None:
