@@ -206,12 +206,9 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			self._enable()
 
 	def _handle_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
-		args=list(parameters.unpack())
-		result=getattr(self, method_name)(*args)
-		out_args=self._node_info.lookup_interface(interface_name).lookup_method(method_name).out_args
-		if out_args:
-			signature="("+"".join([arg.signature for arg in out_args])+")"
-			variant=GLib.Variant(signature, (result,))
+		result=getattr(self, method_name)(*parameters.unpack())
+		if out_args:=self._node_info.lookup_interface(interface_name).lookup_method(method_name).out_args:
+			variant=GLib.Variant(f"({out_args[0].signature})", (result,))
 			invocation.return_value(variant)
 		else:
 			invocation.return_value(None)
