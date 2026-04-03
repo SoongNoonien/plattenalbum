@@ -619,8 +619,6 @@ class Client(MPDClient):
 		return [Song(song) for song in super().plchanges(version)]
 	def lsinfo(self, uri):
 		return [Song(song) for song in super().lsinfo(uri)]
-	def listplaylistinfo(self, name):
-		return [Song(song) for song in super().listplaylistinfo(name)]
 	def update(self):
 		# This is a rather ugly workaround for database updates that are quicker
 		# than around a tenth of a second and therefore can't be detected by _main_loop.
