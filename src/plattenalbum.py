@@ -819,7 +819,7 @@ class Client(MPDClient):
 		return bool(songs)
 
 	def show_album(self, uri):
-		self.restrict_tagtypes("album", "albumartist", "artist", "date")
+		self.tagtypes("reset", "album", "albumartist", "artist", "date")
 		song=self.lsinfo(uri)[0]
 		self.tagtypes("all")
 		self.emitter.emit("show-album", song["album"][0], song["albumartist"][0], song["date"][0])
@@ -835,13 +835,6 @@ class Client(MPDClient):
 				self.play()
 			except:
 				pass
-
-	def restrict_tagtypes(self, *tags):
-		self.command_list_ok_begin()
-		self.tagtypes("clear")
-		for tag in tags:
-			self.tagtypes("enable", tag)
-		self.command_list_end()
 
 	def a_b_loop(self):
 		value=float(self.status()["elapsed"])
@@ -1480,7 +1473,7 @@ class SearchView(Gtk.Stack):
 	def search(self, search_text):
 		self.clear()
 		if (keywords:=search_text.split()):
-			self._client.restrict_tagtypes(*self._song_tags)
+			self._client.tagtypes("reset", *self._song_tags)
 			songs=self._client.search(self._client.get_search_expression(self._song_tags, keywords), "window", f"0:{self._results}")
 			self._client.tagtypes("all")
 			for song in songs:
@@ -1804,7 +1797,7 @@ class AlbumPage(Adw.NavigationPage):
 		suptitle.set_text(albumartist)
 		subtitle.set_text(date)
 		length.set_text(str(Duration(client.count(*tag_filter)["playtime"])))
-		client.restrict_tagtypes("track", "title", "artist")
+		client.tagtypes("reset", "track", "title", "artist")
 		songs=client.find(*tag_filter)
 		client.tagtypes("all")
 		album_cover.set_paintable(client.get_cover(songs[0]["file"]).get_paintable())
@@ -2119,7 +2112,7 @@ class PlaylistView(SongList):
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
 		self._menu.popdown()
-		self._client.restrict_tagtypes("track", "title", "artist", "album", "date")
+		self._client.tagtypes("reset", "track", "title", "artist", "album", "date")
 		if self._playlist_version is not None:
 			songs=self._client.plchanges(self._playlist_version)
 		else:
