@@ -180,11 +180,11 @@ class MPRISInterface:  # TODO emit Seeked if needed
 				"Position": (self._get_position, None),
 				"MinimumRate": (GLib.Variant("d", 1.0), None),
 				"MaximumRate": (GLib.Variant("d", 1.0), None),
-				"CanGoNext": (self._get_can_next_prev_seek, None),
-				"CanGoPrevious": (self._get_can_next_prev_seek, None),
+				"CanGoNext": (self._get_can_next_prev, None),
+				"CanGoPrevious": (self._get_can_next_prev, None),
 				"CanPlay": (self._get_can_play_pause, None),
 				"CanPause": (self._get_can_play_pause, None),
-				"CanSeek": (self._get_can_next_prev_seek, None),
+				"CanSeek": (self._get_can_seek, None),
 				"CanControl": (GLib.Variant("b", True), None)},
 		}
 
@@ -271,7 +271,12 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			return GLib.Variant("x", float(self._client.status().get("elapsed", 0))*1000000)
 		return GLib.Variant("x", 0)
 
-	def _get_can_next_prev_seek(self):
+	def _get_can_seek(self):
+		if self._client.connected():
+			return GLib.Variant("b", "duration" in self._client.status())
+		return GLib.Variant("x", 0)
+
+	def _get_can_next_prev(self):
 		if self._client.connected():
 			return GLib.Variant("b", self._client.status()["state"] != "stop")
 		return GLib.Variant("b", False)
@@ -414,11 +419,11 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		value=GLib.Variant("b", state != "stop")
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoNext", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious", value)
-		self._set_property(self._MPRIS_PLAYER_IFACE, "CanSeek", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
 
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		self._update_metadata(song)
+		self._update_property(self._MPRIS_PLAYER_IFACE, "CanSeek")
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
