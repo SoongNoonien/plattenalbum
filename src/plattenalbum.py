@@ -736,6 +736,23 @@ class Client(MPDClient):
 	def album_to_playlist(self, albumartist, album, date, mode):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
 
+	def search_songs(self, keywords, num):
+		tags=("title", "artist", "album", "date")
+		self.tagtypes("reset", *tags)
+		songs=self.search(self._get_search_expression(tags, keywords), "window", f"0:{num}")
+		self.tagtypes("all")
+		return songs
+
+	def search_albums(self, keywords, num):
+		tags=("album", "albumartist", "albumartistsort", "date")
+		albums=self.list("album", self._get_search_expression(tags, keywords), "group", "date", "group", "albumartist")
+		return itertools.islice(albums, num)
+
+	def search_artists(self, keywords, num):
+		tags=("albumartist", "albumartistsort")
+		artists=self.list("albumartist", self._get_search_expression(tags, keywords))
+		return itertools.islice(artists, num)
+
 	def get_cover(self, uri):
 		return self._get_cover_with_path(uri)[0]
 
@@ -802,7 +819,7 @@ class Client(MPDClient):
 		else:
 			self._clear_marks()
 
-	def get_search_expression(self, tags, keywords):
+	def _get_search_expression(self, tags, keywords):
 		return "("+(" AND ".join("(!("+(" AND ".join(f"({tag} !contains_ci '{keyword.replace("'", "\\'")}')"
 			for tag in tags))+"))" for keyword in keywords))+")"
 
@@ -1414,9 +1431,6 @@ class SearchView(Gtk.Stack):
 		super().__init__()
 		self._client=client
 		self._results=20  # TODO adjust number of results
-		self._song_tags=("title", "artist", "album", "date")
-		self._artist_tags=("albumartist", "albumartistsort")
-		self._album_tags=("album", "albumartist", "albumartistsort", "date")
 
 		# artist list
 		self._artist_list=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
@@ -1466,20 +1480,15 @@ class SearchView(Gtk.Stack):
 	def search(self, search_text):
 		self.clear()
 		if (keywords:=search_text.split()):
-			self._client.tagtypes("reset", *self._song_tags)
-			songs=self._client.search(self._client.get_search_expression(self._song_tags, keywords), "window", f"0:{self._results}")
-			self._client.tagtypes("all")
-			for song in songs:
+			for song in self._client.search_songs(keywords, self._results):
 				row=BrowserSongRow(song, show_track=False)
 				self._song_list.append(row)
 			self._song_box.set_visible(self._song_list.get_first_child() is not None)
-			albums=self._client.list("album", self._client.get_search_expression(self._album_tags, keywords), "group", "date", "group", "albumartist")
-			for album in itertools.islice(albums, self._results):
+			for album in self._client.search_albums(keywords, self._results):
 				album_row=AlbumRow(album)
 				self._album_list.append(album_row)
 			self._album_box.set_visible(self._album_list.get_first_child() is not None)
-			artists=self._client.list("albumartist", self._client.get_search_expression(self._artist_tags, keywords))
-			for artist in itertools.islice(artists, self._results):
+			for artist in self._client.search_artists(keywords, self._results):
 				row=Adw.ActionRow(title=artist["albumartist"], use_markup=False, activatable=True)
 				row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 				self._artist_list.append(row)
