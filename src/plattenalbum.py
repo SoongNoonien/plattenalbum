@@ -560,6 +560,11 @@ class Album(GObject.Object):
 	def tag_filter(self):
 		return ("albumartist", self.artist, "album", self.name, "date", self.date)
 
+class Artist(GObject.Object):
+	def __init__(self, name):
+		GObject.Object.__init__(self)
+		self.name=name
+
 class EventEmitter(GObject.Object):
 	__gsignals__={
 		"updating-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
@@ -767,7 +772,8 @@ class Client(MPDClient):
 	def search_artists(self, keywords, num):
 		tags=("albumartist", "albumartistsort")
 		artists=self.list("albumartist", self._get_search_expression(tags, keywords))
-		return itertools.islice(artists, num)
+		for artist in itertools.islice(artists, num):
+			yield Artist(artist["albumartist"])
 
 	def get_albums(self, artist):
 		for album in self.list("album", "albumartist", artist, "group", "date"):
@@ -1446,19 +1452,20 @@ class AlbumActionRow(Adw.ActionRow):
 	def __init__(self, album):
 		super().__init__(use_markup=False, activatable=True, css_classes=["property"])
 		self.album=album
-
-		# fill
 		self.set_title(album.artist)
 		self.set_subtitle(album.name)
-		date=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
-		date.set_text(album.date)
+		self.add_suffix(Gtk.Label(label=album.date, use_markup=False, xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"]))
+		self.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 
-		# packing
-		self.add_suffix(date)
+class ArtistActionRow(Adw.ActionRow):
+	def __init__(self, artist):
+		super().__init__(use_markup=False, activatable=True)
+		self.artist=artist
+		self.set_title(artist.name)
 		self.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 
 class SearchView(Gtk.Stack):
-	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (Artist,)),
 			"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (Album,))}
 	def __init__(self, client):
 		super().__init__()
@@ -1514,23 +1521,19 @@ class SearchView(Gtk.Stack):
 		self.clear()
 		if (keywords:=search_text.split()):
 			for song in self._client.search_songs(keywords, self._results):
-				row=BrowserSongRow(song, show_track=False)
-				self._song_list.append(row)
+				self._song_list.append(BrowserSongRow(song, show_track=False))
 			self._song_box.set_visible(self._song_list.get_first_child() is not None)
 			for album in self._client.search_albums(keywords, self._results):
-				album_row=AlbumActionRow(album)
-				self._album_list.append(album_row)
+				self._album_list.append(AlbumActionRow(album))
 			self._album_box.set_visible(self._album_list.get_first_child() is not None)
 			for artist in self._client.search_artists(keywords, self._results):
-				row=Adw.ActionRow(title=artist["albumartist"], use_markup=False, activatable=True)
-				row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
-				self._artist_list.append(row)
+				self._artist_list.append(ArtistActionRow(artist))
 			self._artist_box.set_visible(self._artist_list.get_first_child() is not None)
 			if self._song_box.get_visible() or self._album_box.get_visible() or self._artist_box.get_visible():
 				self.set_visible_child_name("results")
 
 	def _on_artist_activate(self, list_box, row):
-		self.emit("artist-selected", row.get_title())
+		self.emit("artist-selected", row.artist)
 
 	def _on_album_activate(self, list_box, row):
 		self.emit("album-selected", row.album)
@@ -1541,11 +1544,6 @@ class SearchView(Gtk.Stack):
 				root.child_focus(Gtk.DirectionType.TAB_BACKWARD)
 			elif direction == Gtk.DirectionType.DOWN:
 				root.child_focus(Gtk.DirectionType.TAB_FORWARD)
-
-class Artist(GObject.Object):
-	def __init__(self, name):
-		GObject.Object.__init__(self)
-		self.name=name
 
 class ArtistSelectionModel(SelectionModel):
 	def __init__(self):
@@ -1941,7 +1939,7 @@ class Browser(Gtk.Stack):
 		album_page.play_button.grab_focus()
 
 	def _on_search_artist_selected(self, widget, artist):
-		self._artist_list.select(artist)
+		self._artist_list.select(artist.name)
 		self.search_entry.emit("stop-search")
 		self._albums_page.grid_view.grab_focus()
 
