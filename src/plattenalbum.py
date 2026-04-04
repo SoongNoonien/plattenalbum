@@ -401,8 +401,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			else:
 				if (song_path:=self._client.get_absolute_path(song_file)) is not None:
 					self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
-				if isinstance(self._client.current_cover, FileCover):
-					self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(self._client.current_cover).get_uri())
+					if (cover_path:=song["cover_path"]) is not None:
+						self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
 
 	def _set_property(self, interface_name, prop, value):
 		self.PropertiesChanged(interface_name, {prop: value}, [])
@@ -524,7 +524,7 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 			pass
 		elif key == "duration":
 			super().__setitem__(key, Duration(value))
-		elif key in ("range", "file", "pos", "id", "format", "last-modified"):
+		elif key in ("range", "file", "pos", "id", "format", "last-modified", "cover", "cover_path"):
 			super().__setitem__(key, value)
 		else:
 			if isinstance(value, list):
@@ -548,26 +548,6 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 				return MultiTag([""])
 		else:
 			return None
-
-class BinaryCover(bytes):
-	def get_paintable(self):
-		try:
-			paintable=Gdk.Texture.new_from_bytes(GLib.Bytes.new(self))
-		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			paintable=FALLBACK_COVER
-		return paintable
-
-class FileCover(str):
-	def get_paintable(self):
-		try:
-			paintable=Gdk.Texture.new_from_filename(self)
-		except gi.repository.GLib.Error:  # load fallback if cover can't be loaded
-			paintable=FALLBACK_COVER
-		return paintable
-
-class FallbackCover():
-	def get_paintable(self):
-		return FALLBACK_COVER
 
 class EventEmitter(GObject.Object):
 	__gsignals__={
@@ -600,7 +580,6 @@ class Client(MPDClient):
 		self.emitter=EventEmitter()
 		self._last_status={}
 		self._music_directory=None
-		self.current_cover=FallbackCover()
 		self._first_mark=None
 		self._second_mark=None
 		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
@@ -697,7 +676,6 @@ class Client(MPDClient):
 		self._last_status={}
 		self._music_directory=None
 		self.server=""
-		self.current_cover=FallbackCover()
 		self.emitter.emit("disconnected")
 
 	def connected(self):
@@ -758,35 +736,8 @@ class Client(MPDClient):
 	def album_to_playlist(self, albumartist, album, date, mode):
 		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
 
-	def get_cover_path(self, uri):
-		if self._music_directory is not None:
-			song_dir=GLib.build_filenamev([self._music_directory, GLib.path_get_dirname(uri)])
-			if uri.lower().endswith(".cue"):
-				song_dir=GLib.path_get_dirname(song_dir)  # get actual directory of .cue file
-			if GLib.file_test(song_dir, GLib.FileTest.IS_DIR):
-				directory=GLib.Dir.open(song_dir, 0)
-				while (f:=directory.read_name()) is not None:
-					if self._cover_regex.match(f):
-						return GLib.build_filenamev([song_dir, f])
-		return None
-
-	def get_cover_binary(self, uri):
-		try:
-			binary=self.albumart(uri)["binary"]
-		except:
-			try:
-				binary=self.readpicture(uri)["binary"]
-			except:
-				binary=None
-		return binary
-
 	def get_cover(self, uri):
-		if (cover_path:=self.get_cover_path(uri)) is not None:
-			return FileCover(cover_path)
-		elif (cover_binary:=self.get_cover_binary(uri)) is not None:
-			return BinaryCover(cover_binary)
-		else:
-			return FallbackCover()
+		return self._get_cover_with_path(uri)[0]
 
 	def get_absolute_path(self, uri):
 		stripped_uri=re.sub(r"(.*\.cue)\/track\d+$", r"\1", uri, flags=re.IGNORECASE)
@@ -855,6 +806,49 @@ class Client(MPDClient):
 		return "("+(" AND ".join("(!("+(" AND ".join(f"({tag} !contains_ci '{keyword.replace("'", "\\'")}')"
 			for tag in tags))+"))" for keyword in keywords))+")"
 
+	def _get_cover_path(self, uri):
+		if self._music_directory is None:
+			return None
+		song_dir=GLib.build_filenamev([self._music_directory, GLib.path_get_dirname(uri)])
+		if uri.lower().endswith(".cue"):
+			song_dir=GLib.path_get_dirname(song_dir)  # get actual directory of .cue file
+		if GLib.file_test(song_dir, GLib.FileTest.IS_DIR):
+			directory=GLib.Dir.open(song_dir, 0)
+			while (f:=directory.read_name()) is not None:
+				if self._cover_regex.match(f):
+					return GLib.build_filenamev([song_dir, f])
+
+	def _binary_to_paintable(self, binary):
+		try:
+			return Gdk.Texture.new_from_bytes(GLib.Bytes.new(binary))
+		except gi.repository.GLib.Error:  # cover can't be loaded
+			return FALLBACK_COVER
+
+	def _get_cover_from_file(self, uri):
+		try:
+			return self._binary_to_paintable(self.albumart(uri)["binary"])
+		except:
+			return FALLBACK_COVER
+
+	def _get_cover_from_tag(self, uri):
+		try:
+			return self._binary_to_paintable(self.readpicture(uri)["binary"])
+		except:
+			return FALLBACK_COVER
+
+	def _get_binary_cover(self, uri):
+		if (cover:=self._get_cover_from_file(uri)) is not FALLBACK_COVER:
+			return cover
+		return self._get_cover_from_tag(uri)
+
+	def _get_cover_with_path(self, uri):
+		if (cover_path:=self._get_cover_path(uri)) is None:
+			return self._get_binary_cover(uri), None
+		try:
+			return Gdk.Texture.new_from_filename(cover_path), cover_path
+		except gi.repository.GLib.Error:  # cover can't be loaded
+			return self._get_binary_cover(uri), None
+
 	def _clear_marks(self):
 		if self._first_mark is not None:
 			self.emitter.emit("a-b-loop", -1.0, -1.0)
@@ -874,7 +868,7 @@ class Client(MPDClient):
 				self.emitter.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
 			if "songid" in diff:
 				song=self.currentsong()
-				self.current_cover=self.get_cover(song["file"])
+				song["cover"],song["cover_path"]=self._get_cover_with_path(song["file"])
 				self.emitter.emit("current-song", song, status["song"], status["songid"], status["state"])
 				self._clear_marks()
 			if "elapsed" in diff:
@@ -901,7 +895,6 @@ class Client(MPDClient):
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
-					self.current_cover=FallbackCover()
 					self.emitter.emit("current-song", Song({}), None, None, status["state"])
 					self._clear_marks()
 				elif "volume" == key:
@@ -1651,7 +1644,7 @@ class AlbumListRow(Gtk.Box):
 			self._client.tagtypes("clear")
 			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
 			self._client.tagtypes("all")
-			album.cover=self._client.get_cover(song["file"]).get_paintable()
+			album.cover=self._client.get_cover(song["file"])
 		self._cover.set_paintable(album.cover)
 
 class AlbumsPage(Adw.NavigationPage):
@@ -1800,7 +1793,7 @@ class AlbumPage(Adw.NavigationPage):
 		client.tagtypes("reset", "track", "title", "artist")
 		songs=client.find(*tag_filter)
 		client.tagtypes("all")
-		album_cover.set_paintable(client.get_cover(songs[0]["file"]).get_paintable())
+		album_cover.set_paintable(client.get_cover(songs[0]["file"]))
 		for song in songs:
 			row=BrowserSongRow(song, hide_artist=albumartist)
 			song_list.append(row)
@@ -2664,14 +2657,15 @@ class Player(Adw.Bin):
 
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
+			self._cover.set_paintable(song["cover"])
 			self._cover.set_visible(True)
 			self._lyrics_window.set_property("song", song)
 			if self._stack.get_visible_child_name() == "lyrics":
 				self._lyrics_window.load()
 		else:
 			self._cover.set_visible(False)
+			self._cover.set_paintable(FALLBACK_COVER)
 			self._lyrics_window.set_property("song", None)
-		self._cover.set_paintable(self._client.current_cover.get_paintable())
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
 		self._playback_controls.set_visible(length > 0)
@@ -2740,24 +2734,23 @@ class PlayerBar(Gtk.Overlay):
 		self.add_overlay(progress_bar)
 		self.set_child(box)
 
-	def _clear_title(self):
+	def _clear(self):
 		self._title.set_text("")
 		self._subtitle.set_text("")
+		self._cover.set_paintable(FALLBACK_COVER)
+		self._cover.set_visible(False)
 
 	def _on_song_changed(self, emitter, song, songpos, songid, state):
 		if song:
+			self._cover.set_paintable(song["cover"])
 			self._cover.set_visible(True)
 			self._title.set_text(song["title"][0])
 			self._subtitle.set_text(str(song["artist"]))
 		else:
-			self._cover.set_visible(False)
-			self._clear_title()
-		self._cover.set_paintable(self._client.current_cover.get_paintable())
+			self._clear()
 
 	def _on_disconnected(self, *args):
-		self._clear_title()
-		self._cover.set_paintable(FALLBACK_COVER)
-		self._cover.set_visible(False)
+		self._clear()
 
 ###############
 # main window #
