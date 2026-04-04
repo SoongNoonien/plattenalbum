@@ -549,6 +549,17 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 		else:
 			return None
 
+class Album(GObject.Object):
+	def __init__(self, artist, name, date):
+		GObject.Object.__init__(self)
+		self.artist=artist
+		self.name=name
+		self.date=date
+		self.cover=None
+
+	def tag_filter(self):
+		return ("albumartist", self.artist, "album", self.name, "date", self.date)
+
 class EventEmitter(GObject.Object):
 	__gsignals__={
 		"updating-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
@@ -569,7 +580,7 @@ class EventEmitter(GObject.Object):
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"a-b-loop": (GObject.SignalFlags.RUN_FIRST, None, (float,float)),
-		"show-album": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str)),
+		"show-album": (GObject.SignalFlags.RUN_FIRST, None, (Album,)),
 	}
 
 class Client(MPDClient):
@@ -685,6 +696,10 @@ class Client(MPDClient):
 		except:
 			return False
 
+	def enqueue(self):
+		song=self.currentsong()
+		self.album_to_playlist(Album(song["albumartist"][0], song["album"][0], song["date"][0]), "enqueue")
+
 	def tidy_playlist(self):
 		status=self.status()
 		if (songid:=status.get("songid")) is None:
@@ -733,8 +748,8 @@ class Client(MPDClient):
 		else:
 			raise ValueError(f"Unknown mode: {mode}")
 
-	def album_to_playlist(self, albumartist, album, date, mode):
-		self.filter_to_playlist(("albumartist", albumartist, "album", album, "date", date), mode)
+	def album_to_playlist(self, album, mode):
+		self.filter_to_playlist(album.tag_filter(), mode)
 
 	def search_songs(self, keywords, num):
 		tags=("title", "artist", "album", "date")
@@ -746,12 +761,32 @@ class Client(MPDClient):
 	def search_albums(self, keywords, num):
 		tags=("album", "albumartist", "albumartistsort", "date")
 		albums=self.list("album", self._get_search_expression(tags, keywords), "group", "date", "group", "albumartist")
-		return itertools.islice(albums, num)
+		for album in itertools.islice(albums, num):
+			yield Album(album["albumartist"], album["album"], album["date"])
 
 	def search_artists(self, keywords, num):
 		tags=("albumartist", "albumartistsort")
 		artists=self.list("albumartist", self._get_search_expression(tags, keywords))
 		return itertools.islice(artists, num)
+
+	def get_albums(self, artist):
+		for album in self.list("album", "albumartist", artist, "group", "date"):
+			yield Album(artist, album["album"], album["date"])
+
+	def songs_of_album(self, album):
+		self.tagtypes("reset", "track", "title", "artist")
+		songs=self.find(*album.tag_filter())
+		self.tagtypes("all")
+		return songs
+
+	def cover_of_album(self, album):
+		self.tagtypes("clear")
+		song=self.find(*album.tag_filter(), "window", "0:1")[0]
+		self.tagtypes("all")
+		return self.get_cover(song["file"])
+
+	def length_of_album(self, album):
+		return Duration(self.count(*album.tag_filter())["playtime"])
 
 	def get_cover(self, uri):
 		return self._get_cover_with_path(uri)[0]
@@ -790,7 +825,7 @@ class Client(MPDClient):
 		self.tagtypes("reset", "album", "albumartist", "artist", "date")
 		song=self.lsinfo(uri)[0]
 		self.tagtypes("all")
-		self.emitter.emit("show-album", song["album"][0], song["albumartist"][0], song["date"][0])
+		self.emitter.emit("show-album", Album(song["albumartist"][0], song["album"][0], song["date"][0]))
 
 	def toggle_play(self):
 		status=self.status()
@@ -1081,23 +1116,6 @@ class HeadingBox(Gtk.Box):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
 		self.append(Gtk.Label(label=heading, xalign=0, css_classes=["heading"]))
 		self.append(widget)
-
-class AlbumRow(Adw.ActionRow):
-	def __init__(self, album):
-		super().__init__(use_markup=False, activatable=True, css_classes=["property"])
-		self.album=album["album"]
-		self.artist=album["albumartist"]
-		self.date=album["date"]
-
-		# fill
-		self.set_title(self.artist)
-		self.set_subtitle(self.album)
-		date=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
-		date.set_text(self.date)
-
-		# packing
-		self.add_suffix(date)
-		self.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
 
 class SongListRow(Gtk.Box):
 	position=GObject.Property(type=int, default=-1)
@@ -1424,9 +1442,24 @@ class AlbumCover(Gtk.Widget):
 # browser #
 ###########
 
+class AlbumActionRow(Adw.ActionRow):
+	def __init__(self, album):
+		super().__init__(use_markup=False, activatable=True, css_classes=["property"])
+		self.album=album
+
+		# fill
+		self.set_title(album.artist)
+		self.set_subtitle(album.name)
+		date=Gtk.Label(xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"])
+		date.set_text(album.date)
+
+		# packing
+		self.add_suffix(date)
+		self.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
+
 class SearchView(Gtk.Stack):
 	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-			"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
+			"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (Album,))}
 	def __init__(self, client):
 		super().__init__()
 		self._client=client
@@ -1485,7 +1518,7 @@ class SearchView(Gtk.Stack):
 				self._song_list.append(row)
 			self._song_box.set_visible(self._song_list.get_first_child() is not None)
 			for album in self._client.search_albums(keywords, self._results):
-				album_row=AlbumRow(album)
+				album_row=AlbumActionRow(album)
 				self._album_list.append(album_row)
 			self._album_box.set_visible(self._album_list.get_first_child() is not None)
 			for artist in self._client.search_artists(keywords, self._results):
@@ -1500,7 +1533,7 @@ class SearchView(Gtk.Stack):
 		self.emit("artist-selected", row.get_title())
 
 	def _on_album_activate(self, list_box, row):
-		self.emit("album-selected", row.album, row.artist, row.date)
+		self.emit("album-selected", row.album)
 
 	def _on_keynav_failed(self, list_box, direction):
 		if (root:=list_box.get_root()) is not None:
@@ -1622,14 +1655,6 @@ class ArtistList(Gtk.ListView):
 				self._refresh()
 				self.select(artist)
 
-class Album(GObject.Object):
-	def __init__(self, artist, name, date):
-		GObject.Object.__init__(self)
-		self.artist=artist
-		self.name=name
-		self.date=date
-		self.cover=None
-
 class AlbumListRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
@@ -1650,14 +1675,11 @@ class AlbumListRow(Gtk.Box):
 			self._cover.set_alternative_text(_("Album cover of an unknown album"))
 		self._date.set_text(album.date)
 		if album.cover is None:
-			self._client.tagtypes("clear")
-			song=self._client.find("albumartist", album.artist, "album", album.name, "date", album.date, "window", "0:1")[0]
-			self._client.tagtypes("all")
-			album.cover=self._client.get_cover(song["file"])
+			album.cover=self._client.cover_of_album(album)
 		self._cover.set_paintable(album.cover)
 
 class AlbumsPage(Adw.NavigationPage):
-	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (str,str,str,))}
+	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (Album,))}
 	def __init__(self, client, settings):
 		super().__init__(title=_("Albums"), tag="album_list")
 		self._settings=settings
@@ -1714,11 +1736,6 @@ class AlbumsPage(Adw.NavigationPage):
 		self.set_title(_("Albums"))
 		self._stack.set_visible_child_name("status-page")
 
-	def _get_albums(self, artist):
-		albums=self._client.list("album", "albumartist", artist, "group", "date")
-		for album in albums:
-			yield Album(artist, album["album"], album["date"])
-
 	def display(self, artist):
 		self._settings.set_property("cursor-watch", True)
 		self._selection_model.clear()
@@ -1729,12 +1746,11 @@ class AlbumsPage(Adw.NavigationPage):
 		while main.pending():
 			main.iteration()
 		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist)])
-		self._selection_model.append(sorted(self._get_albums(artist), key=lambda item: item.date))
+		self._selection_model.append(sorted(self._client.get_albums(artist), key=lambda item: item.date))
 		self._settings.set_property("cursor-watch", False)
 
 	def _on_activate(self, widget, pos):
-		album=self._selection_model.get_item(pos)
-		self.emit("album-selected", album.artist, album.name, album.date)
+		self.emit("album-selected", self._selection_model.get_item(pos))
 
 	def _on_disconnected(self, *args):
 		self._stack.set_visible_child_name("albums")
@@ -1743,9 +1759,8 @@ class AlbumsPage(Adw.NavigationPage):
 		self._stack.set_visible_child_name("albums")
 
 class AlbumPage(Adw.NavigationPage):
-	def __init__(self, client, albumartist, album, date):
+	def __init__(self, client, album):
 		super().__init__()
-		tag_filter=("albumartist", albumartist, "album", album, "date", date)
 
 		# songs list
 		song_list=BrowserSongList(client)
@@ -1753,9 +1768,9 @@ class AlbumPage(Adw.NavigationPage):
 
 		# buttons
 		self.play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"))
-		self.play_button.connect("clicked", lambda *args: client.filter_to_playlist(tag_filter, "play"))
+		self.play_button.connect("clicked", lambda *args: client.album_to_playlist(album, "play"))
 		append_button=Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Append"))
-		append_button.connect("clicked", lambda *args: client.filter_to_playlist(tag_filter, "append"))
+		append_button.connect("clicked", lambda *args: client.album_to_playlist(album, "append"))
 
 		# header bar
 		header_bar=Adw.HeaderBar(show_title=False)
@@ -1765,7 +1780,7 @@ class AlbumPage(Adw.NavigationPage):
 		# labels
 		suptitle=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
 		title=Gtk.Label(wrap=True, justify=Gtk.Justification.CENTER, css_classes=["title-4"])
-		subtitle=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, visible=bool(date))
+		subtitle=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, visible=bool(album.date))
 		length=Gtk.Label(single_line_mode=True, css_classes=["numeric", "dimmed", "caption"])
 
 		# label box
@@ -1790,21 +1805,18 @@ class AlbumPage(Adw.NavigationPage):
 		self.set_child(toolbar_view)
 
 		# populate
-		if album:
-			self.set_title(album)
-			title.set_text(album)
+		if album.name:
+			self.set_title(album.name)
+			title.set_text(album.name)
 		else:
 			self.set_title(_("Unknown Album"))
 			title.set_text(_("Unknown Album"))
-		suptitle.set_text(albumartist)
-		subtitle.set_text(date)
-		length.set_text(str(Duration(client.count(*tag_filter)["playtime"])))
-		client.tagtypes("reset", "track", "title", "artist")
-		songs=client.find(*tag_filter)
-		client.tagtypes("all")
-		album_cover.set_paintable(client.get_cover(songs[0]["file"]))
-		for song in songs:
-			row=BrowserSongRow(song, hide_artist=albumartist)
+		suptitle.set_text(album.artist)
+		subtitle.set_text(album.date)
+		length.set_text(str(client.length_of_album(album)))
+		album_cover.set_paintable(client.cover_of_album(album))
+		for song in client.songs_of_album(album):
+			row=BrowserSongRow(song, hide_artist=album.artist)
 			song_list.append(row)
 
 class MainMenuButton(Gtk.MenuButton):
@@ -1886,14 +1898,14 @@ class Browser(Gtk.Stack):
 		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
 		self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
-		self._search_view.connect("album-selected", lambda widget, *args: self._show_album(*args))
+		self._search_view.connect("album-selected", lambda widget, album: self._show_album(album))
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
 		client.emitter.connect("disconnected", self._on_disconnected)
 		client.emitter.connect("connection-error", self._on_connection_error)
 		client.emitter.connect("connected", self._on_connected_or_updated_db)
 		client.emitter.connect("updated-db", self._on_connected_or_updated_db)
-		client.emitter.connect("show-album", lambda widget, *args: self._show_album(*args))
+		client.emitter.connect("show-album", lambda widget, album: self._show_album(album))
 
 		# packing
 		self.add_named(self._navigation_view, "browser")
@@ -1923,8 +1935,8 @@ class Browser(Gtk.Stack):
 		self._navigation_split_view.set_show_content(True)
 		self._album_navigation_view.pop_to_tag("album_list")
 
-	def _on_album_selected(self, widget, *tags):
-		album_page=AlbumPage(self._client, *tags)
+	def _on_album_selected(self, widget, album):
+		album_page=AlbumPage(self._client, album)
 		self._album_navigation_view.push(album_page)
 		album_page.play_button.grab_focus()
 
@@ -1933,9 +1945,9 @@ class Browser(Gtk.Stack):
 		self.search_entry.emit("stop-search")
 		self._albums_page.grid_view.grab_focus()
 
-	def _show_album(self, album, artist, date):
-		self._artist_list.select(artist)
-		album_page=AlbumPage(self._client, artist, album, date)
+	def _show_album(self, album):
+		self._artist_list.select(album.artist)
+		album_page=AlbumPage(self._client, album)
 		self._album_navigation_view.replace([self._albums_page, album_page])
 		self.search_entry.emit("stop-search")
 		album_page.play_button.grab_focus()
@@ -3103,8 +3115,7 @@ class Plattenalbum(Adw.Application):
 		self._client.tidy_playlist()
 
 	def _on_enqueue(self, action, param):
-		song=self._client.currentsong()
-		self._client.album_to_playlist(song["albumartist"][0], song["album"][0], song["date"][0], "enqueue")
+		self._client.enqueue()
 
 	def _on_clear(self, action, param):
 		self._client.clear()
