@@ -783,6 +783,12 @@ class Client(MPDClient):
 		for artist in itertools.islice(artists, num):
 			yield Artist(artist["albumartist"], artist["albumartistsort"])
 
+	def get_songs(self, album):
+		self.tagtypes("reset", "track", "title", "artist")
+		songs=self.find(*album.tag_filter())
+		self.tagtypes("all")
+		return songs
+
 	def get_albums(self, artist):
 		for album in self.list("album", *artist.tag_filter(), "group", "date"):
 			yield Album(artist, album["album"], album["date"])
@@ -791,23 +797,14 @@ class Client(MPDClient):
 		for artist in self.list("albumartist", "group", "albumartistsort"):
 			yield Artist(artist["albumartist"], artist["albumartistsort"])
 
-	def songs_of_album(self, album):
-		self.tagtypes("reset", "track", "title", "artist")
-		songs=self.find(*album.tag_filter())
-		self.tagtypes("all")
-		return songs
-
-	def cover_of_album(self, album):
+	def get_cover(self, album):
 		self.tagtypes("clear")
 		song=self.find(*album.tag_filter(), "window", "0:1")[0]
 		self.tagtypes("all")
-		return self.get_cover(song["file"])
+		return self._get_cover(song["file"])
 
-	def length_of_album(self, album):
+	def get_duration(self, album):
 		return Duration(self.count(*album.tag_filter())["playtime"])
-
-	def get_cover(self, uri):
-		return self._get_cover_with_path(uri)[0]
 
 	def get_absolute_path(self, uri):
 		stripped_uri=re.sub(r"(.*\.cue)\/track\d+$", r"\1", uri, flags=re.IGNORECASE)
@@ -918,6 +915,9 @@ class Client(MPDClient):
 			return Gdk.Texture.new_from_filename(cover_path), cover_path
 		except gi.repository.GLib.Error:  # cover can't be loaded
 			return self._get_binary_cover(uri), None
+
+	def _get_cover(self, uri):
+		return self._get_cover_with_path(uri)[0]
 
 	def _clear_marks(self):
 		if self._first_mark is not None:
@@ -1659,7 +1659,7 @@ class AlbumListRow(Gtk.Box):
 			self._cover.set_alternative_text(_("Album cover of an unknown album"))
 		self._date.set_text(album.date)
 		if album.cover is None:
-			album.cover=self._client.cover_of_album(album)
+			album.cover=self._client.get_cover(album)
 		self._cover.set_paintable(album.cover)
 
 class AlbumsPage(Adw.NavigationPage):
@@ -1775,11 +1775,11 @@ class AlbumPage(Adw.NavigationPage):
 		label_box.append(length)
 
 		# cover
-		album_cover=AlbumCover()
+		cover=AlbumCover()
 
 		# packing
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_start=12, margin_end=12, margin_top=6, margin_bottom=24)
-		box.append(Adw.Clamp(child=album_cover, maximum_size=200))
+		box.append(Adw.Clamp(child=cover, maximum_size=200))
 		box.append(label_box)
 		box.append(Adw.Clamp(child=song_list))
 		self._scroll=Gtk.ScrolledWindow(child=box)
@@ -1797,9 +1797,9 @@ class AlbumPage(Adw.NavigationPage):
 			title.set_text(_("Unknown Album"))
 		suptitle.set_text(album.artist.name)
 		subtitle.set_text(album.date)
-		length.set_text(str(client.length_of_album(album)))
-		album_cover.set_paintable(client.cover_of_album(album))
-		for song in client.songs_of_album(album):
+		length.set_text(str(client.get_duration(album)))
+		cover.set_paintable(client.get_cover(album))
+		for song in client.get_songs(album):
 			row=BrowserSongRow(song, hide_artist=album.artist)
 			song_list.append(row)
 
