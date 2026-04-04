@@ -558,12 +558,19 @@ class Album(GObject.Object):
 		self.cover=None
 
 	def tag_filter(self):
-		return ("albumartist", self.artist, "album", self.name, "date", self.date)
+		return (*self.artist.tag_filter(), "album", self.name, "date", self.date)
 
 class Artist(GObject.Object):
-	def __init__(self, name):
+	def __init__(self, name, sortname):
 		GObject.Object.__init__(self)
 		self.name=name
+		self.sortname=sortname
+
+	def __eq__(self, other):
+		return (self.name == other.name) and (self.sortname == other.sortname)
+
+	def tag_filter(self):
+		return ("albumartist", self.name, "albumartistsort", self.sortname)
 
 class EventEmitter(GObject.Object):
 	__gsignals__={
@@ -765,19 +772,24 @@ class Client(MPDClient):
 
 	def search_albums(self, keywords, num):
 		tags=("album", "albumartist", "albumartistsort", "date")
-		albums=self.list("album", self._get_search_expression(tags, keywords), "group", "date", "group", "albumartist")
+		group=("group", "date", "group", "albumartist", "group", "albumartistsort")
+		albums=self.list("album", self._get_search_expression(tags, keywords), *group)
 		for album in itertools.islice(albums, num):
-			yield Album(album["albumartist"], album["album"], album["date"])
+			yield Album(Artist(album["albumartist"], album["albumartistsort"]), album["album"], album["date"])
 
 	def search_artists(self, keywords, num):
 		tags=("albumartist", "albumartistsort")
-		artists=self.list("albumartist", self._get_search_expression(tags, keywords))
+		artists=self.list("albumartist", self._get_search_expression(tags, keywords), "group", "albumartistsort")
 		for artist in itertools.islice(artists, num):
-			yield Artist(artist["albumartist"])
+			yield Artist(artist["albumartist"], artist["albumartistsort"])
 
 	def get_albums(self, artist):
-		for album in self.list("album", "albumartist", artist, "group", "date"):
+		for album in self.list("album", *artist.tag_filter(), "group", "date"):
 			yield Album(artist, album["album"], album["date"])
+
+	def get_artists(self):
+		for artist in self.list("albumartist", "group", "albumartistsort"):
+			yield Artist(artist["albumartist"], artist["albumartistsort"])
 
 	def songs_of_album(self, album):
 		self.tagtypes("reset", "track", "title", "artist")
@@ -1452,7 +1464,7 @@ class AlbumActionRow(Adw.ActionRow):
 	def __init__(self, album):
 		super().__init__(use_markup=False, activatable=True, css_classes=["property"])
 		self.album=album
-		self.set_title(album.artist)
+		self.set_title(album.artist.name)
 		self.set_subtitle(album.name)
 		self.add_suffix(Gtk.Label(label=album.date, use_markup=False, xalign=1, single_line_mode=True, css_classes=["numeric", "dimmed"]))
 		self.add_suffix(Gtk.Image(icon_name="go-next-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
@@ -1545,29 +1557,6 @@ class SearchView(Gtk.Stack):
 			elif direction == Gtk.DirectionType.DOWN:
 				root.child_focus(Gtk.DirectionType.TAB_FORWARD)
 
-class ArtistSelectionModel(SelectionModel):
-	def __init__(self):
-		super().__init__(Artist)
-
-	def set_artists(self, artists):
-		self.clear()
-		self.append((Artist(item[0]) for item in sorted(artists, key=lambda item: locale.strxfrm(item[1]))))
-
-	def select_artist(self, name):
-		for i, artist in enumerate(self.data):
-			if artist.name == name:
-				self.select(i)
-				return
-
-	def get_artist(self, position):
-		return self.get_item(position).name
-
-	def get_selected_artist(self):
-		if (selected:=self.get_selected()) is None:
-			return None
-		else:
-			return self.get_artist(selected)
-
 class ArtistList(Gtk.ListView):
 	def __init__(self, client):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["navigation-sidebar"])
@@ -1601,8 +1590,8 @@ class ArtistList(Gtk.ListView):
 		self.set_header_factory(header_factory)
 
 		# model
-		self.artist_selection_model=ArtistSelectionModel()
-		self.set_model(self.artist_selection_model)
+		self.selection_model=SelectionModel(Artist)
+		self.set_model(self.selection_model)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -1610,46 +1599,43 @@ class ArtistList(Gtk.ListView):
 		self._client.emitter.connect("connected", self._on_connected)
 		self._client.emitter.connect("updated-db", self._on_updated_db)
 
-	def select(self, name):
-		self.artist_selection_model.select_artist(name)
-		if (selected:=self.artist_selection_model.get_selected()) is None:
-			self.artist_selection_model.select(0)
+	def select(self, artist):
+		for i, item in enumerate(self.selection_model):
+			if item == artist:
+				self.selection_model.select(i)
+				break
+		if (selected:=self.selection_model.get_selected()) is None:
+			self.selection_model.select(0)
 			self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
 		else:
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _refresh(self):
-		artists=self._client.list("albumartistsort", "group", "albumartist")
-		filtered_artists=[]
-		for name, artist in itertools.groupby(((artist["albumartist"], artist["albumartistsort"]) for artist in artists), key=lambda x: x[0]):
-			filtered_artists.append(next(artist))
-			# ignore multiple albumartistsort values
-			if next(artist, None) is not None:
-				filtered_artists[-1]=(name, name)
-		self.artist_selection_model.set_artists(filtered_artists)
+		self.selection_model.clear()
+		self.selection_model.append(sorted(self._client.get_artists(), key=lambda item: locale.strxfrm(item.sortname)))
 
 	def _on_activate(self, widget, pos):
-		self.artist_selection_model.select(pos)
+		self.selection_model.select(pos)
 
 	def _on_disconnected(self, *args):
-		self.artist_selection_model.clear()
+		self.selection_model.clear()
 
 	def _on_connected(self, emitter, database_is_empty):
 		if not database_is_empty:
 			self._refresh()
 			if (song:=self._client.currentsong()):
-				artist=song["albumartist"][0]
-				self.select(artist)
+				self.select(Artist(song["albumartist"][0], song["albumartistsort"][0]))
 
 	def _on_updated_db(self, emitter, database_is_empty):
 		if database_is_empty:
-			self.artist_selection_model.clear()
+			self.selection_model.clear()
 		else:
-			if (artist:=self.artist_selection_model.get_selected_artist()) is None:
+			if (selected:=self.selection_model.get_selected()) is None:
 				self._refresh()
-				self.artist_selection_model.select(0)
+				self.selection_model.select(0)
 				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
 			else:
+				artist=self.selection_model.get_item(selected)
 				self._refresh()
 				self.select(artist)
 
@@ -1737,13 +1723,13 @@ class AlbumsPage(Adw.NavigationPage):
 	def display(self, artist):
 		self._settings.set_property("cursor-watch", True)
 		self._selection_model.clear()
-		self.set_title(artist)
+		self.set_title(artist.name)
 		self._stack.set_visible_child_name("albums")
 		# ensure list is empty
 		main=GLib.main_context_default()
 		while main.pending():
 			main.iteration()
-		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist)])
+		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist.name)])
 		self._selection_model.append(sorted(self._client.get_albums(artist), key=lambda item: item.date))
 		self._settings.set_property("cursor-watch", False)
 
@@ -1809,7 +1795,7 @@ class AlbumPage(Adw.NavigationPage):
 		else:
 			self.set_title(_("Unknown Album"))
 			title.set_text(_("Unknown Album"))
-		suptitle.set_text(album.artist)
+		suptitle.set_text(album.artist.name)
 		subtitle.set_text(album.date)
 		length.set_text(str(client.length_of_album(album)))
 		album_cover.set_paintable(client.cover_of_album(album))
@@ -1892,9 +1878,9 @@ class Browser(Gtk.Stack):
 
 		# connect
 		self._albums_page.connect("album-selected", self._on_album_selected)
-		self._artist_list.artist_selection_model.connect("selected", self._on_artist_selected)
-		self._artist_list.artist_selection_model.connect("reselected", self._on_artist_reselected)
-		self._artist_list.artist_selection_model.connect("clear", self._albums_page.clear)
+		self._artist_list.selection_model.connect("selected", self._on_artist_selected)
+		self._artist_list.selection_model.connect("reselected", self._on_artist_reselected)
+		self._artist_list.selection_model.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
 		self._search_view.connect("album-selected", lambda widget, album: self._show_album(album))
 		self.search_entry.connect("search-changed", self._on_search_changed)
@@ -1927,7 +1913,7 @@ class Browser(Gtk.Stack):
 	def _on_artist_selected(self, model, position):
 		self._navigation_split_view.set_show_content(True)
 		self._album_navigation_view.replace_with_tags(["album_list"])
-		self._albums_page.display(model.get_artist(position))
+		self._albums_page.display(model.get_item(position))
 
 	def _on_artist_reselected(self, model):
 		self._navigation_split_view.set_show_content(True)
@@ -1939,7 +1925,7 @@ class Browser(Gtk.Stack):
 		album_page.play_button.grab_focus()
 
 	def _on_search_artist_selected(self, widget, artist):
-		self._artist_list.select(artist.name)
+		self._artist_list.select(artist)
 		self.search_entry.emit("stop-search")
 		self._albums_page.grid_view.grab_focus()
 
