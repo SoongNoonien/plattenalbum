@@ -849,11 +849,8 @@ class Client(MPDClient):
 		self.emitter.emit("show-album", song.get_album())
 
 	def toggle_play(self):
-		status=self.status()
-		if status["state"] == "play":
-			self.pause(1)
-		elif status["state"] == "pause":
-			self.pause(0)
+		if self.status()["state"] != "stop":
+			self.pause()
 		else:
 			try:
 				self.play()
