@@ -549,6 +549,12 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 		else:
 			return None
 
+	def get_album_artist(self):
+		return Artist(self["albumartist"][0], self["albumartistsort"][0])
+
+	def get_album(self):
+		return Album(self.get_album_artist(), self["album"][0], self["date"][0])
+
 class Album(GObject.Object):
 	def __init__(self, artist, name, date):
 		GObject.Object.__init__(self)
@@ -701,7 +707,7 @@ class Client(MPDClient):
 
 	def enqueue(self):
 		song=self.currentsong()
-		self.album_to_playlist(Album(song["albumartist"][0], song["album"][0], song["date"][0]), "enqueue")
+		self.album_to_playlist(song.get_album(), "enqueue")
 
 	def tidy_playlist(self):
 		status=self.status()
@@ -837,10 +843,10 @@ class Client(MPDClient):
 		return bool(songs)
 
 	def show_album(self, uri):
-		self.tagtypes("reset", "album", "albumartist", "artist", "date")
+		self.tagtypes("reset", "album", "albumartist", "albumartistsort", "artist", "date")
 		song=Song(self.lsinfo(uri)[0])
 		self.tagtypes("all")
-		self.emitter.emit("show-album", Album(song["albumartist"][0], song["album"][0], song["date"][0]))
+		self.emitter.emit("show-album", song.get_album())
 
 	def toggle_play(self):
 		status=self.status()
@@ -1624,7 +1630,7 @@ class ArtistList(Gtk.ListView):
 		if not database_is_empty:
 			self._refresh()
 			if (song:=self._client.currentsong()):
-				self.select(Artist(song["albumartist"][0], song["albumartistsort"][0]))
+				self.select(song.get_album_artist())
 
 	def _on_updated_db(self, emitter, database_is_empty):
 		if database_is_empty:
