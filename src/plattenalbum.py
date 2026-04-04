@@ -613,16 +613,7 @@ class Client(MPDClient):
 	# overloads to use Song class
 	def currentsong(self, *args):
 		return Song(super().currentsong(*args))
-	def search(self, *args):
-		return [Song(song) for song in super().search(*args)]
-	def find(self, *args):
-		return [Song(song) for song in super().find(*args)]
-	def playlistinfo(self):
-		return [Song(song) for song in super().playlistinfo()]
-	def plchanges(self, version):
-		return [Song(song) for song in super().plchanges(version)]
-	def lsinfo(self, uri):
-		return [Song(song) for song in super().lsinfo(uri)]
+
 	def update(self):
 		# This is a rather ugly workaround for database updates that are quicker
 		# than around a tenth of a second and therefore can't be detected by _main_loop.
@@ -768,7 +759,7 @@ class Client(MPDClient):
 		self.tagtypes("reset", *tags)
 		songs=self.search(self._get_search_expression(tags, keywords), "window", f"0:{num}")
 		self.tagtypes("all")
-		return songs
+		return (Song(song) for song in songs)
 
 	def search_albums(self, keywords, num):
 		tags=("album", "albumartist", "albumartistsort", "date")
@@ -787,7 +778,7 @@ class Client(MPDClient):
 		self.tagtypes("reset", "track", "title", "artist")
 		songs=self.find(*album.tag_filter())
 		self.tagtypes("all")
-		return songs
+		return (Song(song) for song in songs)
 
 	def get_albums(self, artist):
 		for album in self.list("album", *artist.tag_filter(), "group", "date"):
@@ -805,6 +796,15 @@ class Client(MPDClient):
 
 	def get_duration(self, album):
 		return Duration(self.count(*album.tag_filter())["playtime"])
+
+	def get_playlist_changes(self, version):
+		self.tagtypes("reset", "track", "title", "artist")
+		if version is not None:
+			songs=self.plchanges(version)
+		else:
+			songs=self.playlistinfo()
+		self.tagtypes("all")
+		return (Song(song) for song in songs)
 
 	def get_absolute_path(self, uri):
 		stripped_uri=re.sub(r"(.*\.cue)\/track\d+$", r"\1", uri, flags=re.IGNORECASE)
@@ -838,7 +838,7 @@ class Client(MPDClient):
 
 	def show_album(self, uri):
 		self.tagtypes("reset", "album", "albumartist", "artist", "date")
-		song=self.lsinfo(uri)[0]
+		song=Song(self.lsinfo(uri)[0])
 		self.tagtypes("all")
 		self.emitter.emit("show-album", Album(song["albumartist"][0], song["album"][0], song["date"][0]))
 
@@ -2110,13 +2110,7 @@ class PlaylistView(SongList):
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
 		self._menu.popdown()
-		self._client.tagtypes("reset", "track", "title", "artist")
-		if self._playlist_version is not None:
-			songs=self._client.plchanges(self._playlist_version)
-		else:
-			songs=self._client.playlistinfo()
-		self._client.tagtypes("all")
-		for song in songs:
+		for song in self._client.get_playlist_changes(self._playlist_version):
 			self.get_model().set(int(song["pos"]), song)
 		self.get_model().clear(length)
 		self._refresh_selection(songpos)
