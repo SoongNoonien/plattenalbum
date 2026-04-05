@@ -399,7 +399,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			if "://" in (song_file:=song["file"]):  # remote file
 				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
 			else:
-				if (song_path:=self._client.get_absolute_path(song_file)) is not None:
+				if (song_path:=self._client.get_absolute_path(song)) is not None:
 					self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
 					if (cover_path:=song["cover_path"]) is not None:
 						self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
@@ -718,7 +718,11 @@ class Client(MPDClient):
 			if int(status["playlistlength"]) > 1:
 				self.delete((1,))
 
-	def file_to_playlist(self, file, mode):  # modes: play, append, as-next
+	def insert_song_to_playlist(self, song, position):
+		self.add(song["file"], position)
+
+	def song_to_playlist(self, song, mode):  # modes: play, append, as-next
+		file=song["file"]
 		if mode == "append":
 			self.add(file)
 		elif mode == "play":
@@ -762,7 +766,7 @@ class Client(MPDClient):
 
 	def search_songs(self, keywords, num):
 		tags=("title", "artist", "album", "date")
-		self.tagtypes("reset", *tags)
+		self.tagtypes("reset", "track", "title", "artist", "album", "albumartist", "albumartistsort", "date")
 		songs=self.search(self._get_search_expression(tags, keywords), "window", f"0:{num}")
 		self.tagtypes("all")
 		return (Song(song) for song in songs)
@@ -781,7 +785,7 @@ class Client(MPDClient):
 			yield Artist(artist["albumartist"], artist["albumartistsort"])
 
 	def get_songs(self, album):
-		self.tagtypes("reset", "track", "title", "artist")
+		self.tagtypes("reset", "track", "title", "artist", "album", "albumartist", "albumartistsort", "date")
 		songs=self.find(*album.tag_filter())
 		self.tagtypes("all")
 		return (Song(song) for song in songs)
@@ -804,7 +808,7 @@ class Client(MPDClient):
 		return Duration(self.count(*album.tag_filter())["playtime"])
 
 	def get_playlist_changes(self, version):
-		self.tagtypes("reset", "track", "title", "artist")
+		self.tagtypes("reset", "track", "title", "artist", "album", "albumartist", "albumartistsort", "date")
 		if version is not None:
 			songs=self.plchanges(version)
 		else:
@@ -812,8 +816,8 @@ class Client(MPDClient):
 		self.tagtypes("all")
 		return (Song(song) for song in songs)
 
-	def get_absolute_path(self, uri):
-		stripped_uri=re.sub(r"(.*\.cue)\/track\d+$", r"\1", uri, flags=re.IGNORECASE)
+	def get_absolute_path(self, song):
+		stripped_uri=re.sub(r"(.*\.cue)\/track\d+$", r"\1", song["file"], flags=re.IGNORECASE)
 		if GLib.file_test(stripped_uri, GLib.FileTest.IS_REGULAR):
 			return stripped_uri
 		elif self._music_directory is not None:
@@ -822,30 +826,27 @@ class Client(MPDClient):
 				return absolute_path
 		return None
 
-	def can_show_file(self, uri):
+	def can_show_file(self, song):
 		has_owner,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
 			GLib.Variant("(s)",("org.freedesktop.portal.Desktop",)), GLib.VariantType("(b)"), Gio.DBusCallFlags.NONE, -1, None)
 		activatable,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "ListActivatableNames",
 			None, GLib.VariantType("(as)"), Gio.DBusCallFlags.NONE, -1, None)
-		return (has_owner or "org.freedesktop.portal.Desktop" in activatable) and self.get_absolute_path(uri) is not None
+		return (has_owner or "org.freedesktop.portal.Desktop" in activatable) and self.get_absolute_path(song) is not None
 
-	def show_file(self, uri):
-		with open(self.get_absolute_path(uri)) as f:
+	def show_file(self, song):
+		with open(self.get_absolute_path(song)) as f:
 			fd_list=Gio.UnixFDList()
 			self._bus.call_with_unix_fd_list_sync("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
 				"org.freedesktop.portal.OpenURI", "OpenDirectory", GLib.Variant("(sha{sv})", ("", fd_list.append(f.fileno()), {})),
 				None, Gio.DBusCallFlags.NONE, -1, fd_list)
 
-	def can_show_album(self, uri):
+	def can_show_album(self, song):
 		self.tagtypes("clear")
-		songs=self.find("file", uri)
+		songs=self.find("file", song["file"])
 		self.tagtypes("all")
 		return bool(songs)
 
-	def show_album(self, uri):
-		self.tagtypes("reset", "album", "albumartist", "albumartistsort", "artist", "date")
-		song=Song(self.lsinfo(uri)[0])
-		self.tagtypes("all")
+	def show_album(self, song):
 		self.emitter.emit("show-album", song.get_album())
 
 	def toggle_play(self):
@@ -1254,22 +1255,22 @@ class SongMenu(Gtk.PopoverMenu):
 		super().__init__(has_arrow=False, halign=Gtk.Align.START)
 		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
 		self._client=client
-		self._file=None
+		self._song=None
 
 		# action group
 		action_group=Gio.SimpleActionGroup()
 		action=Gio.SimpleAction.new("append", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "append"))
+		action.connect("activate", lambda *args: self._client.song_to_playlist(self._song, "append"))
 		action_group.add_action(action)
 		action=Gio.SimpleAction.new("as-next", None)
-		action.connect("activate", lambda *args: self._client.file_to_playlist(self._file, "as-next"))
+		action.connect("activate", lambda *args: self._client.song_to_playlist(self._song, "as-next"))
 		action_group.add_action(action)
 		if show_album:
 			action=Gio.SimpleAction.new("show-album", None)
-			action.connect("activate", lambda *args: self._client.show_album(self._file))
+			action.connect("activate", lambda *args: self._client.show_album(self._song))
 			action_group.add_action(action)
 		self._show_file_action=Gio.SimpleAction.new("show-file", None)
-		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._file))
+		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._song))
 		action_group.add_action(self._show_file_action)
 		self.insert_action_group("menu", action_group)
 
@@ -1284,12 +1285,12 @@ class SongMenu(Gtk.PopoverMenu):
 		menu.append_section(None, subsection)
 		self.set_menu_model(menu)
 
-	def open(self, file, x, y):
-		self._file=file
+	def open(self, song, x, y):
+		self._song=song
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self.set_pointing_to(rect)
-		self._show_file_action.set_enabled(self._client.can_show_file(file))
+		self._show_file_action.set_enabled(self._client.can_show_file(self._song))
 		self.popup()
 
 class SongList(Gtk.ListView):
@@ -1401,10 +1402,10 @@ class BrowserSongList(Gtk.ListBox):
 		point.x,point.y=x,y
 		computed_point,point=self.compute_point(row, point)
 		if computed_point:
-			self._menu.open(row.song["file"], point.x, point.y)
+			self._menu.open(row.song, point.x, point.y)
 
 	def _on_row_activated(self, list_box, row):
-		self._client.file_to_playlist(row.song["file"], "play")
+		self._client.song_to_playlist(row.song, "play")
 
 	def _on_keynav_failed(self, list_box, direction):
 		if (root:=list_box.get_root()) is not None and direction == Gtk.DirectionType.UP:
@@ -1413,7 +1414,7 @@ class BrowserSongList(Gtk.ListBox):
 	def _on_button_pressed(self, controller, n_press, x, y):
 		if (row:=self.get_row_at_y(y)) is not None:
 			if controller.get_current_button() == 2 and n_press == 1:
-				self._client.file_to_playlist(row.song["file"], "append")
+				self._client.song_to_playlist(row.song, "append")
 			elif controller.get_current_button() == 3 and n_press == 1:
 				self._open_menu(row, x, y)
 
@@ -1425,7 +1426,7 @@ class BrowserSongList(Gtk.ListBox):
 		row=self.get_focus_child()
 		self._menu.unparent()
 		self._menu.set_parent(row)
-		self._menu.open(row.song["file"], 0, 0)
+		self._menu.open(row.song, 0, 0)
 
 	def _on_drag_prepare(self, drag_source, x, y):
 		if (row:=self.get_row_at_y(y)) is not None:
@@ -1965,7 +1966,7 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		super().__init__(has_arrow=False, halign=Gtk.Align.START)
 		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
 		self._client=client
-		self._file=None
+		self._song=None
 		self._position=None
 
 		# action group
@@ -1974,10 +1975,10 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		self._remove_action.connect("activate", lambda *args: self._client.delete(self._position))
 		action_group.add_action(self._remove_action)
 		self._show_album_action=Gio.SimpleAction.new("show-album", None)
-		self._show_album_action.connect("activate", lambda *args: self._client.show_album(self._file))
+		self._show_album_action.connect("activate", lambda *args: self._client.show_album(self._song))
 		action_group.add_action(self._show_album_action)
 		self._show_file_action=Gio.SimpleAction.new("show-file", None)
-		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._file))
+		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._song))
 		action_group.add_action(self._show_file_action)
 		self.insert_action_group("menu", action_group)
 
@@ -1993,20 +1994,20 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		menu.append_section(None, mpd_section)
 		self.set_menu_model(menu)
 
-	def open(self, file, position, x, y):
-		self._file=file
+	def open(self, song, position, x, y):
+		self._song=song
 		self._position=position
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self.set_pointing_to(rect)
-		if file is None or position is None:
+		if song is None or position is None:
 			self._remove_action.set_enabled(False)
 			self._show_album_action.set_enabled(False)
 			self._show_file_action.set_enabled(False)
 		else:
 			self._remove_action.set_enabled(True)
-			self._show_album_action.set_enabled(self._client.can_show_album(file))
-			self._show_file_action.set_enabled(self._client.can_show_file(file))
+			self._show_album_action.set_enabled(self._client.can_show_album(self._song))
+			self._show_file_action.set_enabled(self._client.can_show_file(self._song))
 		self.popup()
 
 class PlaylistView(SongList):
@@ -2090,7 +2091,7 @@ class PlaylistView(SongList):
 			elif controller.get_current_button() == 2 and n_press == 1:
 				self._client.delete(position)
 			elif controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(self.get_song(position)["file"], position, x, y)
+				self._menu.open(self.get_song(position), position, x, y)
 
 	def _on_button_stopped(self, controller):
 		self._activate_on_release=False
@@ -2105,7 +2106,7 @@ class PlaylistView(SongList):
 		if (position:=self.get_position(x,y)) is None:
 			self._menu.open(None, None, x, y)
 		else:
-			self._menu.open(self.get_song(position)["file"], position, x, y)
+			self._menu.open(self.get_song(position), position, x, y)
 
 	def _on_activate(self, listview, pos):
 		self._autoscroll=False
@@ -2134,7 +2135,7 @@ class PlaylistView(SongList):
 			self._autoscroll=True
 
 	def _on_menu(self, action, state):
-		self._menu.open(self.get_focus_song()["file"], self.get_focus_position(), *self.get_focus_popup_point())
+		self._menu.open(self.get_focus_song(), self.get_focus_position(), *self.get_focus_popup_point())
 
 	def _on_delete(self, action, state):
 		self._client.delete(self.get_focus_position())
@@ -2159,7 +2160,7 @@ class PlaylistView(SongList):
 				position=self.get_model().get_n_items()
 			else:
 				position=item.get_first_child().get_property("position")
-			self._client.add(value["file"], position)
+			self._client.insert_song_to_playlist(value, position)
 			return True
 		return False
 
@@ -2221,7 +2222,7 @@ class PlaylistWindow(Gtk.Stack):
 
 	def _on_drop(self, drop_target, value, x, y):
 		if isinstance(value, Song):
-			self._client.add(value["file"])
+			self._client.song_to_playlist(value)
 			return True
 		return False
 
