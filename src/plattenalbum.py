@@ -706,9 +706,42 @@ class Client(MPDClient):
 		except:
 			return False
 
+	def add_song(self, song, position):
+		self.add(song["file"], position)
+
+	def append_song(self, song):
+		self.add(song["file"])
+
+	def play_song(self, song):
+		self.clear()
+		self.append_song(song)
+		self.play()
+
+	def as_next_song(self, song):
+		try:
+			self.add_song(song, "+0")
+		except CommandError:
+			self.add_song(song, "0")
+
+	def append_album(self, album):
+		self.findadd(*album.tag_filter())
+
+	def play_album(self, album):
+		self.clear()
+		self.append_album(album)
+		self.play()
+
 	def enqueue(self):
 		song=self.currentsong()
-		self.album_to_playlist(song.get_album(), "enqueue")
+		status=self.status()
+		self.moveid(status["songid"], 0)
+		if int(status["playlistlength"]) > 1:
+			self.delete((1,))
+		self.append_album(song.get_album())
+		duplicates=self.playlistfind("file", song["file"])
+		if len(duplicates) > 1:
+			self.swap(0, duplicates[1]["pos"])
+			self.delete(0)
 
 	def tidy_playlist(self):
 		status=self.status()
@@ -718,52 +751,6 @@ class Client(MPDClient):
 			self.moveid(songid, 0)
 			if int(status["playlistlength"]) > 1:
 				self.delete((1,))
-
-	def insert_song_to_playlist(self, song, position):
-		self.add(song["file"], position)
-
-	def song_to_playlist(self, song, mode):  # modes: play, append, as-next
-		file=song["file"]
-		if mode == "append":
-			self.add(file)
-		elif mode == "play":
-			self.clear()
-			self.add(file)
-			self.play()
-		elif mode == "as-next":
-			try:
-				self.add(file, "+0")
-			except CommandError:
-				self.add(file, "0")
-		else:
-			raise ValueError(f"Unknown mode: {mode}")
-
-	def filter_to_playlist(self, tag_filter, mode):  # modes: play, append, enqueue
-		if mode == "append":
-			self.findadd(*tag_filter)
-		elif mode == "play":
-			self.clear()
-			self.findadd(*tag_filter)
-			self.play()
-		elif mode == "enqueue":
-			status=self.status()
-			if (songid:=status.get("songid")) is None:
-				self.clear()
-				self.findadd(*tag_filter)
-			else:
-				self.moveid(songid, 0)
-				if int(status["playlistlength"]) > 1:
-					self.delete((1,))
-				self.findadd(*tag_filter)
-				duplicates=self.playlistfind("file", self.currentsong()["file"])
-				if len(duplicates) > 1:
-					self.swap(0, duplicates[1]["pos"])
-					self.delete(0)
-		else:
-			raise ValueError(f"Unknown mode: {mode}")
-
-	def album_to_playlist(self, album, mode):
-		self.filter_to_playlist(album.tag_filter(), mode)
 
 	def search_songs(self, keywords, num):
 		tags=("title", "artist", "album", "date")
@@ -1257,10 +1244,10 @@ class SongMenu(Gtk.PopoverMenu):
 		# action group
 		action_group=Gio.SimpleActionGroup()
 		action=Gio.SimpleAction.new("append", None)
-		action.connect("activate", lambda *args: self._client.song_to_playlist(self._song, "append"))
+		action.connect("activate", lambda *args: self._client.append_song(self._song))
 		action_group.add_action(action)
 		action=Gio.SimpleAction.new("as-next", None)
-		action.connect("activate", lambda *args: self._client.song_to_playlist(self._song, "as-next"))
+		action.connect("activate", lambda *args: self._client.as_next_song(self._song))
 		action_group.add_action(action)
 		if show_album:
 			action=Gio.SimpleAction.new("show-album", None)
@@ -1402,7 +1389,7 @@ class BrowserSongList(Gtk.ListBox):
 			self._menu.open(row.song, point.x, point.y)
 
 	def _on_row_activated(self, list_box, row):
-		self._client.song_to_playlist(row.song, "play")
+		self._client.play_song(row.song)
 
 	def _on_keynav_failed(self, list_box, direction):
 		if (root:=list_box.get_root()) is not None and direction == Gtk.DirectionType.UP:
@@ -1411,7 +1398,7 @@ class BrowserSongList(Gtk.ListBox):
 	def _on_button_pressed(self, controller, n_press, x, y):
 		if (row:=self.get_row_at_y(y)) is not None:
 			if controller.get_current_button() == 2 and n_press == 1:
-				self._client.song_to_playlist(row.song, "append")
+				self._client.append_song(row.song)
 			elif controller.get_current_button() == 3 and n_press == 1:
 				self._open_menu(row, x, y)
 
@@ -1753,9 +1740,9 @@ class AlbumPage(Adw.NavigationPage):
 
 		# buttons
 		self.play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"))
-		self.play_button.connect("clicked", lambda *args: client.album_to_playlist(album, "play"))
+		self.play_button.connect("clicked", lambda *args: client.play_album(album))
 		append_button=Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Append"))
-		append_button.connect("clicked", lambda *args: client.album_to_playlist(album, "append"))
+		append_button.connect("clicked", lambda *args: client.append_album(album))
 
 		# header bar
 		header_bar=Adw.HeaderBar(show_title=False)
@@ -2157,7 +2144,7 @@ class PlaylistView(SongList):
 				position=self.get_model().get_n_items()
 			else:
 				position=item.get_first_child().get_property("position")
-			self._client.insert_song_to_playlist(value, position)
+			self._client.add_song(value, position)
 			return True
 		return False
 
@@ -2219,7 +2206,7 @@ class PlaylistWindow(Gtk.Stack):
 
 	def _on_drop(self, drop_target, value, x, y):
 		if isinstance(value, Song):
-			self._client.song_to_playlist(value)
+			self._client.append_song(value)
 			return True
 		return False
 
