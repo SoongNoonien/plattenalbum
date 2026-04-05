@@ -687,7 +687,6 @@ class Client(MPDClient):
 			else:
 				self.disconnect()
 				self.emitter.emit("connection_error")
-			# connect successful
 			self._settings.set_boolean("manual-connection", manual)
 			return False
 		GLib.idle_add(callback)
