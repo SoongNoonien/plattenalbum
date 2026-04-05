@@ -1803,7 +1803,7 @@ class AlbumPage(Adw.NavigationPage):
 		length.set_text(str(client.get_duration(album)))
 		cover.set_paintable(client.get_cover(album))
 		for song in client.get_songs(album):
-			row=BrowserSongRow(song, hide_artist=album.artist)
+			row=BrowserSongRow(song, hide_artist=album.artist.name)
 			song_list.append(row)
 
 class MainMenuButton(Gtk.MenuButton):
