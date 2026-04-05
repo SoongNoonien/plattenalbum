@@ -681,6 +681,7 @@ class Client(MPDClient):
 				if len(self.outputs()) == 1:
 					self.enableoutput(0)
 			if "status" in commands:
+				self._set_default_tagtypes()
 				self.emitter.emit("connected", self._database_is_empty())
 				GLib.timeout_add(100, self._main_loop)
 			else:
@@ -766,9 +767,7 @@ class Client(MPDClient):
 
 	def search_songs(self, keywords, num):
 		tags=("title", "artist", "album", "date")
-		self.tagtypes("reset", "track", "title", "artist", "album", "albumartist", "albumartistsort", "date")
 		songs=self.search(self._get_search_expression(tags, keywords), "window", f"0:{num}")
-		self.tagtypes("all")
 		return (Song(song) for song in songs)
 
 	def search_albums(self, keywords, num):
@@ -785,10 +784,7 @@ class Client(MPDClient):
 			yield Artist(artist["albumartist"], artist["albumartistsort"])
 
 	def get_songs(self, album):
-		self.tagtypes("reset", "track", "title", "artist", "album", "albumartist", "albumartistsort", "date")
-		songs=self.find(*album.tag_filter())
-		self.tagtypes("all")
-		return (Song(song) for song in songs)
+		return (Song(song) for song in self.find(*album.tag_filter()))
 
 	def get_albums(self, artist):
 		for album in self.list("album", *artist.tag_filter(), "group", "date"):
@@ -801,19 +797,17 @@ class Client(MPDClient):
 	def get_cover(self, album):
 		self.tagtypes("clear")
 		song=self.find(*album.tag_filter(), "window", "0:1")[0]
-		self.tagtypes("all")
+		self._set_default_tagtypes()
 		return self._get_cover(song["file"])
 
 	def get_duration(self, album):
 		return Duration(self.count(*album.tag_filter())["playtime"])
 
 	def get_playlist_changes(self, version):
-		self.tagtypes("reset", "track", "title", "artist", "album", "albumartist", "albumartistsort", "date")
 		if version is not None:
 			songs=self.plchanges(version)
 		else:
 			songs=self.playlistinfo()
-		self.tagtypes("all")
 		return (Song(song) for song in songs)
 
 	def get_absolute_path(self, song):
@@ -843,7 +837,7 @@ class Client(MPDClient):
 	def can_show_album(self, song):
 		self.tagtypes("clear")
 		songs=self.find("file", song["file"])
-		self.tagtypes("all")
+		self._set_default_tagtypes()
 		return bool(songs)
 
 	def show_album(self, song):
@@ -922,6 +916,9 @@ class Client(MPDClient):
 
 	def _get_cover(self, uri):
 		return self._get_cover_with_path(uri)[0]
+
+	def _set_default_tagtypes(self):
+		self.tagtypes("reset", "track", "title", "artist", "album", "albumartist", "albumartistsort", "date")
 
 	def _clear_marks(self):
 		if self._first_mark is not None:
