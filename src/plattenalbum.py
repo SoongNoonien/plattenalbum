@@ -939,7 +939,7 @@ class Client(MPDClient):
 				else:
 					self.emitter.emit("bitrate", diff["bitrate"])
 			if "volume" in diff:
-				self.emitter.emit("volume", float(diff["volume"]))
+				self.emitter.emit("volume", int(diff["volume"]))
 			if "state" in diff:
 				self.emitter.emit("state", diff["state"])
 			if "single" in diff:
@@ -2535,7 +2535,7 @@ class VolumeControl(Gtk.Box):
 		self.append(scale)
 
 	def _on_change_value(self, scale, scroll, value):
-		self._client.setvol(str(int(max(min(value, 100), 0))))
+		self._client.setvol(int(max(min(value, 100), 0)))
 
 	def _refresh(self, emitter, volume):
 		self._adjustment.set_value(max(volume, 0))
