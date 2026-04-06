@@ -672,15 +672,11 @@ class Client(MPDClient):
 							self.emitter.emit("connection_error")
 							return False
 			# connected
-			commands=self.commands()
 			try:
 				self._music_directory=self.config()["music_directory"]
 			except:
 				self._music_directory=None
-			if "outputs" in commands and "enableoutput" in commands:
-				if len(self.outputs()) == 1:
-					self.enableoutput(0)
-			if "status" in commands:
+			if "status" in self.commands():
 				self._set_default_tagtypes()
 				self.emitter.emit("connected", self._database_is_empty())
 				GLib.timeout_add(100, self._main_loop)
