@@ -701,6 +701,9 @@ class Client(MPDClient):
 		except:
 			return False
 
+	def delete_song(self, song):
+		self.deleteid(song["id"])
+
 	def add_song(self, song, position):
 		self.add(song["file"], position)
 
@@ -1305,11 +1308,8 @@ class SongList(Gtk.ListView):
 			return (point.x, point.y)
 		return (0, 0)
 
-	def get_focus_position(self):
-		return self._get_focus_row().get_property("position")
-
 	def get_focus_song(self):
-		return self.get_model().get_item(self.get_focus_position())
+		return self.get_model().get_item(self._get_focus_row().get_property("position"))
 
 	def get_position(self, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
@@ -1946,12 +1946,11 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
 		self._client=client
 		self._song=None
-		self._position=None
 
 		# action group
 		action_group=Gio.SimpleActionGroup()
 		self._remove_action=Gio.SimpleAction.new("delete", None)
-		self._remove_action.connect("activate", lambda *args: self._client.delete(self._position))
+		self._remove_action.connect("activate", lambda *args: self._client.delete_song(self._song))
 		action_group.add_action(self._remove_action)
 		self._show_album_action=Gio.SimpleAction.new("show-album", None)
 		self._show_album_action.connect("activate", lambda *args: self._client.show_album(self._song))
@@ -1973,13 +1972,12 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		menu.append_section(None, mpd_section)
 		self.set_menu_model(menu)
 
-	def open(self, song, position, x, y):
+	def open(self, song, x, y):
 		self._song=song
-		self._position=position
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self.set_pointing_to(rect)
-		if song is None or position is None:
+		if song is None:
 			self._remove_action.set_enabled(False)
 			self._show_album_action.set_enabled(False)
 			self._show_file_action.set_enabled(False)
@@ -2063,14 +2061,14 @@ class PlaylistView(SongList):
 	def _on_button_pressed(self, controller, n_press, x, y):
 		if (position:=self.get_position(x,y)) is None:
 			if controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(None, None, x, y)
+				self._menu.open(None, x, y)
 		else:
 			if controller.get_current_button() == 1 and n_press == 1:
 				self._activate_on_release=True
 			elif controller.get_current_button() == 2 and n_press == 1:
-				self._client.delete(position)
+				self._client.delete_song(self.get_song(position))
 			elif controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(self.get_song(position), position, x, y)
+				self._menu.open(self.get_song(position), x, y)
 
 	def _on_button_stopped(self, controller):
 		self._activate_on_release=False
@@ -2085,7 +2083,7 @@ class PlaylistView(SongList):
 		if (position:=self.get_position(x,y)) is None:
 			self._menu.open(None, None, x, y)
 		else:
-			self._menu.open(self.get_song(position), position, x, y)
+			self._menu.open(self.get_song(position), x, y)
 
 	def _on_activate(self, listview, pos):
 		self._autoscroll=False
@@ -2114,10 +2112,10 @@ class PlaylistView(SongList):
 			self._autoscroll=True
 
 	def _on_menu(self, action, state):
-		self._menu.open(self.get_focus_song(), self.get_focus_position(), *self.get_focus_popup_point())
+		self._menu.open(self.get_focus_song(), *self.get_focus_popup_point())
 
 	def _on_delete(self, action, state):
-		self._client.delete(self.get_focus_position())
+		self._client.delete_song(self.get_focus_song())
 
 	def _on_drag_prepare(self, drag_source, x, y):
 		if (position:=self.get_position(x,y)) is not None:
