@@ -2754,8 +2754,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
-		simple_actions_data=("close", "search", "preferences", "manual-connect", "server-info")
-		for name in simple_actions_data:
+		for name in ("close", "search", "preferences", "manual-connect", "server-info"):
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
@@ -2976,16 +2975,16 @@ class Plattenalbum(Adw.Application):
 		self.add_action(action)
 
 		# mpd actions
-		self._disable_on_stop_data=["next","previous","seek-forward","seek-backward","a-b-loop"]
-		self._disable_no_song_data=["tidy","enqueue"]
-		self._enable_disable_on_playlist_data=["toggle-play","clear"]
-		self._enable_on_reconnect_data=["stop","update","disconnect"]
+		self._disable_on_stop_data=("next","previous","seek-forward","seek-backward","a-b-loop")
+		self._disable_no_song_data=("tidy","enqueue")
+		self._enable_disable_on_playlist_data=("toggle-play","clear")
+		self._enable_on_reconnect_data=("stop","update","disconnect")
 		self._data=self._disable_on_stop_data+self._disable_no_song_data+self._enable_on_reconnect_data+self._enable_disable_on_playlist_data
 		for name in self._data:
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
-		playback_data=["repeat","random","single","single-oneshot","consume"]
+		playback_data=("repeat","random","single","single-oneshot","consume")
 		self._enable_on_reconnect_data+=playback_data
 		self._data+=playback_data
 		for name in playback_data:
