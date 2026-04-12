@@ -542,10 +542,6 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 				return Duration()
 			elif key in ("track", "artist", "album", "date"):
 				return MultiTag([""])
-			else:
-				return None
-		else:
-			return None
 
 	def get_album_artist(self):
 		return Artist(self["albumartist"][0], self["albumartistsort"][0])
@@ -801,7 +797,6 @@ class Client(MPDClient):
 			absolute_path=GLib.build_filenamev([self._music_directory, stripped_uri])
 			if GLib.file_test(absolute_path, GLib.FileTest.IS_REGULAR):
 				return absolute_path
-		return None
 
 	def can_show_file(self, song):
 		has_owner,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
