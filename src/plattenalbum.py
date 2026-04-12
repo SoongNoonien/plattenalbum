@@ -376,7 +376,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		)
 
 	# other methods
-	def _update_metadata(self, song):
+	def _update_metadata(self, song, cover_path):
 		"""
 		Translate metadata returned by MPD to the MPRIS v2 syntax.
 		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
@@ -401,7 +401,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			else:
 				if (song_path:=self._client.get_absolute_path(song)) is not None:
 					self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
-					if (cover_path:=song["cover_path"]) is not None:
+					if cover_path is not None:
 						self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
 
 	def _set_property(self, interface_name, prop, value):
@@ -421,8 +421,8 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
 
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
-		self._update_metadata(song)
+	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
+		self._update_metadata(song, cover_path)
 		self._update_property(self._MPRIS_PLAYER_IFACE, "CanSeek")
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
@@ -462,7 +462,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _on_mpris_changed(self, settings, key):
 		if settings.get_boolean(key):
 			self._enable()
-			self._update_metadata(self._client.currentsong())
+			self._update_metadata(self._client.currentsong(), None)
 			for prop in ("PlaybackStatus", "Metadata", "Volume", "LoopStatus", "CanGoNext",
 					"CanGoPrevious", "CanPlay", "CanPause", "CanSeek", "Shuffle"):
 				self._update_property(self._MPRIS_PLAYER_IFACE, prop)
@@ -520,17 +520,17 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 		collections.UserDict.__init__(self, data)
 		GObject.Object.__init__(self)
 	def __setitem__(self, key, value):
-		if key == "time":  # time is deprecated https://mpd.readthedocs.io/en/latest/protocol.html#other-metadata
-			pass
-		elif key == "duration":
+		if key == "duration":
 			super().__setitem__(key, Duration(value))
-		elif key in ("range", "file", "pos", "id", "format", "last-modified", "cover", "cover_path"):
+		elif key in ("file", "pos", "id"):
 			super().__setitem__(key, value)
-		else:
+		elif key in ("track", "title", "artist", "album", "albumartist", "albumartistsort", "date"):
 			if isinstance(value, list):
 				super().__setitem__(key, MultiTag(value))
 			else:
 				super().__setitem__(key, MultiTag([value]))
+		else:
+			pass
 
 	def __missing__(self, key):
 		if self.data:
@@ -538,14 +538,14 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 				return self["artist"]
 			elif key == "albumartistsort":
 				return self["albumartist"]
-			elif key == "artistsort":
-				return self["artist"]
 			elif key == "title":
 				return MultiTag([GLib.path_get_basename(self.data["file"])])
 			elif key == "duration":
 				return Duration()
-			else:
+			elif key in ("track", "artist", "album", "date"):
 				return MultiTag([""])
+			else:
+				return None
 		else:
 			return None
 
@@ -586,7 +586,7 @@ class EventEmitter(GObject.Object):
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"current-song": (GObject.SignalFlags.RUN_FIRST, None, (Song,str,str,str,)),
+		"current-song": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"volume": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
@@ -924,8 +924,8 @@ class Client(MPDClient):
 				self.emitter.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
 			if "songid" in diff:
 				song=self.currentsong()
-				song["cover"],song["cover_path"]=self._get_cover_with_path(song["file"])
-				self.emitter.emit("current-song", song, status["song"], status["songid"], status["state"])
+				cover,cover_path=self._get_cover_with_path(song["file"])
+				self.emitter.emit("current-song", song, cover, cover_path, status["song"], status["songid"], status["state"])
 				self._clear_marks()
 			if "elapsed" in diff:
 				elapsed=float(diff["elapsed"])
@@ -951,7 +951,7 @@ class Client(MPDClient):
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
-					self.emitter.emit("current-song", Song({}), None, None, status["state"])
+					self.emitter.emit("current-song", Song({}), FALLBACK_COVER, None, None, None, status["state"])
 					self._clear_marks()
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
@@ -2099,7 +2099,7 @@ class PlaylistView(SongList):
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 		self._playlist_version=version
 
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
+	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
 		self._refresh_selection(songpos)
 		if self._autoscroll:
 			if (selected:=self.get_model().get_selected()) is not None and state == "play":
@@ -2398,7 +2398,7 @@ class PlaylistProgress(Gtk.Label):
 		else:
 			self.set_text(f"{int(song)+1}/{self._length}")
 
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
+	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
 		self._refresh(songpos)
 
 	def _on_playlist_changed(self, emitter, version, length, songpos):
@@ -2635,9 +2635,9 @@ class Player(Adw.Bin):
 		elif self._stack.get_visible_child_name() == "playlist":
 			self._playlist_page.set_needs_attention(False)
 
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
+	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
 		if song:
-			self._cover.set_paintable(song["cover"])
+			self._cover.set_paintable(cover)
 			self._cover.set_visible(True)
 			self._lyrics_window.set_property("song", song)
 			if self._stack.get_visible_child_name() == "lyrics":
@@ -2720,9 +2720,9 @@ class PlayerBar(Gtk.Overlay):
 		self._cover.set_paintable(FALLBACK_COVER)
 		self._cover.set_visible(False)
 
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
+	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
 		if song:
-			self._cover.set_paintable(song["cover"])
+			self._cover.set_paintable(cover)
 			self._cover.set_visible(True)
 			self._title.set_text(song["title"][0])
 			self._subtitle.set_text(str(song["artist"]))
@@ -2886,7 +2886,7 @@ class MainWindow(Adw.ApplicationWindow):
 			self.get_application().set_accels_for_action("app.toggle-play", ["space"])
 			self.get_application().set_accels_for_action("app.a-b-loop", ["l"])
 
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
+	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
 		if song:
 			self.set_title(song["title"][0])
 		else:
@@ -3103,7 +3103,7 @@ class Plattenalbum(Adw.Application):
 		for action in self._disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state_dict[state])
 
-	def _on_song_changed(self, emitter, song, songpos, songid, state):
+	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
 		for action in self._disable_no_song_data:
 			self.lookup_action(action).set_enabled(songpos is not None)
 		if song:
