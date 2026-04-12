@@ -529,8 +529,6 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 				super().__setitem__(key, MultiTag(value))
 			else:
 				super().__setitem__(key, MultiTag([value]))
-		else:
-			pass
 
 	def __missing__(self, key):
 		if self.data:
