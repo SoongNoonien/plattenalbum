@@ -630,7 +630,7 @@ class Client(GObject.Object):
 		try:
 			addrinfo=socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM)
 		except OSError:
-			raise ConnectionError
+			return False
 		for af, socktype, proto, canonname, sa in addrinfo:
 			try:
 				self._socket=socket.socket(af, socktype, proto)
@@ -643,16 +643,20 @@ class Client(GObject.Object):
 				continue
 			break
 		else:
-			raise ConnectionError
+			return False
+		self.server=f"{host}:{port}"
 		self._post_connect()
+		return True
 
-	def _connect_unix(self, path):
+	def _connect_unix(self, socket_path):
 		self._socket=socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 		try:
-			self._socket.connect(path)
+			self._socket.connect(socket_path)
 		except OSError:
-			raise ConnectionError
+			return False
+		self.server=socket_path
 		self._post_connect()
+		return True
 
 	def _parse_line(self):
 		line=self._read_file.readline().decode('utf-8')
@@ -714,51 +718,49 @@ class Client(GObject.Object):
 	def open_connection(self, manual):
 		self.emit("connecting")
 		def callback():
-			# connect
 			if manual:
 				socket.setdefaulttimeout(CONNECTION_TIMEOUT)
-				try:
-					self._connect_tcp(self._settings.get_string("host"), self._settings.get_int("port"))
-					self.server=f'{self._settings.get_string("host")}:{self._settings.get_int("port")}'
-				except ConnectionError:
-					self.emit("connection_error")
-					return False
-				# set password
-				if password:=self._settings.get_string("password"):
-					try:
-						self._run_command(f"password {password}")
-					except ConnectionError:
-						self.close_connection()
-						self.emit("connection_error")
-						return False
+				password=self._settings.get_string("password")
+				success=self._connect_tcp(self._settings.get_string("host"), self._settings.get_int("port"))
 			else:
 				if (timeout:=GLib.getenv("MPD_TIMEOUT")) is None:
 					socket.setdefaulttimeout(CONNECTION_TIMEOUT)
 				else:
 					socket.setdefaulttimeout(int(timeout))
+				password=""
+				socket_path=""
 				host=GLib.getenv("MPD_HOST")
 				port=GLib.getenv("MPD_PORT")
-				if host is not None or port is not None:
+				if host is None and port is None:
+					success=self._connect_unix(self._socket_path)
+					if not success:
+						success=self._connect_unix("/run/mpd/socket")
+				else:
 					if host is None:
 						host="localhost"
+					else:
+						if "@" in host:
+							if host[0] != "@":
+								password,host=host.split("@", 1)
+							if host[0] == "@":
+								socket_path=host[1:]
 					if port is None:
 						port=6600
-					try:
-						self._connect_tcp(host, port)
-						self.server=f"{host}:{port}"
-					except ConnectionError:
-						pass
-				if not self.connected():
-					try:
-						self._connect_unix(self._socket_path)
-						self.server=self._socket_path
-					except ConnectionError:
-						try:
-							self._connect_unix("/run/mpd/socket")
-							self.server="/run/mpd/socket"
-						except ConnectionError:
-							self.emit("connection_error")
-							return False
+					if socket_path:
+						success=self._connect_unix(socket_path)
+					else:
+						success=self._connect_tcp(host, port)
+			if not success:
+				self.emit("connection_error")
+				return False
+			# set password
+			if password:
+				try:
+					self._run_command(f"password {password}")
+				except CommandError:
+					self.close_connection()
+					self.emit("connection_error")
+					return False
 			# connected
 			try:
 				self._music_directory=self.config().get("music_directory")
@@ -768,12 +770,12 @@ class Client(GObject.Object):
 			commands=[command for _, command in self._parse_pairs()]
 			if "tagtypes" in commands and "status" in commands:
 				self._set_default_tagtypes()
+				self._settings.set_boolean("manual-connection", manual)
 				self.emit("connected", self._database_is_empty())
 				GLib.timeout_add(100, self._main_loop)
 			else:
 				self.close_connection()
 				self.emit("connection_error")
-			self._settings.set_boolean("manual-connection", manual)
 			return False
 		GLib.idle_add(callback)
 
