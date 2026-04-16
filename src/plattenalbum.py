@@ -3105,8 +3105,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 class Plattenalbum(Adw.Application):
 	def __init__(self):
-		super().__init__(application_id="de.wagnermartin.Plattenalbum", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
-		self.add_main_option("debug", ord("d"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _("Debug mode"), None)
+		super().__init__(application_id="de.wagnermartin.Plattenalbum")
 		self._settings=Settings()
 		self._client=Client(self._settings)
 		self._window=None
@@ -3173,15 +3172,6 @@ class Plattenalbum(Adw.Application):
 		if self._settings.get_boolean("stop-on-quit") and self._client.connected():
 			self._client.stop()
 		self.withdraw_notification("title-change")
-
-	def do_command_line(self, command_line):
-		# convert GVariantDict -> GVariant -> dict
-		options=command_line.get_options_dict().end().unpack()
-		if "debug" in options:
-			import logging
-			logging.basicConfig(level=logging.DEBUG)
-		self.activate()
-		return 0
 
 	def _on_about(self, *args):
 		dialog=Adw.AboutDialog.new_from_appdata("/de/wagnermartin/Plattenalbum/de.wagnermartin.Plattenalbum.metainfo.xml")
