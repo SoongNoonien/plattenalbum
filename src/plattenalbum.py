@@ -187,16 +187,16 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		}
 
 		# connect
-		self._handlers.append(self._client.emitter.connect("state", self._on_state_changed))
-		self._handlers.append(self._client.emitter.connect("current-song", self._on_song_changed))
-		self._handlers.append(self._client.emitter.connect("playlist", self._on_playlist_changed))
-		self._handlers.append(self._client.emitter.connect("volume", self._on_volume_changed))
-		self._handlers.append(self._client.emitter.connect("repeat", self._on_loop_changed))
-		self._handlers.append(self._client.emitter.connect("single", self._on_loop_changed))
-		self._handlers.append(self._client.emitter.connect("random", self._on_random_changed))
-		self._handlers.append(self._client.emitter.connect("disconnected", self._on_disconnected))
+		self._handlers.append(self._client.connect("state", self._on_state_changed))
+		self._handlers.append(self._client.connect("current-song", self._on_song_changed))
+		self._handlers.append(self._client.connect("playlist", self._on_playlist_changed))
+		self._handlers.append(self._client.connect("volume", self._on_volume_changed))
+		self._handlers.append(self._client.connect("repeat", self._on_loop_changed))
+		self._handlers.append(self._client.connect("single", self._on_loop_changed))
+		self._handlers.append(self._client.connect("random", self._on_random_changed))
+		self._handlers.append(self._client.connect("disconnected", self._on_disconnected))
 		for handler in self._handlers:
-			self._client.emitter.handler_block(handler)
+			self._client.handler_block(handler)
 
 		# enable/disable
 		settings.connect("changed::mpris", self._on_mpris_changed)
@@ -413,23 +413,23 @@ class MPRISInterface:  # TODO emit Seeked if needed
 			value=getter
 		self._set_property(interface_name, prop, value)
 
-	def _on_state_changed(self, emitter, state):
+	def _on_state_changed(self, client, state):
 		value=GLib.Variant("b", state != "stop")
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoNext", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
 
-	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
+	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._update_metadata(song, cover_path)
 		self._update_property(self._MPRIS_PLAYER_IFACE, "CanSeek")
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
-	def _on_playlist_changed(self, emitter, version, length, songpos):
+	def _on_playlist_changed(self, client, version, length, songpos):
 		value=GLib.Variant("b", length > 0)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPlay", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPause", value)
 
-	def _on_volume_changed(self, emitter, volume):
+	def _on_volume_changed(self, client, volume):
 		if volume < 0:
 			self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", 0.0))
 		else:
@@ -438,7 +438,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _on_loop_changed(self, *args):
 		self._update_property(self._MPRIS_PLAYER_IFACE, "LoopStatus")
 
-	def _on_random_changed(self, emitter, state):
+	def _on_random_changed(self, client, state):
 		self._set_property(self._MPRIS_PLAYER_IFACE, "Shuffle", GLib.Variant("b", state))
 
 	def _enable(self):
@@ -446,7 +446,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		for interface in self._node_info.interfaces:
 			self._object_ids.append(self._bus.register_object(self._MPRIS_PATH, interface, self._handle_method_call, None, None))
 		for handler in self._handlers:
-			self._client.emitter.handler_unblock(handler)
+			self._client.handler_unblock(handler)
 
 	def _disable(self):
 		for object_id in self._object_ids:
@@ -455,7 +455,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		Gio.bus_unown_name(self._name_id)
 		self._name_id=None
 		for handler in self._handlers:
-			self._client.emitter.handler_block(handler)
+			self._client.handler_block(handler)
 
 	def _on_mpris_changed(self, settings, key):
 		if settings.get_boolean(key):
@@ -586,7 +586,8 @@ class Artist(GObject.Object):
 	def tag_filter(self):
 		return TagFilter(albumartist=self.name, albumartistsort=self.sortname)
 
-class EventEmitter(GObject.Object):
+class CommandError(Exception): pass
+class Client(GObject.Object):
 	__gsignals__={
 		"updating-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"updated-db": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
@@ -598,24 +599,19 @@ class EventEmitter(GObject.Object):
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"volume": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
-		"playlist": (GObject.SignalFlags.RUN_FIRST, None, (int,int,str)),
+		"playlist": (GObject.SignalFlags.RUN_FIRST, None, (int,int,str,)),
 		"repeat": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"single": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"single-oneshot": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-		"a-b-loop": (GObject.SignalFlags.RUN_FIRST, None, (float,float)),
+		"a-b-loop": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"show-album": (GObject.SignalFlags.RUN_FIRST, None, (Album,)),
 	}
-
-class CommandError(Exception): pass
-
-class Client():
 	def __init__(self, settings):
 		super().__init__()
 		self._settings=settings
-		self.emitter=EventEmitter()
 		self._last_status={}
 		self._first_mark=None
 		self._second_mark=None
@@ -711,10 +707,10 @@ class Client():
 		# This is a rather ugly workaround for database updates that are quicker
 		# than around a tenth of a second and therefore can't be detected by _main_loop.
 		self._last_status["updating_db"]=self._parse_dict()["updating_db"]
-		self.emitter.emit("updating-db")
+		self.emit("updating-db")
 
 	def open_connection(self, manual):
-		self.emitter.emit("connecting")
+		self.emit("connecting")
 		def callback():
 			# connect
 			if manual:
@@ -722,7 +718,7 @@ class Client():
 					self._connect_tcp(self._settings.get_string("host"), self._settings.get_int("port"))
 					self.server=f'{self._settings.get_string("host")}:{self._settings.get_int("port")}'
 				except ConnectionError:
-					self.emitter.emit("connection_error")
+					self.emit("connection_error")
 					return False
 				# set password
 				if password:=self._settings.get_string("password"):
@@ -730,7 +726,7 @@ class Client():
 						self._run_command(f"password {password}")
 					except ConnectionError:
 						self.close_connection()
-						self.emitter.emit("connection_error")
+						self.emit("connection_error")
 						return False
 			else:
 				host=GLib.getenv("MPD_HOST")
@@ -754,7 +750,7 @@ class Client():
 							self._connect_unix("/run/mpd/socket")
 							self.server="/run/mpd/socket"
 						except ConnectionError:
-							self.emitter.emit("connection_error")
+							self.emit("connection_error")
 							return False
 			# connected
 			try:
@@ -765,11 +761,11 @@ class Client():
 			commands=[command for _, command in self._parse_pairs()]
 			if "tagtypes" in commands and "status" in commands:
 				self._set_default_tagtypes()
-				self.emitter.emit("connected", self._database_is_empty())
+				self.emit("connected", self._database_is_empty())
 				GLib.timeout_add(100, self._main_loop)
 			else:
 				self.close_connection()
-				self.emitter.emit("connection_error")
+				self.emit("connection_error")
 			self._settings.set_boolean("manual-connection", manual)
 			return False
 		GLib.idle_add(callback)
@@ -779,7 +775,7 @@ class Client():
 		self._read_file.close()
 		self._write_file.close()
 		self._last_status={}
-		self.emitter.emit("disconnected")
+		self.emit("disconnected")
 
 	def connected(self):
 		try:
@@ -936,7 +932,7 @@ class Client():
 		return bool(song)
 
 	def show_album(self, song):
-		self.emitter.emit("show-album", song.get_album())
+		self.emit("show-album", song.get_album())
 
 	def toggle_play(self):
 		if self.status()["state"] == "stop":
@@ -948,14 +944,14 @@ class Client():
 		value=float(self.status()["elapsed"])
 		if self._first_mark is None:
 			self._first_mark=value
-			self.emitter.emit("a-b-loop", value, -1.0)
+			self.emit("a-b-loop", value, -1.0)
 		elif self._second_mark is None:
 			if value < self._first_mark:
 				self._second_mark=self._first_mark
 				self._first_mark=value
 			else:
 				self._second_mark=value
-			self.emitter.emit("a-b-loop", self._first_mark, self._second_mark)
+			self.emit("a-b-loop", self._first_mark, self._second_mark)
 		else:
 			self._clear_marks()
 
@@ -1023,7 +1019,7 @@ class Client():
 
 	def _clear_marks(self):
 		if self._first_mark is not None:
-			self.emitter.emit("a-b-loop", -1.0, -1.0)
+			self.emit("a-b-loop", -1.0, -1.0)
 		self._first_mark=None
 		self._second_mark=None
 
@@ -1035,54 +1031,54 @@ class Client():
 			status=self.status()
 			diff=dict(set(status.items())-set(self._last_status.items()))
 			if "updating_db" in diff:
-				self.emitter.emit("updating-db")
+				self.emit("updating-db")
 			if "playlist" in diff:
-				self.emitter.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
+				self.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
 			if "songid" in diff:
 				song=self.currentsong()
 				cover,cover_path=self._get_cover_with_path(song)
-				self.emitter.emit("current-song", song, cover, cover_path, status["song"], status["songid"], status["state"])
+				self.emit("current-song", song, cover, cover_path, status["song"], status["songid"], status["state"])
 				self._clear_marks()
 			if "elapsed" in diff:
 				elapsed=float(diff["elapsed"])
-				self.emitter.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
+				self.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
 				if self._second_mark is not None:
 					if elapsed > self._second_mark:
 						self.seekcur(self._first_mark)
 			if "bitrate" in diff:
 				if diff["bitrate"] == "0":
-					self.emitter.emit("bitrate", None)
+					self.emit("bitrate", None)
 				else:
-					self.emitter.emit("bitrate", diff["bitrate"])
+					self.emit("bitrate", diff["bitrate"])
 			if "volume" in diff:
-				self.emitter.emit("volume", int(diff["volume"]))
+				self.emit("volume", int(diff["volume"]))
 			if "state" in diff:
-				self.emitter.emit("state", diff["state"])
+				self.emit("state", diff["state"])
 			if "single" in diff:
-				self.emitter.emit("single", diff["single"] == "1")
-				self.emitter.emit("single-oneshot", diff["single"] == "oneshot")
+				self.emit("single", diff["single"] == "1")
+				self.emit("single-oneshot", diff["single"] == "oneshot")
 			for key in ("repeat", "random", "consume"):
 				if key in diff:
-					self.emitter.emit(key, diff[key] == "1")
+					self.emit(key, diff[key] == "1")
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
-					self.emitter.emit("current-song", Song(), FALLBACK_COVER, None, None, None, status["state"])
+					self.emit("current-song", Song(), FALLBACK_COVER, None, None, None, status["state"])
 					self._clear_marks()
 				elif "volume" == key:
-					self.emitter.emit("volume", -1)
+					self.emit("volume", -1)
 				elif "updating_db" == key:
-					self.emitter.emit("updated-db", self._database_is_empty())
+					self.emit("updated-db", self._database_is_empty())
 				elif "bitrate" == key:
-					self.emitter.emit("bitrate", None)
+					self.emit("bitrate", None)
 			self._last_status=status
 			return True
 		except BrokenPipeError:
 			self.close_connection()
-			self.emitter.emit("connection_error")
+			self.emit("connection_error")
 			return False
 		except ValueError:
-			self.emitter.emit("connection_error")
+			self.emit("connection_error")
 			return False
 
 	def currentsong(self):
@@ -1727,9 +1723,9 @@ class ArtistList(Gtk.ListView):
 
 		# connect
 		self.connect("activate", self._on_activate)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
-		self._client.emitter.connect("updated-db", self._on_updated_db)
+		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("connected", self._on_connected)
+		self._client.connect("updated-db", self._on_updated_db)
 
 	def select(self, artist):
 		for i, item in enumerate(self.selection_model):
@@ -1752,13 +1748,13 @@ class ArtistList(Gtk.ListView):
 	def _on_disconnected(self, *args):
 		self.selection_model.clear()
 
-	def _on_connected(self, emitter, database_is_empty):
+	def _on_connected(self, client, database_is_empty):
 		if not database_is_empty:
 			self._refresh()
 			if (song:=self._client.currentsong()):
 				self.select(song.get_album_artist())
 
-	def _on_updated_db(self, emitter, database_is_empty):
+	def _on_updated_db(self, client, database_is_empty):
 		if database_is_empty:
 			self.selection_model.clear()
 		else:
@@ -1839,8 +1835,8 @@ class AlbumsPage(Adw.NavigationPage):
 
 		# connect
 		self.grid_view.connect("activate", self._on_activate)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connection-error", self._on_connection_error)
+		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("connection-error", self._on_connection_error)
 
 		# packing
 		toolbar_view=Adw.ToolbarView(content=self._stack)
@@ -2017,11 +2013,11 @@ class Browser(Gtk.Stack):
 		self._search_view.connect("album-selected", lambda widget, album: self._show_album(album))
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
-		client.emitter.connect("disconnected", self._on_disconnected)
-		client.emitter.connect("connection-error", self._on_connection_error)
-		client.emitter.connect("connected", self._on_connected_or_updated_db)
-		client.emitter.connect("updated-db", self._on_connected_or_updated_db)
-		client.emitter.connect("show-album", lambda widget, album: self._show_album(album))
+		client.connect("disconnected", self._on_disconnected)
+		client.connect("connection-error", self._on_connection_error)
+		client.connect("connected", self._on_connected_or_updated_db)
+		client.connect("updated-db", self._on_connected_or_updated_db)
+		client.connect("show-album", lambda widget, album: self._show_album(album))
 
 		# packing
 		self.add_named(self._navigation_view, "browser")
@@ -2077,7 +2073,7 @@ class Browser(Gtk.Stack):
 	def _on_connection_error(self, *args):
 		self.set_visible_child_name("empty-collection")
 
-	def _on_connected_or_updated_db(self, emitter, database_is_empty):
+	def _on_connected_or_updated_db(self, client, database_is_empty):
 		self.search_entry.emit("stop-search")
 		self.search_entry.set_text("")
 		if database_is_empty:
@@ -2192,9 +2188,9 @@ class PlaylistView(SongList):
 		drop_target.connect("drop", self._on_drop)
 		drop_motion.connect("motion", self._on_drop_motion)
 		drop_motion.connect("leave", self._on_drop_leave)
-		self._client.emitter.connect("playlist", self._on_playlist_changed)
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.connect("playlist", self._on_playlist_changed)
+		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("disconnected", self._on_disconnected)
 
 	def _clear(self, *args):
 		self._menu.popdown()
@@ -2238,7 +2234,7 @@ class PlaylistView(SongList):
 		self._autoscroll=False
 		self._client.play(pos)
 
-	def _on_playlist_changed(self, emitter, version, length, songpos):
+	def _on_playlist_changed(self, client, version, length, songpos):
 		self._menu.popdown()
 		for song in self._client.get_playlist_changes(self._playlist_version):
 			self.get_model().set(int(song["pos"]), song)
@@ -2248,7 +2244,7 @@ class PlaylistView(SongList):
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 		self._playlist_version=version
 
-	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
+	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._refresh_selection(songpos)
 		if self._autoscroll:
 			if (selected:=self.get_model().get_selected()) is not None and state == "play":
@@ -2338,9 +2334,9 @@ class PlaylistWindow(Gtk.Stack):
 		self._scroll_button.connect("clicked", self._on_scroll_button_clicked)
 		self._adj.connect("value-changed", self._update_scroll_button_visibility)
 		self._playlist_view.get_model().connect("selection-changed", self._update_scroll_button_visibility)
-		self._client.emitter.connect("playlist", self._on_playlist_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connection-error", self._on_connection_error)
+		self._client.connect("playlist", self._on_playlist_changed)
+		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("connection-error", self._on_connection_error)
 
 		# packing
 		self.add_named(overlay, "playlist")
@@ -2352,7 +2348,7 @@ class PlaylistWindow(Gtk.Stack):
 			return True
 		return False
 
-	def _on_playlist_changed(self, emitter, version, length, songpos):
+	def _on_playlist_changed(self, client, version, length, songpos):
 		if length:
 			self.set_visible_child_name("playlist")
 		else:
@@ -2488,9 +2484,9 @@ class LyricsWindow(Gtk.Stack):
 class PlayButton(Gtk.Button):
 	def __init__(self, client):
 		super().__init__(icon_name="media-playback-start-symbolic", action_name="app.toggle-play", tooltip_text=_("Play"))
-		client.emitter.connect("state", self._on_state)
+		client.connect("state", self._on_state)
 
-	def _on_state(self, emitter, state):
+	def _on_state(self, client, state):
 		if state == "play":
 			self.set_property("icon-name", "media-playback-pause-symbolic")
 			self.set_tooltip_text(_("Pause"))
@@ -2513,10 +2509,10 @@ class BitRate(Gtk.Label):
 		self._mask=_("{bitrate} kb/s")
 
 		# connect
-		self._client.emitter.connect("bitrate", self._on_bitrate)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.connect("bitrate", self._on_bitrate)
+		self._client.connect("disconnected", self._on_disconnected)
 
-	def _on_bitrate(self, emitter, bitrate):
+	def _on_bitrate(self, client, bitrate):
 		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
 		if bitrate is None:
 			self.set_text("")
@@ -2533,9 +2529,9 @@ class PlaylistProgress(Gtk.Label):
 		self._length=0
 
 		# connect
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("playlist", self._on_playlist_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("playlist", self._on_playlist_changed)
+		self._client.connect("disconnected", self._on_disconnected)
 
 	def _clear(self):
 		self._length=0
@@ -2547,10 +2543,10 @@ class PlaylistProgress(Gtk.Label):
 		else:
 			self.set_text(f"{int(song)+1}/{self._length}")
 
-	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
+	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._refresh(songpos)
 
-	def _on_playlist_changed(self, emitter, version, length, songpos):
+	def _on_playlist_changed(self, client, version, length, songpos):
 		self._length=length
 		self._refresh(songpos)
 
@@ -2582,10 +2578,10 @@ class PlaybackControls(Gtk.Box):
 		self._scale.connect("value-changed", self._on_value_changed)
 		self._scale.connect("notify::css-classes", self._on_css_classes)
 		key_controller.connect("key-pressed", self._on_key_pressed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("state", self._on_state)
-		self._elapsed_handler=self._client.emitter.connect("elapsed", self._on_elapsed)
-		self._client.emitter.connect("current-song", self._on_song_changed)
+		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("state", self._on_state)
+		self._elapsed_handler=self._client.connect("elapsed", self._on_elapsed)
+		self._client.connect("current-song", self._on_song_changed)
 
 		# packing
 		start_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START)
@@ -2618,7 +2614,7 @@ class PlaybackControls(Gtk.Box):
 			self._seeking=False
 			self._adjustment.set_value(self._scale.get_fill_level())
 
-	def _on_elapsed(self, emitter, elapsed, duration):
+	def _on_elapsed(self, client, elapsed, duration):
 		if duration > 0:
 			elapsed=min(elapsed, duration)  # fix display error
 			if not self._seeking:
@@ -2651,7 +2647,7 @@ class PlaybackControls(Gtk.Box):
 			pass
 		return True
 
-	def _on_state(self, emitter, state):
+	def _on_state(self, client, state):
 		if state == "stop":
 			self._scale.set_range(0, 0)
 
@@ -2677,7 +2673,7 @@ class VolumeControl(Gtk.Box):
 
 		# connect
 		scale.connect("change-value", self._on_change_value)
-		self._client.emitter.connect("volume", self._refresh)
+		self._client.connect("volume", self._refresh)
 
 		# packing
 		self.append(Gtk.Image(icon_name="audio-speakers-symbolic", accessible_role=Gtk.AccessibleRole.PRESENTATION))
@@ -2686,7 +2682,7 @@ class VolumeControl(Gtk.Box):
 	def _on_change_value(self, scale, scroll, value):
 		self._client.setvol(int(max(min(value, 100), 0)))
 
-	def _refresh(self, emitter, volume):
+	def _refresh(self, client, volume):
 		self._adjustment.set_value(max(volume, 0))
 
 class PlayerMenu(Gtk.PopoverMenu):
@@ -2712,10 +2708,10 @@ class PlayerMenu(Gtk.PopoverMenu):
 		self.set_menu_model(menu)
 
 		# connect
-		self._client.emitter.connect("volume", self._on_volume_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.connect("volume", self._on_volume_changed)
+		self._client.connect("disconnected", self._on_disconnected)
 
-	def _on_volume_changed(self, emitter, volume):
+	def _on_volume_changed(self, client, volume):
 		if volume < 0 and self._volume_visible:
 			self._volume_section.remove(0)
 			self._volume_visible=False
@@ -2766,10 +2762,10 @@ class Player(Adw.Bin):
 
 		# connect
 		self._stack.connect("notify::visible-child-name", self._on_visible_child_name)
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("playlist", self._on_playlist_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
+		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("playlist", self._on_playlist_changed)
+		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("connected", self._on_connected)
 
 		# packing
 		toolbar_view=Adw.ToolbarView()
@@ -2784,7 +2780,7 @@ class Player(Adw.Bin):
 		elif self._stack.get_visible_child_name() == "playlist":
 			self._playlist_page.set_needs_attention(False)
 
-	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
+	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		if song:
 			self._cover.set_paintable(cover)
 			self._cover.set_visible(True)
@@ -2796,7 +2792,7 @@ class Player(Adw.Bin):
 			self._cover.set_paintable(FALLBACK_COVER)
 			self._lyrics_window.set_property("song", None)
 
-	def _on_playlist_changed(self, emitter, version, length, songpos):
+	def _on_playlist_changed(self, client, version, length, songpos):
 		self._playback_controls.set_visible(length > 0)
 		if self._stack.get_visible_child_name() != "playlist":
 			self._playlist_page.set_needs_attention(True)
@@ -2818,15 +2814,15 @@ class ProgressBar(Gtk.ProgressBar):
 	def __init__(self, client):
 		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.FILL)
 		self.add_css_class("osd")
-		client.emitter.connect("state", self._on_state)
-		client.emitter.connect("elapsed", self._on_elapsed)
+		client.connect("state", self._on_state)
+		client.connect("elapsed", self._on_elapsed)
 
-	def _on_state(self, emitter, state):
+	def _on_state(self, client, state):
 		if state == "stop":
 			self.set_visible(False)
 			self.set_fraction(0.0)
 
-	def _on_elapsed(self, emitter, elapsed, duration):
+	def _on_elapsed(self, client, elapsed, duration):
 		if duration > 0:
 			self.set_visible(True)
 			self.set_fraction(elapsed/duration)
@@ -2847,8 +2843,8 @@ class PlayerBar(Gtk.Overlay):
 		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
 
 		# connect
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
+		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("disconnected", self._on_disconnected)
 
 		# packing
 		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
@@ -2869,7 +2865,7 @@ class PlayerBar(Gtk.Overlay):
 		self._cover.set_paintable(FALLBACK_COVER)
 		self._cover.set_visible(False)
 
-	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
+	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		if song:
 			self._cover.set_paintable(cover)
 			self._cover.set_visible(True)
@@ -2971,15 +2967,15 @@ class MainWindow(Adw.ApplicationWindow):
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("connected", self._on_connected)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connection_error", self._on_connection_error)
-		self._client.emitter.connect("updating-db", self._on_updating_db)
-		self._client.emitter.connect("updated-db", self._on_updated_db)
-		self._client.emitter.connect("a-b-loop", self._on_a_b_loop)
-		self._client.emitter.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
+		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("state", self._on_state)
+		self._client.connect("connected", self._on_connected)
+		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("connection_error", self._on_connection_error)
+		self._client.connect("updating-db", self._on_updating_db)
+		self._client.connect("updated-db", self._on_updated_db)
+		self._client.connect("a-b-loop", self._on_a_b_loop)
+		self._client.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
 
 		# packing
 		self._toast_overlay=Adw.ToastOverlay(child=self._status_page_stack)
@@ -2987,8 +2983,8 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def open(self):
 		# bring player in consistent state
-		self._client.emitter.emit("disconnected")
-		self._client.emitter.emit("connecting")
+		self._client.emit("disconnected")
+		self._client.emit("connecting")
 		# set default window size
 		self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
 		self._settings.bind("width", self, "default-width", Gio.SettingsBindFlags.SET)
@@ -3035,13 +3031,13 @@ class MainWindow(Adw.ApplicationWindow):
 			self.get_application().set_accels_for_action("app.toggle-play", ["space"])
 			self.get_application().set_accels_for_action("app.a-b-loop", ["l"])
 
-	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
+	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		if song:
 			self.set_title(song["title"][0])
 		else:
 			self._clear_title()
 
-	def _on_state(self, emitter, state):
+	def _on_state(self, client, state):
 		if state == "play":
 			self._suspend_inhibit=self.get_application().inhibit(self, Gtk.ApplicationInhibitFlags.SUSPEND, _("Playing music"))
 		elif self._suspend_inhibit:
@@ -3082,7 +3078,7 @@ class MainWindow(Adw.ApplicationWindow):
 			dialog.close()
 		self._toast_overlay.add_toast(self._updated_toast)
 
-	def _on_a_b_loop(self, emitter, first_mark, second_mark):
+	def _on_a_b_loop(self, client, first_mark, second_mark):
 		if first_mark < 0.0:
 			title=_("Cleared A‐B loop")
 		else:
@@ -3140,7 +3136,7 @@ class Plattenalbum(Adw.Application):
 			action=Gio.SimpleAction.new_stateful(name , None, GLib.Variant("b", False))
 			handler=action.connect("notify::state", self._on_mode_change, name)
 			self.add_action(action)
-			self._client.emitter.connect(name, self._update_action, action, handler)
+			self._client.connect(name, self._update_action, action, handler)
 		self._connect_action=Gio.SimpleAction.new("connect", GLib.VariantType.new("b"))
 		self._connect_action.connect("activate", self._on_connect)
 		self.add_action(self._connect_action)
@@ -3158,11 +3154,11 @@ class Plattenalbum(Adw.Application):
 			self.set_accels_for_action(action, accels)
 
 		# connect
-		self._client.emitter.connect("state", self._on_state)
-		self._client.emitter.connect("current-song", self._on_song_changed)
-		self._client.emitter.connect("playlist", self._on_playlist_changed)
-		self._client.emitter.connect("disconnected", self._on_disconnected)
-		self._client.emitter.connect("connected", self._on_connected)
+		self._client.connect("state", self._on_state)
+		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("playlist", self._on_playlist_changed)
+		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("connected", self._on_connected)
 
 	def do_activate(self):
 		if self._window is None:
@@ -3230,7 +3226,7 @@ class Plattenalbum(Adw.Application):
 	def _on_update(self, action, param):
 		self._client.update()
 
-	def _update_action(self, emitter, value, action, handler):
+	def _update_action(self, client, value, action, handler):
 		action.handler_block(handler)
 		action.set_state(GLib.Variant("b", value))
 		action.handler_unblock(handler)
@@ -3247,12 +3243,12 @@ class Plattenalbum(Adw.Application):
 	def _on_connect(self, action, param):
 		self._client.open_connection(param.get_boolean())
 
-	def _on_state(self, emitter, state):
+	def _on_state(self, client, state):
 		state_dict={"play": True, "pause": True, "stop": False}
 		for action in self._disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state_dict[state])
 
-	def _on_song_changed(self, emitter, song, cover, cover_path, songpos, songid, state):
+	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		for action in self._disable_no_song_data:
 			self.lookup_action(action).set_enabled(songpos is not None)
 		if song:
@@ -3277,7 +3273,7 @@ class Plattenalbum(Adw.Application):
 			else:
 				self.withdraw_notification("title-change")
 
-	def _on_playlist_changed(self, emitter, version, length, songpos):
+	def _on_playlist_changed(self, client, version, length, songpos):
 		for action in self._enable_disable_on_playlist_data:
 			self.lookup_action(action).set_enabled(length > 0)
 
