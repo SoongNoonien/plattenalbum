@@ -45,6 +45,7 @@ textdomain("de.wagnermartin.Plattenalbum")
 Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
 
 FALLBACK_COVER=Gdk.Paintable.new_empty(1, 1)
+CONNECTION_TIMEOUT=30
 
 ############################
 # decorators and functions #
@@ -620,6 +621,7 @@ class Client(GObject.Object):
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 
 	def _post_connect(self):
+		self._socket.settimeout(None)
 		self._read_file=self._socket.makefile("rb")
 		self._write_file=self._socket.makefile("w", encoding='utf-8')
 		self.protocol_version=self._read_file.readline().decode('utf-8')[7:-1]
@@ -714,6 +716,7 @@ class Client(GObject.Object):
 		def callback():
 			# connect
 			if manual:
+				socket.setdefaulttimeout(CONNECTION_TIMEOUT)
 				try:
 					self._connect_tcp(self._settings.get_string("host"), self._settings.get_int("port"))
 					self.server=f'{self._settings.get_string("host")}:{self._settings.get_int("port")}'
@@ -729,6 +732,10 @@ class Client(GObject.Object):
 						self.emit("connection_error")
 						return False
 			else:
+				if (timeout:=GLib.getenv("MPD_TIMEOUT")) is None:
+					socket.setdefaulttimeout(CONNECTION_TIMEOUT)
+				else:
+					socket.setdefaulttimeout(int(timeout))
 				host=GLib.getenv("MPD_HOST")
 				port=GLib.getenv("MPD_PORT")
 				if host is not None or port is not None:
