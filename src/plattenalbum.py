@@ -21,14 +21,12 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, Gdk, Pango, GObject, GLib, Graphene
-from mpd import MPDClient, CommandError, ConnectionError
 from html.parser import HTMLParser
 import urllib.request
 import urllib.parse
 import urllib.error
+import socket
 import threading
-import functools
-import itertools
 import collections
 import sys
 import signal
@@ -482,6 +480,19 @@ class MPRISInterface:  # TODO emit Seeked if needed
 # MPD client wrapper #
 ######################
 
+class TagFilter():
+	def __init__(self, **kwargs):
+		self.filter=kwargs
+
+	def __str__(self):
+		return " ".join((f"{tag} {self._quote(value)}" for tag, value in self.filter.items()))
+
+	def __add__(self, other):
+		return TagFilter(**self.filter, **other.filter)
+
+	def _quote(self, value):
+		return f'"{value.replace("\"","\\\"")}"'
+
 class Duration():
 	def __init__(self, seconds=None):
 		if seconds is None:
@@ -516,8 +527,8 @@ class MultiTag(list):
 
 class SongMetaclass(type(GObject.Object), type(collections.UserDict)): pass
 class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
-	def __init__(self, data):
-		collections.UserDict.__init__(self, data)
+	def __init__(self):
+		collections.UserDict.__init__(self)
 		GObject.Object.__init__(self)
 	def __setitem__(self, key, value):
 		if key == "duration":
@@ -525,8 +536,8 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 		elif key in ("file", "pos", "id"):
 			super().__setitem__(key, value)
 		elif key in ("track", "title", "artist", "album", "albumartist", "albumartistsort", "date"):
-			if isinstance(value, list):
-				super().__setitem__(key, MultiTag(value))
+			if key in self.data:
+				self.data[key].append(value)
 			else:
 				super().__setitem__(key, MultiTag([value]))
 
@@ -549,6 +560,9 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 	def get_album(self):
 		return Album(self.get_album_artist(), self["album"][0], self["date"][0])
 
+	def get_quoted_file(self):
+		return f'"{self["file"].replace("\"", "\\\"")}"'
+
 class Album(GObject.Object):
 	def __init__(self, artist, name, date):
 		GObject.Object.__init__(self)
@@ -558,7 +572,7 @@ class Album(GObject.Object):
 		self.cover=None
 
 	def tag_filter(self):
-		return (*self.artist.tag_filter(), "album", self.name, "date", self.date)
+		return self.artist.tag_filter()+TagFilter(album=self.name, date=self.date)
 
 class Artist(GObject.Object):
 	def __init__(self, name, sortname):
@@ -570,7 +584,7 @@ class Artist(GObject.Object):
 		return (self.name == other.name) and (self.sortname == other.sortname)
 
 	def tag_filter(self):
-		return ("albumartist", self.name, "albumartistsort", self.sortname)
+		return TagFilter(albumartist=self.name, albumartistsort=self.sortname)
 
 class EventEmitter(GObject.Object):
 	__gsignals__={
@@ -595,32 +609,109 @@ class EventEmitter(GObject.Object):
 		"show-album": (GObject.SignalFlags.RUN_FIRST, None, (Album,)),
 	}
 
-class Client(MPDClient):
+class CommandError(Exception): pass
+
+class Client():
 	def __init__(self, settings):
 		super().__init__()
-		self.add_command("config", MPDClient._parse_object)  # Work around https://github.com/Mic92/python-mpd2/issues/244
 		self._settings=settings
 		self.emitter=EventEmitter()
 		self._last_status={}
-		self._music_directory=None
 		self._first_mark=None
 		self._second_mark=None
 		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
 		self._socket_path=GLib.build_filenamev([GLib.get_user_runtime_dir(), "mpd", "socket"])
 		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
-		self.server=""
 
-	# overloads to use Song class
-	def currentsong(self, *args):
-		return Song(super().currentsong(*args))
+	def _post_connect(self):
+		self._read_file=self._socket.makefile("rb")
+		self._write_file=self._socket.makefile("w", encoding='utf-8')
+		self.mpd_version=self._read_file.readline().decode('utf-8')[7:-1]
+
+	def _connect_tcp(self, host, port):
+		try:
+			addrinfo=socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM)
+		except OSError:
+			raise ConnectionError
+		for af, socktype, proto, canonname, sa in addrinfo:
+			try:
+				self._socket=socket.socket(af, socktype, proto)
+			except OSError:
+				continue
+			try:
+				self._socket.connect(sa)
+			except OSError:
+				self._socket.close()
+				continue
+			break
+		else:
+			raise ConnectionError
+		self._post_connect()
+
+	def _connect_unix(self, path):
+		self._socket=socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+		try:
+			self._socket.connect(path)
+		except OSError:
+			raise ConnectionError
+		self._post_connect()
+
+	def _parse_line(self):
+		line=self._read_file.readline().decode('utf-8')
+		if not line.endswith("\n"):
+			raise CommandError
+		line=line[:-1]
+		if line.startswith("ACK"):
+			raise CommandError(line)
+		if line == "OK":
+			return None
+		return line
+
+	def _parse_pairs(self):
+		while (line:=self._parse_line()) is not None:
+			key,value=line.split(": ", 1)
+			yield (key.lower(), value)
+
+	def _parse_dict(self):
+		response={}
+		for key, value in self._parse_pairs():
+			response[key]=value
+		return response
+
+	def _parse_songs(self):
+		song=Song()
+		for key, value in self._parse_pairs():
+			if key == "file" and song:
+				yield song
+				song=Song()
+			song[key]=value
+		if song:
+			yield song
+
+	def _parse_song(self):
+		song=Song()
+		for song in self._parse_songs():
+			continue
+		return song
+
+	def _send_command(self, command):
+		self._write_file.write(command+"\n")
+		self._write_file.flush()
+
+	def _clear_response(self):
+		while self._parse_line() is not None:
+			continue
+
+	def _run_command(self, command):
+		self._send_command(command)
+		self._clear_response()
 
 	def update(self):
+		self._send_command("update")
 		# This is a rather ugly workaround for database updates that are quicker
 		# than around a tenth of a second and therefore can't be detected by _main_loop.
-		job_id=super().update()
-		self._last_status["updating_db"]=job_id
+		self._last_status["updating_db"]=self._parse_dict()["updating_db"]
 		self.emitter.emit("updating-db")
-		return job_id
 
 	def try_connect(self, manual):
 		self.emitter.emit("connecting")
@@ -628,16 +719,16 @@ class Client(MPDClient):
 			# connect
 			if manual:
 				try:
-					self.connect(self._settings.get_string("host"), self._settings.get_int("port"))
+					self._connect_tcp(self._settings.get_string("host"), self._settings.get_int("port"))
 					self.server=f'{self._settings.get_string("host")}:{self._settings.get_int("port")}'
-				except:
+				except ConnectionError:
 					self.emitter.emit("connection_error")
 					return False
 				# set password
 				if password:=self._settings.get_string("password"):
 					try:
-						self.password(password)
-					except:
+						self._run_command(f"password {password}")
+					except ConnectionError:
 						self.disconnect()
 						self.emitter.emit("connection_error")
 						return False
@@ -650,27 +741,29 @@ class Client(MPDClient):
 					if port is None:
 						port=6600
 					try:
-						self.connect(host, port)
+						self._connect_tcp(host, port)
 						self.server=f"{host}:{port}"
-					except:
+					except ConnectionError:
 						pass
 				if not self.connected():
 					try:
-						self.connect(self._socket_path, None)
+						self._connect_unix(self._socket_path)
 						self.server=self._socket_path
-					except:
+					except ConnectionError:
 						try:
-							self.connect("/run/mpd/socket", None)
+							self._connect_unix("/run/mpd/socket")
 							self.server="/run/mpd/socket"
-						except:
+						except ConnectionError:
 							self.emitter.emit("connection_error")
 							return False
 			# connected
 			try:
-				self._music_directory=self.config()["music_directory"]
-			except:
+				self._music_directory=self.config().get("music_directory")
+			except CommandError:
 				self._music_directory=None
-			if "status" in self.commands():
+			self._send_command("commands")
+			commands=[command for _, command in self._parse_pairs()]
+			if "tagtypes" in commands and "status" in commands:
 				self._set_default_tagtypes()
 				self.emitter.emit("connected", self._database_is_empty())
 				GLib.timeout_add(100, self._main_loop)
@@ -682,27 +775,27 @@ class Client(MPDClient):
 		GLib.idle_add(callback)
 
 	def disconnect(self):
-		super().disconnect()
+		self._socket.close()
+		self._read_file.close()
+		self._write_file.close()
 		self._last_status={}
-		self._music_directory=None
-		self.server=""
 		self.emitter.emit("disconnected")
 
 	def connected(self):
 		try:
-			self.ping()
+			self._run_command("ping")
 			return True
 		except:
 			return False
 
 	def delete_song(self, song):
-		self.deleteid(song["id"])
+		self._run_command(f'deleteid {song["id"]}')
 
 	def add_song(self, song, position):
-		self.add(song["file"], position)
+		self._run_command(f"add {song.get_quoted_file()} {position}")
 
 	def append_song(self, song):
-		self.add(song["file"])
+		self._run_command(f"add {song.get_quoted_file()}")
 
 	def play_song(self, song):
 		self.clear()
@@ -716,7 +809,7 @@ class Client(MPDClient):
 			self.add_song(song, "0")
 
 	def append_album(self, album):
-		self.findadd(*album.tag_filter())
+		self._run_command(f"findadd {album.tag_filter()}")
 
 	def play_album(self, album):
 		self.clear()
@@ -726,68 +819,91 @@ class Client(MPDClient):
 	def enqueue(self):
 		song=self.currentsong()
 		status=self.status()
-		self.moveid(status["songid"], 0)
+		self._run_command(f'moveid {status["songid"]} 0')
 		if int(status["playlistlength"]) > 1:
-			self.delete((1,))
+			self._run_command(f"delete 1:")
 		self.append_album(song.get_album())
-		duplicates=self.playlistfind("file", song["file"])
-		if len(duplicates) > 1:
-			self.swap(0, duplicates[1]["pos"])
-			self.delete(0)
+		self._send_command(f"playlistfind file {song.get_quoted_file()}")
+		if duplicate:=self._parse_song():
+			self._run_command(f'swapid {status["songid"]} {duplicate["id"]}')
+			self._run_command(f'deleteid {duplicate["id"]}')
 
 	def tidy_playlist(self):
 		status=self.status()
 		if (songid:=status.get("songid")) is None:
 			self.clear()
 		else:
-			self.moveid(songid, 0)
+			self._run_command(f"moveid {songid} 0")
 			if int(status["playlistlength"]) > 1:
-				self.delete((1,))
+				self._run_command(f"delete 1:")
 
 	def search_songs(self, keywords, num):
 		tags=("title", "artist", "album", "date")
-		songs=self.search(self._get_search_expression(tags, keywords), "window", f"0:{num}")
-		return (Song(song) for song in songs)
+		self._send_command(f"search {self._get_search_expression(tags, keywords)} window 0:{num}")
+		return self._parse_songs()
 
 	def search_albums(self, keywords, num):
 		tags=("album", "albumartist", "albumartistsort", "date")
-		group=("group", "date", "group", "albumartist", "group", "albumartistsort")
-		albums=self.list("album", self._get_search_expression(tags, keywords), *group)
-		for album in itertools.islice(albums, num):
-			yield Album(Artist(album["albumartist"], album["albumartistsort"]), album["album"], album["date"])
+		self._send_command(f"list album {self._get_search_expression(tags, keywords)} group date group albumartist group albumartistsort")
+		for key, value in self._parse_pairs():
+			if key == "date":
+				date=value
+			elif key == "albumartist":
+				albumartist=value
+			elif key == "albumartistsort":
+				albumartistsort=value
+			elif num > 0:
+				yield Album(Artist(albumartist, albumartistsort), value, date)
+				num-=1
 
 	def search_artists(self, keywords, num):
 		tags=("albumartist", "albumartistsort")
-		artists=self.list("albumartist", self._get_search_expression(tags, keywords), "group", "albumartistsort")
-		for artist in itertools.islice(artists, num):
-			yield Artist(artist["albumartist"], artist["albumartistsort"])
+		self._send_command(f"list albumartist {self._get_search_expression(tags, keywords)} group albumartistsort")
+		for key, value in self._parse_pairs():
+			if key == "albumartistsort":
+				sortname=value
+			elif num > 0:
+				yield Artist(value, sortname)
+				num-=1
 
 	def get_songs(self, album):
-		return (Song(song) for song in self.find(*album.tag_filter()))
+		self._send_command(f"find {album.tag_filter()}")
+		return self._parse_songs()
 
 	def get_albums(self, artist):
-		for album in self.list("album", *artist.tag_filter(), "group", "date"):
-			yield Album(artist, album["album"], album["date"])
+		self._send_command(f"list album {artist.tag_filter()} group date")
+		for key, value in self._parse_pairs():
+			if key == "date":
+				date=value
+			else:
+				yield Album(artist, value, date)
 
 	def get_artists(self):
-		for artist in self.list("albumartist", "group", "albumartistsort"):
-			yield Artist(artist["albumartist"], artist["albumartistsort"])
+		self._send_command(f"list albumartist group albumartistsort")
+		for key, value in self._parse_pairs():
+			if key == "albumartistsort":
+				sortname=value
+			else:
+				yield Artist(value, sortname)
 
 	def get_cover(self, album):
-		self.tagtypes("clear")
-		song=self.find(*album.tag_filter(), "window", "0:1")[0]
+		self._clear_tagtypes()
+		self._send_command(f"find {album.tag_filter()} window 0:1")
+		song=self._parse_song()
 		self._set_default_tagtypes()
-		return self._get_cover(song["file"])
+		return self._get_cover(song)
 
 	def get_duration(self, album):
-		return Duration(self.count(*album.tag_filter())["playtime"])
+		self._send_command(f"count {album.tag_filter()}")
+		return Duration(self._parse_dict()["playtime"])
 
 	def get_playlist_changes(self, version):
-		if version is not None:
-			songs=self.plchanges(version)
+		if version is None:
+			self._send_command("playlistinfo")
 		else:
-			songs=self.playlistinfo()
-		return (Song(song) for song in songs)
+			self._send_command(f"plchanges {version}")
+		for song in self._parse_songs():
+			yield song
 
 	def get_absolute_path(self, song):
 		stripped_uri=re.sub(r"(.*\.cue)\/track\d+$", r"\1", song["file"], flags=re.IGNORECASE)
@@ -813,22 +929,20 @@ class Client(MPDClient):
 				None, Gio.DBusCallFlags.NONE, -1, fd_list)
 
 	def can_show_album(self, song):
-		self.tagtypes("clear")
-		songs=self.find("file", song["file"])
+		self._clear_tagtypes()
+		self._send_command(f"find file {song.get_quoted_file()}")
+		song=self._parse_song()
 		self._set_default_tagtypes()
-		return bool(songs)
+		return bool(song)
 
 	def show_album(self, song):
 		self.emitter.emit("show-album", song.get_album())
 
 	def toggle_play(self):
-		if self.status()["state"] != "stop":
-			self.pause()
+		if self.status()["state"] == "stop":
+			self.play()
 		else:
-			try:
-				self.play()
-			except:
-				pass
+			self.pause()
 
 	def a_b_loop(self):
 		value=float(self.status()["elapsed"])
@@ -846,8 +960,8 @@ class Client(MPDClient):
 			self._clear_marks()
 
 	def _get_search_expression(self, tags, keywords):
-		return "("+(" AND ".join("(!("+(" AND ".join(f"({tag} !contains_ci '{keyword.replace("'", "\\'")}')"
-			for tag in tags))+"))" for keyword in keywords))+")"
+		return '"('+(" AND ".join("(!("+(" AND ".join(f"({tag} !contains_ci '{keyword.replace("'", "\\'")}')"
+			for tag in tags))+"))" for keyword in keywords))+')"'
 
 	def _get_cover_path(self, uri):
 		if self._music_directory is None:
@@ -861,42 +975,51 @@ class Client(MPDClient):
 				if self._cover_regex.match(f):
 					return GLib.build_filenamev([song_dir, f])
 
-	def _binary_to_paintable(self, binary):
+	def _cover_fetch_loop(self, command, quoted_file):
+		offset=0
+		chunk_size=-1
+		data=bytearray()
+		while chunk_size != 0:
+			self._send_command(f'{command} {quoted_file} {offset}')
+			for key, value in self._parse_pairs():
+				if key == "binary":
+					chunk_size=int(value)
+					break
+			else:
+				break
+			chunk=self._read_file.read(chunk_size)
+			data.extend(chunk)
+			offset+=chunk_size
+			self._clear_response()
+		if not data:
+			return FALLBACK_COVER
 		try:
-			return Gdk.Texture.new_from_bytes(GLib.Bytes.new(binary))
+			return Gdk.Texture.new_from_bytes(GLib.Bytes.new(data))
 		except gi.repository.GLib.Error:  # cover can't be loaded
 			return FALLBACK_COVER
 
-	def _get_cover_from_file(self, uri):
+	def _get_binary_cover(self, quoted_file):
 		try:
-			return self._binary_to_paintable(self.albumart(uri)["binary"])
-		except:
-			return FALLBACK_COVER
+			return self._cover_fetch_loop("albumart", quoted_file)
+		except CommandError:
+			return self._cover_fetch_loop("readpicture", quoted_file)
 
-	def _get_cover_from_tag(self, uri):
-		try:
-			return self._binary_to_paintable(self.readpicture(uri)["binary"])
-		except:
-			return FALLBACK_COVER
-
-	def _get_binary_cover(self, uri):
-		if (cover:=self._get_cover_from_file(uri)) is not FALLBACK_COVER:
-			return cover
-		return self._get_cover_from_tag(uri)
-
-	def _get_cover_with_path(self, uri):
-		if (cover_path:=self._get_cover_path(uri)) is None:
-			return self._get_binary_cover(uri), None
+	def _get_cover_with_path(self, song):
+		if (cover_path:=self._get_cover_path(song["file"])) is None:
+			return self._get_binary_cover(song.get_quoted_file()), None
 		try:
 			return Gdk.Texture.new_from_filename(cover_path), cover_path
 		except gi.repository.GLib.Error:  # cover can't be loaded
-			return self._get_binary_cover(uri), None
+			return self._get_binary_cover(song.get_quoted_file()), None
 
-	def _get_cover(self, uri):
-		return self._get_cover_with_path(uri)[0]
+	def _get_cover(self, song):
+		return self._get_cover_with_path(song)[0]
 
 	def _set_default_tagtypes(self):
-		self.tagtypes("reset", "track", "title", "artist", "album", "albumartist", "albumartistsort", "date")
+		self._run_command("tagtypes reset track title artist album albumartist albumartistsort date")
+
+	def _clear_tagtypes(self):
+		self._run_command("tagtypes clear")
 
 	def _clear_marks(self):
 		if self._first_mark is not None:
@@ -917,7 +1040,7 @@ class Client(MPDClient):
 				self.emitter.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
 			if "songid" in diff:
 				song=self.currentsong()
-				cover,cover_path=self._get_cover_with_path(song["file"])
+				cover,cover_path=self._get_cover_with_path(song)
 				self.emitter.emit("current-song", song, cover, cover_path, status["song"], status["songid"], status["state"])
 				self._clear_marks()
 			if "elapsed" in diff:
@@ -944,7 +1067,7 @@ class Client(MPDClient):
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
-					self.emitter.emit("current-song", Song({}), FALLBACK_COVER, None, None, None, status["state"])
+					self.emitter.emit("current-song", Song(), FALLBACK_COVER, None, None, None, status["state"])
 					self._clear_marks()
 				elif "volume" == key:
 					self.emitter.emit("volume", -1)
@@ -953,11 +1076,44 @@ class Client(MPDClient):
 				elif "bitrate" == key:
 					self.emitter.emit("bitrate", None)
 			self._last_status=status
-		except (ConnectionError, ConnectionResetError) as e:
+			return True
+		except BrokenPipeError:
 			self.disconnect()
 			self.emitter.emit("connection_error")
 			return False
-		return True
+		except ValueError:
+			self.emitter.emit("connection_error")
+			return False
+
+	def currentsong(self):
+		self._send_command("currentsong")
+		return self._parse_song()
+
+	def status(self):
+		self._send_command("status")
+		return self._parse_dict()
+
+	def config(self):
+		self._send_command("config")
+		return self._parse_dict()
+
+	def stats(self):
+		self._send_command("stats")
+		return self._parse_dict()
+
+	def pause(self, state=""): self._run_command(f"pause {state}")
+	def play(self, pos=""): self._run_command(f"play {pos}")
+	def move(self, from_pos, to_pos): self._run_command(f"move {from_pos} {to_pos}")
+	def seekcur(self, time): self._run_command(f"seekcur {time}")
+	def setvol(self, vol): self._run_command(f"setvol {vol}")
+	def stop(self): self._run_command("stop")
+	def next(self): self._run_command("next")
+	def previous(self): self._run_command("previous")
+	def clear(self): self._run_command("clear")
+	def single(self, state): self._run_command(f"single {state}")
+	def consume(self, state): self._run_command(f"consume {state}")
+	def random(self, state): self._run_command(f"random {state}")
+	def repeat(self, state): self._run_command(f"repeat {state}")
 
 ########################
 # gio settings wrapper #

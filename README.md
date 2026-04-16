@@ -35,8 +35,7 @@ Install the following dependencies on your system.
 - Python3
 
 #### Python Modules
-- mpd (python-mpd2 >=3.1.0)
-- gi (Gtk, Adw, Gio, Gdk, Pango, GObject, GLib)
+- gi.repository (Gtk, Adw, Gio, Gdk, Pango, GObject, GLib, Graphene)
 
 Execute the following commands to build and install the program.
 ```bash
