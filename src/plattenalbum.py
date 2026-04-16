@@ -626,7 +626,7 @@ class Client():
 	def _post_connect(self):
 		self._read_file=self._socket.makefile("rb")
 		self._write_file=self._socket.makefile("w", encoding='utf-8')
-		self.mpd_version=self._read_file.readline().decode('utf-8')[7:-1]
+		self.protocol_version=self._read_file.readline().decode('utf-8')[7:-1]
 
 	def _connect_tcp(self, host, port):
 		try:
@@ -713,7 +713,7 @@ class Client():
 		self._last_status["updating_db"]=self._parse_dict()["updating_db"]
 		self.emitter.emit("updating-db")
 
-	def try_connect(self, manual):
+	def open_connection(self, manual):
 		self.emitter.emit("connecting")
 		def callback():
 			# connect
@@ -729,7 +729,7 @@ class Client():
 					try:
 						self._run_command(f"password {password}")
 					except ConnectionError:
-						self.disconnect()
+						self.close_connection()
 						self.emitter.emit("connection_error")
 						return False
 			else:
@@ -768,13 +768,13 @@ class Client():
 				self.emitter.emit("connected", self._database_is_empty())
 				GLib.timeout_add(100, self._main_loop)
 			else:
-				self.disconnect()
+				self.close_connection()
 				self.emitter.emit("connection_error")
 			self._settings.set_boolean("manual-connection", manual)
 			return False
 		GLib.idle_add(callback)
 
-	def disconnect(self):
+	def close_connection(self):
 		self._socket.close()
 		self._read_file.close()
 		self._write_file.close()
@@ -1078,7 +1078,7 @@ class Client():
 			self._last_status=status
 			return True
 		except BrokenPipeError:
-			self.disconnect()
+			self.close_connection()
 			self.emitter.emit("connection_error")
 			return False
 		except ValueError:
@@ -1248,7 +1248,7 @@ class ServerInfo(Adw.Dialog):
 		# populate
 		stats=client.stats()
 		server_list.append(PropertyRow(title=_("Address"), subtitle=client.server, subtitle_selectable=True))
-		server_list.append(PropertyRow(title=_("Protocol"), subtitle=client.mpd_version))
+		server_list.append(PropertyRow(title=_("Protocol"), subtitle=client.protocol_version))
 		database_list.append(PropertyRow(title=_("Songs"), subtitle=stats["songs"]))
 		database_list.append(PropertyRow(title=_("Total Playtime"), subtitle=str(Duration(stats["db_playtime"]))))
 		last_update=GLib.DateTime.new_from_unix_local(int(stats["db_update"])).format("%x, %X")
@@ -3001,7 +3001,7 @@ class MainWindow(Adw.ApplicationWindow):
 		while main.pending():
 			main.iteration()
 		self._settings.bind("maximize", self, "maximized", Gio.SettingsBindFlags.SET)
-		self._client.try_connect(self._settings.get_boolean("manual-connection"))
+		self._client.open_connection(self._settings.get_boolean("manual-connection"))
 
 	def _clear_title(self):
 		self.set_title("Plattenalbum")
@@ -3242,10 +3242,10 @@ class Plattenalbum(Adw.Application):
 			getattr(self._client, name)("1" if action.get_state() else "0")
 
 	def _on_disconnect(self, action, param):
-		self._client.disconnect()
+		self._client.close_connection()
 
 	def _on_connect(self, action, param):
-		self._client.try_connect(param.get_boolean())
+		self._client.open_connection(param.get_boolean())
 
 	def _on_state(self, emitter, state):
 		state_dict={"play": True, "pause": True, "stop": False}
