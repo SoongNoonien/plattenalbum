@@ -481,6 +481,20 @@ class MPRISInterface:  # TODO emit Seeked if needed
 # MPD client wrapper #
 ######################
 
+class SearchFilter():
+	def __init__(self, tags, keywords):
+		self._tags=tags
+		self._keywords=keywords
+
+	def __str__(self):
+		return '"('+" AND ".join(self._filter(keyword) for keyword in self._keywords)+')"'
+
+	def _filter(self, keyword):
+		return "(!("+" AND ".join(f'({tag} !contains_ci \\"{self._escape(keyword)}\\")' for tag in self._tags)+"))"
+
+	def _escape(self, keyword):
+		return keyword.replace("\\", "\\\\\\\\").replace("'", "\\\\'").replace("\"", "\\\\\\\"")
+
 class TagFilter():
 	def __init__(self, **kwargs):
 		self.filter=kwargs
@@ -844,12 +858,12 @@ class Client(GObject.Object):
 
 	def search_songs(self, keywords, num):
 		tags=("title", "artist", "album", "date")
-		self._send_command(f"search {self._get_search_expression(tags, keywords)} window 0:{num}")
+		self._send_command(f"search {SearchFilter(tags, keywords)} window 0:{num}")
 		return self._parse_songs()
 
 	def search_albums(self, keywords, num):
 		tags=("album", "albumartist", "albumartistsort", "date")
-		self._send_command(f"list album {self._get_search_expression(tags, keywords)} group date group albumartist group albumartistsort")
+		self._send_command(f"list album {SearchFilter(tags, keywords)} group date group albumartist group albumartistsort")
 		for key, value in self._parse_pairs():
 			if key == "date":
 				date=value
@@ -863,7 +877,7 @@ class Client(GObject.Object):
 
 	def search_artists(self, keywords, num):
 		tags=("albumartist", "albumartistsort")
-		self._send_command(f"list albumartist {self._get_search_expression(tags, keywords)} group albumartistsort")
+		self._send_command(f"list albumartist {SearchFilter(tags, keywords)} group albumartistsort")
 		for key, value in self._parse_pairs():
 			if key == "albumartistsort":
 				sortname=value
@@ -963,10 +977,6 @@ class Client(GObject.Object):
 			self.emit("a-b-loop", self._first_mark, self._second_mark)
 		else:
 			self._clear_marks()
-
-	def _get_search_expression(self, tags, keywords):
-		return '"('+(" AND ".join("(!("+(" AND ".join(f"({tag} !contains_ci '{keyword.replace("'", "\\'")}')"
-			for tag in tags))+"))" for keyword in keywords))+')"'
 
 	def _get_cover_path(self, uri):
 		if self._music_directory is None:
