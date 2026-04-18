@@ -1006,7 +1006,7 @@ class Client(GObject.Object):
 			return FALLBACK_COVER
 		try:
 			return Gdk.Texture.new_from_bytes(GLib.Bytes.new(data))
-		except gi.repository.GLib.Error:  # cover can't be loaded
+		except GLib.Error:  # cover can't be loaded
 			return FALLBACK_COVER
 
 	def _get_binary_cover(self, quoted_file):
@@ -1020,7 +1020,7 @@ class Client(GObject.Object):
 			return self._get_binary_cover(song.get_quoted_file()), None
 		try:
 			return Gdk.Texture.new_from_filename(cover_path), cover_path
-		except gi.repository.GLib.Error:  # cover can't be loaded
+		except GLib.Error:  # cover can't be loaded
 			return self._get_binary_cover(song.get_quoted_file()), None
 
 	def _get_cover(self, song):
