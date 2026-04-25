@@ -792,7 +792,10 @@ class Client(GObject.Object):
 	def close_connection(self):
 		self._socket.close()
 		self._read_file.close()
-		self._write_file.close()
+		try:
+			self._write_file.close()
+		except BrokenPipeError:
+			pass
 		self._last_status={}
 		self.emit("disconnected")
 
@@ -1088,7 +1091,7 @@ class Client(GObject.Object):
 					self.emit("bitrate", None)
 			self._last_status=status
 			return True
-		except BrokenPipeError:
+		except (BrokenPipeError, ConnectionResetError, CommandError):
 			self.close_connection()
 			self.emit("connection_error")
 			return False
