@@ -1175,32 +1175,8 @@ class PreferencesDialog(Adw.PreferencesDialog):
 		self.add(page)
 
 class ConnectDialog(Adw.Dialog):
-	def __init__(self, title, target):
-		super().__init__(title=title, width_request=360, follows_content_size=True)
-		self._clamp=Adw.Clamp(margin_bottom=18)
-		connect_button=Gtk.Button(label=_("_Connect"), use_underline=True, action_name="app.connect", action_target=target, halign=Gtk.Align.CENTER)
-		connect_button.set_css_classes(["suggested-action", "pill"])
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
-		box.append(self._clamp)
-		box.append(connect_button)
-		scroll=Gtk.ScrolledWindow(child=box, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
-		toolbar_view=Adw.ToolbarView(content=scroll)
-		toolbar_view.add_top_bar(Adw.HeaderBar())
-		self._connection_toast=Adw.Toast(title=_("Connection failed"))
-		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
-		self.set_child(self._toast_overlay)
-		self.set_default_widget(connect_button)
-		self.set_focus(connect_button)
-
-	def set_content(self, widget):
-		self._clamp.set_child(widget)
-
-	def connection_error(self):
-		self._toast_overlay.add_toast(self._connection_toast)
-
-class ManualConnectDialog(ConnectDialog):
 	def __init__(self, settings):
-		super().__init__(_("Manual Connection"), GLib.Variant("b", True))
+		super().__init__(title=_("Manual Connection"), width_request=360, follows_content_size=True)
 		list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
 		list_box.add_css_class("boxed-list")
 		hostname_row=Adw.EntryRow(title=_("Host"))
@@ -1213,7 +1189,21 @@ class ManualConnectDialog(ConnectDialog):
 		password_row=Adw.PasswordEntryRow(title=_("Password (optional)"))
 		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		list_box.append(password_row)
-		self.set_content(list_box)
+		connect_button=Adw.ButtonRow(title=_("_Connect"), use_underline=True, action_name="app.connect", action_target=GLib.Variant("b", True))
+		connect_button.add_css_class("suggested-action")
+		list_box.append(connect_button)
+
+		# packing
+		clamp=Adw.Clamp(child=list_box, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+		toolbar_view=Adw.ToolbarView(content=scroll)
+		toolbar_view.add_top_bar(Adw.HeaderBar())
+		self._connection_toast=Adw.Toast(title=_("Connection failed"))
+		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
+		self.set_child(self._toast_overlay)
+
+	def connection_error(self):
+		self._toast_overlay.add_toast(self._connection_toast)
 
 class CommandLabel(Gtk.Box):
 	def __init__(self, text):
@@ -1226,9 +1216,9 @@ class CommandLabel(Gtk.Box):
 		label.set_text(text)
 		self.append(label)
 
-class SetupDialog(ConnectDialog):
+class SetupDialog(Adw.Dialog):
 	def __init__(self):
-		super().__init__(_("Setup"), GLib.Variant("b", False))
+		super().__init__(title=_("Setup"), width_request=360, follows_content_size=True)
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
 		box.append(Gtk.Label(label=_("To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package manager, and run the following commands"\
 			" to configure and initialize a basic local instance. After that, Plattenalbum should be able to seamlessly connect to it."), use_markup=True, xalign=0, wrap=True))
@@ -1236,14 +1226,20 @@ class SetupDialog(ConnectDialog):
 		box.append(CommandLabel('cat << EOF > ~/.mpd/mpd.conf\ndb_file\t\t"~/.mpd/database"\nstate_file\t"~/.mpd/state"\n\n'\
 			'audio_output {\n\ttype\t"pulse"\n\tname\t"Music"\n}\nEOF'))
 		box.append(CommandLabel("systemctl --user enable --now mpd.socket"))
-		self.set_content(box)
+
+		# packing
+		clamp=Adw.Clamp(child=box, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+		toolbar_view=Adw.ToolbarView(content=scroll)
+		toolbar_view.add_top_bar(Adw.HeaderBar())
+		self.set_child(toolbar_view)
 
 class PropertyRow(Adw.ActionRow):
 	def __init__(self, **kwargs):
 		super().__init__(activatable=False, selectable=False, css_classes=["property"], **kwargs)
 
 class ServerInfo(Adw.Dialog):
-	def __init__(self, client, settings):
+	def __init__(self, client):
 		super().__init__(title=_("Information"), width_request=360, follows_content_size=True)
 
 		# lists
@@ -1253,7 +1249,7 @@ class ServerInfo(Adw.Dialog):
 		database_list.add_css_class("boxed-list")
 
 		# boxes
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=30)
 		box.append(HeadingBox(_("Server"), server_list))
 		box.append(HeadingBox(_("Database"), database_list))
 
@@ -1267,7 +1263,8 @@ class ServerInfo(Adw.Dialog):
 		database_list.append(PropertyRow(title=_("Last Update"), subtitle=last_update))
 
 		# packing
-		scroll=Gtk.ScrolledWindow(child=Adw.Clamp(child=box), propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+		clamp=Adw.Clamp(child=box, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
 		toolbar_view=Adw.ToolbarView(content=scroll)
 		toolbar_view.add_top_bar(Adw.HeaderBar())
 		self.set_child(toolbar_view)
@@ -3033,11 +3030,11 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_manual_connect(self, action, param):
 		if self.get_visible_dialog() is None:
-			ManualConnectDialog(self._settings).present(self)
+			ConnectDialog(self._settings).present(self)
 
 	def _on_server_info(self, action, param):
 		if self.get_visible_dialog() is None:
-			ServerInfo(self._client, self._settings).present(self)
+			ServerInfo(self._client).present(self)
 
 	def _on_search_entry_focus_event(self, controller, focus):
 		if focus:
