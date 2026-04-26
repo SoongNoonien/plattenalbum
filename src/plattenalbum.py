@@ -731,7 +731,10 @@ class Client(GObject.Object):
 			if manual:
 				socket.setdefaulttimeout(CONNECTION_TIMEOUT)
 				password=self._settings.get_string("password")
-				success=self._connect_tcp(self._settings.get_string("host"), self._settings.get_int("port"))
+				if (host:=self._settings.get_string("host")).startswith("/"):
+					success=self._connect_unix(host)
+				else:
+					success=self._connect_tcp(host, self._settings.get_int("port"))
 			else:
 				if (timeout:=GLib.getenv("MPD_TIMEOUT")) is None:
 					socket.setdefaulttimeout(CONNECTION_TIMEOUT)
