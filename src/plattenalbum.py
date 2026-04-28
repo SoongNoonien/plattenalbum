@@ -1094,11 +1094,11 @@ class Client(GObject.Object):
 					self.emit("bitrate", None)
 			self._last_status=status
 			return True
-		except (BrokenPipeError, ConnectionResetError, CommandError):
+		except (BrokenPipeError, ConnectionResetError, CommandError):  # Server offline or connection lost
 			self.close_connection()
 			self.emit("connection_error")
 			return False
-		except ValueError:
+		except ValueError:  # Connection closed by user
 			self.emit("connection_error")
 			return False
 
