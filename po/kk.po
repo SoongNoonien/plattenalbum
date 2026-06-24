@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-28 21:49+0200\n"
-"PO-Revision-Date: 2026-06-24 11:33+0500\n"
+"PO-Revision-Date: 2026-06-24 12:00+0500\n"
 "Last-Translator: AnmiTaliDev <anmitalidev@nuros.org>\n"
 "Language-Team: Kazakh\n"
 "Language: kk\n"
@@ -45,12 +45,12 @@ msgid "Stop _Playback on Quit"
 msgstr "Шыққанда _ойнатуды тоқтату"
 
 #: src/plattenalbum.py:1165
-msgid "Support "_MPRIS""
-msgstr ""MPRIS" _қолдауы"
+msgid "Support \u201cMPRIS\u201d"
+msgstr "\u201cMPRIS\u201d _қолдауы"
 
 #: src/plattenalbum.py:1165
-msgid "Disable if "MPRIS" is supported by another client"
-msgstr "Басқа клиент "MPRIS" қолдаса өшіру"
+msgid "Disable if \u201cMPRIS\u201d is supported by another client"
+msgstr "Басқа клиент \u201cMPRIS\u201d қолдаса өшіру"
 
 #: src/plattenalbum.py:1182
 msgid "Manual Connection"
@@ -405,13 +405,13 @@ msgstr "Келесі трек ойнатылуда"
 
 #: src/plattenalbum.py:3265
 #, python-brace-format
-msgid "Now playing "{title}" by "{artist}""
-msgstr "Қазір ойнатылуда: "{artist}" орындаушысының "{title}" треги"
+msgid "Now playing \u201c{title}\u201d by \u201c{artist}\u201d"
+msgstr "Қазір ойнатылуда: \u201c{artist}\u201d орындаушысының \u201c{title}\u201d треги"
 
 #: src/plattenalbum.py:3267
 #, python-brace-format
-msgid "Now playing "{title}""
-msgstr "Қазір ойнатылуда: "{title}" треги"
+msgid "Now playing \u201c{title}\u201d"
+msgstr "Қазір ойнатылуда: \u201c{title}\u201d треги"
 
 #: src/plattenalbum.py:3269
 msgid "Skip"
@@ -454,10 +454,6 @@ msgstr "Басты терезе"
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
 msgid "Album view"
 msgstr "Альбом көрінісі"
-
-#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
-msgid "Search"
-msgstr "Іздеу"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
 msgid "Small window"
