@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-28 21:49+0200\n"
-"PO-Revision-Date: 2026-06-23 20:29+0200\n"
+"PO-Revision-Date: 2026-06-24 11:33+0500\n"
 "Last-Translator: AnmiTaliDev <anmitalidev@nuros.org>\n"
 "Language-Team: Kazakh\n"
 "Language: kk\n"
@@ -45,12 +45,12 @@ msgid "Stop _Playback on Quit"
 msgstr "Шыққанда _ойнатуды тоқтату"
 
 #: src/plattenalbum.py:1165
-msgid "Support “_MPRIS”"
-msgstr "“MPRIS” қолдауы"
+msgid "Support "_MPRIS""
+msgstr ""MPRIS" _қолдауы"
 
 #: src/plattenalbum.py:1165
-msgid "Disable if “MPRIS” is supported by another client"
-msgstr "Басқа клиент “MPRIS” қолдаса өшіру"
+msgid "Disable if "MPRIS" is supported by another client"
+msgstr "Басқа клиент "MPRIS" қолдаса өшіру"
 
 #: src/plattenalbum.py:1182
 msgid "Manual Connection"
@@ -134,11 +134,11 @@ msgstr "_Қосу"
 
 #: src/plattenalbum.py:1423
 msgid "As _Next"
-msgstr "_Келесі ретінде"
+msgstr "Келесі _ретінде"
 
 #: src/plattenalbum.py:1426 src/plattenalbum.py:2127
 msgid "Show Al_bum"
-msgstr "_Альбомды көрсету"
+msgstr "Альбомды _көрсету"
 
 #: src/plattenalbum.py:1427 src/plattenalbum.py:2128
 msgid "Show _File"
@@ -309,8 +309,8 @@ msgstr "Келесі"
 
 #: src/plattenalbum.py:2525
 #, python-brace-format
-msgid "{bitrate} kb/s"
-msgstr "{bitrate} кбит/с"
+msgid "{bitrate} kb/s"
+msgstr "{bitrate} кбит/с"
 
 #: src/plattenalbum.py:2585 src/plattenalbum.py:2857
 msgid "Progress bar"
@@ -326,11 +326,11 @@ msgstr "_Қайталау режимі"
 
 #: src/plattenalbum.py:2719
 msgid "R_andom Mode"
-msgstr "_Кездейсоқ режим"
+msgstr "Ке_здейсоқ режим"
 
 #: src/plattenalbum.py:2720
 msgid "_Single Mode"
-msgstr "_Бір рет режимі"
+msgstr "_Бір рет режімі"
 
 #: src/plattenalbum.py:2721
 msgid "_Pause After Song"
@@ -405,13 +405,13 @@ msgstr "Келесі трек ойнатылуда"
 
 #: src/plattenalbum.py:3265
 #, python-brace-format
-msgid "Now playing “{title}” by “{artist}”"
-msgstr "Қазір ойнатылуда: “{artist}” орындаушысының “{title}” треги"
+msgid "Now playing "{title}" by "{artist}""
+msgstr "Қазір ойнатылуда: "{artist}" орындаушысының "{title}" треги"
 
 #: src/plattenalbum.py:3267
 #, python-brace-format
-msgid "Now playing “{title}”"
-msgstr "Қазір ойнатылуда: “{title}” треги"
+msgid "Now playing "{title}""
+msgstr "Қазір ойнатылуда: "{title}" треги"
 
 #: src/plattenalbum.py:3269
 msgid "Skip"
@@ -454,6 +454,10 @@ msgstr "Басты терезе"
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
 msgid "Album view"
 msgstr "Альбом көрінісі"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+msgid "Search"
+msgstr "Іздеу"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
 msgid "Small window"
