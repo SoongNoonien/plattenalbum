@@ -45,12 +45,12 @@ msgid "Stop _Playback on Quit"
 msgstr "Шыққанда _ойнатуды тоқтату"
 
 #: src/plattenalbum.py:1165
-msgid "Support \u201cMPRIS\u201d"
-msgstr "\u201cMPRIS\u201d _қолдауы"
+msgid "Support “_MPRIS”"
+msgstr "“MPRIS” _қолдауы"
 
 #: src/plattenalbum.py:1165
-msgid "Disable if \u201cMPRIS\u201d is supported by another client"
-msgstr "Басқа клиент \u201cMPRIS\u201d қолдаса өшіру"
+msgid "Disable if “MPRIS” is supported by another client"
+msgstr "Басқа клиент “MPRIS” қолдаса өшіру"
 
 #: src/plattenalbum.py:1182
 msgid "Manual Connection"
@@ -405,13 +405,13 @@ msgstr "Келесі трек ойнатылуда"
 
 #: src/plattenalbum.py:3265
 #, python-brace-format
-msgid "Now playing \u201c{title}\u201d by \u201c{artist}\u201d"
-msgstr "Қазір ойнатылуда: \u201c{artist}\u201d орындаушысының \u201c{title}\u201d треги"
+msgid "Now playing “{title}” by “{artist}”"
+msgstr "Қазір ойнатылуда: “{artist}” орындаушысының “{title}” треги"
 
 #: src/plattenalbum.py:3267
 #, python-brace-format
-msgid "Now playing \u201c{title}\u201d"
-msgstr "Қазір ойнатылуда: \u201c{title}\u201d треги"
+msgid "Now playing “{title}”"
+msgstr "Қазір ойнатылуда: “{title}” треги"
 
 #: src/plattenalbum.py:3269
 msgid "Skip"
