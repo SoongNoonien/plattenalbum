@@ -213,11 +213,11 @@ msgstr "_Параметрлер"
 
 #: src/plattenalbum.py:1955 src/plattenalbum.py:2964
 msgid "_Keyboard Shortcuts"
-msgstr "_Пернелер тіркесімдері"
+msgstr "Пернелер _тіркесімдері"
 
 #: src/plattenalbum.py:1956 src/plattenalbum.py:2965
 msgid "_About Plattenalbum"
-msgstr "_Plattenalbum туралы"
+msgstr "Plattenalbum _жайында"
 
 #: src/plattenalbum.py:1958
 msgid "_Disconnect"
