@@ -1,0 +1,575 @@
+# Kazakh translation for Plattenalbum.
+# Copyright (C) 2026 Martin Wagner
+# This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
+# AnmiTaliDev <anmitalidev@nuros.org>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: de.wagnermartin.Plattenalbum\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-28 21:49+0200\n"
+"PO-Revision-Date: 2026-06-24 12:00+0500\n"
+"Last-Translator: AnmiTaliDev <anmitalidev@nuros.org>\n"
+"Language-Team: Kazakh\n"
+"Language: kk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.9\n"
+
+#: src/plattenalbum.py:526
+#, python-brace-format
+msgid "{days} day"
+msgid_plural "{days} days"
+msgstr[0] "{days} күн"
+
+#: src/plattenalbum.py:1150
+msgid "View"
+msgstr "Көрініс"
+
+#: src/plattenalbum.py:1152
+msgid "_Show Bit Rate"
+msgstr "_Бит жылдамдығын көрсету"
+
+#: src/plattenalbum.py:1161
+msgid "Behavior"
+msgstr "Мінез-құлық"
+
+#: src/plattenalbum.py:1163
+msgid "Send _Notification on Title Change"
+msgstr "Атауы өзгергенде _хабарлама жіберу"
+
+#: src/plattenalbum.py:1164
+msgid "Stop _Playback on Quit"
+msgstr "Шыққанда _ойнатуды тоқтату"
+
+#: src/plattenalbum.py:1165
+msgid "Support “_MPRIS”"
+msgstr "“MPRIS” _қолдауы"
+
+#: src/plattenalbum.py:1165
+msgid "Disable if “MPRIS” is supported by another client"
+msgstr "Басқа клиент “MPRIS” қолдаса өшіру"
+
+#: src/plattenalbum.py:1182
+msgid "Manual Connection"
+msgstr "Қолмен қосылу"
+
+#: src/plattenalbum.py:1185
+msgid "Host"
+msgstr "Хост"
+
+#: src/plattenalbum.py:1189
+msgid "Port"
+msgstr "Порт"
+
+#: src/plattenalbum.py:1192
+msgid "Password (optional)"
+msgstr "Құпия сөз (міндетті емес)"
+
+#: src/plattenalbum.py:1195 src/plattenalbum.py:2954
+msgid "_Connect"
+msgstr "_Қосылу"
+
+#: src/plattenalbum.py:1204
+msgid "Connection failed"
+msgstr "Қосылу сәтсіз аяқталды"
+
+#: src/plattenalbum.py:1224
+msgid "Setup"
+msgstr "Баптау"
+
+#: src/plattenalbum.py:1226
+msgid ""
+"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
+"system package manager, and run the following commands to configure and "
+"initialize a basic local instance. After that, Plattenalbum should be able "
+"to seamlessly connect to it."
+msgstr ""
+"Бастау үшін жүйелік пакет менеджерімен Music Player Daemon (<tt>mpd</tt>) "
+"орнатып, негізгі жергілікті данасын конфигурациялау және инициализациялау "
+"үшін келесі пәрмендерді орындаңыз. Осыдан кейін Plattenalbum оған үздіксіз "
+"қосыла алуы керек."
+
+#: src/plattenalbum.py:1246
+msgid "Information"
+msgstr "Ақпарат"
+
+#: src/plattenalbum.py:1256
+msgid "Server"
+msgstr "Сервер"
+
+#: src/plattenalbum.py:1257
+msgid "Database"
+msgstr "Дерекқор"
+
+#: src/plattenalbum.py:1261
+msgid "Address"
+msgstr "Мекенжай"
+
+#: src/plattenalbum.py:1262
+msgid "Protocol"
+msgstr "Протокол"
+
+#: src/plattenalbum.py:1263 src/plattenalbum.py:1646
+msgid "Songs"
+msgstr "Әндер"
+
+#: src/plattenalbum.py:1264
+msgid "Total Playtime"
+msgstr "Жалпы ойнату уақыты"
+
+#: src/plattenalbum.py:1266
+msgid "Last Update"
+msgstr "Соңғы жаңарту"
+
+#: src/plattenalbum.py:1399 src/plattenalbum.py:2107
+msgid "Context menu"
+msgstr "Контекстік мәзір"
+
+#: src/plattenalbum.py:1422
+msgid "_Append"
+msgstr "_Қосу"
+
+#: src/plattenalbum.py:1423
+msgid "As _Next"
+msgstr "Келесі _ретінде"
+
+#: src/plattenalbum.py:1426 src/plattenalbum.py:2127
+msgid "Show Al_bum"
+msgstr "Альбомды _көрсету"
+
+#: src/plattenalbum.py:1427 src/plattenalbum.py:2128
+msgid "Show _File"
+msgstr "_Файлды көрсету"
+
+#. boxes
+#: src/plattenalbum.py:1644 src/plattenalbum.py:1988
+msgid "Artists"
+msgstr "Орындаушылар"
+
+#: src/plattenalbum.py:1645 src/plattenalbum.py:1812 src/plattenalbum.py:1864
+#: src/plattenalbum.py:1996
+msgid "Albums"
+msgstr "Альбомдар"
+
+#. status page
+#: src/plattenalbum.py:1657
+msgid "No Results"
+msgstr "Нәтиже жоқ"
+
+#: src/plattenalbum.py:1657
+msgid "Try a different search"
+msgstr "Басқа сұраныспен іздеп көріңіз"
+
+#: src/plattenalbum.py:1718
+msgid "Unknown Artist"
+msgstr "Белгісіз орындаушы"
+
+#: src/plattenalbum.py:1800
+#, python-brace-format
+msgid "Album cover of {album}"
+msgstr "{album} альбомының мұқабасы"
+
+#: src/plattenalbum.py:1802 src/plattenalbum.py:1940 src/plattenalbum.py:1941
+msgid "Unknown Album"
+msgstr "Белгісіз альбом"
+
+#: src/plattenalbum.py:1803
+msgid "Album cover of an unknown album"
+msgstr "Белгісіз альбомның мұқабасы"
+
+#. status page
+#: src/plattenalbum.py:1845
+msgid "No Albums"
+msgstr "Альбомдар жоқ"
+
+#: src/plattenalbum.py:1845
+msgid "Select an artist"
+msgstr "Орындаушыны таңдаңыз"
+
+#: src/plattenalbum.py:1876
+#, python-brace-format
+msgid "Albums of {artist}"
+msgstr "{artist} орындаушысының альбомдары"
+
+#. buttons
+#: src/plattenalbum.py:1898 src/plattenalbum.py:2502 src/plattenalbum.py:2511
+msgid "Play"
+msgstr "Ойнату"
+
+#: src/plattenalbum.py:1900
+msgid "Append"
+msgstr "Қосу"
+
+#: src/plattenalbum.py:1952 src/plattenalbum.py:2966 data/shortcuts-dialog.ui:9
+msgid "Main Menu"
+msgstr "Басты мәзір"
+
+#: src/plattenalbum.py:1954 src/plattenalbum.py:2963
+msgid "_Preferences"
+msgstr "_Параметрлер"
+
+#: src/plattenalbum.py:1955 src/plattenalbum.py:2964
+msgid "_Keyboard Shortcuts"
+msgstr "Пернелер _тіркесімдері"
+
+#: src/plattenalbum.py:1956 src/plattenalbum.py:2965
+msgid "_About Plattenalbum"
+msgstr "Plattenalbum _жайында"
+
+#: src/plattenalbum.py:1958
+msgid "_Disconnect"
+msgstr "_Ажырату"
+
+#: src/plattenalbum.py:1959
+msgid "_Update Database"
+msgstr "_Дерекқорды жаңарту"
+
+#: src/plattenalbum.py:1960
+msgid "_Server Information"
+msgstr "_Сервер туралы ақпарат"
+
+#: src/plattenalbum.py:1971 src/plattenalbum.py:1972
+msgid "Search collection"
+msgstr "Коллекциядан іздеу"
+
+#: src/plattenalbum.py:1982 src/plattenalbum.py:2021
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+#: data/shortcuts-dialog.ui:45
+msgid "Search"
+msgstr "Іздеу"
+
+#. status page
+#: src/plattenalbum.py:2012
+msgid "Collection is Empty"
+msgstr "Коллекция бос"
+
+#: src/plattenalbum.py:2020
+msgid "Collection"
+msgstr "Коллекция"
+
+#: src/plattenalbum.py:2126
+msgid "_Remove"
+msgstr "_Жою"
+
+#: src/plattenalbum.py:2130
+msgid "_Enqueue Album"
+msgstr "_Альбомды кезекке қосу"
+
+#: src/plattenalbum.py:2131
+msgid "_Tidy"
+msgstr "_Реттеу"
+
+#: src/plattenalbum.py:2132
+msgid "_Clear"
+msgstr "_Тазалау"
+
+#: src/plattenalbum.py:2332
+msgid "Playlist is Empty"
+msgstr "Ойнату тізімі бос"
+
+#: src/plattenalbum.py:2338
+msgid "Scroll to Current Song"
+msgstr "Ағымдағы әнге өту"
+
+#. status pages
+#: src/plattenalbum.py:2432
+msgid "No Lyrics"
+msgstr "Мәтін жоқ"
+
+#: src/plattenalbum.py:2435
+msgid "Connection Error"
+msgstr "Қосылу қатесі"
+
+#: src/plattenalbum.py:2435
+msgid "Check your network connection"
+msgstr "Желі қосылымын тексеріңіз"
+
+#: src/plattenalbum.py:2437
+msgid "Searching…"
+msgstr "Іздеу…"
+
+#: src/plattenalbum.py:2449
+msgid "Lyrics view"
+msgstr "Мәтін көрінісі"
+
+#: src/plattenalbum.py:2508
+msgid "Pause"
+msgstr "Кідірту"
+
+#: src/plattenalbum.py:2516 data/shortcuts-dialog.ui:86
+msgid "Previous"
+msgstr "Алдыңғы"
+
+#: src/plattenalbum.py:2518 data/shortcuts-dialog.ui:80
+msgid "Next"
+msgstr "Келесі"
+
+#: src/plattenalbum.py:2525
+#, python-brace-format
+msgid "{bitrate} kb/s"
+msgstr "{bitrate} кбит/с"
+
+#: src/plattenalbum.py:2585 src/plattenalbum.py:2857
+msgid "Progress bar"
+msgstr "Орындалу тақтасы"
+
+#: src/plattenalbum.py:2686
+msgid "Volume control"
+msgstr "Дыбыс деңгейі реттегіші"
+
+#: src/plattenalbum.py:2718
+msgid "_Repeat Mode"
+msgstr "_Қайталау режимі"
+
+#: src/plattenalbum.py:2719
+msgid "R_andom Mode"
+msgstr "Ке_здейсоқ режим"
+
+#: src/plattenalbum.py:2720
+msgid "_Single Mode"
+msgstr "_Бір рет режімі"
+
+#: src/plattenalbum.py:2721
+msgid "_Pause After Song"
+msgstr "_Әннен кейін кідіру"
+
+#: src/plattenalbum.py:2722
+msgid "_Consume Mode"
+msgstr "_Тұтыну режимі"
+
+#: src/plattenalbum.py:2764 data/shortcuts-dialog.ui:147
+msgid "Playlist"
+msgstr "Ойнату тізімі"
+
+#: src/plattenalbum.py:2765
+msgid "Lyrics"
+msgstr "Мәтін"
+
+#: src/plattenalbum.py:2777
+msgid "Player Menu"
+msgstr "Ойнатқыш мәзірі"
+
+#: src/plattenalbum.py:2913
+msgid "Database is being updated"
+msgstr "Дерекқор жаңартылуда"
+
+#: src/plattenalbum.py:2914
+msgid "Database updated"
+msgstr "Дерекқор жаңартылды"
+
+#. status page
+#: src/plattenalbum.py:2951
+msgid "Connect to Your Music"
+msgstr "Музыкаңызға қосылыңыз"
+
+#: src/plattenalbum.py:2952
+msgid ""
+"To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
+"up and running on this device or another one on the network"
+msgstr ""
+"Plattenalbum пайдалану үшін осы құрылғыда немесе желідегі басқа құрылғыда "
+"Music Player Daemon данасы орнатылып, іске қосылып тұруы керек"
+
+#: src/plattenalbum.py:2956
+msgid "Connect _Manually"
+msgstr "_Қолмен қосылу"
+
+#: src/plattenalbum.py:3058
+msgid "Playing music"
+msgstr "Музыка ойнатылуда"
+
+#: src/plattenalbum.py:3099
+msgid "Cleared A‐B loop"
+msgstr "A‐B ілмегі тазаланды"
+
+#: src/plattenalbum.py:3102
+#, python-brace-format
+msgid "Started A‐B loop at {start}"
+msgstr "A‐B ілмегі {start} нүктесінен басталды"
+
+#: src/plattenalbum.py:3104
+#, python-brace-format
+msgid "Activated A‐B loop from {start} to {end}"
+msgstr "A‐B ілмегі {start} нүктесінен {end} нүктесіне дейін іске қосылды"
+
+#: src/plattenalbum.py:3196
+msgid "translator-credits"
+msgstr "AnmiTaliDev <anmitalidev@nuros.org>"
+
+#: src/plattenalbum.py:3263
+msgid "Next Title is Playing"
+msgstr "Келесі трек ойнатылуда"
+
+#: src/plattenalbum.py:3265
+#, python-brace-format
+msgid "Now playing “{title}” by “{artist}”"
+msgstr "Қазір ойнатылуда: “{artist}” орындаушысының “{title}” треги"
+
+#: src/plattenalbum.py:3267
+#, python-brace-format
+msgid "Now playing “{title}”"
+msgstr "Қазір ойнатылуда: “{title}” треги"
+
+#: src/plattenalbum.py:3269
+msgid "Skip"
+msgstr "Өткізіп жіберу"
+
+#: src/plattenalbum.py:3276
+msgid "Playback Finished"
+msgstr "Ойнату аяқталды"
+
+#: src/plattenalbum.py:3277
+msgid "The playlist is over"
+msgstr "Ойнату тізімі аяқталды"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.desktop.in:3
+msgid "Plattenalbum"
+msgstr "Plattenalbum"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.desktop.in:5
+msgid "Connect to your music"
+msgstr "Музыкаңызға қосылыңыз"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:10
+msgid "A client for the Music Player Daemon (MPD)."
+msgstr "Music Player Daemon (MPD) клиенті."
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
+msgid ""
+"Browse your collection while viewing large album covers. Play your music "
+"without managing playlists."
+msgstr ""
+"Үлкен альбом мұқабаларын көре отырып, коллекцияңызды шолыңыз. Ойнату "
+"тізімдерін басқармай музыкаңызды тыңдаңыз."
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
+msgid "Main window"
+msgstr "Басты терезе"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
+msgid "Album view"
+msgstr "Альбом көрінісі"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
+msgid "Small window"
+msgstr "Шағын терезе"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:36
+msgid "Small window with playlist"
+msgstr "Ойнату тізімі бар шағын терезе"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:40
+msgid "Small window with cover"
+msgstr "Мұқабасы бар шағын терезе"
+
+#: data/de.wagnermartin.Plattenalbum.desktop.in:4
+msgid "Music Browser"
+msgstr "Музыка шолғышы"
+
+#. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
+#: data/de.wagnermartin.Plattenalbum.desktop.in:11
+msgid "music;player;audio;MPD;"
+msgstr "music;player;audio;MPD;музыка;ойнатқыш;аудио;"
+
+#: data/shortcuts-dialog.ui:6
+msgid "General"
+msgstr "Жалпы"
+
+#: data/shortcuts-dialog.ui:15
+msgid "Disconnect"
+msgstr "Ажырату"
+
+#: data/shortcuts-dialog.ui:21
+msgid "Update Database"
+msgstr "Дерекқорды жаңарту"
+
+#: data/shortcuts-dialog.ui:27
+msgid "Server Information"
+msgstr "Сервер туралы ақпарат"
+
+#: data/shortcuts-dialog.ui:33
+msgid "Preferences"
+msgstr "Параметрлер"
+
+#: data/shortcuts-dialog.ui:39
+msgid "Shortcuts"
+msgstr "Пернелер тіркесімдері"
+
+#: data/shortcuts-dialog.ui:51
+msgid "Close"
+msgstr "Жабу"
+
+#: data/shortcuts-dialog.ui:57
+msgid "Quit"
+msgstr "Шығу"
+
+#: data/shortcuts-dialog.ui:65
+msgid "Playback"
+msgstr "Ойнату"
+
+#: data/shortcuts-dialog.ui:68
+msgid "Play/Pause"
+msgstr "Ойнату/Кідірту"
+
+#: data/shortcuts-dialog.ui:74
+msgid "Stop"
+msgstr "Тоқтату"
+
+#: data/shortcuts-dialog.ui:92
+msgid "Seek Forward"
+msgstr "Алға іздеу"
+
+#: data/shortcuts-dialog.ui:98
+msgid "Seek Backward"
+msgstr "Артқа іздеу"
+
+#: data/shortcuts-dialog.ui:104
+msgid "A‐B Loop"
+msgstr "A‐B ілмегі"
+
+#: data/shortcuts-dialog.ui:112
+msgid "Playback Options"
+msgstr "Ойнату параметрлері"
+
+#: data/shortcuts-dialog.ui:115
+msgid "Toggle Repeat Mode"
+msgstr "Қайталау режимін ауыстыру"
+
+#: data/shortcuts-dialog.ui:121
+msgid "Toggle Random Mode"
+msgstr "Кездейсоқ режимді ауыстыру"
+
+#: data/shortcuts-dialog.ui:127
+msgid "Toggle Single Mode"
+msgstr "Бір рет режимін ауыстыру"
+
+#: data/shortcuts-dialog.ui:133
+msgid "Pause After Song"
+msgstr "Әннен кейін кідіру"
+
+#: data/shortcuts-dialog.ui:139
+msgid "Toggle Consume Mode"
+msgstr "Тұтыну режимін ауыстыру"
+
+#: data/shortcuts-dialog.ui:150
+msgid "Enqueue Album"
+msgstr "Альбомды кезекке қосу"
+
+#: data/shortcuts-dialog.ui:156
+msgid "Tidy"
+msgstr "Реттеу"
+
+#: data/shortcuts-dialog.ui:162
+msgid "Clear"
+msgstr "Тазалау"
+
+#~ msgid "Ca_ncel"
+#~ msgstr "_Болдырмау"
+
+#~ msgid "Debug mode"
+#~ msgstr "Жөндеу режимі"
