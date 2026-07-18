@@ -1750,9 +1750,9 @@ class ArtistList(Gtk.ListView):
 				break
 		if (selected:=self.selection_model.get_selected()) is None:
 			self.selection_model.select(0)
-			self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
+			idle_add(self.scroll_to, 0, Gtk.ListScrollFlags.FOCUS, None)
 		else:
-			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+			idle_add(self.scroll_to, selected, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _refresh(self):
 		self.selection_model.clear()
@@ -1777,7 +1777,7 @@ class ArtistList(Gtk.ListView):
 			if (selected:=self.selection_model.get_selected()) is None:
 				self._refresh()
 				self.selection_model.select(0)
-				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
+				idle_add(self.scroll_to, 0, Gtk.ListScrollFlags.FOCUS, None)
 			else:
 				artist=self.selection_model.get_item(selected)
 				self._refresh()
@@ -2257,14 +2257,14 @@ class PlaylistView(SongList):
 		self.get_model().clear(length)
 		self._refresh_selection(songpos)
 		if self._playlist_version is None and (selected:=self.get_model().get_selected()) is not None:  # always scroll to song on startup
-			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+			idle_add(self.scroll_to, selected, Gtk.ListScrollFlags.FOCUS, None)
 		self._playlist_version=version
 
 	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._refresh_selection(songpos)
 		if self._autoscroll:
 			if (selected:=self.get_model().get_selected()) is not None and state == "play":
-				self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+				idle_add(self.scroll_to, selected, Gtk.ListScrollFlags.FOCUS, None)
 				adj=self.get_vadjustment()
 				value=adj.get_upper()*selected/self.get_model().get_n_items()-self.get_parent().get_height()*0.3
 				if value >= adj.get_value():
