@@ -274,7 +274,7 @@ class MPRISInterface:
 
 	def _get_can_seek(self):
 		if self._client.connected():
-			return GLib.Variant("b", "duration" in self._client.status())
+			return GLib.Variant("b", "mpris:length" in self._metadata)
 		return GLib.Variant("x", 0)
 
 	def _get_can_next_prev(self):
