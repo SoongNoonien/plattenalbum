@@ -188,9 +188,9 @@ class MPRISInterface:
 		}
 
 		# connect
+		self._client.connect("songid", self._on_songid_changed)
+		self._client.connect("metadata", self._on_metadata_changed)
 		self._handlers.append(self._client.connect("state", self._on_state_changed))
-		self._handlers.append(self._client.connect("songid", self._on_songid_changed))
-		self._handlers.append(self._client.connect("metadata", self._on_metadata_changed))
 		self._handlers.append(self._client.connect("playlist", self._on_playlist_changed))
 		self._handlers.append(self._client.connect("volume", self._on_volume_changed))
 		self._handlers.append(self._client.connect("repeat", self._on_loop_changed))
@@ -419,15 +419,17 @@ class MPRISInterface:
 		self._metadata=self._convert_metadata(song)
 		if cover_path is not None:
 			self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
-		self._update_property(self._MPRIS_PLAYER_IFACE, "CanSeek")
-		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
+		if self._name_id is not None:
+			self._update_property(self._MPRIS_PLAYER_IFACE, "CanSeek")
+			self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
 	def _on_metadata_changed(self, client, song):
 		cover=self._metadata.get("mpris:artUrl")
 		self._metadata=self._convert_metadata(song)
 		if cover is not None:
 			self._metadata["mpris:artUrl"]=cover
-		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
+		if self._name_id is not None:
+			self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
 	def _on_playlist_changed(self, client, version, length, songpos):
 		value=GLib.Variant("b", length > 0)
@@ -468,7 +470,6 @@ class MPRISInterface:
 	def _on_mpris_changed(self, settings, key):
 		if settings.get_boolean(key):
 			self._enable()
-			self._metadata=self._convert_metadata(self._client.currentsong())
 			for prop in ("PlaybackStatus", "Metadata", "Volume", "LoopStatus", "CanGoNext",
 					"CanGoPrevious", "CanPlay", "CanPause", "CanSeek", "Shuffle"):
 				self._update_property(self._MPRIS_PLAYER_IFACE, prop)
