@@ -1064,19 +1064,19 @@ class Client(GObject.Object):
 			diff=dict(set(status.items())-set(self._last_status.items()))
 			if "updating_db" in diff:
 				self.emit("updating-db")
-			if "playlist" in diff:
-				self.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
+			if (playlist:=diff.get("playlist")) is not None:
+				self.emit("playlist", int(playlist), int(status["playlistlength"]), status.get("song"))
 				song=self.currentsong()
-			if "songid" in diff:
+			if (songid:=diff.get("songid")) is not None:
 				if song is None:
 					song=self.currentsong()
 				cover,cover_path=self._get_cover_with_path(song)
-				self.emit("songid", song, cover, cover_path, status["song"], status["songid"], status["state"])
+				self.emit("songid", song, cover, cover_path, status["song"], songid, status["state"])
 				self._clear_marks()
 			elif song is not None:
 				self.emit("metadata", song)
-			if "elapsed" in diff:
-				elapsed=float(diff["elapsed"])
+			if (elapsed:=diff.get("elapsed")) is not None:
+				elapsed=float(elapsed)
 				self.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
 				if self._second_mark is not None:
 					if elapsed > self._second_mark:
@@ -1085,21 +1085,21 @@ class Client(GObject.Object):
 				if (last_elapsed:=self._last_status.get("elapsed")) is not None:
 					if abs(elapsed-float(last_elapsed)) > 0.2:
 						self.emit("seeked", elapsed)
-			if "bitrate" in diff:
-				if diff["bitrate"] == "0":
+			if (bitrate:=diff.get("bitrate")) is not None:
+				if bitrate == "0":
 					self.emit("bitrate", None)
 				else:
-					self.emit("bitrate", diff["bitrate"])
-			if "volume" in diff:
-				self.emit("volume", int(diff["volume"]))
-			if "state" in diff:
-				self.emit("state", diff["state"])
-			if "single" in diff:
-				self.emit("single", diff["single"] == "1")
-				self.emit("single-oneshot", diff["single"] == "oneshot")
+					self.emit("bitrate", bitrate)
+			if (volume:=diff.get("volume")) is not None:
+				self.emit("volume", int(volume))
+			if (state:=diff.get("state")) is not None:
+				self.emit("state", state)
+			if (single:=diff.get("single")) is not None:
+				self.emit("single", single == "1")
+				self.emit("single-oneshot", single == "oneshot")
 			for key in ("repeat", "random", "consume"):
-				if key in diff:
-					self.emit(key, diff[key] == "1")
+				if (val:=diff.get(key)):
+					self.emit(key, val == "1")
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
