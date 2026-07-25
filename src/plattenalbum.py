@@ -611,6 +611,7 @@ class Client(GObject.Object):
 		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"current-song": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
+		"metadata": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"volume": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
@@ -1054,17 +1055,22 @@ class Client(GObject.Object):
 
 	def _main_loop(self, *args):
 		try:
+			song=None
 			status=self.status()
 			diff=dict(set(status.items())-set(self._last_status.items()))
 			if "updating_db" in diff:
 				self.emit("updating-db")
 			if "playlist" in diff:
 				self.emit("playlist", int(diff["playlist"]), int(status["playlistlength"]), status.get("song"))
-			if "songid" in diff:
 				song=self.currentsong()
+			if "songid" in diff:
+				if song is None:
+					song=self.currentsong()
 				cover,cover_path=self._get_cover_with_path(song)
 				self.emit("current-song", song, cover, cover_path, status["song"], status["songid"], status["state"])
 				self._clear_marks()
+			elif song is not None:
+				self.emit("metadata", song)
 			if "elapsed" in diff:
 				elapsed=float(diff["elapsed"])
 				self.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
@@ -2985,7 +2991,8 @@ class MainWindow(Adw.ApplicationWindow):
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
-		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("current-song", self._on_song_or_metadata_changed)
+		self._client.connect("metadata", self._on_song_or_metadata_changed)
 		self._client.connect("state", self._on_state)
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
@@ -3020,6 +3027,12 @@ class MainWindow(Adw.ApplicationWindow):
 	def _clear_title(self):
 		self.set_title("Plattenalbum")
 
+	def _update_title(self, song):
+		if song:
+			self.set_title(song["title"][0])
+		else:
+			self._clear_title()
+
 	def _on_close(self, action, param):
 		if (dialog:=self.get_visible_dialog()) is None:
 			self.close()
@@ -3049,11 +3062,8 @@ class MainWindow(Adw.ApplicationWindow):
 			self.get_application().set_accels_for_action("app.toggle-play", ["space"])
 			self.get_application().set_accels_for_action("app.a-b-loop", ["l"])
 
-	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
-		if song:
-			self.set_title(song["title"][0])
-		else:
-			self._clear_title()
+	def _on_song_or_metadata_changed(self, client, song, *args):
+		self._update_title(song)
 
 	def _on_state(self, client, state):
 		if state == "play":
