@@ -239,7 +239,6 @@ class MPRISInterface:
 				if status.get("single", "0") == "0":
 					return GLib.Variant("s", "Playlist")
 				return GLib.Variant("s", "Track")
-			return GLib.Variant("s", "None")
 		return GLib.Variant("s", "None")
 
 	def _set_shuffle(self, value):
@@ -263,9 +262,8 @@ class MPRISInterface:
 		return GLib.Variant("d", 0)
 
 	def _set_volume(self, value):
-		if self._client.connected():
-			if 0 <= value <= 1:
-				self._client.setvol(int(value * 100))
+		if self._client.connected() and 0 <= value <= 1:
+			self._client.setvol(int(value * 100))
 
 	def _get_position(self):
 		if self._client.connected():
@@ -1078,13 +1076,11 @@ class Client(GObject.Object):
 			if (elapsed:=diff.get("elapsed")) is not None:
 				elapsed=float(elapsed)
 				self.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
-				if self._second_mark is not None:
-					if elapsed > self._second_mark:
-						self.seekcur(self._first_mark)
+				if self._second_mark is not None and elapsed > self._second_mark:
+					self.seekcur(self._first_mark)
 				# check if playback position has changed by more than two times the polling interval which indicates a seek event
-				if (last_elapsed:=self._last_status.get("elapsed")) is not None:
-					if abs(elapsed-float(last_elapsed)) > 0.2:
-						self.emit("seeked", elapsed)
+				if (last_elapsed:=self._last_status.get("elapsed")) is not None and abs(elapsed-float(last_elapsed)) > 0.2:
+					self.emit("seeked", elapsed)
 			if (bitrate:=diff.get("bitrate")) is not None:
 				if bitrate == "0":
 					self.emit("bitrate", None)
@@ -1360,9 +1356,8 @@ class SelectionModel(ListModel, Gtk.SelectionModel):
 	def clear(self, position=0):
 		n=self.get_n_items()-position
 		self.data=self.data[:position]
-		if self._selected is not None:
-			if self._selected >= self.get_n_items():
-				self._selected=None
+		if self._selected is not None and self._selected >= self.get_n_items():
+			self._selected=None
 		self.items_changed(position, n, 0)
 		if position == 0:
 			self.emit("clear")
