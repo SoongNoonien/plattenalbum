@@ -189,7 +189,7 @@ class MPRISInterface:
 
 		# connect
 		self._handlers.append(self._client.connect("state", self._on_state_changed))
-		self._handlers.append(self._client.connect("current-song", self._on_song_changed))
+		self._handlers.append(self._client.connect("songid", self._on_songid_changed))
 		self._handlers.append(self._client.connect("metadata", self._on_metadata_changed))
 		self._handlers.append(self._client.connect("playlist", self._on_playlist_changed))
 		self._handlers.append(self._client.connect("volume", self._on_volume_changed))
@@ -419,7 +419,7 @@ class MPRISInterface:
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
 
-	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
+	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._metadata=self._convert_metadata(song)
 		if cover_path is not None:
 			self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
@@ -617,7 +617,7 @@ class Client(GObject.Object):
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"current-song": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
+		"songid": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
 		"metadata": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
@@ -1074,7 +1074,7 @@ class Client(GObject.Object):
 				if song is None:
 					song=self.currentsong()
 				cover,cover_path=self._get_cover_with_path(song)
-				self.emit("current-song", song, cover, cover_path, status["song"], status["songid"], status["state"])
+				self.emit("songid", song, cover, cover_path, status["song"], status["songid"], status["state"])
 				self._clear_marks()
 			elif song is not None:
 				self.emit("metadata", song)
@@ -1106,7 +1106,7 @@ class Client(GObject.Object):
 			diff=set(self._last_status)-set(status)
 			for key in diff:
 				if "songid" == key:
-					self.emit("current-song", Song(), FALLBACK_COVER, None, None, None, status["state"])
+					self.emit("songid", Song(), FALLBACK_COVER, None, None, None, status["state"])
 					self._clear_marks()
 				elif "volume" == key:
 					self.emit("volume", -1)
@@ -2220,7 +2220,7 @@ class PlaylistView(SongList):
 		drop_motion.connect("motion", self._on_drop_motion)
 		drop_motion.connect("leave", self._on_drop_leave)
 		self._client.connect("playlist", self._on_playlist_changed)
-		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("songid", self._on_songid_changed)
 		self._client.connect("disconnected", self._on_disconnected)
 
 	def _clear(self, *args):
@@ -2275,7 +2275,7 @@ class PlaylistView(SongList):
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 		self._playlist_version=version
 
-	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
+	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._refresh_selection(songpos)
 		if self._autoscroll:
 			if (selected:=self.get_model().get_selected()) is not None and state == "play":
@@ -2471,7 +2471,7 @@ class LyricsWindow(Gtk.Stack):
 		self._adj=scroll.get_vadjustment()
 
 		# connect
-		self.connect("notify::song", self._on_song_changed)
+		self.connect("notify::song", self._on_songid_changed)
 
 		# packing
 		self.add_named(scroll, "lyrics")
@@ -2484,7 +2484,7 @@ class LyricsWindow(Gtk.Stack):
 			self.set_visible_child_name("searching")
 			threading.Thread(target=self._display_lyrics, args=(song["title"][0], str(song["artist"])), daemon=True).start()
 
-	def _on_song_changed(self, *args):
+	def _on_songid_changed(self, *args):
 		self.set_visible_child_name("no-lyrics")
 		self._text_buffer.delete(self._text_buffer.get_start_iter(), self._text_buffer.get_end_iter())
 
@@ -2560,7 +2560,7 @@ class PlaylistProgress(Gtk.Label):
 		self._length=0
 
 		# connect
-		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("songid", self._on_songid_changed)
 		self._client.connect("playlist", self._on_playlist_changed)
 		self._client.connect("disconnected", self._on_disconnected)
 
@@ -2574,7 +2574,7 @@ class PlaylistProgress(Gtk.Label):
 		else:
 			self.set_text(f"{int(song)+1}/{self._length}")
 
-	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
+	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._refresh(songpos)
 
 	def _on_playlist_changed(self, client, version, length, songpos):
@@ -2612,7 +2612,7 @@ class PlaybackControls(Gtk.Box):
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("state", self._on_state)
 		self._elapsed_handler=self._client.connect("elapsed", self._on_elapsed)
-		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("songid", self._on_songid_changed)
 
 		# packing
 		start_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.START)
@@ -2682,7 +2682,7 @@ class PlaybackControls(Gtk.Box):
 		if state == "stop":
 			self._scale.set_range(0, 0)
 
-	def _on_song_changed(self, *args):
+	def _on_songid_changed(self, *args):
 		if self._seeking:
 			self._seeking=False
 			self._scale.set_sensitive(False)
@@ -2793,7 +2793,7 @@ class Player(Adw.Bin):
 
 		# connect
 		self._stack.connect("notify::visible-child-name", self._on_visible_child_name)
-		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("songid", self._on_songid_changed)
 		self._client.connect("playlist", self._on_playlist_changed)
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("connected", self._on_connected)
@@ -2811,7 +2811,7 @@ class Player(Adw.Bin):
 		elif self._stack.get_visible_child_name() == "playlist":
 			self._playlist_page.set_needs_attention(False)
 
-	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
+	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		if song:
 			self._cover.set_paintable(cover)
 			self._cover.set_visible(True)
@@ -2874,7 +2874,7 @@ class PlayerBar(Gtk.Overlay):
 		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
 
 		# connect
-		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("songid", self._on_songid_changed)
 		self._client.connect("disconnected", self._on_disconnected)
 
 		# packing
@@ -2896,7 +2896,7 @@ class PlayerBar(Gtk.Overlay):
 		self._cover.set_paintable(FALLBACK_COVER)
 		self._cover.set_visible(False)
 
-	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
+	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		if song:
 			self._cover.set_paintable(cover)
 			self._cover.set_visible(True)
@@ -2998,8 +2998,8 @@ class MainWindow(Adw.ApplicationWindow):
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
-		self._client.connect("current-song", self._on_song_or_metadata_changed)
-		self._client.connect("metadata", self._on_song_or_metadata_changed)
+		self._client.connect("songid", self._on_songid_or_metadata_changed)
+		self._client.connect("metadata", self._on_songid_or_metadata_changed)
 		self._client.connect("state", self._on_state)
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
@@ -3069,7 +3069,7 @@ class MainWindow(Adw.ApplicationWindow):
 			self.get_application().set_accels_for_action("app.toggle-play", ["space"])
 			self.get_application().set_accels_for_action("app.a-b-loop", ["l"])
 
-	def _on_song_or_metadata_changed(self, client, song, *args):
+	def _on_songid_or_metadata_changed(self, client, song, *args):
 		self._update_title(song)
 
 	def _on_state(self, client, state):
@@ -3189,7 +3189,7 @@ class Plattenalbum(Adw.Application):
 
 		# connect
 		self._client.connect("state", self._on_state)
-		self._client.connect("current-song", self._on_song_changed)
+		self._client.connect("songid", self._on_songid_changed)
 		self._client.connect("playlist", self._on_playlist_changed)
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("connected", self._on_connected)
@@ -3273,7 +3273,7 @@ class Plattenalbum(Adw.Application):
 		for action in self._disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state_dict[state])
 
-	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
+	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		for action in self._disable_no_song_data:
 			self.lookup_action(action).set_enabled(songpos is not None)
 		if song:
