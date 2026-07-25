@@ -360,12 +360,8 @@ class MPRISInterface:
 		self._client.seekcur(offset)
 
 	def SetPosition(self, trackid, position):
-		song=self._client.currentsong()
-		if str(trackid).split("/")[-1] != song["id"]:
-			return
-		mpd_pos=position/1000000
-		if 0 <= mpd_pos <= float(song["duration"]):
-			self._client.seekcur(str(mpd_pos))
+		if trackid == self._metadata["mpris:trackid"] and 0 <= position <= self._metadata["mpris:length"]:
+			self._client.seekcur(str(position/1000000))
 
 	def OpenUri(self, uri):
 		pass
