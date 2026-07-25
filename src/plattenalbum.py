@@ -190,6 +190,7 @@ class MPRISInterface:
 		# connect
 		self._handlers.append(self._client.connect("state", self._on_state_changed))
 		self._handlers.append(self._client.connect("current-song", self._on_song_changed))
+		self._handlers.append(self._client.connect("metadata", self._on_metadata_changed))
 		self._handlers.append(self._client.connect("playlist", self._on_playlist_changed))
 		self._handlers.append(self._client.connect("volume", self._on_volume_changed))
 		self._handlers.append(self._client.connect("repeat", self._on_loop_changed))
@@ -376,31 +377,30 @@ class MPRISInterface:
 		)
 
 	# other methods
-	def _update_metadata(self, song, cover_path):
+	def _convert_metadata(self, song):
 		"""
 		Translate metadata returned by MPD to the MPRIS v2 syntax.
 		http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata
 		"""
-		self._metadata={}
+		metadata_map={}
 		for tag, xesam_tag in (("album","album"),("title","title"),("date","contentCreated")):
 			if tag in song:
-				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("s", song[tag][0])
+				metadata_map[f"xesam:{xesam_tag}"]=GLib.Variant("s", song[tag][0])
 		for tag, xesam_tag in (("albumartist","albumArtist"),("artist","artist")):
 			if tag in song:
-				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("as", song[tag])
+				metadata_map[f"xesam:{xesam_tag}"]=GLib.Variant("as", song[tag])
 		if "track" in song:
-			self._metadata["xesam:trackNumber"]=GLib.Variant("i", int(song["track"][0]))
+			metadata_map["xesam:trackNumber"]=GLib.Variant("i", int(song["track"][0]))
 		if "id" in song:
-			self._metadata["mpris:trackid"]=GLib.Variant("o", f"{self._MPRIS_PATH}/Track/{song['id']}")
+			metadata_map["mpris:trackid"]=GLib.Variant("o", f"{self._MPRIS_PATH}/Track/{song['id']}")
 		if "duration" in song:
-			self._metadata["mpris:length"]=GLib.Variant("x", float(song["duration"])*1000000)
+			metadata_map["mpris:length"]=GLib.Variant("x", float(song["duration"])*1000000)
 		if "file" in song:
 			if "://" in (song_file:=song["file"]):  # remote file
-				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
+				metadata_map["xesam:url"]=GLib.Variant("s", song_file)
 			elif (song_path:=self._client.get_absolute_path(song)) is not None:
-				self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
-		if cover_path is not None:
-			self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
+				metadata_map["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
+		return metadata_map
 
 	def _set_property(self, interface_name, prop, value):
 		self.PropertiesChanged(interface_name, {prop: value}, [])
@@ -420,8 +420,17 @@ class MPRISInterface:
 		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
 
 	def _on_song_changed(self, client, song, cover, cover_path, songpos, songid, state):
-		self._update_metadata(song, cover_path)
+		self._metadata=self._convert_metadata(song)
+		if cover_path is not None:
+			self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
 		self._update_property(self._MPRIS_PLAYER_IFACE, "CanSeek")
+		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
+
+	def _on_metadata_changed(self, client, song):
+		cover=self._metadata.get("mpris:artUrl")
+		self._metadata=self._convert_metadata(song)
+		if cover is not None:
+			self._metadata["mpris:artUrl"]=cover
 		self._update_property(self._MPRIS_PLAYER_IFACE, "Metadata")
 
 	def _on_playlist_changed(self, client, version, length, songpos):
@@ -463,7 +472,7 @@ class MPRISInterface:
 	def _on_mpris_changed(self, settings, key):
 		if settings.get_boolean(key):
 			self._enable()
-			self._update_metadata(self._client.currentsong(), None)
+			self._metadata=self._convert_metadata(self._client.currentsong())
 			for prop in ("PlaybackStatus", "Metadata", "Volume", "LoopStatus", "CanGoNext",
 					"CanGoPrevious", "CanPlay", "CanPause", "CanSeek", "Shuffle"):
 				self._update_property(self._MPRIS_PLAYER_IFACE, prop)
