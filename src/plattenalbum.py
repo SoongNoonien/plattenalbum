@@ -385,12 +385,11 @@ class MPRISInterface:
 		for tag, xesam_tag in (("album","album"),("title","title"),("date","contentCreated")):
 			if tag in song:
 				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("s", song[tag][0])
-		for tag, xesam_tag in (("track","trackNumber"),("disc","discNumber")):
-			if tag in song:
-				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("i", int(song[tag][0]))
-		for tag, xesam_tag in (("albumartist","albumArtist"),("artist","artist"),("composer","composer"),("genre","genre")):
+		for tag, xesam_tag in (("albumartist","albumArtist"),("artist","artist")):
 			if tag in song:
 				self._metadata[f"xesam:{xesam_tag}"]=GLib.Variant("as", song[tag])
+		if "track" in song:
+			self._metadata["xesam:trackNumber"]=GLib.Variant("i", int(song["track"][0]))
 		if "id" in song:
 			self._metadata["mpris:trackid"]=GLib.Variant("o", f"{self._MPRIS_PATH}/Track/{song['id']}")
 		if "duration" in song:
@@ -398,11 +397,10 @@ class MPRISInterface:
 		if "file" in song:
 			if "://" in (song_file:=song["file"]):  # remote file
 				self._metadata["xesam:url"]=GLib.Variant("s", song_file)
-			else:
-				if (song_path:=self._client.get_absolute_path(song)) is not None:
-					self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
-					if cover_path is not None:
-						self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
+			elif (song_path:=self._client.get_absolute_path(song)) is not None:
+				self._metadata["xesam:url"]=GLib.Variant("s", Gio.File.new_for_path(song_path).get_uri())
+		if cover_path is not None:
+			self._metadata["mpris:artUrl"]=GLib.Variant("s", Gio.File.new_for_path(cover_path).get_uri())
 
 	def _set_property(self, interface_name, prop, value):
 		self.PropertiesChanged(interface_name, {prop: value}, [])
