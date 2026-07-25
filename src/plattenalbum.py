@@ -62,7 +62,7 @@ def lookup_icon(icon_name, size, scale=1):
 # MPRIS #
 #########
 
-class MPRISInterface:  # TODO emit Seeked if needed
+class MPRISInterface:
 	"""
 	based on 'Lollypop' (master 22.12.2020) by Cedric Bellegarde <cedric.bellegarde@adishatz.org>
 	and 'mpDris2' (master 19.03.2020) by Jean-Philippe Braun <eon@patapon.info>, Mantas Mikulėnas <grawity@gmail.com>
@@ -195,6 +195,7 @@ class MPRISInterface:  # TODO emit Seeked if needed
 		self._handlers.append(self._client.connect("repeat", self._on_loop_changed))
 		self._handlers.append(self._client.connect("single", self._on_loop_changed))
 		self._handlers.append(self._client.connect("random", self._on_random_changed))
+		self._handlers.append(self._client.connect("seeked", self._on_seeked))
 		self._handlers.append(self._client.connect("disconnected", self._on_disconnected))
 		for handler in self._handlers:
 			self._client.handler_block(handler)
@@ -442,6 +443,9 @@ class MPRISInterface:  # TODO emit Seeked if needed
 	def _on_random_changed(self, client, state):
 		self._set_property(self._MPRIS_PLAYER_IFACE, "Shuffle", GLib.Variant("b", state))
 
+	def _on_seeked(self, client, position):
+		self.Seeked(position*1000000)
+
 	def _enable(self):
 		self._name_id=Gio.bus_own_name_on_connection(self._bus, self._MPRIS_NAME, Gio.BusNameOwnerFlags.NONE, None, None)
 		for interface in self._node_info.interfaces:
@@ -619,6 +623,7 @@ class Client(GObject.Object):
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"a-b-loop": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"show-album": (GObject.SignalFlags.RUN_FIRST, None, (Album,)),
+		"seeked": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
 	}
 	def __init__(self, settings):
 		super().__init__()
@@ -1066,6 +1071,10 @@ class Client(GObject.Object):
 				if self._second_mark is not None:
 					if elapsed > self._second_mark:
 						self.seekcur(self._first_mark)
+				# check if playback position has changed by more than two times the polling interval which indicates a seek event
+				if (last_elapsed:=self._last_status.get("elapsed")) is not None:
+					if abs(elapsed-float(last_elapsed)) > 0.2:
+						self.emit("seeked", elapsed)
 			if "bitrate" in diff:
 				if diff["bitrate"] == "0":
 					self.emit("bitrate", None)
