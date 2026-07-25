@@ -1748,10 +1748,7 @@ class ArtistList(Gtk.ListView):
 			if item == artist:
 				self.selection_model.select(i)
 				break
-		if (selected:=self.selection_model.get_selected()) is None:
-			self.selection_model.select(0)
-			self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
-		else:
+		if (selected:=self.selection_model.get_selected()) is not None:
 			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
 
 	def _refresh(self):
@@ -1774,11 +1771,7 @@ class ArtistList(Gtk.ListView):
 		if database_is_empty:
 			self.selection_model.clear()
 		else:
-			if (selected:=self.selection_model.get_selected()) is None:
-				self._refresh()
-				self.selection_model.select(0)
-				self.scroll_to(0, Gtk.ListScrollFlags.FOCUS, None)
-			else:
+			if (selected:=self.selection_model.get_selected()) is not None:
 				artist=self.selection_model.get_item(selected)
 				self._refresh()
 				self.select(artist)
