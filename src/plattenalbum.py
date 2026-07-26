@@ -330,12 +330,7 @@ class MPRISInterface:
 		self.PropertiesChanged(interface_name, {prop: value}, [])
 
 	def _update_property(self, interface_name, prop):
-		default, getter, setter=self._prop_mapping[interface_name][prop]
-		if callable(getter):
-			value=getter()
-		else:
-			value=getter
-		self._set_property(interface_name, prop, value)
+		self._set_property(interface_name, prop, self.Get(interface_name, prop))
 
 	def _on_state_changed(self, client, state):
 		value=GLib.Variant("b", state != "stop")
@@ -395,20 +390,13 @@ class MPRISInterface:
 	def _on_mpris_changed(self, settings, key):
 		if settings.get_boolean(key):
 			self._enable()
-			for prop in ("PlaybackStatus", "Metadata", "Volume", "LoopStatus", "CanGoNext",
-					"CanGoPrevious", "CanPlay", "CanPause", "CanSeek", "Shuffle"):
-				self._update_property(self._MPRIS_PLAYER_IFACE, prop)
 		else:
 			self._disable()
 
 	def _on_disconnected(self, *args):
 		self._metadata={}
-		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", "Stopped"))
-		self._set_property(self._MPRIS_PLAYER_IFACE, "Metadata", GLib.Variant("a{sv}", self._metadata))
-		self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", 0))
-		self._set_property(self._MPRIS_PLAYER_IFACE, "LoopStatus", GLib.Variant("s", "None"))
-		for prop in ("CanGoNext","CanGoPrevious","CanPlay","CanPause","CanSeek","Shuffle"):
-			self._set_property(self._MPRIS_PLAYER_IFACE, prop, GLib.Variant("b", False))
+		for prop in ("PlaybackStatus","LoopStatus","Shuffle","Metadata","Volume","CanGoNext","CanGoPrevious","CanPlay","CanPause","CanSeek"):
+			self._update_property(self._MPRIS_PLAYER_IFACE, prop)
 
 ######################
 # MPD client wrapper #
@@ -3188,9 +3176,8 @@ class Plattenalbum(Adw.Application):
 		self._client.open_connection(param.get_boolean())
 
 	def _on_state(self, client, state):
-		state_dict={"play": True, "pause": True, "stop": False}
 		for action in self._disable_on_stop_data:
-			self.lookup_action(action).set_enabled(state_dict[state])
+			self.lookup_action(action).set_enabled(state != "stop")
 
 	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		for action in self._disable_no_song_data:
