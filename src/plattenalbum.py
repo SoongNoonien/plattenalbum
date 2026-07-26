@@ -162,29 +162,29 @@ class MPRISInterface:
 		# MPRIS property mappings
 		self._prop_mapping={
 			self._MPRIS_IFACE:
-				{"CanQuit": (GLib.Variant("b", False), None),
-				"CanRaise": (GLib.Variant("b", True), None),
-				"HasTrackList": (GLib.Variant("b", False), None),
-				"Identity": (GLib.Variant("s", "Plattenalbum"), None),
-				"DesktopEntry": (GLib.Variant("s", "de.wagnermartin.Plattenalbum"), None),
-				"SupportedUriSchemes": (GLib.Variant("as", []), None),
-				"SupportedMimeTypes": (GLib.Variant("as", []), None)},
+				{"CanQuit": (GLib.Variant("b", False), None, None),
+				"CanRaise": (GLib.Variant("b", True), None, None),
+				"HasTrackList": (GLib.Variant("b", False), None, None),
+				"Identity": (GLib.Variant("s", "Plattenalbum"), None, None),
+				"DesktopEntry": (GLib.Variant("s", "de.wagnermartin.Plattenalbum"), None, None),
+				"SupportedUriSchemes": (GLib.Variant("as", []), None, None),
+				"SupportedMimeTypes": (GLib.Variant("as", []), None, None)},
 			self._MPRIS_PLAYER_IFACE:
-				{"PlaybackStatus": (self._get_playback_status, None),
-				"LoopStatus": (self._get_loop_status, self._set_loop_status),
-				"Rate": (GLib.Variant("d", 1.0), None),
-				"Shuffle": (self._get_shuffle, self._set_shuffle),
-				"Metadata": (self._get_metadata, None),
-				"Volume": (self._get_volume, self._set_volume),
-				"Position": (self._get_position, None),
-				"MinimumRate": (GLib.Variant("d", 1.0), None),
-				"MaximumRate": (GLib.Variant("d", 1.0), None),
-				"CanGoNext": (self._get_can_next_prev, None),
-				"CanGoPrevious": (self._get_can_next_prev, None),
-				"CanPlay": (self._get_can_play_pause, None),
-				"CanPause": (self._get_can_play_pause, None),
-				"CanSeek": (self._get_can_seek, None),
-				"CanControl": (GLib.Variant("b", True), None)},
+				{"PlaybackStatus": (GLib.Variant("s", "Stopped"), self._get_playback_status, None),
+				"LoopStatus": (GLib.Variant("s", "None"), self._get_loop_status, self._set_loop_status),
+				"Rate": (GLib.Variant("d", 1.0), None, None),
+				"Shuffle": (GLib.Variant("b", False), self._get_shuffle, self._set_shuffle),
+				"Metadata": (GLib.Variant("a{sv}", {}), self._get_metadata, None),
+				"Volume": (GLib.Variant("d", 0.0), self._get_volume, self._set_volume),
+				"Position": (GLib.Variant("x", 0), self._get_position, None),
+				"MinimumRate": (GLib.Variant("d", 1.0), None, None),
+				"MaximumRate": (GLib.Variant("d", 1.0), None, None),
+				"CanGoNext": (GLib.Variant("b", False), self._get_can_next_prev, None),
+				"CanGoPrevious": (GLib.Variant("b", False), self._get_can_next_prev, None),
+				"CanPlay": (GLib.Variant("b", False), self._get_can_play_pause, None),
+				"CanPause": (GLib.Variant("b", False), self._get_can_play_pause, None),
+				"CanSeek": (GLib.Variant("b", False), self._get_can_seek, None),
+				"CanControl": (GLib.Variant("b", True), None, None)},
 		}
 
 		# connect
@@ -215,10 +215,16 @@ class MPRISInterface:
 			invocation.return_value(None)
 
 	# setter and getter
-	def _get_playback_status(self):
-		if self._client.connected():
-			return GLib.Variant("s", self._playback_mapping[self._client.status()["state"]])
-		return GLib.Variant("s", "Stopped")
+	def _get_playback_status(self): return GLib.Variant("s", self._playback_mapping[self._client.status()["state"]])
+	def _set_shuffle(self, value): self._client.random(int(value))
+	def _get_shuffle(self): return GLib.Variant("b", self._client.status()["random"] == "1")
+	def _get_metadata(self): return GLib.Variant("a{sv}", self._metadata)
+	def _get_volume(self): return GLib.Variant("d", float(self._client.status().get("volume", 0))/100)
+	def _set_volume(self, value): self._client.setvol(int(max(value, 0.0)*100))
+	def _get_position(self): return GLib.Variant("x", float(self._client.status().get("elapsed", 0))*1000000)
+	def _get_can_seek(self): return GLib.Variant("b", "mpris:length" in self._metadata)
+	def _get_can_next_prev(self): return GLib.Variant("b", self._client.status()["state"] != "stop")
+	def _get_can_play_pause(self): return GLib.Variant("b", int(self._client.status()["playlistlength"]) > 0)
 
 	def _set_loop_status(self, value):
 		if value == "Playlist":
@@ -232,66 +238,25 @@ class MPRISInterface:
 			self._client.single(0)
 
 	def _get_loop_status(self):
-		if self._client.connected():
-			status=self._client.status()
-			if status["repeat"] == "1":
-				if status.get("single", "0") == "0":
-					return GLib.Variant("s", "Playlist")
-				return GLib.Variant("s", "Track")
+		status=self._client.status()
+		if status["repeat"] == "1":
+			if status.get("single", "0") == "0":
+				return GLib.Variant("s", "Playlist")
+			return GLib.Variant("s", "Track")
 		return GLib.Variant("s", "None")
 
-	def _set_shuffle(self, value):
-		self._client.random(int(value))
-
-	def _get_shuffle(self):
-		if self._client.connected():
-			return GLib.Variant("b", self._client.status()["random"] == "1")
-		return GLib.Variant("b", False)
-
-	def _get_metadata(self):
-		return GLib.Variant("a{sv}", self._metadata)
-
-	def _get_volume(self):
-		if self._client.connected():
-			return GLib.Variant("d", float(self._client.status().get("volume", 0))/100)
-		return GLib.Variant("d", 0)
-
-	def _set_volume(self, value):
-		self._client.setvol(int(max(value, 0.0)*100))
-
-	def _get_position(self):
-		if self._client.connected():
-			return GLib.Variant("x", float(self._client.status().get("elapsed", 0))*1000000)
-		return GLib.Variant("x", 0)
-
-	def _get_can_seek(self):
-		if self._client.connected():
-			return GLib.Variant("b", "mpris:length" in self._metadata)
-		return GLib.Variant("x", 0)
-
-	def _get_can_next_prev(self):
-		if self._client.connected():
-			return GLib.Variant("b", self._client.status()["state"] != "stop")
-		return GLib.Variant("b", False)
-
-	def _get_can_play_pause(self):
-		if self._client.connected():
-			return GLib.Variant("b", int(self._client.status()["playlistlength"]) > 0)
-		return GLib.Variant("b", False)
-
 	# introspect methods
-	def Introspect(self):
-		return self._INTERFACES_XML
+	def Introspect(self): return self._INTERFACES_XML
 
 	# property methods
 	def Get(self, interface_name, prop):
-		getter, setter=self._prop_mapping[interface_name][prop]
-		if callable(getter):
+		default, getter, setter=self._prop_mapping[interface_name][prop]
+		if getter is not None and self._client.connected():
 			return getter()
-		return getter
+		return default
 
 	def Set(self, interface_name, prop, value):
-		getter, setter=self._prop_mapping[interface_name][prop]
+		default, getter, setter=self._prop_mapping[interface_name][prop]
 		if setter is not None and self._client.connected():
 			setter(value)
 
@@ -300,13 +265,13 @@ class MPRISInterface:
 			props=self._prop_mapping[interface_name]
 		except KeyError:  # interface has no properties
 			return {}
-		else:
-			read_props={}
-			for key, (getter, setter) in props.items():
-				if callable(getter):
-					getter=getter()
-				read_props[key]=getter
-			return read_props
+		read_props={}
+		for key, (default, getter, setter) in props.items():
+			if getter is not None and self._client.connected():
+				read_props[key]=getter()
+			else:
+				read_props[key]=default
+		return read_props
 
 	def PropertiesChanged(self, interface_name, changed_properties, invalidated_properties):
 		self._bus.emit_signal(
@@ -372,7 +337,7 @@ class MPRISInterface:
 		self.PropertiesChanged(interface_name, {prop: value}, [])
 
 	def _update_property(self, interface_name, prop):
-		getter, setter=self._prop_mapping[interface_name][prop]
+		default, getter, setter=self._prop_mapping[interface_name][prop]
 		if callable(getter):
 			value=getter()
 		else:
