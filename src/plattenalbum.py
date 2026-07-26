@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Plattenalbum - MPD Client.
 # Copyright (C) 2020-2026 Martin Wagner <martin.wagner.dev@gmail.com>
