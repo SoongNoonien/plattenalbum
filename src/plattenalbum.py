@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!@PYTHON@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Plattenalbum - MPD Client.

@@ -1,5 +1,6 @@
 project('plattenalbum', version: '2.5.0')
 
+python = import('python')
 i18n = import('i18n')
 gnome = import('gnome')
 

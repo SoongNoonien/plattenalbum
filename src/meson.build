@@ -1,6 +1,7 @@
 conf = configuration_data()
-conf.set('RESOURCES_DIR', resources_dir)
+conf.set('PYTHON', python.find_installation('python3').full_path())
 conf.set('LOCALE_DIR', get_option('prefix')/get_option('datadir')/'locale')
+conf.set('RESOURCES_DIR', resources_dir)
 
 configure_file(
           input: 'plattenalbum.py',
