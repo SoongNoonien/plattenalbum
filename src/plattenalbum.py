@@ -777,7 +777,7 @@ class Client(GObject.Object):
 		status=self.status()
 		self._run_command(f'moveid {status["songid"]} 0')
 		if int(status["playlistlength"]) > 1:
-			self._run_command(f"delete 1:")
+			self._run_command("delete 1:")
 		self.append_album(song.get_album())
 		self._send_command(f"playlistfind file {song.get_quoted_file()}")
 		if duplicate:=self._parse_song():
@@ -791,7 +791,7 @@ class Client(GObject.Object):
 		else:
 			self._run_command(f"moveid {songid} 0")
 			if int(status["playlistlength"]) > 1:
-				self._run_command(f"delete 1:")
+				self._run_command("delete 1:")
 
 	def search_songs(self, keywords, num):
 		tags=("title", "artist", "album", "date")
