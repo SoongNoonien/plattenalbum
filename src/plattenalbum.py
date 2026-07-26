@@ -358,7 +358,7 @@ class MPRISInterface:
 		self._client.seekcur(offset)
 
 	def SetPosition(self, trackid, position):
-		if trackid == self._metadata["mpris:trackid"] and 0 <= position <= self._metadata["mpris:length"]:
+		if trackid == self._metadata["mpris:trackid"].unpack() and 0 <= position <= self._metadata["mpris:length"].unpack():
 			self._client.seekcur(str(position/1000000))
 
 	def OpenUri(self, uri):
