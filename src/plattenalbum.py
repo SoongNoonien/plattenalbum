@@ -151,6 +151,7 @@ class MPRISInterface:
 	def __init__(self, window, client, settings):
 		self._window=window
 		self._client=client
+		self._settings=settings
 		self._bus=self._window.get_application().get_dbus_connection()
 		self._node_info=Gio.DBusNodeInfo.new_for_xml(self._INTERFACES_XML)
 		self._metadata={}
@@ -188,8 +189,11 @@ class MPRISInterface:
 		}
 
 		# connect
+		self._settings.connect("changed::mpris", self._on_mpris_changed)
 		self._client.connect("songid", self._on_songid_changed)
 		self._client.connect("metadata", self._on_metadata_changed)
+		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("connected", self._on_connected)
 		self._handlers.append(self._client.connect("state", self._on_state_changed))
 		self._handlers.append(self._client.connect("playlist", self._on_playlist_changed))
 		self._handlers.append(self._client.connect("volume", self._on_volume_changed))
@@ -197,14 +201,8 @@ class MPRISInterface:
 		self._handlers.append(self._client.connect("single", self._on_loop_changed))
 		self._handlers.append(self._client.connect("random", self._on_random_changed))
 		self._handlers.append(self._client.connect("seeked", self._on_seeked))
-		self._handlers.append(self._client.connect("disconnected", self._on_disconnected))
 		for handler in self._handlers:
 			self._client.handler_block(handler)
-
-		# enable/disable
-		settings.connect("changed::mpris", self._on_mpris_changed)
-		if settings.get_boolean("mpris"):
-			self._enable()
 
 	def _handle_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
 		result=getattr(self, method_name)(*parameters.unpack())
@@ -244,13 +242,13 @@ class MPRISInterface:
 	# property methods
 	def Get(self, interface_name, prop):
 		default, getter, setter=self._prop_mapping[interface_name][prop]
-		if getter is not None and self._client.connected():
+		if getter is not None:
 			return getter()
 		return default
 
 	def Set(self, interface_name, prop, value):
 		default, getter, setter=self._prop_mapping[interface_name][prop]
-		if setter is not None and self._client.connected():
+		if setter is not None:
 			setter(value)
 
 	def GetAll(self, interface_name):
@@ -260,7 +258,7 @@ class MPRISInterface:
 			return {}
 		read_props={}
 		for key, (default, getter, setter) in props.items():
-			if getter is not None and self._client.connected():
+			if getter is not None:
 				read_props[key]=getter()
 			else:
 				read_props[key]=default
@@ -388,15 +386,18 @@ class MPRISInterface:
 			self._client.handler_block(handler)
 
 	def _on_mpris_changed(self, settings, key):
-		if settings.get_boolean(key):
+		if settings.get_boolean(key) and self._client.connected():
 			self._enable()
-		else:
+		elif self._name_id is not None:
 			self._disable()
 
 	def _on_disconnected(self, *args):
-		self._metadata={}
-		for prop in ("PlaybackStatus","LoopStatus","Shuffle","Metadata","Volume","CanGoNext","CanGoPrevious","CanPlay","CanPause","CanSeek"):
-			self._update_property(self._MPRIS_PLAYER_IFACE, prop)
+		if self._name_id is not None:
+			self._disable()
+
+	def _on_connected(self, *args):
+		if self._settings.get_boolean("mpris"):
+			self._enable()
 
 ######################
 # MPD client wrapper #
