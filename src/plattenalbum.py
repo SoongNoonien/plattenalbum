@@ -221,16 +221,15 @@ class MPRISInterface:
 		return GLib.Variant("s", "Stopped")
 
 	def _set_loop_status(self, value):
-		if self._client.connected():
-			if value == "Playlist":
-				self._client.repeat(1)
-				self._client.single(0)
-			elif value == "Track":
-				self._client.repeat(1)
-				self._client.single(1)
-			elif value == "None":
-				self._client.repeat(0)
-				self._client.single(0)
+		if value == "Playlist":
+			self._client.repeat(1)
+			self._client.single(0)
+		elif value == "Track":
+			self._client.repeat(1)
+			self._client.single(1)
+		elif value == "None":
+			self._client.repeat(0)
+			self._client.single(0)
 
 	def _get_loop_status(self):
 		if self._client.connected():
@@ -242,11 +241,7 @@ class MPRISInterface:
 		return GLib.Variant("s", "None")
 
 	def _set_shuffle(self, value):
-		if self._client.connected():
-			if value:
-				self._client.random("1")
-			else:
-				self._client.random("0")
+		self._client.random(int(value))
 
 	def _get_shuffle(self):
 		if self._client.connected():
@@ -262,8 +257,7 @@ class MPRISInterface:
 		return GLib.Variant("d", 0)
 
 	def _set_volume(self, value):
-		if self._client.connected() and 0 <= value <= 1:
-			self._client.setvol(int(value * 100))
+		self._client.setvol(int(max(value, 0.0)*100))
 
 	def _get_position(self):
 		if self._client.connected():
@@ -298,7 +292,7 @@ class MPRISInterface:
 
 	def Set(self, interface_name, prop, value):
 		getter, setter=self._prop_mapping[interface_name][prop]
-		if setter is not None:
+		if setter is not None and self._client.connected():
 			setter(value)
 
 	def GetAll(self, interface_name):
@@ -325,44 +319,22 @@ class MPRISInterface:
 		)
 
 	# root methods
-	def Raise(self):
-		self._window.present()
-
-	def Quit(self):
-		self._window.get_application().quit()
+	def Raise(self): self._window.present()
+	def Quit(self): self._window.get_application().quit()
 
 	# player methods
-	def Next(self):
-		self._client.next()
-
-	def Previous(self):
-		self._client.previous()
-
-	def Pause(self):
-		self._client.pause(1)
-
-	def PlayPause(self):
-		self._client.toggle_play()
-
-	def Stop(self):
-		self._client.stop()
-
-	def Play(self):
-		self._client.play()
-
-	def Seek(self, offset):
-		if offset > 0:
-			offset="+"+str(offset/1000000)
-		else:
-			offset=str(offset/1000000)
-		self._client.seekcur(offset)
+	def Next(self): self._client.next()
+	def Previous(self): self._client.previous()
+	def Pause(self): self._client.pause(1)
+	def PlayPause(self): self._client.toggle_play()
+	def Stop(self): self._client.stop()
+	def Play(self): self._client.play()
+	def Seek(self, offset): self._client.seekcur((offset>0)*"+"+str(offset/1000000))
+	def OpenUri(self, uri): pass
 
 	def SetPosition(self, trackid, position):
 		if trackid == self._metadata["mpris:trackid"].unpack() and 0 <= position <= self._metadata["mpris:length"].unpack():
 			self._client.seekcur(str(position/1000000))
-
-	def OpenUri(self, uri):
-		pass
 
 	def Seeked(self, position):
 		self._bus.emit_signal(
@@ -435,10 +407,7 @@ class MPRISInterface:
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanPause", value)
 
 	def _on_volume_changed(self, client, volume):
-		if volume < 0:
-			self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", 0.0))
-		else:
-			self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", volume/100))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "Volume", GLib.Variant("d", max(volume, 0)/100))
 
 	def _on_loop_changed(self, *args):
 		self._update_property(self._MPRIS_PLAYER_IFACE, "LoopStatus")
