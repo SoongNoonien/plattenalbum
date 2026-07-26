@@ -227,15 +227,8 @@ class MPRISInterface:
 	def _get_can_play_pause(self): return GLib.Variant("b", int(self._client.status()["playlistlength"]) > 0)
 
 	def _set_loop_status(self, value):
-		if value == "Playlist":
-			self._client.repeat(1)
-			self._client.single(0)
-		elif value == "Track":
-			self._client.repeat(1)
-			self._client.single(1)
-		elif value == "None":
-			self._client.repeat(0)
-			self._client.single(0)
+		self._client.repeat(int(value != "None"))
+		self._client.single(int(value == "Track"))
 
 	def _get_loop_status(self):
 		status=self._client.status()
