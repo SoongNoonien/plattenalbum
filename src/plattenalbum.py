@@ -2440,6 +2440,7 @@ class PlaybackControls(Gtk.Box):
 		self._scale.connect("change-value", self._on_change_value)
 		self._scale.connect("value-changed", self._on_value_changed)
 		self._scale.connect("notify::css-classes", self._on_css_classes)
+		self._adjustment.connect("notify::upper", self._on_upper)
 		key_controller.connect("key-pressed", self._on_key_pressed)
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("state", self._on_state)
@@ -2493,11 +2494,6 @@ class PlaybackControls(Gtk.Box):
 			elapsed=self._adjustment.get_value()
 			self._elapsed.set_text(str(Duration(elapsed)))
 			self._rest.set_text(str(Duration(duration-elapsed)))
-		else:
-			self._scale.set_visible(False)
-			self._scale.set_fill_level(0)
-			self._elapsed.set_text("")
-			self._rest.set_text("")
 
 	def _on_change_value(self, scale, scroll, value):  # value is inaccurate (can be above upper limit)
 		if scroll == Gtk.ScrollType.JUMP:
@@ -2509,6 +2505,13 @@ class PlaybackControls(Gtk.Box):
 		except:
 			pass
 		return True
+
+	def _on_upper(self, *args):
+		if self._adjustment.get_upper() == 0:
+			self._scale.set_visible(False)
+			self._scale.set_fill_level(0)
+			self._elapsed.set_text("")
+			self._rest.set_text("")
 
 	def _on_state(self, client, state):
 		if state == "stop":
