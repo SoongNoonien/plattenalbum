@@ -181,11 +181,8 @@ class MPRISInterface:
 		except KeyError:  # interface has no properties
 			return {}
 		read_props={}
-		for key, (default, getter, setter) in props.items():
-			if getter is not None:
-				read_props[key]=getter()
-			else:
-				read_props[key]=default
+		for prop in props:
+			read_props[prop]=self.Get(interface_name, prop)
 		return read_props
 
 	def PropertiesChanged(self, interface_name, changed_properties, invalidated_properties):
