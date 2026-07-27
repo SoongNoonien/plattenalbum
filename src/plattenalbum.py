@@ -79,7 +79,6 @@ class MPRISInterface:
 		self._bus=self._window.get_application().get_dbus_connection()
 		self._node_info=Gio.DBusNodeInfo.new_for_xml(self._INTERFACES_XML)
 		self._metadata={}
-		self._handlers=[]
 		self._object_ids=[]
 		self._name_id=None
 		self._playback_mapping={"play": "Playing", "pause": "Paused", "stop": "Stopped"}
@@ -118,13 +117,13 @@ class MPRISInterface:
 		self._client.connect("metadata", self._on_metadata_changed)
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("connected", self._on_connected)
-		self._handlers.append(self._client.connect("state", self._on_state_changed))
-		self._handlers.append(self._client.connect("playlist", self._on_playlist_changed))
-		self._handlers.append(self._client.connect("volume", self._on_volume_changed))
-		self._handlers.append(self._client.connect("repeat", self._on_loop_changed))
-		self._handlers.append(self._client.connect("single", self._on_loop_changed))
-		self._handlers.append(self._client.connect("random", self._on_random_changed))
-		self._handlers.append(self._client.connect("seeked", self._on_seeked))
+		self._handlers=(self._client.connect("state", self._on_state_changed),
+			self._client.connect("playlist", self._on_playlist_changed),
+			self._client.connect("volume", self._on_volume_changed),
+			self._client.connect("repeat", self._on_loop_changed),
+			self._client.connect("single", self._on_loop_changed),
+			self._client.connect("random", self._on_random_changed),
+			self._client.connect("seeked", self._on_seeked))
 		for handler in self._handlers:
 			self._client.handler_block(handler)
 
