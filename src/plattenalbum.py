@@ -3003,38 +3003,17 @@ class Plattenalbum(Adw.Application):
 		dialog.set_translator_credits(_("translator-credits"))
 		dialog.present(self._window)
 
-	def _on_quit(self, *args):
-		self.quit()
-
-	def _on_toggle_play(self, action, param):
-		self._client.toggle_play()
-
-	def _on_stop(self, action, param):
-		self._client.stop()
-
-	def _on_next(self, action, param):
-		self._client.next()
-
-	def _on_previous(self, action, param):
-		self._client.previous()
-
-	def _on_seek_forward(self, action, param):
-		self._client.seekcur("+10")
-
-	def _on_seek_backward(self, action, param):
-		self._client.seekcur("-10")
-
-	def _on_tidy(self, action, param):
-		self._client.tidy_playlist()
-
-	def _on_enqueue(self, action, param):
-		self._client.enqueue()
-
-	def _on_clear(self, action, param):
-		self._client.clear()
-
-	def _on_update(self, action, param):
-		self._client.update()
+	def _on_quit(self, *args): self.quit()
+	def _on_toggle_play(self, action, param): self._client.toggle_play()
+	def _on_stop(self, action, param): self._client.stop()
+	def _on_next(self, action, param): self._client.next()
+	def _on_previous(self, action, param): self._client.previous()
+	def _on_seek_forward(self, action, param): self._client.seekcur("+10")
+	def _on_seek_backward(self, action, param): self._client.seekcur("-10")
+	def _on_tidy(self, action, param): self._client.tidy_playlist()
+	def _on_enqueue(self, action, param): self._client.enqueue()
+	def _on_clear(self, action, param): self._client.clear()
+	def _on_update(self, action, param): self._client.update()
 
 	def _update_action(self, client, value, action, handler):
 		action.handler_block(handler)
