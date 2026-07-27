@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2024-09-21 10:02+0200\n"
+"POT-Creation-Date: 2026-07-27 23:39+0200\n"
+"PO-Revision-Date: 2026-07-27 23:46+0200\n"
 "Last-Translator: Scrambled777 <weblate.scrambled777@simplelogin.com>\n"
 "Language-Team: Hindi <indlinux-hindi@lists.sourceforge.net>\n"
 "Language: hi\n"
@@ -16,321 +16,328 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.9\n"
 
-#: src/plattenalbum.py:505
+#: src/plattenalbum.py:368
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days} दिन"
 msgstr[1] "{days} दिन"
 
-#: src/plattenalbum.py:930
+#: src/plattenalbum.py:973
 msgid "View"
 msgstr "देखें"
 
-#: src/plattenalbum.py:932
+#: src/plattenalbum.py:975
 msgid "_Show Bit Rate"
 msgstr ""
 
-#: src/plattenalbum.py:941
+#: src/plattenalbum.py:984
 msgid "Behavior"
 msgstr "व्यवहार"
 
-#: src/plattenalbum.py:943
+#: src/plattenalbum.py:986
 msgid "Send _Notification on Title Change"
 msgstr "शीर्षक परिवर्तन पर अधिसूचना भेजें (_n)"
 
-#: src/plattenalbum.py:944
-msgid "Re_wind via Previous Button"
-msgstr "पिछले बटन द्वारा रिवाइंड (_w)"
-
-#: src/plattenalbum.py:945
+#: src/plattenalbum.py:987
 msgid "Stop _Playback on Quit"
 msgstr "बंद करने पर प्लेबैक रोकें (_p)"
 
-#: src/plattenalbum.py:946
+#: src/plattenalbum.py:988
 msgid "Support “_MPRIS”"
 msgstr "“_MPRIS” समर्थन"
 
-#: src/plattenalbum.py:946
+#: src/plattenalbum.py:988
 msgid "Disable if “MPRIS” is supported by another client"
 msgstr ""
 
-#: src/plattenalbum.py:965
+#: src/plattenalbum.py:1005
+#, fuzzy
+#| msgid "Connection"
+msgid "Manual Connection"
+msgstr "कनेक्शन"
+
+#: src/plattenalbum.py:1008
+#, fuzzy
+#| msgid "Host Name"
+msgid "Host"
+msgstr "होस्ट नाम"
+
+#: src/plattenalbum.py:1012
+msgid "Port"
+msgstr "पोर्ट"
+
+#: src/plattenalbum.py:1015
+msgid "Password (optional)"
+msgstr ""
+
+#: src/plattenalbum.py:1018 src/plattenalbum.py:2771
 #, fuzzy
 #| msgid "Connection"
 msgid "_Connect"
 msgstr "कनेक्शन"
 
-#: src/plattenalbum.py:973
+#: src/plattenalbum.py:1027
 #, fuzzy
 #| msgid "Connection"
 msgid "Connection failed"
 msgstr "कनेक्शन"
 
-#: src/plattenalbum.py:987
-#, fuzzy
-#| msgid "Connection"
-msgid "Local Connection"
-msgstr "कनेक्शन"
-
-#: src/plattenalbum.py:990 src/plattenalbum.py:1007
-msgid "Password (optional)"
-msgstr ""
-
-#: src/plattenalbum.py:997
-#, fuzzy
-#| msgid "Connection"
-msgid "Remote Connection"
-msgstr "कनेक्शन"
-
-#: src/plattenalbum.py:1000
-msgid "Host Name"
-msgstr "होस्ट नाम"
-
-#: src/plattenalbum.py:1004
-msgid "Port"
-msgstr "पोर्ट"
-
-#: src/plattenalbum.py:1025
+#: src/plattenalbum.py:1047
 msgid "Setup"
 msgstr ""
 
-#: src/plattenalbum.py:1027
+#: src/plattenalbum.py:1049
 msgid ""
 "To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package "
 "manager, and run the following commands to configure and initialize a basic local instance. "
 "After that, Plattenalbum should be able to seamlessly connect to it."
 msgstr ""
 
-#: src/plattenalbum.py:1037 data/ShortcutsWindow.ui:49
-msgid "Server Statistics"
-msgstr "सर्वर आंकड़े"
+#: src/plattenalbum.py:1069
+msgid "Information"
+msgstr ""
 
-#: src/plattenalbum.py:1045
+#: src/plattenalbum.py:1079
+msgid "Server"
+msgstr ""
+
+#: src/plattenalbum.py:1080
+#, fuzzy
+#| msgid "Database Update"
+msgid "Database"
+msgstr "डेटाबेस अद्यतन"
+
+#: src/plattenalbum.py:1084
+msgid "Address"
+msgstr ""
+
+#: src/plattenalbum.py:1085
 msgid "Protocol"
 msgstr "प्रोटोकॉल"
 
-#: src/plattenalbum.py:1046
-msgid "Uptime"
-msgstr "सक्रिय-अवधि"
-
-#: src/plattenalbum.py:1047
-msgid "Playtime"
-msgstr "अवधि"
-
-#: src/plattenalbum.py:1048 src/plattenalbum.py:1383 src/plattenalbum.py:1794
-msgid "Artists"
-msgstr "कलाकार"
-
-#: src/plattenalbum.py:1049 src/plattenalbum.py:1606 src/plattenalbum.py:1647
-#: src/plattenalbum.py:1802
-msgid "Albums"
-msgstr "एलबम"
-
-#: src/plattenalbum.py:1050 src/plattenalbum.py:1386
+#: src/plattenalbum.py:1086 src/plattenalbum.py:1468
 msgid "Songs"
 msgstr "गाने"
 
-#: src/plattenalbum.py:1051
+#: src/plattenalbum.py:1087
 msgid "Total Playtime"
 msgstr "कुल अवधि"
 
-#: src/plattenalbum.py:1052
-msgid "Database Update"
+#: src/plattenalbum.py:1089
+#, fuzzy
+#| msgid "Database Update"
+msgid "Last Update"
 msgstr "डेटाबेस अद्यतन"
 
-#: src/plattenalbum.py:1193 src/plattenalbum.py:1919
+#: src/plattenalbum.py:1221 src/plattenalbum.py:1922
 msgid "Context menu"
 msgstr "संदर्भ मेनू"
 
-#: src/plattenalbum.py:1215
+#: src/plattenalbum.py:1244
 msgid "_Append"
 msgstr "संलग्न करें (_A)"
 
-#: src/plattenalbum.py:1216
+#: src/plattenalbum.py:1245
 msgid "As _Next"
 msgstr "अगले के रूप में (_N)"
 
-#: src/plattenalbum.py:1217
-msgid "_Play"
-msgstr "चलाएं (_P)"
+#: src/plattenalbum.py:1248 src/plattenalbum.py:1942
+msgid "Show Al_bum"
+msgstr ""
 
-#: src/plattenalbum.py:1219 src/plattenalbum.py:1937
-msgid "_Show"
-msgstr "दिखाएं (_S)"
+#: src/plattenalbum.py:1249 src/plattenalbum.py:1943
+msgid "Show _File"
+msgstr ""
+
+#. boxes
+#: src/plattenalbum.py:1466 src/plattenalbum.py:1803
+msgid "Artists"
+msgstr "कलाकार"
+
+#: src/plattenalbum.py:1467 src/plattenalbum.py:1627 src/plattenalbum.py:1679
+#: src/plattenalbum.py:1811
+msgid "Albums"
+msgstr "एलबम"
 
 #. status page
-#: src/plattenalbum.py:1393
-msgid "No Results Found"
+#: src/plattenalbum.py:1479
+#, fuzzy
+#| msgid "No Results Found"
+msgid "No Results"
 msgstr "कोई परिणाम नहीं मिला"
 
-#: src/plattenalbum.py:1393
+#: src/plattenalbum.py:1479
 msgid "Try a different search"
 msgstr "भिन्न खोज का प्रयास करें"
 
-#: src/plattenalbum.py:1588 src/plattenalbum.py:1716
+#: src/plattenalbum.py:1540
+msgid "Unknown Artist"
+msgstr ""
+
+#: src/plattenalbum.py:1615
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "{album} का एल्बम कवर"
 
-#: src/plattenalbum.py:1591 src/plattenalbum.py:1720
+#: src/plattenalbum.py:1617 src/plattenalbum.py:1755 src/plattenalbum.py:1756
+msgid "Unknown Album"
+msgstr ""
+
+#: src/plattenalbum.py:1618
 msgid "Album cover of an unknown album"
 msgstr "किसी अज्ञात एल्बम का एल्बम कवर"
 
-#: src/plattenalbum.py:1667
+#. status page
+#: src/plattenalbum.py:1660
+#, fuzzy
+#| msgid "Albums"
+msgid "No Albums"
+msgstr "एलबम"
+
+#: src/plattenalbum.py:1660
+msgid "Select an artist"
+msgstr ""
+
+#: src/plattenalbum.py:1691
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "{artist} के एल्बम"
 
 #. buttons
-#: src/plattenalbum.py:1691 src/plattenalbum.py:2336 src/plattenalbum.py:2345
+#: src/plattenalbum.py:1713 src/plattenalbum.py:2317 src/plattenalbum.py:2326
 msgid "Play"
 msgstr "चलाएं"
 
-#: src/plattenalbum.py:1692
+#: src/plattenalbum.py:1715
 msgid "Append"
 msgstr "संलग्न करें"
 
-#: src/plattenalbum.py:1718 src/plattenalbum.py:1719
-msgid "Unknown Album"
-msgstr ""
-
-#: src/plattenalbum.py:1753 src/plattenalbum.py:2905 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:1767 src/plattenalbum.py:2783 data/shortcuts-dialog.ui:9
 msgid "Main Menu"
 msgstr "मुख्य मेनू"
 
-#: src/plattenalbum.py:1755 src/plattenalbum.py:2901
+#: src/plattenalbum.py:1769 src/plattenalbum.py:2780
 msgid "_Preferences"
 msgstr "प्राथमिकताएं (_P)"
 
-#: src/plattenalbum.py:1756 src/plattenalbum.py:2902
+#: src/plattenalbum.py:1770 src/plattenalbum.py:2781
 msgid "_Keyboard Shortcuts"
 msgstr "कीबोर्ड शॉर्टकट (_K)"
 
-#: src/plattenalbum.py:1757 src/plattenalbum.py:2903
-msgid "_Help"
-msgstr "सहायता (_H)"
-
-#: src/plattenalbum.py:1758 src/plattenalbum.py:2904
+#: src/plattenalbum.py:1771 src/plattenalbum.py:2782
 msgid "_About Plattenalbum"
 msgstr "प्लैटेनएल्बम के बारे में (_A)"
 
-#: src/plattenalbum.py:1760
+#: src/plattenalbum.py:1773
 #, fuzzy
 #| msgid "_Reconnect"
 msgid "_Disconnect"
 msgstr "पुनः जुड़ें (_R)"
 
-#: src/plattenalbum.py:1761
+#: src/plattenalbum.py:1774
 msgid "_Update Database"
 msgstr "डेटाबेस अद्यतन (_U)"
 
-#: src/plattenalbum.py:1762
-msgid "_Server Statistics"
-msgstr "सर्वर आंकड़े (_S)"
+#: src/plattenalbum.py:1775
+msgid "_Server Information"
+msgstr ""
 
-#: src/plattenalbum.py:1774 src/plattenalbum.py:1775
+#: src/plattenalbum.py:1786 src/plattenalbum.py:1787
 msgid "Search collection"
 msgstr "संग्रह खोजें"
 
-#: src/plattenalbum.py:1778 src/plattenalbum.py:1788
-#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+#: src/plattenalbum.py:1797 src/plattenalbum.py:1836
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28 data/shortcuts-dialog.ui:45
 msgid "Search"
 msgstr "खोजें"
 
 #. status page
-#: src/plattenalbum.py:1818
+#: src/plattenalbum.py:1827
 msgid "Collection is Empty"
 msgstr "संग्रह खाली है"
 
-#: src/plattenalbum.py:1936
+#: src/plattenalbum.py:1835
+#, fuzzy
+#| msgid "Collection is Empty"
+msgid "Collection"
+msgstr "संग्रह खाली है"
+
+#: src/plattenalbum.py:1941
 msgid "_Remove"
 msgstr "हटाएं (_R)"
 
-#: src/plattenalbum.py:1939
+#: src/plattenalbum.py:1945
 msgid "_Enqueue Album"
 msgstr "एल्बम कतारबद्ध करें (_E)"
 
-#: src/plattenalbum.py:1940
+#: src/plattenalbum.py:1946
 msgid "_Tidy"
 msgstr "संवारें (_T)"
 
-#: src/plattenalbum.py:1942
+#: src/plattenalbum.py:1947
 msgid "_Clear"
 msgstr "साफ करें (_C)"
 
-#: src/plattenalbum.py:2152
+#: src/plattenalbum.py:2147
 msgid "Playlist is Empty"
 msgstr "प्लेलिस्ट खाली है"
 
-#: src/plattenalbum.py:2157
+#: src/plattenalbum.py:2153
 msgid "Scroll to Current Song"
 msgstr "वर्तमान गाने पर जाएं"
 
 #. status pages
-#: src/plattenalbum.py:2250
-msgid "No Lyrics Found"
+#: src/plattenalbum.py:2247
+#, fuzzy
+#| msgid "No Lyrics Found"
+msgid "No Lyrics"
 msgstr "कोई बोल नहीं मिला"
 
-#: src/plattenalbum.py:2253
+#: src/plattenalbum.py:2250
 msgid "Connection Error"
 msgstr "कनेक्शन त्रुटि"
 
-#: src/plattenalbum.py:2253
+#: src/plattenalbum.py:2250
 msgid "Check your network connection"
 msgstr "नेटवर्क कनेक्शन जांचें"
 
-#: src/plattenalbum.py:2255
+#: src/plattenalbum.py:2252
 #, fuzzy
 #| msgid "searching…"
 msgid "Searching…"
 msgstr "खोज रहे हैं…"
 
-#: src/plattenalbum.py:2280
+#: src/plattenalbum.py:2264
 msgid "Lyrics view"
 msgstr "बोल दृश्य"
 
-#: src/plattenalbum.py:2301
-#, python-brace-format
-msgid "Lyrics of {song}"
-msgstr "{song} के बोल"
-
-#: src/plattenalbum.py:2311
-msgid "Current album cover"
-msgstr "वर्तमान एल्बम कवर"
-
-#: src/plattenalbum.py:2342
+#: src/plattenalbum.py:2323
 msgid "Pause"
 msgstr "विराम"
 
-#: src/plattenalbum.py:2352
+#: src/plattenalbum.py:2331 data/shortcuts-dialog.ui:86
+msgid "Previous"
+msgstr "पिछला"
+
+#: src/plattenalbum.py:2333 data/shortcuts-dialog.ui:80
+msgid "Next"
+msgstr "अगला"
+
+#: src/plattenalbum.py:2340
 #, python-brace-format
 msgid "{bitrate} kb/s"
 msgstr ""
 
-#: src/plattenalbum.py:2377 data/ShortcutsWindow.ui:107
-msgid "Previous"
-msgstr "पिछला"
-
-#: src/plattenalbum.py:2378 data/ShortcutsWindow.ui:101
-msgid "Next"
-msgstr "अगला"
-
-#: src/plattenalbum.py:2390
+#: src/plattenalbum.py:2400 src/plattenalbum.py:2675
 msgid "Progress bar"
 msgstr "प्रगति पट्टी"
 
-#: src/plattenalbum.py:2506
+#: src/plattenalbum.py:2504
 msgid "Volume control"
 msgstr "ध्वनि नियंत्रण"
-
-#: src/plattenalbum.py:2526
-#, fuzzy
-#| msgid "Main Menu"
-msgid "Player Menu"
-msgstr "मुख्य मेनू"
 
 #: src/plattenalbum.py:2536
 msgid "_Repeat Mode"
@@ -352,26 +359,38 @@ msgstr "गाने के बाद विराम (_P)"
 msgid "_Consume Mode"
 msgstr "उपभोग मोड (_C)"
 
-#: src/plattenalbum.py:2543
-msgid "_Lyrics"
+#: src/plattenalbum.py:2582 data/shortcuts-dialog.ui:141
+msgid "Playlist"
+msgstr "प्लेलिस्ट"
+
+#: src/plattenalbum.py:2583
+#, fuzzy
+#| msgid "_Lyrics"
+msgid "Lyrics"
 msgstr "बोल (_L)"
 
-#: src/plattenalbum.py:2836
+#: src/plattenalbum.py:2595
+#, fuzzy
+#| msgid "Main Menu"
+msgid "Player Menu"
+msgstr "मुख्य मेनू"
+
+#: src/plattenalbum.py:2731
 msgid "Database is being updated"
 msgstr "डेटाबेस अद्यतन किया जा रहा है"
 
-#: src/plattenalbum.py:2837
+#: src/plattenalbum.py:2732
 msgid "Database updated"
 msgstr "डाटाबेस अद्यतित"
 
 #. status page
-#: src/plattenalbum.py:2886
+#: src/plattenalbum.py:2768
 #, fuzzy
 #| msgid "Connect to your music"
 msgid "Connect to Your Music"
 msgstr "अपने संगीत से जुड़ें"
 
-#: src/plattenalbum.py:2887
+#: src/plattenalbum.py:2769
 #, fuzzy
 #| msgid ""
 #| "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set up and "
@@ -383,57 +402,47 @@ msgstr ""
 "प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या किसी अन्य उपकरण "
 "पर स्थापित और चलाने की आवश्यकता है"
 
-#: src/plattenalbum.py:2889
-msgid "_Set up Instance"
-msgstr ""
-
-#: src/plattenalbum.py:2891
+#: src/plattenalbum.py:2773
 #, fuzzy
 #| msgid "Connection"
-msgid "Connect _Locally"
+msgid "Connect _Manually"
 msgstr "कनेक्शन"
 
-#: src/plattenalbum.py:2893
-#, fuzzy
-#| msgid "_Connect to Remote Server"
-msgid "Connect _Remotely"
-msgstr "रिमोट सर्वर से जुड़ें (_C)"
+#: src/plattenalbum.py:2876
+msgid "Playing music"
+msgstr ""
 
-#: src/plattenalbum.py:3000
+#: src/plattenalbum.py:3003
+msgid "translator-credits"
+msgstr "Scrambled777 <weblate.scrambled777@simplelogin.com>"
+
+#: src/plattenalbum.py:3045
 msgid "Next Title is Playing"
 msgstr "अगला शीर्षक बज रहा है"
 
-#: src/plattenalbum.py:3002
+#: src/plattenalbum.py:3047
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "अब “{artist}” द्वारा “{title}” बज रहा है"
 
-#: src/plattenalbum.py:3004
+#: src/plattenalbum.py:3049
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "अभी “{title}” बज रहा है"
 
-#: src/plattenalbum.py:3039
-msgid "Cleared A‐B loop"
+#: src/plattenalbum.py:3051
+msgid "Skip"
 msgstr ""
 
-#: src/plattenalbum.py:3042
-#, python-brace-format
-msgid "Started A‐B loop at {start}"
+#: src/plattenalbum.py:3058
+#, fuzzy
+#| msgid "Playback Options"
+msgid "Playback Finished"
+msgstr "प्लेबैक विकल्प"
+
+#: src/plattenalbum.py:3059
+msgid "The playlist is over"
 msgstr ""
-
-#: src/plattenalbum.py:3044
-#, python-brace-format
-msgid "Activated A‐B loop from {start} to {end}"
-msgstr ""
-
-#: src/plattenalbum.py:3061
-msgid "Debug mode"
-msgstr "डिबग मोड"
-
-#: src/plattenalbum.py:3118
-msgid "translator-credits"
-msgstr "Scrambled777 <weblate.scrambled777@simplelogin.com>"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
@@ -460,7 +469,9 @@ msgid "Main window"
 msgstr "मुख्य विंडो"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
-msgid "Album View"
+#, fuzzy
+#| msgid "Album View"
+msgid "Album view"
 msgstr "एल्बम दृश्य"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
@@ -469,123 +480,186 @@ msgstr "एल्बम दृश्य"
 msgid "Small window"
 msgstr "मुख्य विंडो"
 
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:36
+#, fuzzy
+#| msgid "Main window"
+msgid "Small window with playlist"
+msgstr "मुख्य विंडो"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:40
+#, fuzzy
+#| msgid "Main window"
+msgid "Small window with cover"
+msgstr "मुख्य विंडो"
+
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
 msgstr "संगीत ब्राउज़र"
 
-#: data/de.wagnermartin.Plattenalbum.desktop.in:12
-msgid "Music;Player;"
+#. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
+#: data/de.wagnermartin.Plattenalbum.desktop.in:11
+#, fuzzy
+#| msgid "Music;Player;"
+msgid "music;player;audio;MPD;"
 msgstr "संगीत;वादक;"
 
-#: data/ShortcutsWindow.ui:10
+#: data/shortcuts-dialog.ui:6
 msgid "General"
 msgstr "सामान्य"
 
-#: data/ShortcutsWindow.ui:13
-msgid "Online Help"
-msgstr "ऑनलाइन सहायता"
-
-#: data/ShortcutsWindow.ui:19
-msgid "Preferences"
-msgstr "प्राथमिकताएं"
-
-#: data/ShortcutsWindow.ui:25
-msgid "Shortcuts"
-msgstr "शॉर्टकट"
-
-#: data/ShortcutsWindow.ui:37
+#: data/shortcuts-dialog.ui:15
 #, fuzzy
 #| msgid "Reconnect"
 msgid "Disconnect"
 msgstr "पुनः जुड़ें"
 
-#: data/ShortcutsWindow.ui:43
+#: data/shortcuts-dialog.ui:21
 msgid "Update Database"
 msgstr "डेटाबेस अद्यतन करें"
 
-#: data/ShortcutsWindow.ui:55
+#: data/shortcuts-dialog.ui:27
+msgid "Server Information"
+msgstr ""
+
+#: data/shortcuts-dialog.ui:33
+msgid "Preferences"
+msgstr "प्राथमिकताएं"
+
+#: data/shortcuts-dialog.ui:39
+msgid "Shortcuts"
+msgstr "शॉर्टकट"
+
+#: data/shortcuts-dialog.ui:51
 msgid "Close"
 msgstr "बंद करें"
 
-#: data/ShortcutsWindow.ui:61
+#: data/shortcuts-dialog.ui:57
 msgid "Quit"
 msgstr "बंद करें"
 
-#: data/ShortcutsWindow.ui:69
-msgid "Window"
-msgstr "विंडो"
-
-#: data/ShortcutsWindow.ui:72
-msgid "Toggle Lyrics"
-msgstr "बोल टॉगल करें"
-
-#: data/ShortcutsWindow.ui:78
-msgid "Toggle Search"
-msgstr "खोज टॉगल करें"
-
-#: data/ShortcutsWindow.ui:86
+#: data/shortcuts-dialog.ui:65
 msgid "Playback"
 msgstr "प्लेबैक"
 
-#: data/ShortcutsWindow.ui:89
+#: data/shortcuts-dialog.ui:68
 msgid "Play/Pause"
 msgstr "बजाएं/रोकें"
 
-#: data/ShortcutsWindow.ui:95
+#: data/shortcuts-dialog.ui:74
 msgid "Stop"
 msgstr "रोकें"
 
-#: data/ShortcutsWindow.ui:113
+#: data/shortcuts-dialog.ui:92
 msgid "Seek Forward"
 msgstr "आगे तलाशें"
 
-#: data/ShortcutsWindow.ui:119
+#: data/shortcuts-dialog.ui:98
 msgid "Seek Backward"
 msgstr "पीछे तलाशें"
 
-#: data/ShortcutsWindow.ui:125
-msgid "A‐B Loop"
-msgstr ""
-
-#: data/ShortcutsWindow.ui:133
+#: data/shortcuts-dialog.ui:106
 msgid "Playback Options"
 msgstr "प्लेबैक विकल्प"
 
-#: data/ShortcutsWindow.ui:136
-msgid "Toggle Repeat Mode"
-msgstr "दोहराएं मोड टॉगल करें"
+#: data/shortcuts-dialog.ui:109
+msgid "Repeat Mode"
+msgstr "दोहराएं मोड"
 
-#: data/ShortcutsWindow.ui:142
-msgid "Toggle Random Mode"
-msgstr "यादृच्छिक मोड टॉगल करें"
+#: data/shortcuts-dialog.ui:115
+msgid "Random Mode"
+msgstr "यादृच्छिक मोड"
 
-#: data/ShortcutsWindow.ui:148
-msgid "Toggle Single Mode"
-msgstr "एकल मोड टॉगल करें"
+#: data/shortcuts-dialog.ui:121
+msgid "Single Mode"
+msgstr "एकल मोड"
 
-#: data/ShortcutsWindow.ui:154
+#: data/shortcuts-dialog.ui:127
 msgid "Pause After Song"
 msgstr "गाने के बाद विराम"
 
-#: data/ShortcutsWindow.ui:160
-msgid "Toggle Consume Mode"
-msgstr "उपभोग मोड टॉगल करें"
+#: data/shortcuts-dialog.ui:133
+msgid "Consume Mode"
+msgstr "उपभोग मोड"
 
-#: data/ShortcutsWindow.ui:168
-msgid "Playlist"
-msgstr "प्लेलिस्ट"
+#: data/shortcuts-dialog.ui:144
+msgid "Enqueue Album"
+msgstr "एल्बम कतारबद्ध करें"
 
-#: data/ShortcutsWindow.ui:171
-msgid "Clear"
-msgstr "साफ करें"
-
-#: data/ShortcutsWindow.ui:177
+#: data/shortcuts-dialog.ui:150
 msgid "Tidy"
 msgstr "संवारें"
 
-#: data/ShortcutsWindow.ui:183
-msgid "Enqueue Album"
-msgstr "एल्बम कतारबद्ध करें"
+#: data/shortcuts-dialog.ui:156
+msgid "Clear"
+msgstr "साफ करें"
+
+#~ msgid "Re_wind via Previous Button"
+#~ msgstr "पिछले बटन द्वारा रिवाइंड (_w)"
+
+#, fuzzy
+#~| msgid "Connection"
+#~ msgid "Remote Connection"
+#~ msgstr "कनेक्शन"
+
+#~ msgid "Server Statistics"
+#~ msgstr "सर्वर आंकड़े"
+
+#~ msgid "Uptime"
+#~ msgstr "सक्रिय-अवधि"
+
+#~ msgid "Playtime"
+#~ msgstr "अवधि"
+
+#~ msgid "_Play"
+#~ msgstr "चलाएं (_P)"
+
+#~ msgid "_Show"
+#~ msgstr "दिखाएं (_S)"
+
+#~ msgid "_Help"
+#~ msgstr "सहायता (_H)"
+
+#~ msgid "_Server Statistics"
+#~ msgstr "सर्वर आंकड़े (_S)"
+
+#, python-brace-format
+#~ msgid "Lyrics of {song}"
+#~ msgstr "{song} के बोल"
+
+#~ msgid "Current album cover"
+#~ msgstr "वर्तमान एल्बम कवर"
+
+#, fuzzy
+#~| msgid "_Connect to Remote Server"
+#~ msgid "Connect _Remotely"
+#~ msgstr "रिमोट सर्वर से जुड़ें (_C)"
+
+#~ msgid "Debug mode"
+#~ msgstr "डिबग मोड"
+
+#~ msgid "Online Help"
+#~ msgstr "ऑनलाइन सहायता"
+
+#~ msgid "Window"
+#~ msgstr "विंडो"
+
+#~ msgid "Toggle Lyrics"
+#~ msgstr "बोल टॉगल करें"
+
+#~ msgid "Toggle Search"
+#~ msgstr "खोज टॉगल करें"
+
+#~ msgid "Toggle Repeat Mode"
+#~ msgstr "दोहराएं मोड टॉगल करें"
+
+#~ msgid "Toggle Random Mode"
+#~ msgstr "यादृच्छिक मोड टॉगल करें"
+
+#~ msgid "Toggle Single Mode"
+#~ msgstr "एकल मोड टॉगल करें"
+
+#~ msgid "Toggle Consume Mode"
+#~ msgstr "उपभोग मोड टॉगल करें"
 
 #, python-brace-format
 #~ msgid "{channels} channel"

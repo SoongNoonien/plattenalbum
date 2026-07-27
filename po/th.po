@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-04 20:30+0200\n"
-"PO-Revision-Date: 2025-06-15 16:33+0700\n"
+"POT-Creation-Date: 2026-07-27 23:39+0200\n"
+"PO-Revision-Date: 2026-07-27 23:54+0200\n"
 "Last-Translator: Supakorn Huemwang <shuemwang.han@gmail.com>\n"
 "Language-Team: \n"
 "Language: th\n"
@@ -16,421 +16,419 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.9\n"
 
-#: src/plattenalbum.py:502
+#: src/plattenalbum.py:368
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days} วัน"
 
-#: src/plattenalbum.py:953
+#: src/plattenalbum.py:973
 msgid "View"
 msgstr "แสดง"
 
-#: src/plattenalbum.py:955
+#: src/plattenalbum.py:975
 msgid "_Show Bit Rate"
 msgstr "แสดงบิตเรต (_S)"
 
-#: src/plattenalbum.py:964
+#: src/plattenalbum.py:984
 msgid "Behavior"
 msgstr "การทำงาน"
 
-#: src/plattenalbum.py:966
+#: src/plattenalbum.py:986
 msgid "Send _Notification on Title Change"
 msgstr "แสดงการแจ้งเตือนเมื่อเปลี่ยนเพลง (_N)"
 
-#: src/plattenalbum.py:967
-msgid "Re_wind via Previous Button"
-msgstr "ย้อนเพลงด้วยปุ่ม Previous (_W)"
-
-#: src/plattenalbum.py:968
+#: src/plattenalbum.py:987
 msgid "Stop _Playback on Quit"
 msgstr "หยุดการเล่นเมื่อออกจากโปรแกรม (_P)"
 
-#: src/plattenalbum.py:969
+#: src/plattenalbum.py:988
 msgid "Support “_MPRIS”"
 msgstr "สนับสนุน “MPRIS” (_M)"
 
-#: src/plattenalbum.py:969
+#: src/plattenalbum.py:988
 msgid "Disable if “MPRIS” is supported by another client"
 msgstr "ปิดใช้เมือ “MPRIS” ถูกสนับสนุนโดยไคลเอนต์อื่น"
 
-#: src/plattenalbum.py:988 src/plattenalbum.py:3009
-msgid "_Connect"
-msgstr "เชื่อมต่อ (_C)"
-
-#: src/plattenalbum.py:990
-msgid "Ca_ncel"
-msgstr "ยกเลิก (_N)"
-
-#: src/plattenalbum.py:998
-msgid "Connection failed"
-msgstr "การเชื่อมต่อล้มเหลว"
-
-#: src/plattenalbum.py:1012
+#: src/plattenalbum.py:1005
 msgid "Manual Connection"
 msgstr "การเชื่อมต่อแบบ Manual"
 
-#: src/plattenalbum.py:1015
+#: src/plattenalbum.py:1008
 msgid "Host"
 msgstr "โฮส์ต"
 
-#: src/plattenalbum.py:1019
+#: src/plattenalbum.py:1012
 msgid "Port"
 msgstr "พอร์ต"
 
-#: src/plattenalbum.py:1022
+#: src/plattenalbum.py:1015
 msgid "Password (optional)"
 msgstr "รหัสผ่าน (ไม่บังคับ)"
 
-#: src/plattenalbum.py:1040
+#: src/plattenalbum.py:1018 src/plattenalbum.py:2771
+msgid "_Connect"
+msgstr "เชื่อมต่อ (_C)"
+
+#: src/plattenalbum.py:1027
+msgid "Connection failed"
+msgstr "การเชื่อมต่อล้มเหลว"
+
+#: src/plattenalbum.py:1047
 msgid "Setup"
 msgstr "เซ็ตอัพ"
 
-#: src/plattenalbum.py:1042
+#: src/plattenalbum.py:1049
 msgid ""
-"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package manager, and run the following "
-"commands to configure and initialize a basic local instance. After that, Plattenalbum should be able to seamlessly "
-"connect to it."
+"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package "
+"manager, and run the following commands to configure and initialize a basic local "
+"instance. After that, Plattenalbum should be able to seamlessly connect to it."
 msgstr ""
-"ในการเริ่มต้น ติดตั้ง Music Player Daemon (<tt>mpd</tt>) โดยใช้ตัวจัดการแพคเกจของคุณ และรันคำสั่งต่อไปนี้เพื่อตั้งค่า "
-"และเริ่มต้นการทำงานเบื้องต้น หลังจากนั้น Plattenalbum จะสามารถเชื่อมต่อได้อย่างราบรื่น"
+"ในการเริ่มต้น ติดตั้ง Music Player Daemon (<tt>mpd</tt>) โดยใช้ตัวจัดการแพคเกจของคุณ "
+"และรันคำสั่งต่อไปนี้เพื่อตั้งค่า และเริ่มต้นการทำงานเบื้องต้น หลังจากนั้น Plattenalbum "
+"จะสามารถเชื่อมต่อได้อย่างราบรื่น"
 
-#: src/plattenalbum.py:1052 data/ShortcutsWindow.ui:49
-msgid "Server Information"
+#: src/plattenalbum.py:1069
+#, fuzzy
+#| msgid "Server Information"
+msgid "Information"
 msgstr "ข้อมูลเซิฟเวอร์"
 
-#: src/plattenalbum.py:1060
+#: src/plattenalbum.py:1079
 msgid "Server"
 msgstr "เซิฟเวอร์"
 
-#: src/plattenalbum.py:1061
+#: src/plattenalbum.py:1080
+#, fuzzy
+#| msgid "Database Update"
+msgid "Database"
+msgstr "การอัพเดตของฐานข้อมูล"
+
+#: src/plattenalbum.py:1084
+msgid "Address"
+msgstr ""
+
+#: src/plattenalbum.py:1085
 msgid "Protocol"
 msgstr "โปรโตคอล"
 
-#: src/plattenalbum.py:1062
-msgid "Uptime"
-msgstr "อัพไทม์"
-
-#: src/plattenalbum.py:1063
-msgid "Playtime"
-msgstr "เวลาที่เล่น"
-
-#: src/plattenalbum.py:1064 src/plattenalbum.py:1476 src/plattenalbum.py:1849
-msgid "Artists"
-msgstr "ศิลปิน"
-
-#: src/plattenalbum.py:1065 src/plattenalbum.py:1479 src/plattenalbum.py:1688 src/plattenalbum.py:1729
-#: src/plattenalbum.py:1857
-msgid "Albums"
-msgstr "อัลบั้ม"
-
-#: src/plattenalbum.py:1066 src/plattenalbum.py:1482
+#: src/plattenalbum.py:1086 src/plattenalbum.py:1468
 msgid "Songs"
 msgstr "เพลง"
 
-#: src/plattenalbum.py:1067
+#: src/plattenalbum.py:1087
 msgid "Total Playtime"
 msgstr "เวลาที่เล่นทั้งหมด"
 
-#: src/plattenalbum.py:1068
-msgid "Database Update"
+#: src/plattenalbum.py:1089
+#, fuzzy
+#| msgid "Database Update"
+msgid "Last Update"
 msgstr "การอัพเดตของฐานข้อมูล"
 
-#: src/plattenalbum.py:1229 src/plattenalbum.py:1973
+#: src/plattenalbum.py:1221 src/plattenalbum.py:1922
 msgid "Context menu"
 msgstr "เมนูเพิ่มเติม"
 
-#: src/plattenalbum.py:1251
+#: src/plattenalbum.py:1244
 msgid "_Append"
 msgstr "เพิ่ม (_A)"
 
-#: src/plattenalbum.py:1252
+#: src/plattenalbum.py:1245
 msgid "As _Next"
 msgstr "เล่นถัดไป (_N)"
 
-#: src/plattenalbum.py:1253
-msgid "_Play"
-msgstr "เล่น (_P)"
+#: src/plattenalbum.py:1248 src/plattenalbum.py:1942
+msgid "Show Al_bum"
+msgstr ""
 
-#: src/plattenalbum.py:1255 src/plattenalbum.py:1991
-msgid "_Show"
-msgstr "แสดง (_P)"
+#: src/plattenalbum.py:1249 src/plattenalbum.py:1943
+msgid "Show _File"
+msgstr ""
 
-#: src/plattenalbum.py:1431
-msgid "Current album cover"
-msgstr "รูปปกอัลบั้มปัจจุบัน"
+#. boxes
+#: src/plattenalbum.py:1466 src/plattenalbum.py:1803
+msgid "Artists"
+msgstr "ศิลปิน"
+
+#: src/plattenalbum.py:1467 src/plattenalbum.py:1627 src/plattenalbum.py:1679
+#: src/plattenalbum.py:1811
+msgid "Albums"
+msgstr "อัลบั้ม"
 
 #. status page
-#: src/plattenalbum.py:1490
-msgid "No Results Found"
+#: src/plattenalbum.py:1479
+#, fuzzy
+#| msgid "No Results Found"
+msgid "No Results"
 msgstr "ไม่พบผลลัพท์"
 
-#: src/plattenalbum.py:1490
+#: src/plattenalbum.py:1479
 msgid "Try a different search"
 msgstr "ลองคำค้นหาอื่น"
 
-#: src/plattenalbum.py:1577
+#: src/plattenalbum.py:1540
 msgid "Unknown Artist"
 msgstr "ศิลปินไม่ทราบชื่อ"
 
-#: src/plattenalbum.py:1673 src/plattenalbum.py:1792
+#: src/plattenalbum.py:1615
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "รูปปกอัลบั้มของ {album}"
 
-#: src/plattenalbum.py:1675 src/plattenalbum.py:1794 src/plattenalbum.py:1795
+#: src/plattenalbum.py:1617 src/plattenalbum.py:1755 src/plattenalbum.py:1756
 msgid "Unknown Album"
 msgstr "อัลบั้มไม่ทราบชื่อ"
 
-#: src/plattenalbum.py:1676 src/plattenalbum.py:1796
+#: src/plattenalbum.py:1618
 msgid "Album cover of an unknown album"
 msgstr "ปกอัลบั้มของอัลบั้มไม่ทราบชื่อ"
 
-#: src/plattenalbum.py:1744
+#. status page
+#: src/plattenalbum.py:1660
+#, fuzzy
+#| msgid "Albums"
+msgid "No Albums"
+msgstr "อัลบั้ม"
+
+#: src/plattenalbum.py:1660
+msgid "Select an artist"
+msgstr ""
+
+#: src/plattenalbum.py:1691
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "อัลบั้ม {artist}"
 
 #. buttons
-#: src/plattenalbum.py:1763 src/plattenalbum.py:2400 src/plattenalbum.py:2409
+#: src/plattenalbum.py:1713 src/plattenalbum.py:2317 src/plattenalbum.py:2326
 msgid "Play"
 msgstr "เล่น"
 
-#: src/plattenalbum.py:1765
+#: src/plattenalbum.py:1715
 msgid "Append"
 msgstr "เพิ่ม"
 
-#: src/plattenalbum.py:1808 src/plattenalbum.py:3022 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:1767 src/plattenalbum.py:2783 data/shortcuts-dialog.ui:9
 msgid "Main Menu"
 msgstr "เมนูหลัก"
 
-#: src/plattenalbum.py:1810 src/plattenalbum.py:3018
+#: src/plattenalbum.py:1769 src/plattenalbum.py:2780
 msgid "_Preferences"
 msgstr "การตั้งค่า (_P)"
 
-#: src/plattenalbum.py:1811 src/plattenalbum.py:3019
+#: src/plattenalbum.py:1770 src/plattenalbum.py:2781
 msgid "_Keyboard Shortcuts"
 msgstr "คำสั้งลัดคีย์บอร์ด (_K)"
 
-#: src/plattenalbum.py:1812 src/plattenalbum.py:3020
-msgid "_Help"
-msgstr "ช่วยเหลือ (_H)"
-
-#: src/plattenalbum.py:1813 src/plattenalbum.py:3021
+#: src/plattenalbum.py:1771 src/plattenalbum.py:2782
 msgid "_About Plattenalbum"
 msgstr "เกี่ยวกับ Plattenalbum (_A)"
 
-#: src/plattenalbum.py:1815
+#: src/plattenalbum.py:1773
 msgid "_Disconnect"
 msgstr "ตัดการเชื่อมต่อ (_D)"
 
-#: src/plattenalbum.py:1816
+#: src/plattenalbum.py:1774
 msgid "_Update Database"
 msgstr "อัพเดตฐานข้อมูล (_U)"
 
-#: src/plattenalbum.py:1817
+#: src/plattenalbum.py:1775
 msgid "_Server Information"
 msgstr "ข้อมูลของเซิฟเวอร์ (_S)"
 
-#: src/plattenalbum.py:1829 src/plattenalbum.py:1830
+#: src/plattenalbum.py:1786 src/plattenalbum.py:1787
 msgid "Search collection"
 msgstr "ค้นหาคลัง"
 
-#: src/plattenalbum.py:1833 src/plattenalbum.py:1843 data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+#: src/plattenalbum.py:1797 src/plattenalbum.py:1836
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28 data/shortcuts-dialog.ui:45
 msgid "Search"
 msgstr "ค้นหา"
 
 #. status page
-#: src/plattenalbum.py:1873
+#: src/plattenalbum.py:1827
 msgid "Collection is Empty"
 msgstr "คลังว่างเปล่า"
 
-#: src/plattenalbum.py:1990
+#: src/plattenalbum.py:1835
+#, fuzzy
+#| msgid "Collection is Empty"
+msgid "Collection"
+msgstr "คลังว่างเปล่า"
+
+#: src/plattenalbum.py:1941
 msgid "_Remove"
 msgstr "ลบออก (_R)"
 
-#: src/plattenalbum.py:1993
+#: src/plattenalbum.py:1945
 msgid "_Enqueue Album"
 msgstr "เพื่มอัลบัมเข้าคิว (_E)"
 
-#: src/plattenalbum.py:1994
+#: src/plattenalbum.py:1946
 msgid "_Tidy"
 msgstr "จัด (_T)"
 
-#: src/plattenalbum.py:1996
+#: src/plattenalbum.py:1947
 msgid "_Clear"
 msgstr "เคลียร์ (_C)"
 
-#: src/plattenalbum.py:2238
+#: src/plattenalbum.py:2147
 msgid "Playlist is Empty"
 msgstr "เพลย์ลิสต์ว่างเล่า"
 
-#: src/plattenalbum.py:2243
+#: src/plattenalbum.py:2153
 msgid "Scroll to Current Song"
 msgstr "เลื่อนไปยังเพลงปัจจุบัน"
 
 #. status pages
-#: src/plattenalbum.py:2336
-msgid "No Lyrics Found"
-msgstr "ไม่พบเนื่อเพลง"
+#: src/plattenalbum.py:2247
+#, fuzzy
+#| msgid "Lyrics"
+msgid "No Lyrics"
+msgstr "เนื้อเพลง"
 
-#: src/plattenalbum.py:2339
+#: src/plattenalbum.py:2250
 msgid "Connection Error"
 msgstr "การเชื่อมต่อผิดพลาด"
 
-#: src/plattenalbum.py:2339
+#: src/plattenalbum.py:2250
 msgid "Check your network connection"
 msgstr "เช็คการเชื่อมต่ออินเทอร์เน็ตของคุณ"
 
-#: src/plattenalbum.py:2341
+#: src/plattenalbum.py:2252
 msgid "Searching…"
 msgstr "กำลังค้นหา…"
 
-#: src/plattenalbum.py:2366
+#: src/plattenalbum.py:2264
 msgid "Lyrics view"
 msgstr "แสดงเนื้อเพลง"
 
-#: src/plattenalbum.py:2387
-#, python-brace-format
-msgid "Lyrics of {song}"
-msgstr "เนื่อเพลงของ {song}"
-
-#: src/plattenalbum.py:2406
+#: src/plattenalbum.py:2323
 msgid "Pause"
 msgstr "หยุดชั่วคราว"
 
-#: src/plattenalbum.py:2414 data/ShortcutsWindow.ui:107
+#: src/plattenalbum.py:2331 data/shortcuts-dialog.ui:86
 msgid "Previous"
 msgstr "ก่อนหน้า"
 
-#: src/plattenalbum.py:2416 data/ShortcutsWindow.ui:101
+#: src/plattenalbum.py:2333 data/shortcuts-dialog.ui:80
 msgid "Next"
 msgstr "ถัดไป"
 
-#: src/plattenalbum.py:2423
+#: src/plattenalbum.py:2340
 #, python-brace-format
 msgid "{bitrate} kb/s"
 msgstr "{bitrate} kb/s"
 
-#: src/plattenalbum.py:2453
+#: src/plattenalbum.py:2400 src/plattenalbum.py:2675
 msgid "Progress bar"
 msgstr "แถบความคืบหน้า"
 
-#: src/plattenalbum.py:2568
+#: src/plattenalbum.py:2504
 msgid "Volume control"
 msgstr "ควบคุมความดัง"
 
-#: src/plattenalbum.py:2600
+#: src/plattenalbum.py:2536
 msgid "_Repeat Mode"
 msgstr "เล่นซ้ำ (_R)"
 
-#: src/plattenalbum.py:2601
+#: src/plattenalbum.py:2537
 msgid "R_andom Mode"
 msgstr "สุ่ม (_A)"
 
-#: src/plattenalbum.py:2602
+#: src/plattenalbum.py:2538
 msgid "_Single Mode"
 msgstr "เล่นเพลงเดี่ยว (_S)"
 
-#: src/plattenalbum.py:2603
+#: src/plattenalbum.py:2539
 msgid "_Pause After Song"
 msgstr "หยุดหลังเพลงจบ (_P)"
 
-#: src/plattenalbum.py:2604
+#: src/plattenalbum.py:2540
 msgid "_Consume Mode"
 msgstr "Consume (_C)"
 
-#. split button
-#: src/plattenalbum.py:2654 src/plattenalbum.py:2708
-msgid "Lyrics"
-msgstr "เนื้อเพลง"
-
-#: src/plattenalbum.py:2655
-msgid "Player Menu"
-msgstr "เมนูของ Player"
-
-#: src/plattenalbum.py:2700 data/ShortcutsWindow.ui:168
+#: src/plattenalbum.py:2582 data/shortcuts-dialog.ui:141
 msgid "Playlist"
 msgstr "เพลย์ลิสต์"
 
-#: src/plattenalbum.py:2953
+#: src/plattenalbum.py:2583
+msgid "Lyrics"
+msgstr "เนื้อเพลง"
+
+#: src/plattenalbum.py:2595
+msgid "Player Menu"
+msgstr "เมนูของ Player"
+
+#: src/plattenalbum.py:2731
 msgid "Database is being updated"
 msgstr "ฐานข้อมูลกำลังถูกอัพเดต"
 
-#: src/plattenalbum.py:2954
+#: src/plattenalbum.py:2732
 msgid "Database updated"
 msgstr "ฐานข้อมูลถูกอัพเดตแล้ว"
 
 #. status page
-#: src/plattenalbum.py:3006
+#: src/plattenalbum.py:2768
 msgid "Connect to Your Music"
 msgstr "เชื่อมต่อกับเพลงของคุณ"
 
-#: src/plattenalbum.py:3007
+#: src/plattenalbum.py:2769
 msgid ""
-"To use Plattenalbum, an instance of the Music Player Daemon needs to be set up and running on this device or another "
-"one on the network"
-msgstr "ในการใช้งาน Plattenalbum นั้น Music Player Daemon จำเป็นต้องถูกตั้งค่าและเปิดการใช้งานบนอุปกรณ์นี้ หรือบนเน็ตเวิร์ก"
+"To use Plattenalbum, an instance of the Music Player Daemon needs to be set up and "
+"running on this device or another one on the network"
+msgstr ""
+"ในการใช้งาน Plattenalbum นั้น Music Player Daemon จำเป็นต้องถูกตั้งค่าและเปิดการใช้งานบนอุปกรณ์นี้ "
+"หรือบนเน็ตเวิร์ก"
 
-#: src/plattenalbum.py:3011
+#: src/plattenalbum.py:2773
 msgid "Connect _Manually"
 msgstr "เชื่อมต่อแบบแมนนวล (_M)"
 
-#: src/plattenalbum.py:3110
+#: src/plattenalbum.py:2876
+msgid "Playing music"
+msgstr "กำลังเล่นเพลง"
+
+#: src/plattenalbum.py:3003
+msgid "translator-credits"
+msgstr "Supakorn Huemwang <shuemwang.han@gmail.com>"
+
+#: src/plattenalbum.py:3045
 msgid "Next Title is Playing"
 msgstr "เพลงต่อไปกำลังเล่น"
 
-#: src/plattenalbum.py:3112
+#: src/plattenalbum.py:3047
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "ขณะนี้กำลังเล่น »{title}« โดย »{artist}«"
 
-#: src/plattenalbum.py:3114
+#: src/plattenalbum.py:3049
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "ขณะนี้กำลังเล่น »{title}«"
 
-#: src/plattenalbum.py:3123
+#: src/plattenalbum.py:3051
+msgid "Skip"
+msgstr ""
+
+#: src/plattenalbum.py:3058
 msgid "Playback Finished"
 msgstr "การเล่นเพลงจบแล้ว"
 
-#: src/plattenalbum.py:3124
+#: src/plattenalbum.py:3059
 msgid "The playlist is over"
 msgstr "เพลย์ลิสต์จบแล้ว"
 
-#: src/plattenalbum.py:3131
-msgid "Playing music"
-msgstr "กำลังเล่นเพลง"
-
-#: src/plattenalbum.py:3168
-msgid "Cleared A‐B loop"
-msgstr "ลบลูป A‐B‐แล้ว"
-
-#: src/plattenalbum.py:3171
-#, python-brace-format
-msgid "Started A‐B loop at {start}"
-msgstr "เริ่มต้นลูป A‐B ที่ {start}"
-
-#: src/plattenalbum.py:3173
-#, python-brace-format
-msgid "Activated A‐B loop from {start} to {end}"
-msgstr "เริ่มต้นลูป A-B ที่ {start} ถึง {end}"
-
-#: src/plattenalbum.py:3194
-msgid "Debug mode"
-msgstr "โหมด Debug"
-
-#: src/plattenalbum.py:3251
-msgid "translator-credits"
-msgstr "Supakorn Huemwang <shuemwang.han@gmail.com>"
-
-#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7 data/de.wagnermartin.Plattenalbum.desktop.in:2
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
+#: data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr "Plattenalbum"
 
-#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8 data/de.wagnermartin.Plattenalbum.desktop.in:4
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
+#: data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Connect to your music"
 msgstr "เชื่อมต่อกับเพลงของคุณ"
 
@@ -439,7 +437,9 @@ msgid "A client for the Music Player Daemon (MPD)."
 msgstr "ไคลเอนต์สำหรับ Music Player Daemon (MPD)"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
-msgid "Browse your collection while viewing large album covers. Play your music without managing playlists."
+msgid ""
+"Browse your collection while viewing large album covers. Play your music without "
+"managing playlists."
 msgstr "ดูคลังเพลงของคุณและรับชมรูปปกอัลบั้มขนาดใหญ่ เล่นเพลงของคุณโดยไม่จัดการเพลย์ลิสต์"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
@@ -462,114 +462,173 @@ msgstr "หน้าต่างเล็กพร้อมดพลย์ลิ
 msgid "Small window with cover"
 msgstr "หน้าต่างเล็กพร้อมรูปปก"
 
-#: data/de.wagnermartin.Plattenalbum.desktop.in:3
+#: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
 msgstr "ตัวค้นหาเพลง"
 
+#. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
 #: data/de.wagnermartin.Plattenalbum.desktop.in:11
-msgid "Music;Player;"
+#, fuzzy
+#| msgid "Music;Player;"
+msgid "music;player;audio;MPD;"
 msgstr "ตัวเล่นเพลง"
 
-#: data/ShortcutsWindow.ui:10
+#: data/shortcuts-dialog.ui:6
 msgid "General"
 msgstr "ทั่วไป"
 
-#: data/ShortcutsWindow.ui:13
-msgid "Online Help"
-msgstr "การช่วยเหลือทางออนไลน์"
-
-#: data/ShortcutsWindow.ui:19
-msgid "Preferences"
-msgstr "การตั้งค่า"
-
-#: data/ShortcutsWindow.ui:25
-msgid "Shortcuts"
-msgstr "คำสั่งลัด"
-
-#: data/ShortcutsWindow.ui:37
+#: data/shortcuts-dialog.ui:15
 msgid "Disconnect"
 msgstr "ตัดการเชื่อมต่อ"
 
-#: data/ShortcutsWindow.ui:43
+#: data/shortcuts-dialog.ui:21
 msgid "Update Database"
 msgstr "อัพเดตฐานข้อมูล"
 
-#: data/ShortcutsWindow.ui:55
+#: data/shortcuts-dialog.ui:27
+msgid "Server Information"
+msgstr "ข้อมูลเซิฟเวอร์"
+
+#: data/shortcuts-dialog.ui:33
+msgid "Preferences"
+msgstr "การตั้งค่า"
+
+#: data/shortcuts-dialog.ui:39
+msgid "Shortcuts"
+msgstr "คำสั่งลัด"
+
+#: data/shortcuts-dialog.ui:51
 msgid "Close"
 msgstr "ปิด"
 
-#: data/ShortcutsWindow.ui:61
+#: data/shortcuts-dialog.ui:57
 msgid "Quit"
 msgstr "ออก"
 
-#: data/ShortcutsWindow.ui:69
-msgid "Window"
-msgstr "หน้าต่าง"
-
-#: data/ShortcutsWindow.ui:72
-msgid "Toggle Lyrics"
-msgstr "เปิด/ปิดเนื้อเพลง"
-
-#: data/ShortcutsWindow.ui:78
-msgid "Toggle Search"
-msgstr "เปิด/ปิดการค้นหา"
-
-#: data/ShortcutsWindow.ui:86
+#: data/shortcuts-dialog.ui:65
 msgid "Playback"
 msgstr "การเล่นเพลง"
 
-#: data/ShortcutsWindow.ui:89
+#: data/shortcuts-dialog.ui:68
 msgid "Play/Pause"
 msgstr "เล่น/หยุดชั่วคราว"
 
-#: data/ShortcutsWindow.ui:95
+#: data/shortcuts-dialog.ui:74
 msgid "Stop"
 msgstr "หยุด"
 
-#: data/ShortcutsWindow.ui:113
+#: data/shortcuts-dialog.ui:92
 msgid "Seek Forward"
 msgstr "เลื่อนข้างหน้า"
 
-#: data/ShortcutsWindow.ui:119
+#: data/shortcuts-dialog.ui:98
 msgid "Seek Backward"
 msgstr "เลื่อนถอยกลับ"
 
-#: data/ShortcutsWindow.ui:125
-msgid "A‐B Loop"
-msgstr "ลูป A‐B"
-
-#: data/ShortcutsWindow.ui:133
+#: data/shortcuts-dialog.ui:106
 msgid "Playback Options"
 msgstr "ตัวเลือกการเล่น"
 
-#: data/ShortcutsWindow.ui:136
-msgid "Toggle Repeat Mode"
-msgstr "เปิด/ปิดการเล่นซ้ำ"
+#: data/shortcuts-dialog.ui:109
+msgid "Repeat Mode"
+msgstr "เล่นซ้ำ"
 
-#: data/ShortcutsWindow.ui:142
-msgid "Toggle Random Mode"
-msgstr "เปิด/ปิดสุ่ม"
+#: data/shortcuts-dialog.ui:115
+msgid "Random Mode"
+msgstr "สุ่ม"
 
-#: data/ShortcutsWindow.ui:148
-msgid "Toggle Single Mode"
-msgstr "เปิด/ปิดการเล่นเพลงเดียว"
+#: data/shortcuts-dialog.ui:121
+msgid "Single Mode"
+msgstr "เล่นเพลงเดี่ยว"
 
-#: data/ShortcutsWindow.ui:154
+#: data/shortcuts-dialog.ui:127
 msgid "Pause After Song"
 msgstr "หยุดหลังเพลงจบ"
 
-#: data/ShortcutsWindow.ui:160
-msgid "Toggle Consume Mode"
-msgstr "เปิด/ปิดโหมด Consume"
+#: data/shortcuts-dialog.ui:133
+msgid "Consume Mode"
+msgstr "Consume"
 
-#: data/ShortcutsWindow.ui:171
-msgid "Clear"
-msgstr "เคลียร์"
+#: data/shortcuts-dialog.ui:144
+msgid "Enqueue Album"
+msgstr "เพิ่มอัลบัมเข้าคิว"
 
-#: data/ShortcutsWindow.ui:177
+#: data/shortcuts-dialog.ui:150
 msgid "Tidy"
 msgstr "จัด"
 
-#: data/ShortcutsWindow.ui:183
-msgid "Enqueue Album"
-msgstr "เพิ่มอัลบัมเข้าคิว"
+#: data/shortcuts-dialog.ui:156
+msgid "Clear"
+msgstr "เคลียร์"
+
+#~ msgid "Re_wind via Previous Button"
+#~ msgstr "ย้อนเพลงด้วยปุ่ม Previous (_W)"
+
+#~ msgid "Ca_ncel"
+#~ msgstr "ยกเลิก (_N)"
+
+#~ msgid "Uptime"
+#~ msgstr "อัพไทม์"
+
+#~ msgid "Playtime"
+#~ msgstr "เวลาที่เล่น"
+
+#~ msgid "_Play"
+#~ msgstr "เล่น (_P)"
+
+#~ msgid "_Show"
+#~ msgstr "แสดง (_P)"
+
+#~ msgid "Current album cover"
+#~ msgstr "รูปปกอัลบั้มปัจจุบัน"
+
+#~ msgid "_Help"
+#~ msgstr "ช่วยเหลือ (_H)"
+
+#~ msgid "No Lyrics Found"
+#~ msgstr "ไม่พบเนื่อเพลง"
+
+#, python-brace-format
+#~ msgid "Lyrics of {song}"
+#~ msgstr "เนื่อเพลงของ {song}"
+
+#~ msgid "Cleared A‐B loop"
+#~ msgstr "ลบลูป A‐B‐แล้ว"
+
+#, python-brace-format
+#~ msgid "Started A‐B loop at {start}"
+#~ msgstr "เริ่มต้นลูป A‐B ที่ {start}"
+
+#, python-brace-format
+#~ msgid "Activated A‐B loop from {start} to {end}"
+#~ msgstr "เริ่มต้นลูป A-B ที่ {start} ถึง {end}"
+
+#~ msgid "Debug mode"
+#~ msgstr "โหมด Debug"
+
+#~ msgid "Online Help"
+#~ msgstr "การช่วยเหลือทางออนไลน์"
+
+#~ msgid "Window"
+#~ msgstr "หน้าต่าง"
+
+#~ msgid "Toggle Lyrics"
+#~ msgstr "เปิด/ปิดเนื้อเพลง"
+
+#~ msgid "Toggle Search"
+#~ msgstr "เปิด/ปิดการค้นหา"
+
+#~ msgid "A‐B Loop"
+#~ msgstr "ลูป A‐B"
+
+#~ msgid "Toggle Repeat Mode"
+#~ msgstr "เปิด/ปิดการเล่นซ้ำ"
+
+#~ msgid "Toggle Random Mode"
+#~ msgstr "เปิด/ปิดสุ่ม"
+
+#~ msgid "Toggle Single Mode"
+#~ msgstr "เปิด/ปิดการเล่นเพลงเดียว"
+
+#~ msgid "Toggle Consume Mode"
+#~ msgstr "เปิด/ปิดโหมด Consume"

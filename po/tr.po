@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: mpdevil\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-21 09:50+0200\n"
-"PO-Revision-Date: 2024-09-21 09:56+0200\n"
+"POT-Creation-Date: 2026-07-27 23:39+0200\n"
+"PO-Revision-Date: 2026-07-27 23:55+0200\n"
 "Last-Translator: Oğuz Ersen <oguz@ersen.moe>\n"
 "Language-Team: Turkish <tr>\n"
 "Language: tr\n"
@@ -17,79 +17,75 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.9\n"
 
-#: src/plattenalbum.py:505
+#: src/plattenalbum.py:368
 #, python-brace-format
 msgid "{days} day"
 msgid_plural "{days} days"
 msgstr[0] "{days} gün"
 
-#: src/plattenalbum.py:930
+#: src/plattenalbum.py:973
 msgid "View"
 msgstr "Gürünüm"
 
-#: src/plattenalbum.py:932
+#: src/plattenalbum.py:975
 msgid "_Show Bit Rate"
 msgstr "Bit Hızını _Göster"
 
-#: src/plattenalbum.py:941
+#: src/plattenalbum.py:984
 msgid "Behavior"
 msgstr "Davranış"
 
-#: src/plattenalbum.py:943
+#: src/plattenalbum.py:986
 msgid "Send _Notification on Title Change"
 msgstr "Şarkı değişikliğinde _bildirim gönder"
 
-#: src/plattenalbum.py:944
-msgid "Re_wind via Previous Button"
-msgstr "Önceki düğmesi ile geri _sar"
-
-#: src/plattenalbum.py:945
+#: src/plattenalbum.py:987
 msgid "Stop _Playback on Quit"
 msgstr "Çıkışta _oynatmayı durdur"
 
-#: src/plattenalbum.py:946
+#: src/plattenalbum.py:988
 msgid "Support “_MPRIS”"
 msgstr "“_MPRIS” destekle"
 
-#: src/plattenalbum.py:946
+#: src/plattenalbum.py:988
 msgid "Disable if “MPRIS” is supported by another client"
 msgstr "“MPRIS” başka istemci tarafından destekleniyorsa devre dışı bırakın"
 
-#: src/plattenalbum.py:965
-msgid "_Connect"
-msgstr "_Bağlan"
-
-#: src/plattenalbum.py:973
-msgid "Connection failed"
-msgstr "Bağlantı başarısız oldu"
-
-#: src/plattenalbum.py:987
-msgid "Local Connection"
+#: src/plattenalbum.py:1005
+#, fuzzy
+#| msgid "Local Connection"
+msgid "Manual Connection"
 msgstr "Yerel Bağlantı"
 
-#: src/plattenalbum.py:990 src/plattenalbum.py:1007
-msgid "Password (optional)"
-msgstr "Parola (isteğe bağlı)"
-
-#: src/plattenalbum.py:997
-msgid "Remote Connection"
-msgstr "Uzak Bağlantı"
-
-#: src/plattenalbum.py:1000
-msgid "Host Name"
+#: src/plattenalbum.py:1008
+#, fuzzy
+#| msgid "Host Name"
+msgid "Host"
 msgstr "Ana makine adı"
 
-#: src/plattenalbum.py:1004
+#: src/plattenalbum.py:1012
 msgid "Port"
 msgstr "Bağlantı noktası"
 
-#: src/plattenalbum.py:1025
+#: src/plattenalbum.py:1015
+msgid "Password (optional)"
+msgstr "Parola (isteğe bağlı)"
+
+#: src/plattenalbum.py:1018 src/plattenalbum.py:2771
+msgid "_Connect"
+msgstr "_Bağlan"
+
+#: src/plattenalbum.py:1027
+msgid "Connection failed"
+msgstr "Bağlantı başarısız oldu"
+
+#: src/plattenalbum.py:1047
 msgid "Setup"
 msgstr "Kurulum"
 
-#: src/plattenalbum.py:1027
+#: src/plattenalbum.py:1049
 msgid ""
 "To get started, install the Music Player Daemon (<tt>mpd</tt>) with your "
 "system package manager, and run the following commands to configure and "
@@ -101,227 +97,249 @@ msgstr ""
 "komutları çalıştırın. Bundan sonra, Plattenalbum sorunsuz bir şekilde ona "
 "bağlanabilecektir."
 
-#: src/plattenalbum.py:1037 data/ShortcutsWindow.ui:49
-msgid "Server Statistics"
-msgstr "Sunucu İstatistikleri"
+#: src/plattenalbum.py:1069
+#, fuzzy
+msgid "Information"
+msgstr "Ek bilgileri göster"
 
-#: src/plattenalbum.py:1045
+#: src/plattenalbum.py:1079
+msgid "Server"
+msgstr ""
+
+#: src/plattenalbum.py:1080
+#, fuzzy
+#| msgid "Database Update"
+msgid "Database"
+msgstr "Veri Tabanı Güncellemesi"
+
+#: src/plattenalbum.py:1084
+msgid "Address"
+msgstr ""
+
+#: src/plattenalbum.py:1085
 msgid "Protocol"
 msgstr "Protokol"
 
-#: src/plattenalbum.py:1046
-msgid "Uptime"
-msgstr "Çalışma Süresi"
-
-#: src/plattenalbum.py:1047
-msgid "Playtime"
-msgstr "Oynatma Süresi"
-
-#: src/plattenalbum.py:1048 src/plattenalbum.py:1383 src/plattenalbum.py:1794
-msgid "Artists"
-msgstr "Sanatçılar"
-
-#: src/plattenalbum.py:1049 src/plattenalbum.py:1606 src/plattenalbum.py:1647
-#: src/plattenalbum.py:1802
-msgid "Albums"
-msgstr "Albümler"
-
-#: src/plattenalbum.py:1050 src/plattenalbum.py:1386
+#: src/plattenalbum.py:1086 src/plattenalbum.py:1468
 msgid "Songs"
 msgstr "Şarkılar"
 
-#: src/plattenalbum.py:1051
+#: src/plattenalbum.py:1087
 msgid "Total Playtime"
 msgstr "Toplam Oynatma Süresi"
 
-#: src/plattenalbum.py:1052
-msgid "Database Update"
+#: src/plattenalbum.py:1089
+#, fuzzy
+#| msgid "Database Update"
+msgid "Last Update"
 msgstr "Veri Tabanı Güncellemesi"
 
-#: src/plattenalbum.py:1193 src/plattenalbum.py:1919
+#: src/plattenalbum.py:1221 src/plattenalbum.py:1922
 msgid "Context menu"
 msgstr "İçerik menüsü"
 
-#: src/plattenalbum.py:1215
+#: src/plattenalbum.py:1244
 msgid "_Append"
 msgstr "Sona _Ekle"
 
-#: src/plattenalbum.py:1216
+#: src/plattenalbum.py:1245
 msgid "As _Next"
 msgstr "_Sonraki Olarak"
 
-#: src/plattenalbum.py:1217
-msgid "_Play"
-msgstr "_Oynat"
+#: src/plattenalbum.py:1248 src/plattenalbum.py:1942
+msgid "Show Al_bum"
+msgstr ""
 
-#: src/plattenalbum.py:1219 src/plattenalbum.py:1937
-msgid "_Show"
-msgstr "_Göster"
+#: src/plattenalbum.py:1249 src/plattenalbum.py:1943
+msgid "Show _File"
+msgstr ""
+
+#. boxes
+#: src/plattenalbum.py:1466 src/plattenalbum.py:1803
+msgid "Artists"
+msgstr "Sanatçılar"
+
+#: src/plattenalbum.py:1467 src/plattenalbum.py:1627 src/plattenalbum.py:1679
+#: src/plattenalbum.py:1811
+msgid "Albums"
+msgstr "Albümler"
 
 #. status page
-#: src/plattenalbum.py:1393
-msgid "No Results Found"
+#: src/plattenalbum.py:1479
+#, fuzzy
+#| msgid "No Results Found"
+msgid "No Results"
 msgstr "Sonuç Bulunamadı"
 
-#: src/plattenalbum.py:1393
+#: src/plattenalbum.py:1479
 msgid "Try a different search"
 msgstr "Farklı bir arama deneyin"
 
-#: src/plattenalbum.py:1588 src/plattenalbum.py:1716
+#: src/plattenalbum.py:1540
+#, fuzzy
+#| msgid "Unknown Album"
+msgid "Unknown Artist"
+msgstr "Bilinmeyen Albüm"
+
+#: src/plattenalbum.py:1615
 #, python-brace-format
 msgid "Album cover of {album}"
 msgstr "{album} albümünün kapağı"
 
-#: src/plattenalbum.py:1591 src/plattenalbum.py:1720
+#: src/plattenalbum.py:1617 src/plattenalbum.py:1755 src/plattenalbum.py:1756
+msgid "Unknown Album"
+msgstr "Bilinmeyen Albüm"
+
+#: src/plattenalbum.py:1618
 msgid "Album cover of an unknown album"
 msgstr "Bilinmeyen albümün kapağı"
 
-#: src/plattenalbum.py:1667
+#. status page
+#: src/plattenalbum.py:1660
+#, fuzzy
+#| msgid "Albums"
+msgid "No Albums"
+msgstr "Albümler"
+
+#: src/plattenalbum.py:1660
+msgid "Select an artist"
+msgstr ""
+
+#: src/plattenalbum.py:1691
 #, python-brace-format
 msgid "Albums of {artist}"
 msgstr "{artist} albümleri"
 
 #. buttons
-#: src/plattenalbum.py:1691 src/plattenalbum.py:2336 src/plattenalbum.py:2345
+#: src/plattenalbum.py:1713 src/plattenalbum.py:2317 src/plattenalbum.py:2326
 msgid "Play"
 msgstr "Oynat"
 
-#: src/plattenalbum.py:1692
+#: src/plattenalbum.py:1715
 msgid "Append"
 msgstr "Sona ekle"
 
-#: src/plattenalbum.py:1718 src/plattenalbum.py:1719
-msgid "Unknown Album"
-msgstr "Bilinmeyen Albüm"
-
-#: src/plattenalbum.py:1753 src/plattenalbum.py:2905 data/ShortcutsWindow.ui:31
+#: src/plattenalbum.py:1767 src/plattenalbum.py:2783 data/shortcuts-dialog.ui:9
 msgid "Main Menu"
 msgstr "Ana Menü"
 
-#: src/plattenalbum.py:1755 src/plattenalbum.py:2901
+#: src/plattenalbum.py:1769 src/plattenalbum.py:2780
 msgid "_Preferences"
 msgstr "_Tercihler"
 
-#: src/plattenalbum.py:1756 src/plattenalbum.py:2902
+#: src/plattenalbum.py:1770 src/plattenalbum.py:2781
 msgid "_Keyboard Shortcuts"
 msgstr "_Klavye Kısayolları"
 
-#: src/plattenalbum.py:1757 src/plattenalbum.py:2903
-msgid "_Help"
-msgstr "_Yardım"
-
-#: src/plattenalbum.py:1758 src/plattenalbum.py:2904
+#: src/plattenalbum.py:1771 src/plattenalbum.py:2782
 msgid "_About Plattenalbum"
 msgstr "Plattenalbum _Hakkında"
 
-#: src/plattenalbum.py:1760
+#: src/plattenalbum.py:1773
 msgid "_Disconnect"
 msgstr "Bağlantıyı _Kes"
 
-#: src/plattenalbum.py:1761
+#: src/plattenalbum.py:1774
 msgid "_Update Database"
 msgstr "Veri Tabanını _Güncelle"
 
-#: src/plattenalbum.py:1762
-msgid "_Server Statistics"
-msgstr "_Sunucu İstatistikleri"
+#: src/plattenalbum.py:1775
+#, fuzzy
+msgid "_Server Information"
+msgstr "Ek bilgileri göster"
 
-#: src/plattenalbum.py:1774 src/plattenalbum.py:1775
+#: src/plattenalbum.py:1786 src/plattenalbum.py:1787
 msgid "Search collection"
 msgstr "Koleksiyonu ara"
 
-#: src/plattenalbum.py:1778 src/plattenalbum.py:1788
+#: src/plattenalbum.py:1797 src/plattenalbum.py:1836
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+#: data/shortcuts-dialog.ui:45
 msgid "Search"
 msgstr "Ara"
 
 #. status page
-#: src/plattenalbum.py:1818
+#: src/plattenalbum.py:1827
 msgid "Collection is Empty"
 msgstr "Koleksiyon Boş"
 
-#: src/plattenalbum.py:1936
+#: src/plattenalbum.py:1835
+#, fuzzy
+#| msgid "Collection is Empty"
+msgid "Collection"
+msgstr "Koleksiyon Boş"
+
+#: src/plattenalbum.py:1941
 msgid "_Remove"
 msgstr "_Kaldır"
 
-#: src/plattenalbum.py:1939
+#: src/plattenalbum.py:1945
 msgid "_Enqueue Album"
 msgstr "Albümü _Sıraya Al"
 
-#: src/plattenalbum.py:1940
+#: src/plattenalbum.py:1946
 msgid "_Tidy"
 msgstr "_Düzenle"
 
-#: src/plattenalbum.py:1942
+#: src/plattenalbum.py:1947
 msgid "_Clear"
 msgstr "_Temizle"
 
-#: src/plattenalbum.py:2152
+#: src/plattenalbum.py:2147
 msgid "Playlist is Empty"
 msgstr "Oynatma Listesi Boş"
 
-#: src/plattenalbum.py:2157
+#: src/plattenalbum.py:2153
 msgid "Scroll to Current Song"
 msgstr "Geçerli Şarkıya Kaydır"
 
 #. status pages
-#: src/plattenalbum.py:2250
-msgid "No Lyrics Found"
+#: src/plattenalbum.py:2247
+#, fuzzy
+#| msgid "No Lyrics Found"
+msgid "No Lyrics"
 msgstr "Şarkı Sözleri Bulunamadı"
 
-#: src/plattenalbum.py:2253
+#: src/plattenalbum.py:2250
 msgid "Connection Error"
 msgstr "Bağlantı Hatası"
 
-#: src/plattenalbum.py:2253
+#: src/plattenalbum.py:2250
 msgid "Check your network connection"
 msgstr "Ağ bağlantınızı gözden geçirin"
 
-#: src/plattenalbum.py:2255
+#: src/plattenalbum.py:2252
 msgid "Searching…"
 msgstr "Aranıyor…"
 
-#: src/plattenalbum.py:2280
+#: src/plattenalbum.py:2264
 msgid "Lyrics view"
 msgstr "Şarkı sözleri görünümü"
 
-#: src/plattenalbum.py:2301
-#, python-brace-format
-msgid "Lyrics of {song}"
-msgstr "{song} şarkı sözleri"
-
-#: src/plattenalbum.py:2311
-msgid "Current album cover"
-msgstr "Şu anki albüm kapağı"
-
-#: src/plattenalbum.py:2342
+#: src/plattenalbum.py:2323
 msgid "Pause"
 msgstr "Duraklat"
 
-#: src/plattenalbum.py:2352
+#: src/plattenalbum.py:2331 data/shortcuts-dialog.ui:86
+msgid "Previous"
+msgstr "Önceki"
+
+#: src/plattenalbum.py:2333 data/shortcuts-dialog.ui:80
+msgid "Next"
+msgstr "Sonraki"
+
+#: src/plattenalbum.py:2340
 #, python-brace-format
 msgid "{bitrate} kb/s"
 msgstr "{bitrate} kb/sn"
 
-#: src/plattenalbum.py:2377 data/ShortcutsWindow.ui:107
-msgid "Previous"
-msgstr "Önceki"
-
-#: src/plattenalbum.py:2378 data/ShortcutsWindow.ui:101
-msgid "Next"
-msgstr "Sonraki"
-
-#: src/plattenalbum.py:2390
+#: src/plattenalbum.py:2400 src/plattenalbum.py:2675
 msgid "Progress bar"
 msgstr "İlerleme çubuğu"
 
-#: src/plattenalbum.py:2506
+#: src/plattenalbum.py:2504
 msgid "Volume control"
 msgstr "Ses denetimi"
-
-#: src/plattenalbum.py:2526
-msgid "Player Menu"
-msgstr "Oynatıcı Menüsü"
 
 #: src/plattenalbum.py:2536
 msgid "_Repeat Mode"
@@ -343,24 +361,34 @@ msgstr "Şarkıdan Sonra _Duraklat"
 msgid "_Consume Mode"
 msgstr "Tüketi_m Modu"
 
-#: src/plattenalbum.py:2543
-msgid "_Lyrics"
+#: src/plattenalbum.py:2582 data/shortcuts-dialog.ui:141
+msgid "Playlist"
+msgstr "Oynatma listesi"
+
+#: src/plattenalbum.py:2583
+#, fuzzy
+#| msgid "_Lyrics"
+msgid "Lyrics"
 msgstr "Şarkı Söz_leri"
 
-#: src/plattenalbum.py:2836
+#: src/plattenalbum.py:2595
+msgid "Player Menu"
+msgstr "Oynatıcı Menüsü"
+
+#: src/plattenalbum.py:2731
 msgid "Database is being updated"
 msgstr "Veri tabanı güncelleniyor"
 
-#: src/plattenalbum.py:2837
+#: src/plattenalbum.py:2732
 msgid "Database updated"
 msgstr "Veri tabanı güncellendi"
 
 #. status page
-#: src/plattenalbum.py:2886
+#: src/plattenalbum.py:2768
 msgid "Connect to Your Music"
 msgstr "Müziğinize Bağlanın"
 
-#: src/plattenalbum.py:2887
+#: src/plattenalbum.py:2769
 msgid ""
 "To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
 "up and running on this device or another one on the network"
@@ -368,53 +396,47 @@ msgstr ""
 "Plattenalbum kullanmak için, bir Music Player Daemon sunucusunun bu aygıtta "
 "veya ağdaki başka bir aygıtta kurulu ve çalışıyor olması gerekir"
 
-#: src/plattenalbum.py:2889
-msgid "_Set up Instance"
-msgstr "Sunucu _Ayarla"
-
-#: src/plattenalbum.py:2891
-msgid "Connect _Locally"
+#: src/plattenalbum.py:2773
+#, fuzzy
+#| msgid "Connect _Locally"
+msgid "Connect _Manually"
 msgstr "_Yerel Sunucuya Bağlan"
 
-#: src/plattenalbum.py:2893
-msgid "Connect _Remotely"
-msgstr "_Uzak Sunucuya Bağlan"
+#: src/plattenalbum.py:2876
+msgid "Playing music"
+msgstr ""
 
-#: src/plattenalbum.py:3000
+#: src/plattenalbum.py:3003
+msgid "translator-credits"
+msgstr "Oğuz Ersen"
+
+#: src/plattenalbum.py:3045
 msgid "Next Title is Playing"
 msgstr "Sonraki Şarkı Oynatılıyor"
 
-#: src/plattenalbum.py:3002
+#: src/plattenalbum.py:3047
 #, python-brace-format
 msgid "Now playing “{title}” by “{artist}”"
 msgstr "“{title}” / “{artist}” oynatılıyor"
 
-#: src/plattenalbum.py:3004
+#: src/plattenalbum.py:3049
 #, python-brace-format
 msgid "Now playing “{title}”"
 msgstr "“{title}” oynatılıyor"
 
-#: src/plattenalbum.py:3039
-msgid "Cleared A‐B loop"
-msgstr "A-B döngüsü temizlendi"
+#: src/plattenalbum.py:3051
+msgid "Skip"
+msgstr ""
 
-#: src/plattenalbum.py:3042
-#, python-brace-format
-msgid "Started A‐B loop at {start}"
-msgstr "{start} konumunda A-B döngüsü başlatıldı"
+#: src/plattenalbum.py:3058
+#, fuzzy
+#| msgid "Playback Options"
+msgid "Playback Finished"
+msgstr "Oynatım Seçenekleri"
 
-#: src/plattenalbum.py:3044
-#, python-brace-format
-msgid "Activated A‐B loop from {start} to {end}"
-msgstr "{start} ile {end} arasında A-B döngüsü etkinleştirildi"
-
-#: src/plattenalbum.py:3061
-msgid "Debug mode"
-msgstr "Hata ayıklama modu"
-
-#: src/plattenalbum.py:3118
-msgid "translator-credits"
-msgstr "Oğuz Ersen"
+#: src/plattenalbum.py:3059
+msgid "The playlist is over"
+msgstr ""
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
@@ -443,7 +465,9 @@ msgid "Main window"
 msgstr "Ana pencere"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
-msgid "Album View"
+#, fuzzy
+#| msgid "Album View"
+msgid "Album view"
 msgstr "Albüm Görünümü"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:32
@@ -452,121 +476,198 @@ msgstr "Albüm Görünümü"
 msgid "Small window"
 msgstr "Ana pencere"
 
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:36
+#, fuzzy
+#| msgid "Main window"
+msgid "Small window with playlist"
+msgstr "Ana pencere"
+
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:40
+#, fuzzy
+#| msgid "Main window"
+msgid "Small window with cover"
+msgstr "Ana pencere"
+
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
 msgstr "Müzik Tarayıcısı"
 
-#: data/de.wagnermartin.Plattenalbum.desktop.in:12
-msgid "Music;Player;"
+#. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
+#: data/de.wagnermartin.Plattenalbum.desktop.in:11
+#, fuzzy
+#| msgid "Music;Player;"
+msgid "music;player;audio;MPD;"
 msgstr "Music;Player;Müzik;Oynatıcı;"
 
-#: data/ShortcutsWindow.ui:10
+#: data/shortcuts-dialog.ui:6
 msgid "General"
 msgstr "Genel"
 
-#: data/ShortcutsWindow.ui:13
-msgid "Online Help"
-msgstr "Çevrim İçi Yardım"
-
-#: data/ShortcutsWindow.ui:19
-msgid "Preferences"
-msgstr "Tercihler"
-
-#: data/ShortcutsWindow.ui:25
-msgid "Shortcuts"
-msgstr "Kısayollar"
-
-#: data/ShortcutsWindow.ui:37
+#: data/shortcuts-dialog.ui:15
 msgid "Disconnect"
 msgstr "Başlantıyı Kes"
 
-#: data/ShortcutsWindow.ui:43
+#: data/shortcuts-dialog.ui:21
 msgid "Update Database"
 msgstr "Veri Tabanını Güncelle"
 
-#: data/ShortcutsWindow.ui:55
+#: data/shortcuts-dialog.ui:27
+#, fuzzy
+msgid "Server Information"
+msgstr "Ek bilgileri göster"
+
+#: data/shortcuts-dialog.ui:33
+msgid "Preferences"
+msgstr "Tercihler"
+
+#: data/shortcuts-dialog.ui:39
+msgid "Shortcuts"
+msgstr "Kısayollar"
+
+#: data/shortcuts-dialog.ui:51
 msgid "Close"
 msgstr "Kapat"
 
-#: data/ShortcutsWindow.ui:61
+#: data/shortcuts-dialog.ui:57
 msgid "Quit"
 msgstr "Çıkış"
 
-#: data/ShortcutsWindow.ui:69
-msgid "Window"
-msgstr "Pencere"
-
-#: data/ShortcutsWindow.ui:72
-msgid "Toggle Lyrics"
-msgstr "Şarkı Sözlerini Aç/Kapat"
-
-#: data/ShortcutsWindow.ui:78
-msgid "Toggle Search"
-msgstr "Aramayı Aç/Kapat"
-
-#: data/ShortcutsWindow.ui:86
+#: data/shortcuts-dialog.ui:65
 msgid "Playback"
 msgstr "Oynatım"
 
-#: data/ShortcutsWindow.ui:89
+#: data/shortcuts-dialog.ui:68
 msgid "Play/Pause"
 msgstr "Oynat/Duraklat"
 
-#: data/ShortcutsWindow.ui:95
+#: data/shortcuts-dialog.ui:74
 msgid "Stop"
 msgstr "Durdur"
 
-#: data/ShortcutsWindow.ui:113
+#: data/shortcuts-dialog.ui:92
 msgid "Seek Forward"
 msgstr "İleri Sar"
 
-#: data/ShortcutsWindow.ui:119
+#: data/shortcuts-dialog.ui:98
 msgid "Seek Backward"
 msgstr "Geri Sar"
 
-#: data/ShortcutsWindow.ui:125
-msgid "A‐B Loop"
-msgstr "A-B Döngüsü"
-
-#: data/ShortcutsWindow.ui:133
+#: data/shortcuts-dialog.ui:106
 msgid "Playback Options"
 msgstr "Oynatım Seçenekleri"
 
-#: data/ShortcutsWindow.ui:136
-msgid "Toggle Repeat Mode"
-msgstr "Tekrar Modunu Aç/Kapat"
+#: data/shortcuts-dialog.ui:109
+msgid "Repeat Mode"
+msgstr "Tekrar Modu"
 
-#: data/ShortcutsWindow.ui:142
-msgid "Toggle Random Mode"
-msgstr "Rastgele Modunu Aç/Kapat"
+#: data/shortcuts-dialog.ui:115
+msgid "Random Mode"
+msgstr "Rastgele Modu"
 
-#: data/ShortcutsWindow.ui:148
-msgid "Toggle Single Mode"
-msgstr "Tekli Modunu Aç/Kapat"
+#: data/shortcuts-dialog.ui:121
+msgid "Single Mode"
+msgstr "Tekli Modu"
 
-#: data/ShortcutsWindow.ui:154
+#: data/shortcuts-dialog.ui:127
 msgid "Pause After Song"
 msgstr "Şarkıdan Sonra Duraklat"
 
-#: data/ShortcutsWindow.ui:160
-msgid "Toggle Consume Mode"
-msgstr "Tüketim Modunu Aç/Kapat"
+#: data/shortcuts-dialog.ui:133
+msgid "Consume Mode"
+msgstr "Tüketim Modu"
 
-#: data/ShortcutsWindow.ui:168
-msgid "Playlist"
-msgstr "Oynatma listesi"
+#: data/shortcuts-dialog.ui:144
+msgid "Enqueue Album"
+msgstr "Albümü sıraya al"
 
-#: data/ShortcutsWindow.ui:171
-msgid "Clear"
-msgstr "Temizle"
-
-#: data/ShortcutsWindow.ui:177
+#: data/shortcuts-dialog.ui:150
 msgid "Tidy"
 msgstr "Düzenle"
 
-#: data/ShortcutsWindow.ui:183
-msgid "Enqueue Album"
-msgstr "Albümü sıraya al"
+#: data/shortcuts-dialog.ui:156
+msgid "Clear"
+msgstr "Temizle"
+
+#~ msgid "Re_wind via Previous Button"
+#~ msgstr "Önceki düğmesi ile geri _sar"
+
+#~ msgid "Remote Connection"
+#~ msgstr "Uzak Bağlantı"
+
+#~ msgid "Server Statistics"
+#~ msgstr "Sunucu İstatistikleri"
+
+#~ msgid "Uptime"
+#~ msgstr "Çalışma Süresi"
+
+#~ msgid "Playtime"
+#~ msgstr "Oynatma Süresi"
+
+#~ msgid "_Play"
+#~ msgstr "_Oynat"
+
+#~ msgid "_Show"
+#~ msgstr "_Göster"
+
+#~ msgid "_Help"
+#~ msgstr "_Yardım"
+
+#~ msgid "_Server Statistics"
+#~ msgstr "_Sunucu İstatistikleri"
+
+#, python-brace-format
+#~ msgid "Lyrics of {song}"
+#~ msgstr "{song} şarkı sözleri"
+
+#~ msgid "Current album cover"
+#~ msgstr "Şu anki albüm kapağı"
+
+#~ msgid "_Set up Instance"
+#~ msgstr "Sunucu _Ayarla"
+
+#~ msgid "Connect _Remotely"
+#~ msgstr "_Uzak Sunucuya Bağlan"
+
+#~ msgid "Cleared A‐B loop"
+#~ msgstr "A-B döngüsü temizlendi"
+
+#, python-brace-format
+#~ msgid "Started A‐B loop at {start}"
+#~ msgstr "{start} konumunda A-B döngüsü başlatıldı"
+
+#, python-brace-format
+#~ msgid "Activated A‐B loop from {start} to {end}"
+#~ msgstr "{start} ile {end} arasında A-B döngüsü etkinleştirildi"
+
+#~ msgid "Debug mode"
+#~ msgstr "Hata ayıklama modu"
+
+#~ msgid "Online Help"
+#~ msgstr "Çevrim İçi Yardım"
+
+#~ msgid "Window"
+#~ msgstr "Pencere"
+
+#~ msgid "Toggle Lyrics"
+#~ msgstr "Şarkı Sözlerini Aç/Kapat"
+
+#~ msgid "Toggle Search"
+#~ msgstr "Aramayı Aç/Kapat"
+
+#~ msgid "A‐B Loop"
+#~ msgstr "A-B Döngüsü"
+
+#~ msgid "Toggle Repeat Mode"
+#~ msgstr "Tekrar Modunu Aç/Kapat"
+
+#~ msgid "Toggle Random Mode"
+#~ msgstr "Rastgele Modunu Aç/Kapat"
+
+#~ msgid "Toggle Single Mode"
+#~ msgstr "Tekli Modunu Aç/Kapat"
+
+#~ msgid "Toggle Consume Mode"
+#~ msgstr "Tüketim Modunu Aç/Kapat"
 
 #, python-brace-format
 #~ msgid "{channels} channel"
@@ -791,10 +892,6 @@ msgstr "Albümü sıraya al"
 
 #~ msgid "Directly play all titles"
 #~ msgstr "Tüm şarkıları doğrudan oynat"
-
-#, fuzzy
-#~ msgid "Show information"
-#~ msgstr "Ek bilgileri göster"
 
 #~ msgid "Search, Album Dialog and Album List"
 #~ msgstr "Ara, Albüm İletişim Kutusu ve Albüm Listesi"

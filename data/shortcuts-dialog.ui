@@ -106,19 +106,19 @@
 	<property name="title" translatable="yes">Playback Options</property>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Toggle Repeat Mode</property>
+		<property name="title" translatable="yes">Repeat Mode</property>
 		<property name="action-name">app.repeat</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Toggle Random Mode</property>
+		<property name="title" translatable="yes">Random Mode</property>
 		<property name="action-name">app.random</property>
 		</object>
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Toggle Single Mode</property>
+		<property name="title" translatable="yes">Single Mode</property>
 		<property name="action-name">app.single</property>
 		</object>
 	</child>
@@ -130,7 +130,7 @@
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Toggle Consume Mode</property>
+		<property name="title" translatable="yes">Consume Mode</property>
 		<property name="action-name">app.consume</property>
 		</object>
 	</child>
