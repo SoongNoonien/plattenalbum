@@ -72,16 +72,16 @@ class MPRISInterface:
 	_MPRIS_NAME="org.mpris.MediaPlayer2.de.wagnermartin.Plattenalbum"
 	_MPRIS_PATH="/org/mpris/MediaPlayer2"
 	_INTERFACES_XML=Gio.resources_lookup_data("/de/wagnermartin/Plattenalbum/mpris.xml", Gio.ResourceLookupFlags.NONE).get_data().decode("utf-8")
+	_NODE_INFO=Gio.DBusNodeInfo.new_for_xml(_INTERFACES_XML)
+	_PLAYBACK_MAPPING={"play": "Playing", "pause": "Paused", "stop": "Stopped"}
 	def __init__(self, window, client, settings):
 		self._window=window
 		self._client=client
 		self._settings=settings
 		self._bus=self._window.get_application().get_dbus_connection()
-		self._node_info=Gio.DBusNodeInfo.new_for_xml(self._INTERFACES_XML)
 		self._metadata={}
 		self._object_ids=[]
 		self._name_id=None
-		self._playback_mapping={"play": "Playing", "pause": "Paused", "stop": "Stopped"}
 
 		# MPRIS property mappings
 		self._prop_mapping={
@@ -129,14 +129,14 @@ class MPRISInterface:
 
 	def _handle_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
 		result=getattr(self, method_name)(*parameters.unpack())
-		if out_args:=self._node_info.lookup_interface(interface_name).lookup_method(method_name).out_args:
+		if out_args:=self._NODE_INFO.lookup_interface(interface_name).lookup_method(method_name).out_args:
 			variant=GLib.Variant(f"({out_args[0].signature})", (result,))
 			invocation.return_value(variant)
 		else:
 			invocation.return_value(None)
 
 	# setter and getter
-	def _get_playback_status(self): return GLib.Variant("s", self._playback_mapping[self._client.status()["state"]])
+	def _get_playback_status(self): return GLib.Variant("s", self._PLAYBACK_MAPPING[self._client.status()["state"]])
 	def _set_shuffle(self, value): self._client.random(int(value))
 	def _get_shuffle(self): return GLib.Variant("b", self._client.status()["random"] == "1")
 	def _get_metadata(self): return GLib.Variant("a{sv}", self._metadata)
@@ -254,7 +254,7 @@ class MPRISInterface:
 		value=GLib.Variant("b", state != "stop")
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoNext", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious", value)
-		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._playback_mapping[state]))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._PLAYBACK_MAPPING[state]))
 
 	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._metadata=self._convert_metadata(song)
@@ -291,7 +291,7 @@ class MPRISInterface:
 
 	def _enable(self):
 		self._name_id=Gio.bus_own_name_on_connection(self._bus, self._MPRIS_NAME, Gio.BusNameOwnerFlags.NONE, None, None)
-		for interface in self._node_info.interfaces:
+		for interface in self._NODE_INFO.interfaces:
 			self._object_ids.append(self._bus.register_object(self._MPRIS_PATH, interface, self._handle_method_call, None, None))
 		for handler in self._handlers:
 			self._client.handler_unblock(handler)
@@ -464,15 +464,15 @@ class Client(GObject.Object):
 		"show-album": (GObject.SignalFlags.RUN_FIRST, None, (Album,)),
 		"seeked": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
 	}
+	_COVER_REGEX=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
+	_SOCKET_PATH=GLib.build_filenamev([GLib.get_user_runtime_dir(), "mpd", "socket"])
+	_BUS=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 	def __init__(self, settings):
 		super().__init__()
 		self._settings=settings
 		self._last_status={}
 		self._first_mark=None
 		self._second_mark=None
-		self._cover_regex=re.compile(r"^\.?(album|cover|folder|front).*\.(gif|jpeg|jpg|png)$", flags=re.IGNORECASE)
-		self._socket_path=GLib.build_filenamev([GLib.get_user_runtime_dir(), "mpd", "socket"])
-		self._bus=Gio.bus_get_sync(Gio.BusType.SESSION, None)  # used for "show in file manager"
 
 	def _post_connect(self):
 		self._socket.settimeout(None)
@@ -589,7 +589,7 @@ class Client(GObject.Object):
 				host=GLib.getenv("MPD_HOST")
 				port=GLib.getenv("MPD_PORT")
 				if host is None and port is None:
-					success=self._connect_unix(self._socket_path)
+					success=self._connect_unix(self._SOCKET_PATH)
 					if not success:
 						success=self._connect_unix("/run/mpd/socket")
 				else:
@@ -780,16 +780,16 @@ class Client(GObject.Object):
 				return absolute_path
 
 	def can_show_file(self, song):
-		has_owner,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
+		has_owner,=self._BUS.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
 			GLib.Variant("(s)",("org.freedesktop.portal.Desktop",)), GLib.VariantType("(b)"), Gio.DBusCallFlags.NONE, -1, None)
-		activatable,=self._bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "ListActivatableNames",
+		activatable,=self._BUS.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "ListActivatableNames",
 			None, GLib.VariantType("(as)"), Gio.DBusCallFlags.NONE, -1, None)
 		return (has_owner or "org.freedesktop.portal.Desktop" in activatable) and self.get_absolute_path(song) is not None
 
 	def show_file(self, song):
 		with open(self.get_absolute_path(song)) as f:
 			fd_list=Gio.UnixFDList()
-			self._bus.call_with_unix_fd_list_sync("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+			self._BUS.call_with_unix_fd_list_sync("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
 				"org.freedesktop.portal.OpenURI", "OpenDirectory", GLib.Variant("(sha{sv})", ("", fd_list.append(f.fileno()), {})),
 				None, Gio.DBusCallFlags.NONE, -1, fd_list)
 
@@ -833,7 +833,7 @@ class Client(GObject.Object):
 		if GLib.file_test(song_dir, GLib.FileTest.IS_DIR):
 			directory=GLib.Dir.open(song_dir, 0)
 			while (f:=directory.read_name()) is not None:
-				if self._cover_regex.match(f):
+				if self._COVER_REGEX.match(f):
 					return GLib.build_filenamev([song_dir, f])
 
 	def _cover_fetch_loop(self, command, quoted_file):
