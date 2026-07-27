@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: plattenalbum\n"
+"Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-27 23:39+0200\n"
-"PO-Revision-Date: 2026-07-27 23:46+0200\n"
+"PO-Revision-Date: 2026-07-27 23:59+0200\n"
 "Last-Translator: Scrambled777 <weblate.scrambled777@simplelogin.com>\n"
 "Language-Team: Hindi <indlinux-hindi@lists.sourceforge.net>\n"
 "Language: hi\n"
@@ -91,9 +91,9 @@ msgstr ""
 
 #: src/plattenalbum.py:1049
 msgid ""
-"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package "
-"manager, and run the following commands to configure and initialize a basic local instance. "
-"After that, Plattenalbum should be able to seamlessly connect to it."
+"To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package manager, and run "
+"the following commands to configure and initialize a basic local instance. After that, Plattenalbum should "
+"be able to seamlessly connect to it."
 msgstr ""
 
 #: src/plattenalbum.py:1069
@@ -157,8 +157,7 @@ msgstr ""
 msgid "Artists"
 msgstr "कलाकार"
 
-#: src/plattenalbum.py:1467 src/plattenalbum.py:1627 src/plattenalbum.py:1679
-#: src/plattenalbum.py:1811
+#: src/plattenalbum.py:1467 src/plattenalbum.py:1627 src/plattenalbum.py:1679 src/plattenalbum.py:1811
 msgid "Albums"
 msgstr "एलबम"
 
@@ -249,8 +248,8 @@ msgstr ""
 msgid "Search collection"
 msgstr "संग्रह खोजें"
 
-#: src/plattenalbum.py:1797 src/plattenalbum.py:1836
-#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28 data/shortcuts-dialog.ui:45
+#: src/plattenalbum.py:1797 src/plattenalbum.py:1836 data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
+#: data/shortcuts-dialog.ui:45
 msgid "Search"
 msgstr "खोजें"
 
@@ -393,14 +392,14 @@ msgstr "अपने संगीत से जुड़ें"
 #: src/plattenalbum.py:2769
 #, fuzzy
 #| msgid ""
-#| "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set up and "
-#| "running on this or another device in the network"
+#| "To use Plattenalbum an instance of the “Music Player Daemon” needs to be set up and running on this or "
+#| "another device in the network"
 msgid ""
-"To use Plattenalbum, an instance of the Music Player Daemon needs to be set up and running "
-"on this device or another one on the network"
+"To use Plattenalbum, an instance of the Music Player Daemon needs to be set up and running on this device "
+"or another one on the network"
 msgstr ""
-"प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या किसी अन्य उपकरण "
-"पर स्थापित और चलाने की आवश्यकता है"
+"प्लैटेनएल्बम का उपयोग करने के लिए “Music Player Daemon” के एक इंस्टैंस को नेटवर्क में इस या किसी अन्य उपकरण पर स्थापित और "
+"चलाने की आवश्यकता है"
 
 #: src/plattenalbum.py:2773
 #, fuzzy
@@ -444,13 +443,11 @@ msgstr "प्लेबैक विकल्प"
 msgid "The playlist is over"
 msgstr ""
 
-#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
-#: data/de.wagnermartin.Plattenalbum.desktop.in:3
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7 data/de.wagnermartin.Plattenalbum.desktop.in:3
 msgid "Plattenalbum"
 msgstr "प्लैटेनएल्बम"
 
-#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8
-#: data/de.wagnermartin.Plattenalbum.desktop.in:5
+#: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:8 data/de.wagnermartin.Plattenalbum.desktop.in:5
 msgid "Connect to your music"
 msgstr "अपने संगीत से जुड़ें"
 
@@ -459,9 +456,7 @@ msgid "A client for the Music Player Daemon (MPD)."
 msgstr "म्यूजिक प्लेयर डेमॉन (एमपीडी) के लिए क्लाइंट।"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:11
-msgid ""
-"Browse your collection while viewing large album covers. Play your music without managing "
-"playlists."
+msgid "Browse your collection while viewing large album covers. Play your music without managing playlists."
 msgstr "बड़े एल्बम कवरों के साथ अपना संग्रह देखें। प्लेलिस्ट प्रबंधित किए बिना अपना संगीत चलाएं।"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:20
