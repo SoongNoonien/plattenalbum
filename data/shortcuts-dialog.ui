@@ -99,12 +99,6 @@
 		<property name="action-name">app.seek-backward</property>
 		</object>
 	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">A‐B Loop</property>
-		<property name="action-name">app.a-b-loop</property>
-		</object>
-	</child>
 	</object>
 </child>
 <child>

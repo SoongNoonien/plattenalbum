@@ -460,7 +460,6 @@ class Client(GObject.Object):
 		"single-oneshot": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-		"a-b-loop": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"show-album": (GObject.SignalFlags.RUN_FIRST, None, (Album,)),
 		"seeked": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
 	}
@@ -471,8 +470,6 @@ class Client(GObject.Object):
 		super().__init__()
 		self._settings=settings
 		self._last_status={}
-		self._first_mark=None
-		self._second_mark=None
 
 	def _post_connect(self):
 		self._socket.settimeout(None)
@@ -809,21 +806,6 @@ class Client(GObject.Object):
 		else:
 			self.pause()
 
-	def a_b_loop(self):
-		value=float(self.status()["elapsed"])
-		if self._first_mark is None:
-			self._first_mark=value
-			self.emit("a-b-loop", value, -1.0)
-		elif self._second_mark is None:
-			if value < self._first_mark:
-				self._second_mark=self._first_mark
-				self._first_mark=value
-			else:
-				self._second_mark=value
-			self.emit("a-b-loop", self._first_mark, self._second_mark)
-		else:
-			self._clear_marks()
-
 	def _get_cover_path(self, uri):
 		if self._music_directory is None:
 			return None
@@ -882,12 +864,6 @@ class Client(GObject.Object):
 	def _clear_tagtypes(self):
 		self._run_command("tagtypes clear")
 
-	def _clear_marks(self):
-		if self._first_mark is not None:
-			self.emit("a-b-loop", -1.0, -1.0)
-		self._first_mark=None
-		self._second_mark=None
-
 	def _database_is_empty(self):
 		return self.stats().get("songs", "0") == "0"
 
@@ -906,14 +882,11 @@ class Client(GObject.Object):
 					song=self.currentsong()
 				cover,cover_path=self._get_cover_with_path(song)
 				self.emit("songid", song, cover, cover_path, status["song"], songid, status["state"])
-				self._clear_marks()
 			elif song is not None:
 				self.emit("metadata", song)
 			if (elapsed:=diff.get("elapsed")) is not None:
 				elapsed=float(elapsed)
 				self.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
-				if self._second_mark is not None and elapsed > self._second_mark:
-					self.seekcur(self._first_mark)
 				# check if playback position has changed by more than two times the polling interval which indicates a seek event
 				if (last_elapsed:=self._last_status.get("elapsed")) is not None and abs(elapsed-float(last_elapsed)) > 0.2:
 					self.emit("seeked", elapsed)
@@ -936,7 +909,6 @@ class Client(GObject.Object):
 			for key in diff:
 				if "songid" == key:
 					self.emit("songid", Song(), FALLBACK_COVER, None, None, None, status["state"])
-					self._clear_marks()
 				elif "volume" == key:
 					self.emit("volume", -1)
 				elif "updating_db" == key:
@@ -2758,7 +2730,6 @@ class MainWindow(Adw.ApplicationWindow):
 		player=Player(self._client, self._settings)
 		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
 		self._updated_toast=Adw.Toast(title=_("Database updated"))
-		self._a_b_loop_toast=Adw.Toast(priority=Adw.ToastPriority.HIGH)
 
 		# actions
 		for name in ("close", "search", "preferences", "manual-connect", "server-info"):
@@ -2837,7 +2808,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.connect("connection_error", self._on_connection_error)
 		self._client.connect("updating-db", self._on_updating_db)
 		self._client.connect("updated-db", self._on_updated_db)
-		self._client.connect("a-b-loop", self._on_a_b_loop)
 		self._client.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
 
 		# packing
@@ -2895,10 +2865,8 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_search_entry_focus_event(self, controller, focus):
 		if focus:
 			self.get_application().set_accels_for_action("app.toggle-play", [])
-			self.get_application().set_accels_for_action("app.a-b-loop", [])
 		else:
 			self.get_application().set_accels_for_action("app.toggle-play", ["space"])
-			self.get_application().set_accels_for_action("app.a-b-loop", ["l"])
 
 	def _on_songid_or_metadata_changed(self, client, song, *args):
 		self._update_title(song)
@@ -2944,17 +2912,6 @@ class MainWindow(Adw.ApplicationWindow):
 			dialog.close()
 		self._toast_overlay.add_toast(self._updated_toast)
 
-	def _on_a_b_loop(self, client, first_mark, second_mark):
-		if first_mark < 0.0:
-			title=_("Cleared A‐B loop")
-		else:
-			if second_mark < 0.0:
-				title=_("Started A‐B loop at {start}").format(start=Duration(first_mark))
-			else:
-				title=_("Activated A‐B loop from {start} to {end}").format(start=Duration(first_mark), end=Duration(second_mark))
-		self._a_b_loop_toast.set_title(title)
-		self._toast_overlay.add_toast(self._a_b_loop_toast)
-
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
 			self.set_cursor_from_name("progress")
@@ -2985,7 +2942,7 @@ class Plattenalbum(Adw.Application):
 		self.add_action(action)
 
 		# mpd actions
-		self._disable_on_stop_data=("next","previous","seek-forward","seek-backward","a-b-loop")
+		self._disable_on_stop_data=("next","previous","seek-forward","seek-backward")
 		self._disable_no_song_data=("tidy","enqueue")
 		self._enable_disable_on_playlist_data=("toggle-play","clear")
 		self._enable_on_reconnect_data=("stop","update","disconnect")
@@ -3013,7 +2970,7 @@ class Plattenalbum(Adw.Application):
 			("app.toggle-play", ["space"]),("app.stop", ["<Ctrl>space"]),("app.next", ["<Ctrl>k"]),("app.previous", ["<Shift><Ctrl>k"]),
 			("app.repeat", ["<Ctrl>r"]),("app.random", ["<Ctrl>n"]),("app.single", ["<Ctrl>s"]),("app.consume", ["<Ctrl>o"]),
 			("app.single-oneshot", ["<Ctrl>p"]),("app.seek-forward", ["<Ctrl>plus"]),("app.seek-backward", ["<Ctrl>minus"]),
-			("app.a-b-loop", ["l"]),("app.enqueue", ["<Ctrl>e"]),("app.tidy", ["<Ctrl>t"]),("menu.delete", ["Delete"])
+			("app.enqueue", ["<Ctrl>e"]),("app.tidy", ["<Ctrl>t"]),("menu.delete", ["Delete"])
 		)
 		for action, accels in action_accels:
 			self.set_accels_for_action(action, accels)
@@ -3066,9 +3023,6 @@ class Plattenalbum(Adw.Application):
 
 	def _on_seek_backward(self, action, param):
 		self._client.seekcur("-10")
-
-	def _on_a_b_loop(self, action, param):
-		self._client.a_b_loop()
 
 	def _on_tidy(self, action, param):
 		self._client.tidy_playlist()
