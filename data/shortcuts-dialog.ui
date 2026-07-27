@@ -37,7 +37,7 @@
 	<child>
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Shortcuts</property>
-		<property name="accelerator">&lt;Ctrl&gt;question</property>
+		<property name="action-name">app.shortcuts</property>
 		</object>
 	</child>
 	<child>
