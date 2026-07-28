@@ -2,3 +2,4 @@ src/plattenalbum.py
 data/de.wagnermartin.Plattenalbum.metainfo.xml.in
 data/de.wagnermartin.Plattenalbum.desktop.in
 data/shortcuts-dialog.ui
+data/preferences-dialog.ui
