@@ -136,27 +136,26 @@ class MPRISInterface:
 			invocation.return_value(None)
 
 	# setter and getter
-	def _get_playback_status(self): return self._PLAYBACK_MAPPING[self._client.status()["state"]]
+	def _get_playback_status(self): return self._PLAYBACK_MAPPING[self._client.get_state()]
 	def _set_shuffle(self, value): self._client.random(int(value))
-	def _get_shuffle(self): return GLib.Variant("b", self._client.status()["random"] == "1")
+	def _get_shuffle(self): return GLib.Variant("b", self._client.get_random())
 	def _get_metadata(self): return GLib.Variant("a{sv}", self._metadata)
-	def _get_volume(self): return GLib.Variant("d", float(self._client.status().get("volume", 0))/100)
+	def _get_volume(self): return GLib.Variant("d", self._client.get_volume()/100)
 	def _set_volume(self, value): self._client.setvol(int(max(value, 0.0)*100))
-	def _get_position(self): return GLib.Variant("x", float(self._client.status().get("elapsed", 0))*1000000)
+	def _get_position(self): return GLib.Variant("x", self._client.get_elapsed()*1000000)
 	def _get_can_seek(self): return GLib.Variant("b", "mpris:length" in self._metadata)
-	def _get_can_next_prev(self): return GLib.Variant("b", self._client.status()["state"] != "stop")
-	def _get_can_play_pause(self): return GLib.Variant("b", int(self._client.status()["playlistlength"]) > 0)
+	def _get_can_next_prev(self): return GLib.Variant("b", self._client.get_state() != "stop")
+	def _get_can_play_pause(self): return GLib.Variant("b", self._client.get_playlistlength() > 0)
 
 	def _set_loop_status(self, value):
 		self._client.repeat(int(value != "None"))
 		self._client.single(int(value == "Track"))
 
 	def _get_loop_status(self):
-		status=self._client.status()
-		if status["repeat"] == "1":
-			if status["single"] == "0":
-				return GLib.Variant("s", "Playlist")
-			return GLib.Variant("s", "Track")
+		if self._client.get_repeat():
+			if self._client.get_single():
+				return GLib.Variant("s", "Track")
+			return GLib.Variant("s", "Playlist")
 		return GLib.Variant("s", "None")
 
 	# introspect methods
@@ -469,7 +468,7 @@ class Client(GObject.Object):
 	def __init__(self, settings):
 		super().__init__()
 		self._settings=settings
-		self._last_status={}
+		self._cached_status={}
 
 	def _post_connect(self):
 		self._socket.settimeout(None)
@@ -563,7 +562,7 @@ class Client(GObject.Object):
 		self._send_command("update")
 		# This is a rather ugly workaround for database updates that are quicker
 		# than around a tenth of a second and therefore can't be detected by _main_loop.
-		self._last_status["updating_db"]=self._parse_dict()["updating_db"]
+		self._cached_status["updating_db"]=self._parse_dict()["updating_db"]
 		self.emit("updating-db")
 
 	def open_connection(self, manual):
@@ -640,7 +639,7 @@ class Client(GObject.Object):
 			self._write_file.close()
 		except BrokenPipeError:
 			pass
-		self._last_status={}
+		self._cached_status={}
 		self.emit("disconnected")
 
 	def connected(self):
@@ -680,23 +679,22 @@ class Client(GObject.Object):
 
 	def enqueue(self):
 		song=self.currentsong()
-		status=self.status()
-		self._run_command(f'moveid {status["songid"]} 0')
-		if int(status["playlistlength"]) > 1:
+		songid=self.get_songid()
+		self._run_command(f'moveid {songid} 0')
+		if self.get_playlistlength() > 1:
 			self._run_command("delete 1:")
 		self.append_album(song.get_album())
 		self._send_command(f"playlistfind file {song.get_quoted_file()}")
 		if duplicate:=self._parse_song():
-			self._run_command(f'swapid {status["songid"]} {duplicate["id"]}')
+			self._run_command(f'swapid {songid} {duplicate["id"]}')
 			self._run_command(f'deleteid {duplicate["id"]}')
 
 	def tidy_playlist(self):
-		status=self.status()
-		if (songid:=status.get("songid")) is None:
+		if (songid:=self.get_songid()) is None:
 			self.clear()
 		else:
 			self._run_command(f"moveid {songid} 0")
-			if int(status["playlistlength"]) > 1:
+			if self.get_playlistlength() > 1:
 				self._run_command("delete 1:")
 
 	def search_songs(self, keywords, num):
@@ -801,10 +799,20 @@ class Client(GObject.Object):
 		self.emit("show-album", song.get_album())
 
 	def toggle_play(self):
-		if self.status()["state"] == "stop":
+		if self.get_state() == "stop":
 			self.play()
 		else:
-			self.pause()
+			self.pause(int(self.get_state() == "play"))
+
+	def get_state(self): return self._cached_status.get("state", "stop")
+	def get_volume(self): return int(self._cached_status.get("volume", "0"))
+	def get_elapsed(self): return float(self._cached_status.get("elapsed", "0"))
+	def get_playlistlength(self): return int(self._cached_status.get("playlistlength", "0"))
+	def get_songid(self): return self._cached_status.get("songid")
+	def get_random(self): return self._cached_status.get("random", "0") != "0"
+	def get_repeat(self): return self._cached_status.get("repeat", "0") != "0"
+	def get_single(self): return self._cached_status.get("single", "0") != "0"
+	def get_consume(self): return self._cached_status.get("consume", "0") != "0"
 
 	def _get_cover_path(self, uri):
 		if self._music_directory is None:
@@ -871,7 +879,7 @@ class Client(GObject.Object):
 		try:
 			song=None
 			status=self.status()
-			diff=dict(set(status.items())-set(self._last_status.items()))
+			diff=dict(set(status.items())-set(self._cached_status.items()))
 			if "updating_db" in diff:
 				self.emit("updating-db")
 			if (playlist:=diff.get("playlist")) is not None:
@@ -888,7 +896,7 @@ class Client(GObject.Object):
 				elapsed=float(elapsed)
 				self.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
 				# check if playback position has changed by more than two times the polling interval which indicates a seek event
-				if (last_elapsed:=self._last_status.get("elapsed")) is not None and abs(elapsed-float(last_elapsed)) > 0.2:
+				if (last_elapsed:=self._cached_status.get("elapsed")) is not None and abs(elapsed-float(last_elapsed)) > 0.2:
 					self.emit("seeked", elapsed)
 			if (bitrate:=diff.get("bitrate")) is not None:
 				if bitrate == "0":
@@ -905,7 +913,7 @@ class Client(GObject.Object):
 			for key in ("repeat", "random", "consume"):
 				if (val:=diff.get(key)):
 					self.emit(key, val == "1")
-			diff=set(self._last_status)-set(status)
+			diff=set(self._cached_status)-set(status)
 			for key in diff:
 				if "songid" == key:
 					self.emit("songid", Song(), FALLBACK_COVER, None, None, None, status["state"])
@@ -915,7 +923,7 @@ class Client(GObject.Object):
 					self.emit("updated-db", self._database_is_empty())
 				elif "bitrate" == key:
 					self.emit("bitrate", None)
-			self._last_status=status
+			self._cached_status=status
 			return True
 		except (BrokenPipeError, ConnectionResetError, CommandError):  # Server offline or connection lost
 			self.close_connection()
