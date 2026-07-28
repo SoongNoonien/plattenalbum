@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+<template class="PreferencesDialog" parent="AdwPreferencesDialog">
+<child>
+	<object class="AdwPreferencesPage">
+	<child>
+		<object class="AdwPreferencesGroup">
+		<property name="title" translatable="yes">View</property>
+		<child>
+			<object class="AdwSwitchRow" id="show_bit_rate">
+			<property name="title" translatable="yes">_Show Bit Rate</property>
+			<property name="use-underline">true</property>
+			</object>
+		</child>
+		</object>
+	</child>
+	<child>
+		<object class="AdwPreferencesGroup">
+		<property name="title" translatable="yes">Behavior</property>
+		<child>
+			<object class="AdwSwitchRow" id="send_notify">
+			<property name="title" translatable="yes">Send _Notification on Title Change</property>
+			<property name="use-underline">true</property>
+			</object>
+		</child>
+		<child>
+			<object class="AdwSwitchRow" id="stop_on_quit">
+			<property name="title" translatable="yes">Stop _Playback on Quit</property>
+			<property name="use-underline">true</property>
+			</object>
+		</child>
+		<child>
+			<object class="AdwSwitchRow" id="mpris">
+			<property name="title" translatable="yes">Support “_MPRIS”</property>
+			<property name="subtitle" translatable="yes">Disable if “MPRIS” is supported by another client</property>
+			<property name="use-underline">true</property>
+			</object>
+		</child>
+		</object>
+	</child>
+	</object>
+</child>
+</template>
+</interface>

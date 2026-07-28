@@ -976,37 +976,19 @@ class Settings(Gio.Settings):
 # dialogs #
 ###########
 
-class ViewPreferences(Adw.PreferencesGroup):
-	def __init__(self, settings):
-		super().__init__(title=_("View"))
-		toggle_data=(
-			(_("_Show Bit Rate"), "show-bit-rate", ""),
-		)
-		for title, key, subtitle in toggle_data:
-			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
-			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
-			self.add(row)
-
-class BehaviorPreferences(Adw.PreferencesGroup):
-	def __init__(self, settings):
-		super().__init__(title=_("Behavior"))
-		toggle_data=(
-			(_("Send _Notification on Title Change"), "send-notify", ""),
-			(_("Stop _Playback on Quit"), "stop-on-quit", ""),
-			(_("Support “_MPRIS”"), "mpris", _("Disable if “MPRIS” is supported by another client")),
-		)
-		for title, key, subtitle in toggle_data:
-			row=Adw.SwitchRow(title=title, subtitle=subtitle, use_underline=True)
-			settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
-			self.add(row)
-
+@Gtk.Template(resource_path="/de/wagnermartin/Plattenalbum/preferences-dialog.ui")
 class PreferencesDialog(Adw.PreferencesDialog):
+	__gtype_name__="PreferencesDialog"
+	show_bit_rate=Gtk.Template.Child()
+	send_notify=Gtk.Template.Child()
+	stop_on_quit=Gtk.Template.Child()
+	mpris=Gtk.Template.Child()
 	def __init__(self, settings):
 		super().__init__()
-		page=Adw.PreferencesPage()
-		page.add(ViewPreferences(settings))
-		page.add(BehaviorPreferences(settings))
-		self.add(page)
+		settings.bind("show-bit-rate", self.show_bit_rate, "active", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("send-notify", self.send_notify, "active", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("stop-on-quit", self.stop_on_quit, "active", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("mpris", self.mpris, "active", Gio.SettingsBindFlags.DEFAULT)
 
 class ConnectDialog(Adw.Dialog):
 	def __init__(self, settings):
