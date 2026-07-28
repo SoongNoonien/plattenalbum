@@ -40,12 +40,12 @@ gettext.install("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@", names=["ngettext
 Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
 signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
 
+##################################
+# global constants and functions #
+##################################
+
 FALLBACK_COVER=Gdk.Paintable.new_empty(1, 1)
 CONNECTION_TIMEOUT=30
-
-############################
-# decorators and functions #
-############################
 
 def idle_add(*args, **kwargs):
 	GLib.idle_add(*args, priority=GLib.PRIORITY_DEFAULT, **kwargs)
@@ -314,9 +314,9 @@ class MPRISInterface:
 		if self._settings.get_boolean("mpris"):
 			self._enable()
 
-######################
-# MPD client wrapper #
-######################
+##############
+# MPD client #
+##############
 
 class SearchFilter():
 	def __init__(self, tags, keywords):
