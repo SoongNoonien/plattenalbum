@@ -38,6 +38,7 @@ locale.bindtextdomain("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@")
 locale.textdomain("de.wagnermartin.Plattenalbum")
 gettext.install("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@", names=["ngettext"])
 Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
+signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
 
 FALLBACK_COVER=Gdk.Paintable.new_empty(1, 1)
 CONNECTION_TIMEOUT=30
@@ -3011,6 +3012,4 @@ class Plattenalbum(Adw.Application):
 			self.lookup_action(action).set_enabled(True)
 
 if __name__ == "__main__":
-	app=Plattenalbum()
-	signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
-	app.run(sys.argv)
+	Plattenalbum().run(sys.argv)
