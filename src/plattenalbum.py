@@ -154,7 +154,7 @@ class MPRISInterface:
 	def _get_loop_status(self):
 		status=self._client.status()
 		if status["repeat"] == "1":
-			if status.get("single", "0") == "0":
+			if status["single"] == "0":
 				return GLib.Variant("s", "Playlist")
 			return GLib.Variant("s", "Track")
 		return GLib.Variant("s", "None")
