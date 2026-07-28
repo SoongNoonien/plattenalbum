@@ -1054,9 +1054,9 @@ class ServerInfo(Adw.Dialog):
 		super().__init__(title=_("Information"), width_request=360, follows_content_size=True)
 
 		# lists
-		server_list=Gtk.ListBox(valign=Gtk.Align.START)
+		server_list=Gtk.ListBox()
 		server_list.add_css_class("boxed-list")
-		database_list=Gtk.ListBox(valign=Gtk.Align.START)
+		database_list=Gtk.ListBox()
 		database_list.add_css_class("boxed-list")
 
 		# boxes
