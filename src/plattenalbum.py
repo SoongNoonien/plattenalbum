@@ -1001,7 +1001,7 @@ class BehaviorPreferences(Adw.PreferencesGroup):
 			self.add(row)
 
 class PreferencesDialog(Adw.PreferencesDialog):
-	def __init__(self, client, settings):
+	def __init__(self, settings):
 		super().__init__()
 		page=Adw.PreferencesPage()
 		page.add(ViewPreferences(settings))
@@ -2860,7 +2860,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_preferences(self, action, param):
 		if self.get_visible_dialog() is None:
-			PreferencesDialog(self._client, self._settings).present(self)
+			PreferencesDialog(self._settings).present(self)
 
 	def _on_manual_connect(self, action, param):
 		if self.get_visible_dialog() is None:
