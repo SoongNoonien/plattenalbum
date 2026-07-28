@@ -73,7 +73,7 @@ class MPRISInterface:
 	_MPRIS_PATH="/org/mpris/MediaPlayer2"
 	_INTERFACES_XML=Gio.resources_lookup_data("/de/wagnermartin/Plattenalbum/mpris.xml", Gio.ResourceLookupFlags.NONE).get_data().decode("utf-8")
 	_NODE_INFO=Gio.DBusNodeInfo.new_for_xml(_INTERFACES_XML)
-	_PLAYBACK_MAPPING={"play": "Playing", "pause": "Paused", "stop": "Stopped"}
+	_PLAYBACK_MAPPING={"play": GLib.Variant("s", "Playing"), "pause": GLib.Variant("s", "Paused"), "stop": GLib.Variant("s", "Stopped")}
 	def __init__(self, window, client, settings):
 		self._window=window
 		self._client=client
@@ -136,7 +136,7 @@ class MPRISInterface:
 			invocation.return_value(None)
 
 	# setter and getter
-	def _get_playback_status(self): return GLib.Variant("s", self._PLAYBACK_MAPPING[self._client.status()["state"]])
+	def _get_playback_status(self): return self._PLAYBACK_MAPPING[self._client.status()["state"]]
 	def _set_shuffle(self, value): self._client.random(int(value))
 	def _get_shuffle(self): return GLib.Variant("b", self._client.status()["random"] == "1")
 	def _get_metadata(self): return GLib.Variant("a{sv}", self._metadata)
@@ -254,7 +254,7 @@ class MPRISInterface:
 		value=GLib.Variant("b", state != "stop")
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoNext", value)
 		self._set_property(self._MPRIS_PLAYER_IFACE, "CanGoPrevious", value)
-		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", GLib.Variant("s", self._PLAYBACK_MAPPING[state]))
+		self._set_property(self._MPRIS_PLAYER_IFACE, "PlaybackStatus", self._PLAYBACK_MAPPING[state])
 
 	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		self._metadata=self._convert_metadata(song)
