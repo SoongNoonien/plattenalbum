@@ -4,7 +4,7 @@
 
 [![Available on Flathub](https://img.shields.io/flathub/downloads/de.wagnermartin.Plattenalbum?logo=flathub&labelColor=77767b&color=4a90d9)](https://flathub.org/apps/de.wagnermartin.Plattenalbum)
 
-![screenshot](screenshots/main_window.png)
+![screenshot](data/screenshots/main_window.png)
 
 A client for the Music Player Daemon (MPD).
 
