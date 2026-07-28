@@ -32,16 +32,11 @@ import sys
 import signal
 import re
 import locale
-from gettext import gettext as _, ngettext, textdomain, bindtextdomain
+import gettext
 
-try:
-	locale.setlocale(locale.LC_ALL, "")
-except locale.Error as e:
-	print(e)
 locale.bindtextdomain("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@")
 locale.textdomain("de.wagnermartin.Plattenalbum")
-bindtextdomain("de.wagnermartin.Plattenalbum", localedir="@LOCALE_DIR@")
-textdomain("de.wagnermartin.Plattenalbum")
+gettext.install("de.wagnermartin.Plattenalbum", "@LOCALE_DIR@", names=["ngettext"])
 Gio.Resource._register(Gio.resource_load(GLib.build_filenamev(["@RESOURCES_DIR@", "de.wagnermartin.Plattenalbum.gresource"])))
 
 FALLBACK_COVER=Gdk.Paintable.new_empty(1, 1)
