@@ -2300,9 +2300,9 @@ class LyricsWindow(Gtk.Stack):
 class PlayButton(Gtk.Button):
 	def __init__(self, client):
 		super().__init__(icon_name="media-playback-start-symbolic", action_name="app.toggle-play", tooltip_text=_("Play"))
-		client.connect("state", self._on_state)
+		client.connect("state", self._on_state_changed)
 
-	def _on_state(self, client, state):
+	def _on_state_changed(self, client, state):
 		if state == "play":
 			self.set_property("icon-name", "media-playback-pause-symbolic")
 			self.set_tooltip_text(_("Pause"))
@@ -2396,7 +2396,7 @@ class PlaybackControls(Gtk.Box):
 		self._adjustment.connect("notify::upper", self._on_upper)
 		key_controller.connect("key-pressed", self._on_key_pressed)
 		self._client.connect("disconnected", self._on_disconnected)
-		self._client.connect("state", self._on_state)
+		self._client.connect("state", self._on_state_changed)
 		self._elapsed_handler=self._client.connect("elapsed", self._on_elapsed)
 		self._client.connect("songid", self._on_songid_changed)
 
@@ -2466,7 +2466,7 @@ class PlaybackControls(Gtk.Box):
 			self._elapsed.set_text("")
 			self._rest.set_text("")
 
-	def _on_state(self, client, state):
+	def _on_state_changed(self, client, state):
 		if state == "stop":
 			self._scale.set_range(0, 0)
 
@@ -2633,10 +2633,10 @@ class ProgressBar(Gtk.ProgressBar):
 	def __init__(self, client):
 		super().__init__(valign=Gtk.Align.START, halign=Gtk.Align.FILL)
 		self.add_css_class("osd")
-		client.connect("state", self._on_state)
+		client.connect("state", self._on_state_changed)
 		client.connect("elapsed", self._on_elapsed)
 
-	def _on_state(self, client, state):
+	def _on_state_changed(self, client, state):
 		if state == "stop":
 			self.set_visible(False)
 			self.set_fraction(0.0)
@@ -2787,7 +2787,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.connect("songid", self._on_songid_or_metadata_changed)
 		self._client.connect("metadata", self._on_songid_or_metadata_changed)
-		self._client.connect("state", self._on_state)
+		self._client.connect("state", self._on_state_changed)
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("connection_error", self._on_connection_error)
@@ -2856,7 +2856,7 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_songid_or_metadata_changed(self, client, song, *args):
 		self._update_title(song)
 
-	def _on_state(self, client, state):
+	def _on_state_changed(self, client, state):
 		if state == "play":
 			self._suspend_inhibit=self.get_application().inhibit(self, Gtk.ApplicationInhibitFlags.SUSPEND, _("Playing music"))
 		elif self._suspend_inhibit:
@@ -2961,7 +2961,7 @@ class Plattenalbum(Adw.Application):
 			self.set_accels_for_action(action, accels)
 
 		# connect
-		self._client.connect("state", self._on_state)
+		self._client.connect("state", self._on_state_changed)
 		self._client.connect("songid", self._on_songid_changed)
 		self._client.connect("playlist", self._on_playlist_changed)
 		self._client.connect("disconnected", self._on_disconnected)
@@ -3017,7 +3017,7 @@ class Plattenalbum(Adw.Application):
 	def _on_connect(self, action, param):
 		self._client.open_connection(param.get_boolean())
 
-	def _on_state(self, client, state):
+	def _on_state_changed(self, client, state):
 		for action in self._disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state != "stop")
 
