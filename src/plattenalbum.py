@@ -908,11 +908,11 @@ class Client(GObject.Object):
 			if (state:=diff.get("state")) is not None:
 				self.emit("state", state)
 			if (single:=diff.get("single")) is not None:
-				self.emit("single", single == "1")
+				self.emit("single", single != "0")
 				self.emit("single-oneshot", single == "oneshot")
 			for key in ("repeat", "random", "consume"):
 				if (val:=diff.get(key)):
-					self.emit(key, val == "1")
+					self.emit(key, val != "0")
 			diff=set(self._cached_status)-set(status)
 			for key in diff:
 				if "songid" == key:
