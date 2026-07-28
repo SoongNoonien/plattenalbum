@@ -1021,27 +1021,22 @@ class ConnectDialog(Adw.Dialog):
 	def connection_error(self):
 		self._toast_overlay.add_toast(self._connection_toast)
 
-class CommandLabel(Gtk.Box):
-	def __init__(self, text):
-		super().__init__(css_classes=["card"])
-		label=Gtk.Label(selectable=True, xalign=0, hexpand=True, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR, css_classes=["monospace"])
-		label.set_margin_start(12)
-		label.set_margin_end(12)
-		label.set_margin_top(9)
-		label.set_margin_bottom(9)
-		label.set_text(text)
-		self.append(label)
+class CommandLabel(Gtk.Label):
+	def __init__(self, **kwargs):
+		super().__init__(selectable=True, xalign=0, hexpand=True, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR,
+			css_classes=["command-label", "view", "card", "monospace"], **kwargs)
 
 class SetupDialog(Adw.Dialog):
 	def __init__(self):
 		super().__init__(title=_("Setup"), width_request=360, follows_content_size=True)
 		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		box.append(Gtk.Label(label=_("To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package manager, and run the following commands"\
-			" to configure and initialize a basic local instance. After that, Plattenalbum should be able to seamlessly connect to it."), use_markup=True, xalign=0, wrap=True))
-		box.append(CommandLabel("mkdir ~/.mpd"))
-		box.append(CommandLabel('cat << EOF > ~/.mpd/mpd.conf\ndb_file\t\t"~/.mpd/database"\nstate_file\t"~/.mpd/state"\n\n'\
+		box.append(Gtk.Label(label=_("To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package manager, and"\
+			" run the following commands to configure and initialize a basic local instance. After that, Plattenalbum should be able to"\
+			" seamlessly connect to it."), use_markup=True, xalign=0, wrap=True))
+		box.append(CommandLabel(label="mkdir ~/.mpd"))
+		box.append(CommandLabel(label='cat << EOF > ~/.mpd/mpd.conf\ndb_file\t\t"~/.mpd/database"\nstate_file\t"~/.mpd/state"\n\n'\
 			'audio_output {\n\ttype\t"pulse"\n\tname\t"Music"\n}\nEOF'))
-		box.append(CommandLabel("systemctl --user enable --now mpd.socket"))
+		box.append(CommandLabel(label="systemctl --user enable --now mpd.socket"))
 
 		# packing
 		clamp=Adw.Clamp(child=box, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
