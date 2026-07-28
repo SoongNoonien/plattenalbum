@@ -1639,7 +1639,7 @@ class AlbumsPage(Adw.NavigationPage):
 			break_point.set_condition(Adw.BreakpointCondition.parse(f"min-width: {width}sp"))
 			break_point.add_setter(self.grid_view, "max-columns", columns)
 			breakpoint_bin.add_breakpoint(break_point)
-		breakpoint_bin.set_child(Gtk.ScrolledWindow(child=self.grid_view, hscrollbar_policy=Gtk.PolicyType.NEVER))
+		breakpoint_bin.set_child(Gtk.ScrolledWindow(child=self.grid_view))
 
 		# status page
 		status_page=Adw.StatusPage(icon_name="folder-music-symbolic", title=_("No Albums"), description=_("Select an artist"))
@@ -1726,9 +1726,7 @@ class AlbumPage(Adw.NavigationPage):
 		box.append(Adw.Clamp(child=cover, maximum_size=200))
 		box.append(label_box)
 		box.append(Adw.Clamp(child=song_list))
-		self._scroll=Gtk.ScrolledWindow(child=box)
-		self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-		toolbar_view=Adw.ToolbarView(content=self._scroll)
+		toolbar_view=Adw.ToolbarView(content=Gtk.ScrolledWindow(child=box))
 		toolbar_view.add_top_bar(header_bar)
 		self.set_child(toolbar_view)
 
@@ -1777,13 +1775,12 @@ class Browser(Gtk.Stack):
 
 		# artist list
 		self._artist_list=ArtistList(client)
-		artist_window=Gtk.ScrolledWindow(child=self._artist_list)
 		artist_header_bar=Adw.HeaderBar()
 		search_button=Gtk.Button(icon_name="system-search-symbolic", tooltip_text=_("Search"))
 		search_button.connect("clicked", lambda *args: self.search())
 		artist_header_bar.pack_start(search_button)
 		artist_header_bar.pack_end(MainMenuButton())
-		artist_toolbar_view=Adw.ToolbarView(content=artist_window)
+		artist_toolbar_view=Adw.ToolbarView(content=Gtk.ScrolledWindow(child=self._artist_list))
 		artist_toolbar_view.add_top_bar(artist_header_bar)
 		artist_page=Adw.NavigationPage(child=artist_toolbar_view, title=_("Artists"), tag="artists")
 
