@@ -2206,27 +2206,23 @@ class LyricsWindow(Gtk.Stack):
 		searching_status_page.set_paintable(spinner)
 
 		# text view
-		self._text_view=Gtk.TextView(
+		text_view=Gtk.TextView(
 			editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD,
 			justification=Gtk.Justification.CENTER,
 			left_margin=12, right_margin=12, bottom_margin=9, top_margin=9,
 			pixels_above_lines=1, pixels_below_lines=2, pixels_inside_wrap=3
 		)
-		self._text_view.add_css_class("inline")
-		self._text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
+		text_view.add_css_class("inline")
+		text_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Lyrics view")])
 
 		# text buffer
-		self._text_buffer=self._text_view.get_buffer()
-
-		# scroll
-		scroll=Gtk.ScrolledWindow(child=self._text_view, propagate_natural_height=True)
-		self._adj=scroll.get_vadjustment()
+		self._text_buffer=text_view.get_buffer()
 
 		# connect
 		self.connect("notify::song", self._on_songid_changed)
 
 		# packing
-		self.add_named(scroll, "lyrics")
+		self.add_named(Gtk.ScrolledWindow(child=text_view, propagate_natural_height=True), "lyrics")
 		self.add_named(no_lyrics_status_page, "no-lyrics")
 		self.add_named(connection_error_status_page, "connection-error")
 		self.add_named(searching_status_page, "searching")
