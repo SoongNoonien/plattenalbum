@@ -2275,13 +2275,12 @@ class MediaButtons(Gtk.Box):
 class BitRate(Gtk.Label):
 	def __init__(self, client, settings):
 		super().__init__(xalign=1, single_line_mode=True, css_classes=["caption", "numeric", "dimmed"])
-		self._client=client
 		settings.bind("show-bit-rate", self, "visible", Gio.SettingsBindFlags.GET)
 		self._mask=_("{bitrate} kb/s")
 
 		# connect
-		self._client.connect("bitrate", self._on_bitrate)
-		self._client.connect("disconnected", self._on_disconnected)
+		client.connect("bitrate", self._on_bitrate)
+		client.connect("disconnected", self._on_disconnected)
 
 	def _on_bitrate(self, client, bitrate):
 		# handle unknown bitrates: https://github.com/MusicPlayerDaemon/MPD/issues/428#issuecomment-442430365
@@ -2296,13 +2295,12 @@ class BitRate(Gtk.Label):
 class PlaylistProgress(Gtk.Label):
 	def __init__(self, client):
 		super().__init__(xalign=0, single_line_mode=True, css_classes=["caption", "dimmed"])
-		self._client=client
 		self._length=0
 
 		# connect
-		self._client.connect("songid", self._on_songid_changed)
-		self._client.connect("playlist", self._on_playlist_changed)
-		self._client.connect("disconnected", self._on_disconnected)
+		client.connect("songid", self._on_songid_changed)
+		client.connect("playlist", self._on_playlist_changed)
+		client.connect("disconnected", self._on_disconnected)
 
 	def _clear(self):
 		self._length=0
@@ -2462,7 +2460,6 @@ class VolumeControl(Gtk.Box):
 class PlayerMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
 		super().__init__()
-		self._client=client
 		self._volume_visible=False
 
 		# volume
@@ -2482,8 +2479,8 @@ class PlayerMenu(Gtk.PopoverMenu):
 		self.set_menu_model(menu)
 
 		# connect
-		self._client.connect("volume", self._on_volume_changed)
-		self._client.connect("disconnected", self._on_disconnected)
+		client.connect("volume", self._on_volume_changed)
+		client.connect("disconnected", self._on_disconnected)
 
 	def _on_volume_changed(self, client, volume):
 		if volume < 0 and self._volume_visible:
@@ -2502,7 +2499,6 @@ class PlayerMenu(Gtk.PopoverMenu):
 class Player(Adw.Bin):
 	def __init__(self, client, settings):
 		super().__init__(width_request=300, height_request=200)
-		self._client=client
 
 		# widgets
 		self._cover=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION,
@@ -2536,10 +2532,10 @@ class Player(Adw.Bin):
 
 		# connect
 		self._stack.connect("notify::visible-child-name", self._on_visible_child_name)
-		self._client.connect("songid", self._on_songid_changed)
-		self._client.connect("playlist", self._on_playlist_changed)
-		self._client.connect("disconnected", self._on_disconnected)
-		self._client.connect("connected", self._on_connected)
+		client.connect("songid", self._on_songid_changed)
+		client.connect("playlist", self._on_playlist_changed)
+		client.connect("disconnected", self._on_disconnected)
+		client.connect("connected", self._on_connected)
 
 		# packing
 		toolbar_view=Adw.ToolbarView()
@@ -2607,7 +2603,6 @@ class ProgressBar(Gtk.ProgressBar):
 class PlayerBar(Gtk.Overlay):
 	def __init__(self, client):
 		super().__init__()
-		self._client=client
 
 		# widgets
 		self._cover=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION, visible=False)
@@ -2617,8 +2612,8 @@ class PlayerBar(Gtk.Overlay):
 		self._subtitle=Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, css_classes=["dimmed", "caption"])
 
 		# connect
-		self._client.connect("songid", self._on_songid_changed)
-		self._client.connect("disconnected", self._on_disconnected)
+		client.connect("songid", self._on_songid_changed)
+		client.connect("disconnected", self._on_disconnected)
 
 		# packing
 		title_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
