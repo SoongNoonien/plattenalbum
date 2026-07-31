@@ -874,25 +874,26 @@ class Client(GObject.Object):
 	def _main_loop(self, *args):
 		try:
 			song=None
-			status=self.status()
-			diff=dict(set(status.items())-set(self._cached_status.items()))
+			last_status=self._cached_status
+			self._cached_status=self.status()
+			diff=dict(set(self._cached_status.items())-set(last_status.items()))
 			if "updating_db" in diff:
 				self.emit("updating-db")
 			if (playlist:=diff.get("playlist")) is not None:
-				self.emit("playlist", int(playlist), int(status["playlistlength"]), status.get("song"))
+				self.emit("playlist", int(playlist), int(self._cached_status["playlistlength"]), self._cached_status.get("song"))
 				song=self.currentsong()
 			if (songid:=diff.get("songid")) is not None:
 				if song is None:
 					song=self.currentsong()
 				cover,cover_path=self._get_cover_with_path(song)
-				self.emit("songid", song, cover, cover_path, status["song"], songid, status["state"])
+				self.emit("songid", song, cover, cover_path, self._cached_status["song"], songid, self._cached_status["state"])
 			elif song is not None:
 				self.emit("metadata", song)
 			if (elapsed:=diff.get("elapsed")) is not None:
 				elapsed=float(elapsed)
-				self.emit("elapsed", elapsed, float(status.get("duration", 0.0)))
+				self.emit("elapsed", elapsed, float(self._cached_status.get("duration", 0.0)))
 				# check if playback position has changed by more than two times the polling interval which indicates a seek event
-				if (last_elapsed:=self._cached_status.get("elapsed")) is not None and abs(elapsed-float(last_elapsed)) > 0.2:
+				if (last_elapsed:=last_status.get("elapsed")) is not None and abs(elapsed-float(last_elapsed)) > 0.2:
 					self.emit("seeked", elapsed)
 			if (bitrate:=diff.get("bitrate")) is not None:
 				if bitrate == "0":
@@ -909,17 +910,16 @@ class Client(GObject.Object):
 			for key in ("repeat", "random", "consume"):
 				if (val:=diff.get(key)):
 					self.emit(key, val != "0")
-			diff=set(self._cached_status)-set(status)
+			diff=set(last_status)-set(self._cached_status)
 			for key in diff:
 				if "songid" == key:
-					self.emit("songid", Song(), FALLBACK_COVER, None, None, None, status["state"])
+					self.emit("songid", Song(), FALLBACK_COVER, None, None, None, self._cached_status["state"])
 				elif "volume" == key:
 					self.emit("volume", -1)
 				elif "updating_db" == key:
 					self.emit("updated-db", self._database_is_empty())
 				elif "bitrate" == key:
 					self.emit("bitrate", None)
-			self._cached_status=status
 			return True
 		except (BrokenPipeError, ConnectionResetError, CommandError):  # Server offline or connection lost
 			self.close_connection()
