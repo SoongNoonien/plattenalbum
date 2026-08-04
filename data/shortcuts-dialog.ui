@@ -12,6 +12,28 @@
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Search</property>
+		<property name="action-name">win.search</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Close</property>
+		<property name="action-name">win.close</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Quit</property>
+		<property name="action-name">app.quit</property>
+		</object>
+	</child>
+	</object>
+</child>
+<child>
+	<object class="AdwShortcutsSection">
+	<child>
+		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Disconnect</property>
 		<property name="action-name">app.disconnect</property>
 		</object>
@@ -36,26 +58,8 @@
 	</child>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Shortcuts</property>
+		<property name="title" translatable="yes">Keyboard Shortcuts</property>
 		<property name="action-name">app.shortcuts</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Search</property>
-		<property name="action-name">win.search</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Close</property>
-		<property name="action-name">win.close</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Quit</property>
-		<property name="action-name">app.quit</property>
 		</object>
 	</child>
 	</object>
