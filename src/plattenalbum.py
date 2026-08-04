@@ -1648,7 +1648,6 @@ class AlbumsPage(Adw.NavigationPage):
 		# connect
 		self.grid_view.connect("activate", self._on_activate)
 		self._client.connect("disconnected", self._on_disconnected)
-		self._client.connect("connection-error", self._on_connection_error)
 
 		# packing
 		toolbar_view=Adw.ToolbarView(content=self._stack)
@@ -1677,9 +1676,6 @@ class AlbumsPage(Adw.NavigationPage):
 		self.emit("album-selected", self._selection_model.get_item(pos))
 
 	def _on_disconnected(self, *args):
-		self._stack.set_visible_child_name("albums")
-
-	def _on_connection_error(self, *args):
 		self._stack.set_visible_child_name("albums")
 
 class AlbumPage(Adw.NavigationPage):
@@ -1823,7 +1819,6 @@ class Browser(Gtk.Stack):
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
 		client.connect("disconnected", self._on_disconnected)
-		client.connect("connection-error", self._on_connection_error)
 		client.connect("connected", self._on_connected_or_updated_db)
 		client.connect("updated-db", self._on_connected_or_updated_db)
 		client.connect("show-album", lambda widget, album: self._show_album(album))
@@ -1878,9 +1873,6 @@ class Browser(Gtk.Stack):
 		self.set_visible_child_name("browser")
 		self._navigation_split_view.set_show_content(False)
 		self.search_entry.emit("stop-search")
-
-	def _on_connection_error(self, *args):
-		self.set_visible_child_name("empty-collection")
 
 	def _on_connected_or_updated_db(self, client, database_is_empty):
 		self.search_entry.emit("stop-search")
@@ -2134,7 +2126,6 @@ class PlaylistWindow(Gtk.Stack):
 		drop_target.connect("drop", self._on_drop)
 		self._client.connect("playlist", self._on_playlist_changed)
 		self._client.connect("disconnected", self._on_disconnected)
-		self._client.connect("connection-error", self._on_connection_error)
 
 		# packing
 		self.add_named(Gtk.ScrolledWindow(child=playlist_view, propagate_natural_height=True), "playlist")
@@ -2153,9 +2144,6 @@ class PlaylistWindow(Gtk.Stack):
 			self.set_visible_child_name("empty-playlist")
 
 	def _on_disconnected(self, *args):
-		self.set_visible_child_name("playlist")
-
-	def _on_connection_error(self, *args):
 		self.set_visible_child_name("playlist")
 
 ##########
