@@ -442,7 +442,7 @@ class Client(GObject.Object):
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"connection_error": (GObject.SignalFlags.RUN_FIRST, None, ()),
+		"connection-error": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"songid": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
 		"metadata": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -599,7 +599,7 @@ class Client(GObject.Object):
 					else:
 						success=self._connect_tcp(host, port)
 			if not success:
-				self.emit("connection_error")
+				self.emit("connection-error")
 				return False
 			# set password
 			if password:
@@ -607,7 +607,7 @@ class Client(GObject.Object):
 					self._run_command(f"password {password}")
 				except CommandError:
 					self.close_connection()
-					self.emit("connection_error")
+					self.emit("connection-error")
 					return False
 			# connected
 			try:
@@ -623,7 +623,7 @@ class Client(GObject.Object):
 				GLib.timeout_add(100, self._main_loop)
 			else:
 				self.close_connection()
-				self.emit("connection_error")
+				self.emit("connection-error")
 			return False
 		GLib.idle_add(callback)
 
@@ -920,10 +920,10 @@ class Client(GObject.Object):
 			return True
 		except (BrokenPipeError, ConnectionResetError, CommandError):  # Server offline or connection lost
 			self.close_connection()
-			self.emit("connection_error")
+			self.emit("connection-error")
 			return False
 		except ValueError:  # Connection closed by user
-			self.emit("connection_error")
+			self.emit("connection-error")
 			return False
 
 	def currentsong(self):
@@ -2757,7 +2757,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.connect("state", self._on_state_changed)
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
-		self._client.connect("connection_error", self._on_connection_error)
+		self._client.connect("connection-error", self._on_connection_error)
 		self._client.connect("updating-db", self._on_updating_db)
 		self._client.connect("updated-db", self._on_updated_db)
 		self._client.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
