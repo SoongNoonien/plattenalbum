@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-04 15:32+0200\n"
+"POT-Creation-Date: 2026-08-04 16:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -206,7 +206,7 @@ msgstr ""
 
 #: src/plattenalbum.py:1774 src/plattenalbum.py:1813
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
-#: data/shortcuts-dialog.ui:45
+#: data/shortcuts-dialog.ui:15
 msgid "Search"
 msgstr ""
 
@@ -264,11 +264,11 @@ msgstr ""
 msgid "Pause"
 msgstr ""
 
-#: src/plattenalbum.py:2271 data/shortcuts-dialog.ui:86
+#: src/plattenalbum.py:2271 data/shortcuts-dialog.ui:90
 msgid "Previous"
 msgstr ""
 
-#: src/plattenalbum.py:2273 data/shortcuts-dialog.ui:80
+#: src/plattenalbum.py:2273 data/shortcuts-dialog.ui:84
 msgid "Next"
 msgstr ""
 
@@ -301,7 +301,7 @@ msgstr ""
 msgid "_Repeat"
 msgstr ""
 
-#: src/plattenalbum.py:2491 data/shortcuts-dialog.ui:65
+#: src/plattenalbum.py:2491 data/shortcuts-dialog.ui:69
 msgid "Playback"
 msgstr ""
 
@@ -322,7 +322,7 @@ msgid "S_huffle"
 msgstr ""
 
 #: src/plattenalbum.py:2497 src/plattenalbum.py:2537
-#: data/shortcuts-dialog.ui:134
+#: data/shortcuts-dialog.ui:138
 msgid "Playlist"
 msgstr ""
 
@@ -444,91 +444,91 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:15
-msgid "Disconnect"
-msgstr ""
-
 #: data/shortcuts-dialog.ui:21
-msgid "Update Database"
-msgstr ""
-
-#: data/shortcuts-dialog.ui:27
-msgid "Server Information"
-msgstr ""
-
-#: data/shortcuts-dialog.ui:33
-msgid "Preferences"
-msgstr ""
-
-#: data/shortcuts-dialog.ui:39
-msgid "Shortcuts"
-msgstr ""
-
-#: data/shortcuts-dialog.ui:51
 msgid "Close"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:57
+#: data/shortcuts-dialog.ui:27
 msgid "Quit"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:68
+#: data/shortcuts-dialog.ui:37
+msgid "Disconnect"
+msgstr ""
+
+#: data/shortcuts-dialog.ui:43
+msgid "Update Database"
+msgstr ""
+
+#: data/shortcuts-dialog.ui:49
+msgid "Server Information"
+msgstr ""
+
+#: data/shortcuts-dialog.ui:55
+msgid "Preferences"
+msgstr ""
+
+#: data/shortcuts-dialog.ui:61
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+#: data/shortcuts-dialog.ui:72
 msgid "Play/Pause"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:74
+#: data/shortcuts-dialog.ui:78
 msgid "Stop"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:92
+#: data/shortcuts-dialog.ui:96
 msgid "Seek Forward"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:98
+#: data/shortcuts-dialog.ui:102
 msgid "Seek Backward"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:108
+#: data/shortcuts-dialog.ui:112
 msgid "Continuous"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:114
+#: data/shortcuts-dialog.ui:118
 msgid "Single Songs"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:120
+#: data/shortcuts-dialog.ui:124
 msgid "Pause Next Song"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:126
+#: data/shortcuts-dialog.ui:130
 msgid "Repeat"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:137
+#: data/shortcuts-dialog.ui:141
 msgid "Enqueue Album"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:143
+#: data/shortcuts-dialog.ui:147
 msgid "Tidy"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:149
+#: data/shortcuts-dialog.ui:153
 msgid "Clear"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:159
+#: data/shortcuts-dialog.ui:163
 msgid "Keep Songs"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:165
+#: data/shortcuts-dialog.ui:169
 msgid "Consume Songs"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:171
+#: data/shortcuts-dialog.ui:175
 msgid "Remove Current Song"
 msgstr ""
 
-#: data/shortcuts-dialog.ui:177
+#: data/shortcuts-dialog.ui:181
 msgid "Shuffle"
 msgstr ""
 

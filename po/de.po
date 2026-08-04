@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de.wagnermartin.Plattenalbum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-04 15:32+0200\n"
-"PO-Revision-Date: 2026-08-04 15:42+0200\n"
+"POT-Creation-Date: 2026-08-04 16:04+0200\n"
+"PO-Revision-Date: 2026-08-04 16:05+0200\n"
 "Last-Translator: Martin Wagner <martin.wagner.dev@gmail.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -210,7 +210,7 @@ msgstr "Sammlung durchsuchen"
 
 #: src/plattenalbum.py:1774 src/plattenalbum.py:1813
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:28
-#: data/shortcuts-dialog.ui:45
+#: data/shortcuts-dialog.ui:15
 msgid "Search"
 msgstr "Suchen"
 
@@ -268,11 +268,11 @@ msgstr "Liedtextansicht"
 msgid "Pause"
 msgstr "Pausieren"
 
-#: src/plattenalbum.py:2271 data/shortcuts-dialog.ui:86
+#: src/plattenalbum.py:2271 data/shortcuts-dialog.ui:90
 msgid "Previous"
 msgstr "Vorheriges"
 
-#: src/plattenalbum.py:2273 data/shortcuts-dialog.ui:80
+#: src/plattenalbum.py:2273 data/shortcuts-dialog.ui:84
 msgid "Next"
 msgstr "Nächstes"
 
@@ -305,7 +305,7 @@ msgstr "_Nächstes Lied pausieren"
 msgid "_Repeat"
 msgstr "_Wiederholen"
 
-#: src/plattenalbum.py:2491 data/shortcuts-dialog.ui:65
+#: src/plattenalbum.py:2491 data/shortcuts-dialog.ui:69
 msgid "Playback"
 msgstr "Wiedergabe"
 
@@ -326,7 +326,7 @@ msgid "S_huffle"
 msgstr "_Durchmischen"
 
 #: src/plattenalbum.py:2497 src/plattenalbum.py:2537
-#: data/shortcuts-dialog.ui:134
+#: data/shortcuts-dialog.ui:138
 msgid "Playlist"
 msgstr "Wiedergabeliste"
 
@@ -452,91 +452,91 @@ msgstr "Musik;Player;Audio;MPD;"
 msgid "General"
 msgstr "Allgemein"
 
-#: data/shortcuts-dialog.ui:15
-msgid "Disconnect"
-msgstr "Trennen"
-
 #: data/shortcuts-dialog.ui:21
-msgid "Update Database"
-msgstr "Datenbank aktualisieren"
-
-#: data/shortcuts-dialog.ui:27
-msgid "Server Information"
-msgstr "Serverinformationen"
-
-#: data/shortcuts-dialog.ui:33
-msgid "Preferences"
-msgstr "Einstellungen"
-
-#: data/shortcuts-dialog.ui:39
-msgid "Shortcuts"
-msgstr "Tastenkürzel"
-
-#: data/shortcuts-dialog.ui:51
 msgid "Close"
 msgstr "Schließen"
 
-#: data/shortcuts-dialog.ui:57
+#: data/shortcuts-dialog.ui:27
 msgid "Quit"
 msgstr "Beenden"
 
-#: data/shortcuts-dialog.ui:68
+#: data/shortcuts-dialog.ui:37
+msgid "Disconnect"
+msgstr "Trennen"
+
+#: data/shortcuts-dialog.ui:43
+msgid "Update Database"
+msgstr "Datenbank aktualisieren"
+
+#: data/shortcuts-dialog.ui:49
+msgid "Server Information"
+msgstr "Serverinformationen"
+
+#: data/shortcuts-dialog.ui:55
+msgid "Preferences"
+msgstr "Einstellungen"
+
+#: data/shortcuts-dialog.ui:61
+msgid "Keyboard Shortcuts"
+msgstr "Tastenkürzel"
+
+#: data/shortcuts-dialog.ui:72
 msgid "Play/Pause"
 msgstr "Wiedergabe/Pause"
 
-#: data/shortcuts-dialog.ui:74
+#: data/shortcuts-dialog.ui:78
 msgid "Stop"
 msgstr "Stopp"
 
-#: data/shortcuts-dialog.ui:92
+#: data/shortcuts-dialog.ui:96
 msgid "Seek Forward"
 msgstr "Vorspulen"
 
-#: data/shortcuts-dialog.ui:98
+#: data/shortcuts-dialog.ui:102
 msgid "Seek Backward"
 msgstr "Zurückspulen"
 
-#: data/shortcuts-dialog.ui:108
+#: data/shortcuts-dialog.ui:112
 msgid "Continuous"
 msgstr "Vortlaufend"
 
-#: data/shortcuts-dialog.ui:114
+#: data/shortcuts-dialog.ui:118
 msgid "Single Songs"
 msgstr "Einzelne Lieder"
 
-#: data/shortcuts-dialog.ui:120
+#: data/shortcuts-dialog.ui:124
 msgid "Pause Next Song"
 msgstr "Nächstes Lied pausieren"
 
-#: data/shortcuts-dialog.ui:126
+#: data/shortcuts-dialog.ui:130
 msgid "Repeat"
 msgstr "Wiederholen"
 
-#: data/shortcuts-dialog.ui:137
+#: data/shortcuts-dialog.ui:141
 msgid "Enqueue Album"
 msgstr "Album einreihen"
 
-#: data/shortcuts-dialog.ui:143
+#: data/shortcuts-dialog.ui:147
 msgid "Tidy"
 msgstr "Aufräumen"
 
-#: data/shortcuts-dialog.ui:149
+#: data/shortcuts-dialog.ui:153
 msgid "Clear"
 msgstr "Leeren"
 
-#: data/shortcuts-dialog.ui:159
+#: data/shortcuts-dialog.ui:163
 msgid "Keep Songs"
 msgstr "Lieder behalten"
 
-#: data/shortcuts-dialog.ui:165
+#: data/shortcuts-dialog.ui:169
 msgid "Consume Songs"
 msgstr "Lieder verbrauchen"
 
-#: data/shortcuts-dialog.ui:171
+#: data/shortcuts-dialog.ui:175
 msgid "Remove Current Song"
 msgstr "Aktuelles Lied entfernen"
 
-#: data/shortcuts-dialog.ui:177
+#: data/shortcuts-dialog.ui:181
 msgid "Shuffle"
 msgstr "Durchmischen"
 
@@ -567,6 +567,9 @@ msgstr "»_MPRIS« unterstützen"
 #: data/preferences-dialog.ui:35
 msgid "Disable if “MPRIS” is supported by another client"
 msgstr "Deaktivieren wenn »MPRIS« von einem anderen Client unterstützt wird"
+
+#~ msgid "Shortcuts"
+#~ msgstr "Tastenkürzel"
 
 #~ msgid "R_andom Mode"
 #~ msgstr "_Zufallsmodus"
