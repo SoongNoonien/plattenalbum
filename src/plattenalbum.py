@@ -146,10 +146,12 @@ class MPRISInterface:
 	def _set_loop_status(self, value):
 		self._client.repeat(int(value != "None"))
 		self._client.single(int(value == "Track"))
+		if value == "Track":
+			self._client.consume(0)
 
 	def _get_loop_status(self):
 		if self._client.get_repeat():
-			if self._client.get_single():
+			if self._client.get_single() and not self._client.get_consume():
 				return GLib.Variant("s", "Track")
 			return GLib.Variant("s", "Playlist")
 		return GLib.Variant("s", "None")
