@@ -20,9 +20,9 @@ Browse your collection while viewing large album covers. Play your music without
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/plattenalbum.svg)](https://repology.org/project/plattenalbum/versions)
 
-## Building
+## Dependencies
 
-Install the following dependencies on your system.
+The following dependencies need to be installed on the machine Plattenalbum is built or executed on. In addition to that, the same or another machine in the network needs a running MPD server. Plattenalbum is compatible with MPD >=0.24. Older versions might work as well for the most part but only the most recent stable version is tested thoroughly.
 
 ### Build Dependencies
 - meson
@@ -35,13 +35,30 @@ Install the following dependencies on your system.
 - Python3
 
 #### Python Modules
-- gi.repository (Gtk, Adw, Gio, Gdk, Pango, GObject, GLib, Graphene)
+- gi.repository
+	- Gtk
+	- Adw
+	- Gio
+	- Gdk
+	- Pango
+	- GObject
+	- GLib
+	- Graphene
 
-Execute the following commands to build and install the program.
+## Building
+
+After installing the necessary build dependencies, execute the following commands.
+
 ```bash
 git clone https://github.com/SoongNoonien/plattenalbum.git
+```
+```bash
 cd plattenalbum
+```
+```bash
 meson setup builddir --prefix=/usr/local
+```
+```bash
 sudo ninja -C builddir install
 ```
 
