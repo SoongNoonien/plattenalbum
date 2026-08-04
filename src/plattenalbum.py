@@ -451,9 +451,8 @@ class Client(GObject.Object):
 		"playlist": (GObject.SignalFlags.RUN_FIRST, None, (int,int,str,)),
 		"repeat": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"single": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"single-oneshot": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"consume": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"single": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+		"consume": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"bitrate": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"show-album": (GObject.SignalFlags.RUN_FIRST, None, (Album,)),
 		"seeked": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
@@ -902,13 +901,11 @@ class Client(GObject.Object):
 					self.emit("bitrate", bitrate)
 			if (volume:=diff.get("volume")) is not None:
 				self.emit("volume", int(volume))
-			if (state:=diff.get("state")) is not None:
-				self.emit("state", state)
-			if (single:=diff.get("single")) is not None:
-				self.emit("single", single != "0")
-				self.emit("single-oneshot", single == "oneshot")
-			for key in ("repeat", "random", "consume"):
-				if (val:=diff.get(key)):
+			for key in ("state", "single", "consume"):
+				if (val:=diff.get(key)) is not None:
+					self.emit(key, val)
+			for key in ("repeat", "random"):
+				if (val:=diff.get(key)) is not None:
 					self.emit(key, val != "0")
 			diff=set(last_status)-set(self._cached_status)
 			for key in diff:
@@ -2444,8 +2441,13 @@ class VolumeControl(Gtk.Box):
 		self._adjustment=scale.get_adjustment()
 		self._adjustment.configure(0, 0, 100, 5, 5, 0)
 
+		# event controllers
+		key_controller=Gtk.EventControllerKey()
+		scale.add_controller(key_controller)
+
 		# connect
 		scale.connect("change-value", self._on_change_value)
+		key_controller.connect("key-pressed", self._on_key_pressed)
 		self._client.connect("volume", self._refresh)
 
 		# packing
@@ -2458,6 +2460,15 @@ class VolumeControl(Gtk.Box):
 	def _refresh(self, client, volume):
 		self._adjustment.set_value(max(volume, 0))
 
+	def _on_key_pressed(self, controller, keyval, keycode, state):
+		root=controller.get_widget().get_root()
+		if keyval == Gdk.KEY_Up:
+			root.child_focus(Gtk.DirectionType.TAB_BACKWARD)
+			return True
+		elif keyval == Gdk.KEY_Down:
+			root.child_focus(Gtk.DirectionType.TAB_FORWARD)
+			return True
+
 class PlayerMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
 		super().__init__()
@@ -2469,15 +2480,20 @@ class PlayerMenu(Gtk.PopoverMenu):
 		self._volume_item.set_attribute_value("custom", GLib.Variant("s", "volume"))
 
 		# menu model
-		self._volume_section=Gio.Menu()
-		menu=Gio.Menu()
-		menu.append(_("_Repeat Mode"), "app.repeat")
-		menu.append(_("R_andom Mode"), "app.random")
-		menu.append(_("_Single Mode"), "app.single")
-		menu.append(_("_Pause After Song"), "app.single-oneshot")
-		menu.append(_("_Consume Mode"), "app.consume")
-		menu.append_section(None, self._volume_section)
-		self.set_menu_model(menu)
+		self._menu=Gio.Menu()
+		playback=Gio.Menu()
+		playback.append(_("_Continuous"), "app.single::0")
+		playback.append(_("_Single Songs"), "app.single::1")
+		playback.append(_("_Pause Next Song"), "app.single::oneshot")
+		playback.append(_("_Repeat"), "app.repeat")
+		self._menu.append_section(_("Playback"), playback)
+		playlist=Gio.Menu()
+		playlist.append(_("_Keep Songs"), "app.consume::0")
+		playlist.append(_("Consu_me Songs"), "app.consume::1")
+		playlist.append(_("Rem_ove Current Song"), "app.consume::oneshot")
+		playlist.append(_("S_huffle"), "app.random")
+		self._menu.append_section(_("Playlist"), playlist)
+		self.set_menu_model(self._menu)
 
 		# connect
 		client.connect("volume", self._on_volume_changed)
@@ -2485,16 +2501,16 @@ class PlayerMenu(Gtk.PopoverMenu):
 
 	def _on_volume_changed(self, client, volume):
 		if volume < 0 and self._volume_visible:
-			self._volume_section.remove(0)
+			self._menu.remove(0)
 			self._volume_visible=False
 		elif volume >= 0 and not self._volume_visible:
-			self._volume_section.append_item(self._volume_item)
+			self._menu.prepend_item(self._volume_item)
 			self.add_child(self._volume_control, "volume")
 			self._volume_visible=True
 
 	def _on_disconnected(self, *args):
 		if self._volume_visible:
-			self._volume_section.remove(0)
+			self._menu.remove(0)
 			self._volume_visible=False
 
 class Player(Adw.Bin):
@@ -2887,14 +2903,22 @@ class Plattenalbum(Adw.Application):
 			action=Gio.SimpleAction.new(name, None)
 			action.connect("activate", getattr(self, ("_on_"+name.replace("-","_"))))
 			self.add_action(action)
-		playback_data=("repeat","random","single","single-oneshot","consume")
-		self._enable_on_reconnect_data+=playback_data
-		self._data+=playback_data
-		for name in playback_data:
-			action=Gio.SimpleAction.new_stateful(name , None, GLib.Variant("b", False))
-			handler=action.connect("notify::state", self._on_mode_change, name)
+		bool_mode_data=("repeat","random")
+		self._enable_on_reconnect_data+=bool_mode_data
+		self._data+=bool_mode_data
+		for name in bool_mode_data:
+			action=Gio.SimpleAction.new_stateful(name, None, GLib.Variant("b", False))
+			action.connect("change-state", self._on_bool_mode_change, name)
 			self.add_action(action)
-			self._client.connect(name, self._update_action, action, handler)
+			self._client.connect(name, self._update_bool_action, action)
+		mode_data=("single","consume")
+		self._enable_on_reconnect_data+=mode_data
+		self._data+=mode_data
+		for name in mode_data:
+			action=Gio.SimpleAction.new_stateful(name, GLib.VariantType("s"), GLib.Variant("s", "0"))
+			action.connect("change-state", self._on_mode_change, name)
+			self.add_action(action)
+			self._client.connect(name, self._update_action, action)
 		self._connect_action=Gio.SimpleAction.new("connect", GLib.VariantType.new("b"))
 		self._connect_action.connect("activate", self._on_connect)
 		self.add_action(self._connect_action)
@@ -2904,8 +2928,9 @@ class Plattenalbum(Adw.Application):
 			("app.quit", ["<Ctrl>q"]),("win.close", ["<Ctrl>w"]),("win.preferences", ["<Ctrl>comma"]),("win.search", ["<Ctrl>f"]),
 			("win.server-info", ["<Ctrl>i"]),("app.disconnect", ["<Ctrl>d"]),("app.update", ["F5"]),("app.clear", ["<Shift>Delete"]),
 			("app.toggle-play", ["space"]),("app.stop", ["<Ctrl>space"]),("app.next", ["<Ctrl>k"]),("app.previous", ["<Shift><Ctrl>k"]),
-			("app.repeat", ["<Ctrl>r"]),("app.random", ["<Ctrl>n"]),("app.single", ["<Ctrl>s"]),("app.consume", ["<Ctrl>o"]),
-			("app.single-oneshot", ["<Ctrl>p"]),("app.seek-forward", ["<Ctrl>plus"]),("app.seek-backward", ["<Ctrl>minus"]),
+			("app.repeat", ["<Ctrl>r"]),("app.random", ["<Ctrl>h"]),("app.single::1", ["<Ctrl>s"]),("app.single::0", ["<Shift><Ctrl>s"]),
+			("app.single::oneshot", ["<Ctrl>p"]),("app.consume::1", ["<Ctrl>m"]),("app.consume::0", ["<Shift><Ctrl>m"]),
+			("app.consume::oneshot", ["<Ctrl>o"]),("app.seek-forward", ["<Ctrl>plus"]),("app.seek-backward", ["<Ctrl>minus"]),
 			("app.enqueue", ["<Ctrl>e"]),("app.tidy", ["<Ctrl>t"]),("menu.delete", ["Delete"])
 		)
 		for action, accels in action_accels:
@@ -2951,16 +2976,10 @@ class Plattenalbum(Adw.Application):
 	def _on_clear(self, action, param): self._client.clear()
 	def _on_update(self, action, param): self._client.update()
 
-	def _update_action(self, client, value, action, handler):
-		action.handler_block(handler)
-		action.set_state(GLib.Variant("b", value))
-		action.handler_unblock(handler)
-
-	def _on_mode_change(self, action, typestring, name):
-		if name == "single-oneshot":
-			self._client.single("oneshot" if action.get_state() else "0")
-		else:
-			getattr(self._client, name)("1" if action.get_state() else "0")
+	def _update_bool_action(self, client, value, action): action.set_state(GLib.Variant("b", value))
+	def _update_action(self, client, value, action): action.set_state(GLib.Variant("s", value))
+	def _on_bool_mode_change(self, action, value, name): getattr(self._client, name)("1" if value.unpack() else "0")
+	def _on_mode_change(self, action, value, name): getattr(self._client, name)(value.unpack())
 
 	def _on_disconnect(self, action, param):
 		self._client.close_connection()

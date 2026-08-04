@@ -103,35 +103,28 @@
 </child>
 <child>
 	<object class="AdwShortcutsSection">
-	<property name="title" translatable="yes">Playback Options</property>
 	<child>
 		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Repeat Mode</property>
+		<property name="title" translatable="yes">Continuous</property>
+		<property name="action-name">app.single::0</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Single Songs</property>
+		<property name="action-name">app.single::1</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Pause Next Song</property>
+		<property name="action-name">app.single::oneshot</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Repeat</property>
 		<property name="action-name">app.repeat</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Random Mode</property>
-		<property name="action-name">app.random</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Single Mode</property>
-		<property name="action-name">app.single</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Pause After Song</property>
-		<property name="action-name">app.single-oneshot</property>
-		</object>
-	</child>
-	<child>
-		<object class="AdwShortcutsItem">
-		<property name="title" translatable="yes">Consume Mode</property>
-		<property name="action-name">app.consume</property>
 		</object>
 	</child>
 	</object>
@@ -155,6 +148,34 @@
 		<object class="AdwShortcutsItem">
 		<property name="title" translatable="yes">Clear</property>
 		<property name="action-name">app.clear</property>
+		</object>
+	</child>
+	</object>
+</child>
+<child>
+	<object class="AdwShortcutsSection">
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Keep Songs</property>
+		<property name="action-name">app.consume::0</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Consume Songs</property>
+		<property name="action-name">app.consume::1</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Remove Current Song</property>
+		<property name="action-name">app.consume::oneshot</property>
+		</object>
+	</child>
+	<child>
+		<object class="AdwShortcutsItem">
+		<property name="title" translatable="yes">Shuffle</property>
+		<property name="action-name">app.random</property>
 		</object>
 	</child>
 	</object>
