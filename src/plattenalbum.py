@@ -2056,7 +2056,7 @@ class PlaylistView(SongList):
 		self._refresh_selection(songpos)
 		if self._autoscroll:
 			if (selected:=self.get_model().get_selected()) is not None and state == "play":
-				self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+				idle_add(self.scroll_to, selected, Gtk.ListScrollFlags.FOCUS, None)
 				adj=self.get_vadjustment()
 				value=adj.get_upper()*selected/self.get_model().get_n_items()-self.get_parent().get_height()*0.3
 				if value >= adj.get_value():
