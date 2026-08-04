@@ -118,6 +118,7 @@ class MPRISInterface:
 			self._client.connect("volume", self._on_volume_changed),
 			self._client.connect("repeat", self._on_loop_changed),
 			self._client.connect("single", self._on_loop_changed),
+			self._client.connect("consume", self._on_loop_changed),
 			self._client.connect("random", self._on_random_changed),
 			self._client.connect("seeked", self._on_seeked))
 		for handler in self._handlers:
