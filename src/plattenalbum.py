@@ -1207,7 +1207,7 @@ class SongMenu(Gtk.PopoverMenu):
 		self._show_file_action.set_enabled(self._client.can_show_file(self._song))
 		self.popup()
 
-class BrowserSongRow(Adw.ActionRow):
+class SongActionRow(Adw.ActionRow):
 	def __init__(self, song, show_track=True, hide_artist="", **kwargs):
 		super().__init__(use_markup=False, activatable=True, **kwargs)
 		self.song=song
@@ -1222,7 +1222,7 @@ class BrowserSongRow(Adw.ActionRow):
 			track=Gtk.Label(label=song["track"][0], xalign=1, single_line_mode=True, width_chars=3, css_classes=["numeric", "dimmed"])
 			self.add_prefix(track)
 
-class BrowserSongList(Gtk.ListBox):
+class SongList(Gtk.ListBox):
 	def __init__(self, client, show_album=False):
 		super().__init__(selection_mode=Gtk.SelectionMode.NONE, tab_behavior=Gtk.ListTabBehavior.ITEM, valign=Gtk.Align.START)
 		self._client=client
@@ -1363,7 +1363,7 @@ class SearchView(Gtk.Stack):
 		self._album_list.add_css_class("boxed-list")
 
 		# song list
-		self._song_list=BrowserSongList(client, show_album=True)
+		self._song_list=SongList(client, show_album=True)
 		self._song_list.add_css_class("boxed-list")
 
 		# boxes
@@ -1403,7 +1403,7 @@ class SearchView(Gtk.Stack):
 		self.clear()
 		if (keywords:=search_text.split()):
 			for song in self._client.search_songs(keywords, self._results):
-				self._song_list.append(BrowserSongRow(song, show_track=False))
+				self._song_list.append(SongActionRow(song, show_track=False))
 			self._song_box.set_visible(self._song_list.get_first_child() is not None)
 			for album in self._client.search_albums(keywords, self._results):
 				self._album_list.append(AlbumActionRow(album))
@@ -1490,7 +1490,7 @@ class ArtistList(Gtk.ListView):
 				self._refresh()
 				self.select(artist)
 
-class AlbumListRow(Gtk.Box):
+class AlbumRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
 		self._client=client
@@ -1529,7 +1529,7 @@ class AlbumsPage(Adw.NavigationPage):
 
 		# factory
 		def setup(factory, item):
-			row=AlbumListRow(self._client)
+			row=AlbumRow(self._client)
 			item.set_child(row)
 		def bind(factory, item):
 			row=item.get_child()
@@ -1594,7 +1594,7 @@ class AlbumPage(Adw.NavigationPage):
 		super().__init__()
 
 		# songs list
-		song_list=BrowserSongList(client)
+		song_list=SongList(client)
 		song_list.add_css_class("boxed-list")
 
 		# buttons
@@ -1645,7 +1645,7 @@ class AlbumPage(Adw.NavigationPage):
 		length.set_text(str(client.get_duration(album)))
 		cover.set_paintable(client.get_cover(album))
 		for song in client.get_songs(album):
-			row=BrowserSongRow(song, hide_artist=album.artist.name)
+			row=SongActionRow(song, hide_artist=album.artist.name)
 			song_list.append(row)
 
 class MainMenuButton(Gtk.MenuButton):
@@ -1844,7 +1844,7 @@ class PlaylistMenu(Gtk.PopoverMenu):
 			self._show_file_action.set_enabled(self._client.can_show_file(self._song))
 		self.popup()
 
-class SongListRow(Gtk.Box):
+class SongRow(Gtk.Box):
 	position=GObject.Property(type=int, default=-1)
 	def __init__(self, show_track=True, **kwargs):
 		# can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
@@ -1887,7 +1887,7 @@ class PlaylistView(Gtk.ListView):
 
 		# factory
 		def setup(factory, item):
-			item.set_child(SongListRow())
+			item.set_child(SongRow())
 		def bind(factory, item):
 			row=item.get_child()
 			song=item.get_item()
