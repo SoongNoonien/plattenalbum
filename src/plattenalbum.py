@@ -444,7 +444,6 @@ class Client(GObject.Object):
 		"updated-db": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"connecting": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connection-error": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"songid": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
 		"metadata": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
@@ -564,7 +563,6 @@ class Client(GObject.Object):
 		self.emit("updating-db")
 
 	def open_connection(self, manual):
-		self.emit("connecting")
 		def callback():
 			if manual:
 				socket.setdefaulttimeout(CONNECTION_TIMEOUT)
@@ -2760,7 +2758,6 @@ class MainWindow(Adw.ApplicationWindow):
 	def open(self):
 		# bring player in consistent state
 		self._client.emit("disconnected")
-		self._client.emit("connecting")
 		# set default window size
 		self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
 		self._settings.bind("width", self, "default-width", Gio.SettingsBindFlags.SET)
