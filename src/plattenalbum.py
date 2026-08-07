@@ -1477,18 +1477,6 @@ class ArtistList(Gtk.ListView):
 		factory.connect("bind", bind)
 		self.set_factory(factory)
 
-		# header factory
-		def header_setup(factory, item):
-			label=Gtk.Label(xalign=0, single_line_mode=True)
-			item.set_child(label)
-		def header_bind(factory, item):
-			label=item.get_child()
-			label.set_text(item.get_item().section_name)
-		header_factory=Gtk.SignalListItemFactory()
-		header_factory.connect("setup", header_setup)
-		header_factory.connect("bind", header_bind)
-		self.set_header_factory(header_factory)
-
 		# model
 		self.selection_model=SelectionModel(Artist)
 		self.set_model(self.selection_model)
