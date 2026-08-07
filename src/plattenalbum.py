@@ -1239,51 +1239,6 @@ class SongMenu(Gtk.PopoverMenu):
 		self._show_file_action.set_enabled(self._client.can_show_file(self._song))
 		self.popup()
 
-class SongList(Gtk.ListView):
-	def __init__(self):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM)
-		self.set_model(SelectionModel(Song))
-
-		# factory
-		def setup(factory, item):
-			item.set_child(SongListRow())
-		def bind(factory, item):
-			row=item.get_child()
-			song=item.get_item()
-			row.set_song(song)
-			row.set_property("position", item.get_position())
-		def unbind(factory, item):
-			row=item.get_child()
-			song=item.get_item()
-			row.unset_song()
-			row.set_property("position", -1)
-		factory=Gtk.SignalListItemFactory()
-		factory.connect("setup", setup)
-		factory.connect("bind", bind)
-		factory.connect("unbind", unbind)
-		self.set_factory(factory)
-
-	def _get_focus_row(self):
-		return self.get_focus_child().get_first_child()
-
-	def get_focus_popup_point(self):
-		computed_point,point=self._get_focus_row().compute_point(self, Graphene.Point.zero())
-		if computed_point:
-			return (point.x, point.y)
-		return (0, 0)
-
-	def get_focus_song(self):
-		return self.get_model().get_item(self._get_focus_row().get_property("position"))
-
-	def get_position(self, x, y):
-		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is self or item is None:
-			return None
-		return item.get_first_child().get_property("position")
-
-	def get_song(self, position):
-		return self.get_model().get_item(position)
-
 class BrowserSongRow(Adw.ActionRow):
 	def __init__(self, song, show_track=True, hide_artist="", **kwargs):
 		super().__init__(use_markup=False, activatable=True, **kwargs)
@@ -1932,6 +1887,51 @@ class PlaylistMenu(Gtk.PopoverMenu):
 			self._show_album_action.set_enabled(self._client.can_show_album(self._song))
 			self._show_file_action.set_enabled(self._client.can_show_file(self._song))
 		self.popup()
+
+class SongList(Gtk.ListView):
+	def __init__(self):
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM)
+		self.set_model(SelectionModel(Song))
+
+		# factory
+		def setup(factory, item):
+			item.set_child(SongListRow())
+		def bind(factory, item):
+			row=item.get_child()
+			song=item.get_item()
+			row.set_song(song)
+			row.set_property("position", item.get_position())
+		def unbind(factory, item):
+			row=item.get_child()
+			song=item.get_item()
+			row.unset_song()
+			row.set_property("position", -1)
+		factory=Gtk.SignalListItemFactory()
+		factory.connect("setup", setup)
+		factory.connect("bind", bind)
+		factory.connect("unbind", unbind)
+		self.set_factory(factory)
+
+	def _get_focus_row(self):
+		return self.get_focus_child().get_first_child()
+
+	def get_focus_popup_point(self):
+		computed_point,point=self._get_focus_row().compute_point(self, Graphene.Point.zero())
+		if computed_point:
+			return (point.x, point.y)
+		return (0, 0)
+
+	def get_focus_song(self):
+		return self.get_model().get_item(self._get_focus_row().get_property("position"))
+
+	def get_position(self, x, y):
+		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if item is self or item is None:
+			return None
+		return item.get_first_child().get_property("position")
+
+	def get_song(self, position):
+		return self.get_model().get_item(position)
 
 class PlaylistView(SongList):
 	def __init__(self, client):
