@@ -1,4 +1,4 @@
-![icon](/data/de.wagnermartin.Plattenalbum.svg)
+![icon](data/de.wagnermartin.Plattenalbum.svg)
 
 # Plattenalbum
 
