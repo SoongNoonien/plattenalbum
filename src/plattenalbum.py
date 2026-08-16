@@ -1696,8 +1696,6 @@ class Browser(Gtk.Stack):
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
 		break_point.add_setter(self._navigation_split_view, "collapsed", True)
-		break_point.connect("apply", lambda *args: self._navigation_split_view.add_css_class("content-pane"))
-		break_point.connect("unapply", lambda *args: self._navigation_split_view.remove_css_class("content-pane"))
 		breakpoint_bin.add_breakpoint(break_point)
 		breakpoint_bin.set_child(self._navigation_split_view)
 
