@@ -1086,8 +1086,6 @@ class HeadingBox(Gtk.Box):
 
 class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 	show_selection=GObject.Property(type=bool, default=True)
-	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
-			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, item_type):
 		super().__init__()
 		self._item_type=item_type
@@ -1103,8 +1101,6 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 		if self._selected is not None and self._selected >= self.get_n_items():
 			self._selected=None
 		self.items_changed(position, n, 0)
-		if position == 0:
-			self.emit("clear")
 
 	def append(self, data):
 		n=self.get_n_items()
@@ -1129,7 +1125,6 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 			if old_selected is not None:
 				self.selection_changed(old_selected, 1)
 			self.selection_changed(position, 1)
-		self.emit("selected", position)
 
 	def unselect(self):
 		old_selected=self._selected
@@ -1426,6 +1421,8 @@ class SearchView(Gtk.Stack):
 				root.child_focus(Gtk.DirectionType.TAB_FORWARD)
 
 class ArtistList(Gtk.ListView):
+	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (Artist,)),
+		"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, css_classes=["navigation-sidebar"])
 		self._client=client
@@ -1459,19 +1456,24 @@ class ArtistList(Gtk.ListView):
 		for i, item in enumerate(self.selection_model):
 			if item == artist:
 				self.selection_model.select(i)
+				self.scroll_to(i, Gtk.ListScrollFlags.FOCUS, None)
+				self.emit("artist-selected", artist)
 				break
-		if (selected:=self.selection_model.get_selected()) is not None:
-			self.scroll_to(selected, Gtk.ListScrollFlags.FOCUS, None)
+
+	def _clear(self):
+		self.selection_model.clear()
+		self.emit("clear")
 
 	def _refresh(self):
-		self.selection_model.clear()
+		self._clear()
 		self.selection_model.append(sorted(self._client.get_artists(), key=lambda item: locale.strxfrm(item.sortname)))
 
 	def _on_activate(self, widget, pos):
 		self.selection_model.select(pos)
+		self.emit("artist-selected", self.selection_model.get_item(pos))
 
 	def _on_disconnected(self, *args):
-		self.selection_model.clear()
+		self._clear()
 
 	def _on_connected(self, client, database_is_empty):
 		if not database_is_empty:
@@ -1481,7 +1483,7 @@ class ArtistList(Gtk.ListView):
 
 	def _on_updated_db(self, client, database_is_empty):
 		if database_is_empty:
-			self.selection_model.clear()
+			self._clear()
 		else:
 			if (selected:=self.selection_model.get_selected()) is not None:
 				artist=self.selection_model.get_item(selected)
@@ -1723,8 +1725,8 @@ class Browser(Gtk.Stack):
 
 		# connect
 		self._albums_page.connect("album-selected", self._on_album_selected)
-		self._artist_list.selection_model.connect("selected", self._on_artist_selected)
-		self._artist_list.selection_model.connect("clear", self._albums_page.clear)
+		self._artist_list.connect("artist-selected", self._on_artist_selected)
+		self._artist_list.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
 		self._search_view.connect("album-selected", lambda widget, album: self._show_album(album))
 		self.search_entry.connect("search-changed", self._on_search_changed)
@@ -1753,10 +1755,10 @@ class Browser(Gtk.Stack):
 	def _on_search_stopped(self, widget):
 		self._navigation_view.pop_to_tag("collection")
 
-	def _on_artist_selected(self, model, position):
+	def _on_artist_selected(self, widget, artist):
 		self._navigation_split_view.set_show_content(True)
 		self._album_navigation_view.replace_with_tags(["album_list"])
-		self._albums_page.display(model.get_item(position))
+		self._albums_page.display(artist)
 
 	def _on_album_selected(self, widget, album):
 		album_page=AlbumPage(self._client, album)
