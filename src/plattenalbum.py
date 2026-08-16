@@ -987,6 +987,8 @@ class PreferencesDialog(Adw.PreferencesDialog):
 class ConnectDialog(Adw.Dialog):
 	def __init__(self, settings):
 		super().__init__(title=_("Manual Connection"), width_request=360, follows_content_size=True)
+
+		# list_box
 		list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
 		list_box.add_css_class("boxed-list")
 		hostname_row=Adw.EntryRow(title=_("Host"))
@@ -999,12 +1001,19 @@ class ConnectDialog(Adw.Dialog):
 		password_row=Adw.PasswordEntryRow(title=_("Password (optional)"))
 		settings.bind("password", password_row, "text", Gio.SettingsBindFlags.DEFAULT)
 		list_box.append(password_row)
+
+		# button list box
+		button_list_box=Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+		button_list_box.add_css_class("boxed-list-separate")
 		connect_button=Adw.ButtonRow(title=_("_Connect"), use_underline=True, action_name="app.connect", action_target=GLib.Variant("b", True))
 		connect_button.add_css_class("suggested-action")
-		list_box.append(connect_button)
+		button_list_box.append(connect_button)
 
 		# packing
-		clamp=Adw.Clamp(child=list_box, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
+		box.append(list_box)
+		box.append(button_list_box)
+		clamp=Adw.Clamp(child=box, margin_start=12, margin_end=12, margin_top=24, margin_bottom=24)
 		scroll=Gtk.ScrolledWindow(child=clamp, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
 		toolbar_view=Adw.ToolbarView(content=scroll)
 		toolbar_view.add_top_bar(Adw.HeaderBar())
