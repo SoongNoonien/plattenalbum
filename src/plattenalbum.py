@@ -1419,6 +1419,7 @@ class SearchView(Gtk.Stack):
 				root.child_focus(Gtk.DirectionType.TAB_FORWARD)
 
 class ArtistList(Gtk.ListView):
+	show_selection=GObject.Property(type=bool, default=True)
 	__gsignals__={"artist-selected": (GObject.SignalFlags.RUN_FIRST, None, (Artist,)),
 		"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, client):
@@ -1441,8 +1442,9 @@ class ArtistList(Gtk.ListView):
 		self.set_factory(factory)
 
 		# model
-		self.selection_model=SelectionModel(Artist)
-		self.set_model(self.selection_model)
+		self._selection_model=SelectionModel(Artist)
+		self.set_model(self._selection_model)
+		self.bind_property("show-selection", self._selection_model, "show-selection", GObject.BindingFlags.DEFAULT)
 
 		# connect
 		self.connect("activate", self._on_activate)
@@ -1451,24 +1453,24 @@ class ArtistList(Gtk.ListView):
 		self._client.connect("updated-db", self._on_updated_db)
 
 	def select(self, artist):
-		for i, item in enumerate(self.selection_model):
+		for i, item in enumerate(self._selection_model):
 			if item == artist:
-				self.selection_model.select(i)
+				self._selection_model.select(i)
 				self.scroll_to(i, Gtk.ListScrollFlags.FOCUS, None)
 				self.emit("artist-selected", artist)
 				break
 
 	def _clear(self):
-		self.selection_model.clear()
+		self._selection_model.clear()
 		self.emit("clear")
 
 	def _refresh(self):
 		self._clear()
-		self.selection_model.append(sorted(self._client.get_artists(), key=lambda item: locale.strxfrm(item.sortname)))
+		self._selection_model.append(sorted(self._client.get_artists(), key=lambda item: locale.strxfrm(item.sortname)))
 
 	def _on_activate(self, widget, pos):
-		self.selection_model.select(pos)
-		self.emit("artist-selected", self.selection_model.get_item(pos))
+		self._selection_model.select(pos)
+		self.emit("artist-selected", self._selection_model.get_item(pos))
 
 	def _on_disconnected(self, *args):
 		self._clear()
@@ -1483,8 +1485,8 @@ class ArtistList(Gtk.ListView):
 		if database_is_empty:
 			self._clear()
 		else:
-			if (selected:=self.selection_model.get_selected()) is not None:
-				artist=self.selection_model.get_item(selected)
+			if (selected:=self._selection_model.get_selected()) is not None:
+				artist=self._selection_model.get_item(selected)
 				self._refresh()
 				self.select(artist)
 
@@ -1705,7 +1707,7 @@ class Browser(Gtk.Stack):
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
 		break_point.add_setter(self._navigation_split_view, "collapsed", True)
-		break_point.add_setter(self._artist_list.selection_model, "show-selection", False)
+		break_point.add_setter(self._artist_list, "show-selection", False)
 		breakpoint_bin.add_breakpoint(break_point)
 		breakpoint_bin.set_child(self._navigation_split_view)
 
