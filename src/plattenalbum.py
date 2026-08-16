@@ -1085,14 +1085,17 @@ class HeadingBox(Gtk.Box):
 		self.append(widget)
 
 class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
+	show_selection=GObject.Property(type=bool, default=True)
 	__gsignals__={"selected": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
-			"reselected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 			"clear": (GObject.SignalFlags.RUN_FIRST, None, ())}
 	def __init__(self, item_type):
 		super().__init__()
 		self._item_type=item_type
 		self._data=[]
 		self._selected=None
+
+		# connect
+		self.connect("notify::show-selection", self._on_show_selection)
 
 	def clear(self, position=0):
 		n=self.get_n_items()-position
@@ -1120,21 +1123,23 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 			self.items_changed(position, 0, 1)
 
 	def select(self, position):
-		if position == self._selected:
-			self.emit("reselected")
-		else:
+		if position != self._selected:
 			old_selected=self._selected
 			self._selected=position
 			if old_selected is not None:
 				self.selection_changed(old_selected, 1)
 			self.selection_changed(position, 1)
-			self.emit("selected", position)
+		self.emit("selected", position)
 
 	def unselect(self):
 		old_selected=self._selected
 		self._selected=None
 		if old_selected is not None:
 			self.selection_changed(old_selected, 1)
+
+	def _on_show_selection(self, *args):
+		if self._selected is not None:
+			self.selection_changed(self._selected, 1)
 
 	# Gio.ListModel methods
 	def do_get_item(self, position):
@@ -1155,7 +1160,7 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 	def do_unselect_item(self, position): return False
 	def do_unselect_range(self, position, n_items): return False
 	def do_get_selection_in_range(self, position, n_items): return False
-	def do_is_selected(self, position): return position == self._selected
+	def do_is_selected(self, position): return position == self._selected and self.get_property("show-selection")
 
 class SongMenu(Gtk.PopoverMenu):
 	def __init__(self, client, show_album=False):
@@ -1512,6 +1517,7 @@ class AlbumsPage(Adw.NavigationPage):
 		super().__init__(title=_("Albums"), tag="album_list")
 		self._settings=settings
 		self._client=client
+		self._artist=None
 
 		# grid view
 		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
@@ -1562,19 +1568,22 @@ class AlbumsPage(Adw.NavigationPage):
 		self._selection_model.clear()
 		self.set_title(_("Albums"))
 		self._stack.set_visible_child_name("status-page")
+		self._artist=None
 
 	def display(self, artist):
-		self._settings.set_property("cursor-watch", True)
-		self._selection_model.clear()
-		self.set_title(artist.name)
-		self._stack.set_visible_child_name("albums")
-		# ensure list is empty
-		main=GLib.main_context_default()
-		while main.pending():
-			main.iteration()
-		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist.name)])
-		self._selection_model.append(sorted(self._client.get_albums(artist), key=lambda item: item.date))
-		self._settings.set_property("cursor-watch", False)
+		if artist != self._artist:
+			self._settings.set_property("cursor-watch", True)
+			self._artist=artist
+			self._selection_model.clear()
+			self.set_title(artist.name)
+			self._stack.set_visible_child_name("albums")
+			# ensure list is empty
+			main=GLib.main_context_default()
+			while main.pending():
+				main.iteration()
+			self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist.name)])
+			self._selection_model.append(sorted(self._client.get_albums(artist), key=lambda item: item.date))
+			self._settings.set_property("cursor-watch", False)
 
 	def _on_activate(self, widget, pos):
 		self.emit("album-selected", self._selection_model.get_item(pos))
@@ -1696,6 +1705,7 @@ class Browser(Gtk.Stack):
 		break_point=Adw.Breakpoint()
 		break_point.set_condition(Adw.BreakpointCondition.parse(f"max-width: 550sp"))
 		break_point.add_setter(self._navigation_split_view, "collapsed", True)
+		break_point.add_setter(self._artist_list.selection_model, "show-selection", False)
 		breakpoint_bin.add_breakpoint(break_point)
 		breakpoint_bin.set_child(self._navigation_split_view)
 
@@ -1714,7 +1724,6 @@ class Browser(Gtk.Stack):
 		# connect
 		self._albums_page.connect("album-selected", self._on_album_selected)
 		self._artist_list.selection_model.connect("selected", self._on_artist_selected)
-		self._artist_list.selection_model.connect("reselected", self._on_artist_reselected)
 		self._artist_list.selection_model.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
 		self._search_view.connect("album-selected", lambda widget, album: self._show_album(album))
@@ -1748,10 +1757,6 @@ class Browser(Gtk.Stack):
 		self._navigation_split_view.set_show_content(True)
 		self._album_navigation_view.replace_with_tags(["album_list"])
 		self._albums_page.display(model.get_item(position))
-
-	def _on_artist_reselected(self, model):
-		self._navigation_split_view.set_show_content(True)
-		self._album_navigation_view.pop_to_tag("album_list")
 
 	def _on_album_selected(self, widget, album):
 		album_page=AlbumPage(self._client, album)
