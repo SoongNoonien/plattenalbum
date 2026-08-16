@@ -1120,11 +1120,9 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 
 	def select(self, position):
 		if position != self._selected:
-			old_selected=self._selected
+			self.unselect()
 			self._selected=position
-			if old_selected is not None:
-				self.selection_changed(old_selected, 1)
-			self.selection_changed(position, 1)
+			self.selection_changed(self._selected, 1)
 
 	def unselect(self):
 		old_selected=self._selected
