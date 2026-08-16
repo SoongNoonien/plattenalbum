@@ -567,8 +567,8 @@ class Client(GObject.Object):
 			if manual:
 				socket.setdefaulttimeout(CONNECTION_TIMEOUT)
 				password=self._settings.get_string("password")
-				if (host:=self._settings.get_string("host")).startswith("/"):
-					success=self._connect_unix(host)
+				if (host:=self._settings.get_string("host")).startswith("@"):
+					success=self._connect_unix(host[1:])
 				else:
 					success=self._connect_tcp(host, self._settings.get_int("port"))
 			else:
