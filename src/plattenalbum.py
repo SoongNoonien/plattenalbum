@@ -449,6 +449,7 @@ class Client(GObject.Object):
 		"updated-db": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"server-error": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"songid": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
 		"metadata": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -522,6 +523,9 @@ class Client(GObject.Object):
 			raise CommandError
 		line=line[:-1]
 		if line.startswith("ACK"):
+			if "you don't have permission" in line:
+				self.emit("server-error", _("No permission"))
+				return None
 			raise CommandError(line)
 		if line == "OK":
 			return None
@@ -605,6 +609,7 @@ class Client(GObject.Object):
 			# check MPD version
 			if Version(self.protocol_version) < Version(MINIMUM_MPD_VERSION):
 				self.close_connection()
+				self.emit("server-error", _("Server version older than {version}").format(version=MINIMUM_MPD_VERSION))
 				return False
 			# set password
 			if password:
@@ -612,16 +617,20 @@ class Client(GObject.Object):
 					self._run_command(f"password {password}")
 				except CommandError:
 					self.close_connection()
+					self.emit("server-error", _("Incorrect password"))
 					return False
 			# connected
-			try:
-				self._music_directory=self.config().get("music_directory")
-			except CommandError:
-				self._music_directory=None
 			self._send_command("commands")
 			commands=[command for _, command in self._parse_pairs()]
+			self._music_directory=None
+			if "config" in commands:
+				try:
+					self._music_directory=self.config().get("music_directory")
+				except CommandError:
+					pass
 			if "tagtypes" not in commands or "status" not in commands:
 				self.close_connection()
+				self.emit("server-error", _("Not enough permissions"))
 				return False
 			self._set_default_tagtypes()
 			self._settings.set_boolean("manual-connection", manual)
@@ -2659,8 +2668,6 @@ class MainWindow(Adw.ApplicationWindow):
 		# widgets
 		self._browser=Browser(self._client, self._settings)
 		player=Player(self._client, self._settings)
-		self._updating_toast=Adw.Toast(title=_("Database is being updated"), timeout=0)
-		self._updated_toast=Adw.Toast(title=_("Database updated"))
 
 		# actions
 		for name in ("close", "search", "preferences", "manual-connect", "server-info"):
@@ -2736,6 +2743,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.connect("state", self._on_state_changed)
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
+		self._client.connect("server-error", self._on_server_error)
 		self._client.connect("updating-db", self._on_updating_db)
 		self._client.connect("updated-db", self._on_updated_db)
 		self._client.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
@@ -2822,7 +2830,7 @@ class MainWindow(Adw.ApplicationWindow):
 		else:
 			self._clear_title()
 			self.lookup_action("server-info").set_enabled(False)
-			self._updating_toast.dismiss()
+			self._toast_overlay.dismiss_all()
 			if isinstance(dialog:=self.get_visible_dialog(), ServerInfo):
 				dialog.close()
 			if self._suspend_inhibit:
@@ -2830,14 +2838,20 @@ class MainWindow(Adw.ApplicationWindow):
 				self._suspend_inhibit=0
 			self._status_page_stack.set_visible_child_name("status-page")
 
+	def _on_server_error(self, client, message):
+		if (dialog:=self.get_visible_dialog()) is not None:
+			dialog.close()
+		self._toast_overlay.dismiss_all()
+		self._toast_overlay.add_toast(Adw.Toast(title=message))
+
 	def _on_updating_db(self, *args):
-		self._toast_overlay.add_toast(self._updating_toast)
+		self._toast_overlay.add_toast(Adw.Toast(title=_("Database is being updated"), timeout=0))
 
 	def _on_updated_db(self, *args):
-		self._updating_toast.dismiss()
+		self._toast_overlay.dismiss_all()
 		if isinstance(dialog:=self.get_visible_dialog(), ServerInfo):
 			dialog.close()
-		self._toast_overlay.add_toast(self._updated_toast)
+		self._toast_overlay.add_toast(Adw.Toast(title=_("Database updated")))
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
