@@ -497,13 +497,20 @@ class Client(GObject.Object):
 
 	def _connect_unix(self, socket_path):
 		self._socket=socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+		self.server=socket_path
+		if socket_path[0] == "@":
+			socket_path="\0"+socket_path[1:]
 		try:
 			self._socket.connect(socket_path)
 		except OSError:
 			return False
-		self.server=socket_path
 		self._post_connect()
 		return True
+
+	def _connect(self, host, port):
+		if host[0] == "@" or host[0] == "/":
+			return self._connect_unix(host)
+		return self._connect_tcp(host, port)
 
 	def _parse_line(self):
 		line=self._read_file.readline().decode('utf-8')
@@ -567,17 +574,13 @@ class Client(GObject.Object):
 			if manual:
 				socket.setdefaulttimeout(CONNECTION_TIMEOUT)
 				password=self._settings.get_string("password")
-				if (host:=self._settings.get_string("host")).startswith("@"):
-					success=self._connect_unix(host[1:])
-				else:
-					success=self._connect_tcp(host, self._settings.get_int("port"))
+				success=self._connect(self._settings.get_string("host"), self._settings.get_int("port"))
 			else:
 				if (timeout:=GLib.getenv("MPD_TIMEOUT")) is None:
 					socket.setdefaulttimeout(CONNECTION_TIMEOUT)
 				else:
 					socket.setdefaulttimeout(int(timeout))
 				password=""
-				socket_path=""
 				host=GLib.getenv("MPD_HOST")
 				port=GLib.getenv("MPD_PORT")
 				if host is None and port is None:
@@ -587,18 +590,11 @@ class Client(GObject.Object):
 				else:
 					if host is None:
 						host="localhost"
-					else:
-						if "@" in host:
-							if host[0] != "@":
-								password,host=host.split("@", 1)
-							if host[0] == "@":
-								socket_path=host[1:]
+					elif "@" in host and host[0] != "@":
+						password,host=host.split("@", 1)
 					if port is None:
 						port=6600
-					if socket_path:
-						success=self._connect_unix(socket_path)
-					else:
-						success=self._connect_tcp(host, port)
+					success=self._connect(host, port)
 			if not success:
 				self.emit("connection-error")
 				return False
