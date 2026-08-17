@@ -449,7 +449,6 @@ class Client(GObject.Object):
 		"updated-db": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-		"connection-error": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"songid": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
 		"metadata": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
 		"state": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -601,7 +600,7 @@ class Client(GObject.Object):
 						port=6600
 					success=self._connect(host, port)
 			if not success:
-				self.emit("connection-error")
+				self.emit("disconnected")
 				return False
 			# check MPD version
 			if Version(self.protocol_version) < Version(MINIMUM_MPD_VERSION):
@@ -640,7 +639,6 @@ class Client(GObject.Object):
 			pass
 		self._cached_status={}
 		self.emit("disconnected")
-		self.emit("connection-error")
 
 	def connected(self):
 		try:
@@ -1023,7 +1021,7 @@ class ConnectDialog(Adw.Dialog):
 		self._toast_overlay=Adw.ToastOverlay(child=toolbar_view)
 		self.set_child(self._toast_overlay)
 
-	def connection_error(self):
+	def connection_failed(self):
 		self._toast_overlay.add_toast(self._connection_toast)
 
 class CommandLabel(Gtk.Label):
@@ -2738,7 +2736,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.connect("state", self._on_state_changed)
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
-		self._client.connect("connection-error", self._on_connection_error)
 		self._client.connect("updating-db", self._on_updating_db)
 		self._client.connect("updated-db", self._on_updated_db)
 		self._client.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
@@ -2813,26 +2810,24 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_connected(self, *args):
 		if (dialog:=self.get_visible_dialog()) is not None:
 			dialog.close()
-		self._status_page_stack.set_visible_child_name("content")
 		self.lookup_action("server-info").set_enabled(True)
+		self._status_page_stack.set_visible_child_name("content")
 
 	def _on_disconnected(self, *args):
-		self._clear_title()
-		self.lookup_action("server-info").set_enabled(False)
-		self._updating_toast.dismiss()
-		if isinstance(dialog:=self.get_visible_dialog(), ServerInfo):
-			dialog.close()
-		if self._suspend_inhibit:
-			self.get_application().uninhibit(self._suspend_inhibit)
-			self._suspend_inhibit=0
-
-	def _on_connection_error(self, *args):
-		if self._status_page_stack.get_visible_child_name() == "status-page":
+		if self._status_page_stack.get_visible_child_name() == "status-page":  # already disconnected
 			if (dialog:=self.get_visible_dialog()) is None:
 				SetupDialog().present(self)
 			elif isinstance(dialog, ConnectDialog):
-				dialog.connection_error()
+				dialog.connection_failed()
 		else:
+			self._clear_title()
+			self.lookup_action("server-info").set_enabled(False)
+			self._updating_toast.dismiss()
+			if isinstance(dialog:=self.get_visible_dialog(), ServerInfo):
+				dialog.close()
+			if self._suspend_inhibit:
+				self.get_application().uninhibit(self._suspend_inhibit)
+				self._suspend_inhibit=0
 			self._status_page_stack.set_visible_child_name("status-page")
 
 	def _on_updating_db(self, *args):
