@@ -46,6 +46,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
 
 FALLBACK_COVER=Gdk.Paintable.new_empty(1, 1)
 CONNECTION_TIMEOUT=30
+MINIMUM_MPD_VERSION="0.24.0"
 
 def idle_add(*args, **kwargs):
 	GLib.idle_add(*args, priority=GLib.PRIORITY_DEFAULT, **kwargs)
@@ -320,6 +321,10 @@ class MPRISInterface:
 ##############
 # MPD client #
 ##############
+
+class Version(tuple):
+	def __new__(cls, version):
+		return super().__new__(cls, map(int, version.split(".")))
 
 class SearchFilter():
 	def __init__(self, tags, keywords):
@@ -598,13 +603,16 @@ class Client(GObject.Object):
 			if not success:
 				self.emit("connection-error")
 				return False
+			# check MPD version
+			if Version(self.protocol_version) < Version(MINIMUM_MPD_VERSION):
+				self.close_connection()
+				return False
 			# set password
 			if password:
 				try:
 					self._run_command(f"password {password}")
 				except CommandError:
 					self.close_connection()
-					self.emit("connection-error")
 					return False
 			# connected
 			try:
@@ -613,14 +621,13 @@ class Client(GObject.Object):
 				self._music_directory=None
 			self._send_command("commands")
 			commands=[command for _, command in self._parse_pairs()]
-			if "tagtypes" in commands and "status" in commands:
-				self._set_default_tagtypes()
-				self._settings.set_boolean("manual-connection", manual)
-				self.emit("connected", self._database_is_empty())
-				GLib.timeout_add(100, self._main_loop)
-			else:
+			if "tagtypes" not in commands or "status" not in commands:
 				self.close_connection()
-				self.emit("connection-error")
+				return False
+			self._set_default_tagtypes()
+			self._settings.set_boolean("manual-connection", manual)
+			self.emit("connected", self._database_is_empty())
+			GLib.timeout_add(100, self._main_loop)
 			return False
 		GLib.idle_add(callback)
 
@@ -633,6 +640,7 @@ class Client(GObject.Object):
 			pass
 		self._cached_status={}
 		self.emit("disconnected")
+		self.emit("connection-error")
 
 	def connected(self):
 		try:
@@ -917,10 +925,8 @@ class Client(GObject.Object):
 			return True
 		except (BrokenPipeError, ConnectionResetError, CommandError):  # Server offline or connection lost
 			self.close_connection()
-			self.emit("connection-error")
 			return False
 		except ValueError:  # Connection closed by user
-			self.emit("connection-error")
 			return False
 
 	def currentsong(self):
