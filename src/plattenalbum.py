@@ -2753,8 +2753,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self.set_content(self._toast_overlay)
 
 	def open(self):
-		# bring player in consistent state
-		self._client.emit("disconnected")
 		# set default window size
 		self.set_default_size(self._settings.get_int("width"), self._settings.get_int("height"))
 		self._settings.bind("width", self, "default-width", Gio.SettingsBindFlags.SET)
