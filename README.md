@@ -22,7 +22,10 @@ Browse your collection while viewing large album covers. Play your music without
 
 ## Dependencies
 
-The following dependencies need to be installed on the machine Plattenalbum is built or executed on. In addition to that, the same or another machine in the network needs a running MPD server. Plattenalbum is compatible with MPD >=0.24. Older versions might work as well for the most part but only the most recent stable version is tested thoroughly.
+The following dependencies need to be installed on the machine Plattenalbum is built or executed on.
+
+> [!IMPORTANT]
+> In addition to that, the same or another machine in the network needs a running MPD server with a version of at least 0.24.0.
 
 ### Build Dependencies
 - meson
