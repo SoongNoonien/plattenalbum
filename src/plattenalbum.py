@@ -2814,6 +2814,7 @@ class MainWindow(Adw.ApplicationWindow):
 			self._suspend_inhibit=0
 
 	def _on_connected(self, *args):
+		self._toast_overlay.dismiss_all()
 		if (dialog:=self.get_visible_dialog()) is not None:
 			dialog.close()
 		self.lookup_action("server-info").set_enabled(True)
