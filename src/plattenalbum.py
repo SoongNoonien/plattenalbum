@@ -670,11 +670,14 @@ class Client(GObject.Object):
 		self.append_song(song)
 		self.play()
 
-	def as_next_song(self, song):
+	def add_as_next_song(self, song):
 		try:
 			self.add_song(song, "+0")
 		except CommandError:
 			self.add_song(song, "0")
+
+	def move_as_next_song(self, song):
+		self._run_command(f'moveid {song["id"]} +0')
 
 	def append_album(self, album):
 		self._run_command(f"findadd {album.tag_filter()}")
@@ -1183,7 +1186,7 @@ class SongMenu(Gtk.PopoverMenu):
 		action.connect("activate", lambda *args: self._client.append_song(self._song))
 		action_group.add_action(action)
 		action=Gio.SimpleAction.new("as-next", None)
-		action.connect("activate", lambda *args: self._client.as_next_song(self._song))
+		action.connect("activate", lambda *args: self._client.add_as_next_song(self._song))
 		action_group.add_action(action)
 		if show_album:
 			action=Gio.SimpleAction.new("show-album", None)
@@ -1822,6 +1825,9 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		self._remove_action=Gio.SimpleAction.new("delete", None)
 		self._remove_action.connect("activate", lambda *args: self._client.delete_song(self._song))
 		action_group.add_action(self._remove_action)
+		self._as_next_action=Gio.SimpleAction.new("as-next", None)
+		self._as_next_action.connect("activate", lambda *args: self._client.move_as_next_song(self._song))
+		action_group.add_action(self._as_next_action)
 		self._show_album_action=Gio.SimpleAction.new("show-album", None)
 		self._show_album_action.connect("activate", lambda *args: self._client.show_album(self._song))
 		action_group.add_action(self._show_album_action)
@@ -1833,8 +1839,11 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		# menu model
 		menu=Gio.Menu()
 		menu.append(_("_Remove"), "menu.delete")
-		menu.append(_("Show Al_bum"), "menu.show-album")
-		menu.append(_("Show _File"), "menu.show-file")
+		menu.append(_("As _Next"), "menu.as-next")
+		show_section=Gio.Menu()
+		show_section.append(_("Show Al_bum"), "menu.show-album")
+		show_section.append(_("Show _File"), "menu.show-file")
+		menu.append_section(None, show_section)
 		mpd_section=Gio.Menu()
 		mpd_section.append(_("_Enqueue Album"), "app.enqueue")
 		mpd_section.append(_("_Tidy"), "app.tidy")
@@ -1842,19 +1851,21 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		menu.append_section(None, mpd_section)
 		self.set_menu_model(menu)
 
-	def open(self, song, x, y):
+	def open(self, song, songpos, x, y):
 		self._song=song
 		rect=Gdk.Rectangle()
 		rect.x,rect.y=x,y
 		self.set_pointing_to(rect)
 		if song is None:
 			self._remove_action.set_enabled(False)
+			self._as_next_action.set_enabled(False)
 			self._show_album_action.set_enabled(False)
 			self._show_file_action.set_enabled(False)
 		else:
 			self._remove_action.set_enabled(True)
-			self._show_album_action.set_enabled(self._client.can_show_album(self._song))
-			self._show_file_action.set_enabled(self._client.can_show_file(self._song))
+			self._as_next_action.set_enabled(songpos is not None and songpos != int(song["pos"]) != songpos+1)
+			self._show_album_action.set_enabled(self._client.can_show_album(song))
+			self._show_file_action.set_enabled(self._client.can_show_file(song))
 		self.popup()
 
 class SongRow(Gtk.Box):
@@ -1996,14 +2007,14 @@ class PlaylistView(Gtk.ListView):
 	def _on_button_pressed(self, controller, n_press, x, y):
 		if (position:=self._get_position(x,y)) is None:
 			if controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(None, x, y)
+				self._menu.open(None, None, x, y)
 		else:
 			if controller.get_current_button() == 1 and n_press == 1:
 				self._activate_on_release=True
 			elif controller.get_current_button() == 2 and n_press == 1:
 				self._client.delete_song(self._selection_model.get_item(position))
 			elif controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(self._selection_model.get_item(position), x, y)
+				self._menu.open(self._selection_model.get_item(position), self._selection_model.get_selected(), x, y)
 
 	def _on_button_stopped(self, controller):
 		self._activate_on_release=False
@@ -2018,7 +2029,7 @@ class PlaylistView(Gtk.ListView):
 		if (position:=self._get_position(x,y)) is None:
 			self._menu.open(None, None, x, y)
 		else:
-			self._menu.open(self._selection_model.get_item(position), x, y)
+			self._menu.open(self._selection_model.get_item(position), self._selection_model.get_selected(), x, y)
 
 	def _on_activate(self, listview, pos):
 		self._autoscroll=False
@@ -2050,9 +2061,9 @@ class PlaylistView(Gtk.ListView):
 		row=self._get_focus_row()
 		computed_point,point=row.compute_point(self, Graphene.Point.zero())
 		if computed_point:
-			self._menu.open(self._get_song(row), point.x, point.y)
+			self._menu.open(self._get_song(row), self._selection_model.get_selected(), point.x, point.y)
 		else:
-			self._menu.open(self._get_song(row), 0, 0)
+			self._menu.open(self._get_song(row), self._selection_model.get_selected(), 0, 0)
 
 	def _on_delete(self, action, state):
 		self._client.delete_song(self._get_song(self._get_focus_row()))
