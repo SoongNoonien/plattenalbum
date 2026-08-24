@@ -2983,6 +2983,8 @@ class Plattenalbum(Adw.Application):
 			if self._settings.get_boolean("send-notify") and not self._window.is_active() and state == "play":
 				notify=Gio.Notification()
 				notify.set_title(_("Next Title is Playing"))
+				if cover is not FALLBACK_COVER:
+					notify.set_icon(cover)
 				if artist:=song["artist"]:
 					body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
 				else:
