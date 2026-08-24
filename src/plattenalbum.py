@@ -2046,6 +2046,7 @@ class PlaylistView(Gtk.ListView):
 		self._playlist_version=version
 
 	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
+		self._menu.popdown()
 		self._refresh_selection(songpos)
 		if self._autoscroll:
 			if (selected:=self._selection_model.get_selected()) is not None and state == "play":
