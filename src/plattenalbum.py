@@ -2994,7 +2994,7 @@ class Plattenalbum(Adw.Application):
 		if self._settings.get_boolean("send-notify") and not self._window.is_active():
 			notify=Gio.Notification()
 			if state == "play":
-				notify.set_title(_("Next Title is Playing"))
+				notify.set_title(_("Next Song is Playing"))
 				if artist:=song["artist"]:
 					body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
 				else:

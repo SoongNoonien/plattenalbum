@@ -19,7 +19,7 @@
 		<property name="title" translatable="yes">Behavior</property>
 		<child>
 			<object class="AdwSwitchRow" id="send_notify">
-			<property name="title" translatable="yes">Send _Notification on Title Change</property>
+			<property name="title" translatable="yes">Send _Notification on Song Change</property>
 			<property name="use-underline">true</property>
 			</object>
 		</child>
