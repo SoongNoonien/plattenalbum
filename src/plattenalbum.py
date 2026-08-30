@@ -986,13 +986,11 @@ class Settings(Gio.Settings):
 class PreferencesDialog(Adw.PreferencesDialog):
 	__gtype_name__="PreferencesDialog"
 	show_bit_rate=Gtk.Template.Child()
-	send_notify=Gtk.Template.Child()
 	stop_on_quit=Gtk.Template.Child()
 	mpris=Gtk.Template.Child()
 	def __init__(self, settings):
 		super().__init__()
 		settings.bind("show-bit-rate", self.show_bit_rate, "active", Gio.SettingsBindFlags.DEFAULT)
-		settings.bind("send-notify", self.send_notify, "active", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("stop-on-quit", self.stop_on_quit, "active", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("mpris", self.mpris, "active", Gio.SettingsBindFlags.DEFAULT)
 
@@ -2991,24 +2989,19 @@ class Plattenalbum(Adw.Application):
 	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		for action in self._disable_no_song_data:
 			self.lookup_action(action).set_enabled(songpos is not None)
-		if self._settings.get_boolean("send-notify") and not self._window.is_active():
+		if not self._window.is_active() and state != "play":
 			notify=Gio.Notification()
-			if state == "play":
-				notify.set_title(_("Next Song is Playing"))
-				if artist:=song["artist"]:
-					body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
-				else:
-					body=_("Now playing “{title}”").format(title=song["title"][0])
-				notify.set_body(body)
-				notify.add_button(_("Next"), "app.next")
-			elif state == "pause":
+			notify.add_button(_("Play"), "app.toggle-play")
+			if state == "pause":
 				notify.set_title(_("Playback Paused"))
-				notify.set_body(_("The server has paused the playback"))
-				notify.add_button(_("Play"), "app.toggle-play")
+				if artist:=song["artist"]:
+					body=_("Next song: “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
+				else:
+					body=_("Next song: “{title}”").format(title=song["title"][0])
+				notify.set_body(body)
 			else:
 				notify.set_title(_("Playback Stopped"))
 				notify.set_body(_("The playlist is over"))
-				notify.add_button(_("Play"), "app.toggle-play")
 			self.send_notification("title-change", notify)
 		else:
 			self.withdraw_notification("title-change")

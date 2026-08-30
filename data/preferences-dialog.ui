@@ -18,12 +18,6 @@
 		<object class="AdwPreferencesGroup">
 		<property name="title" translatable="yes">Behavior</property>
 		<child>
-			<object class="AdwSwitchRow" id="send_notify">
-			<property name="title" translatable="yes">Send _Notification on Song Change</property>
-			<property name="use-underline">true</property>
-			</object>
-		</child>
-		<child>
 			<object class="AdwSwitchRow" id="stop_on_quit">
 			<property name="title" translatable="yes">Stop _Playback on Quit</property>
 			<property name="use-underline">true</property>

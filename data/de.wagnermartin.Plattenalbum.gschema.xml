@@ -34,10 +34,6 @@
 			<default>false</default>
 			<summary>Show bit rate</summary>
 		</key>
-		<key type="b" name="send-notify">
-			<default>false</default>
-			<summary>Send notification on title change</summary>
-		</key>
 		<key type="b" name="stop-on-quit">
 			<default>false</default>
 			<summary>Stop playback on quit</summary>
