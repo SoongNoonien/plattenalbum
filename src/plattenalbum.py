@@ -2991,27 +2991,27 @@ class Plattenalbum(Adw.Application):
 	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		for action in self._disable_no_song_data:
 			self.lookup_action(action).set_enabled(songpos is not None)
-		if song:
-			if self._settings.get_boolean("send-notify") and not self._window.is_active() and state == "play":
-				notify=Gio.Notification()
+		if self._settings.get_boolean("send-notify") and not self._window.is_active():
+			notify=Gio.Notification()
+			if state == "play":
 				notify.set_title(_("Next Title is Playing"))
 				if artist:=song["artist"]:
 					body=_("Now playing “{title}” by “{artist}”").format(title=song["title"][0], artist=str(artist))
 				else:
 					body=_("Now playing “{title}”").format(title=song["title"][0])
 				notify.set_body(body)
-				notify.add_button(_("Skip"), "app.next")
-				self.send_notification("title-change", notify)
+				notify.add_button(_("Next"), "app.next")
+			elif state == "pause":
+				notify.set_title(_("Playback Paused"))
+				notify.set_body(_("The server has paused the playback"))
+				notify.add_button(_("Play"), "app.toggle-play")
 			else:
-				self.withdraw_notification("title-change")
-		else:
-			if self._settings.get_boolean("send-notify") and not self._window.is_active():
-				notify=Gio.Notification()
-				notify.set_title(_("Playback Finished"))
+				notify.set_title(_("Playback Stopped"))
 				notify.set_body(_("The playlist is over"))
-				self.send_notification("title-change", notify)
-			else:
-				self.withdraw_notification("title-change")
+				notify.add_button(_("Play"), "app.toggle-play")
+			self.send_notification("title-change", notify)
+		else:
+			self.withdraw_notification("title-change")
 
 	def _on_playlist_changed(self, client, version, length, songpos):
 		for action in self._enable_disable_on_playlist_data:
