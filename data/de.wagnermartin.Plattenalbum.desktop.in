@@ -12,3 +12,4 @@ Keywords=music;player;audio;MPD;
 StartupNotify=true
 SingleMainWindow=true
 X-Purism-FormFactor=Workstation;Mobile;
+X-GNOME-UsesNotifications=true
