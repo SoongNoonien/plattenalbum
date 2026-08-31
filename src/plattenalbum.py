@@ -2985,6 +2985,8 @@ class Plattenalbum(Adw.Application):
 	def _on_state_changed(self, client, state):
 		for action in self._disable_on_stop_data:
 			self.lookup_action(action).set_enabled(state != "stop")
+		if state == "play":
+			self.withdraw_notification("title-change")
 
 	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		for action in self._disable_no_song_data:
