@@ -2667,7 +2667,6 @@ class MainWindow(Adw.ApplicationWindow):
 		super().__init__(title="Plattenalbum", height_request=294, width_request=360, **kwargs)
 		self._client=client
 		self._settings=settings
-		self._suspend_inhibit=0
 
 		# MPRIS
 		MPRISInterface(self, self._client, self._settings)
@@ -2747,7 +2746,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.connect("songid", self._on_songid_or_metadata_changed)
 		self._client.connect("metadata", self._on_songid_or_metadata_changed)
-		self._client.connect("state", self._on_state_changed)
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("server-error", self._on_server_error)
@@ -2813,13 +2811,6 @@ class MainWindow(Adw.ApplicationWindow):
 	def _on_songid_or_metadata_changed(self, client, song, *args):
 		self._update_title(song)
 
-	def _on_state_changed(self, client, state):
-		if state == "play":
-			self._suspend_inhibit=self.get_application().inhibit(self, Gtk.ApplicationInhibitFlags.SUSPEND, _("Playing music"))
-		elif self._suspend_inhibit:
-			self.get_application().uninhibit(self._suspend_inhibit)
-			self._suspend_inhibit=0
-
 	def _on_connected(self, *args):
 		self._toast_overlay.dismiss_all()
 		if (dialog:=self.get_visible_dialog()) is not None:
@@ -2839,9 +2830,6 @@ class MainWindow(Adw.ApplicationWindow):
 			self._toast_overlay.dismiss_all()
 			if isinstance(dialog:=self.get_visible_dialog(), ServerInfo):
 				dialog.close()
-			if self._suspend_inhibit:
-				self.get_application().uninhibit(self._suspend_inhibit)
-				self._suspend_inhibit=0
 			self._status_page_stack.set_visible_child_name("status-page")
 
 	def _on_server_error(self, client, message):
@@ -2878,6 +2866,7 @@ class Plattenalbum(Adw.Application):
 		super().__init__(application_id="de.wagnermartin.Plattenalbum")
 		self._settings=Settings()
 		self._client=Client(self._settings)
+		self._suspend_inhibit=0
 		self._window=None
 
 		# actions
@@ -2987,6 +2976,10 @@ class Plattenalbum(Adw.Application):
 			self.lookup_action(action).set_enabled(state != "stop")
 		if state == "play":
 			self.withdraw_notification("title-change")
+			self._suspend_inhibit=self.inhibit(self._window, Gtk.ApplicationInhibitFlags.SUSPEND, _("Playing music"))
+		elif self._suspend_inhibit:
+			self.uninhibit(self._suspend_inhibit)
+			self._suspend_inhibit=0
 
 	def _on_songid_changed(self, client, song, cover, cover_path, songpos, songid, state):
 		for action in self._disable_no_song_data:
@@ -3016,6 +3009,9 @@ class Plattenalbum(Adw.Application):
 		self._connect_action.set_enabled(True)
 		for action in self._data:
 			self.lookup_action(action).set_enabled(False)
+		if self._suspend_inhibit:
+			self.uninhibit(self._suspend_inhibit)
+			self._suspend_inhibit=0
 
 	def _on_connected(self, *args):
 		self._connect_action.set_enabled(False)
