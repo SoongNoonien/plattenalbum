@@ -8,7 +8,7 @@
 
 A client for the Music Player Daemon (MPD).
 
-Browse your collection while viewing large album covers. Play your music without managing playlists.</p>
+Browse your collection while viewing large album covers. Play your music without managing playlists.
 
 ## Installation
 
