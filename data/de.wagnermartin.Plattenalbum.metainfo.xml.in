@@ -41,6 +41,17 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.7.0" date="2026-09-10">
+      <description translate="no">
+        <ul>
+          <li>Messages for MPD errors</li>
+          <li>Added "as next" item to playlist menu</li>
+          <li>Reworked desktop notifications</li>
+          <li>New symbolic icon</li>
+          <li>Fixed socket connection</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.6.0" date="2026-08-07">
       <description translate="no">
         <ul>
@@ -72,87 +83,6 @@
           <li>Reduced flatpak permissions</li>
           <li>Empty state for artists</li>
           <li>Croatian translation</li>
-        </ul>
-      </description>
-    </release>
-    <release version="2.4.0" date="2025-11-16">
-      <description translate="no">
-        <ul>
-          <li>GUI polish</li>
-          <li>New shortcuts dialog</li>
-          <li>Minor bug fixes and translation updates</li>
-          <li>Romanian translation</li>
-        </ul>
-      </description>
-    </release>
-    <release version="2.3.1" date="2025-06-29">
-      <description translate="no">
-        <ul>
-          <li>Minor bug fixes</li>
-          <li>Updated Dutch, Persian, German, Polish, Thai, French and Brazilian Portuguese translations</li>
-        </ul>
-      </description>
-    </release>
-    <release version="2.3.0" date="2025-05-04">
-      <description translate="no">
-        <ul>
-          <li>Reworked player pane</li>
-          <li>Simplified connect workflow</li>
-          <li>Improved drag and drop feedback</li>
-          <li>Inhibit suspend on playback</li>
-          <li>Reduced minimum window size</li>
-          <li>Updated Persian and German translations</li>
-        </ul>
-      </description>
-    </release>
-    <release version="2.2.2" date="2025-02-08">
-      <description translate="no">
-        <ul>
-          <li>Rounded cover corners</li>
-          <li>New cover fallback</li>
-          <li>Notification when playlist is over</li>
-          <li>Persian and Thai translations</li>
-        </ul>
-      </description>
-    </release>
-    <release version="2.2.1" date="2024-10-12">
-      <description translate="no">
-        <p>Minor fixes and translation updates</p>
-      </description>
-    </release>
-    <release version="2.2.0" date="2024-09-18">
-      <description translate="no">
-        <p>Reworked UI and improved adaptiveness.</p>
-      </description>
-    </release>
-    <release version="2.1.1" date="2024-06-16">
-      <description translate="no">
-        <p>Improved autoscrolling in the playlist and added Hindi and Russian translations.</p>
-      </description>
-    </release>
-    <release version="2.1.0" date="2024-05-02">
-      <description translate="no">
-        <p>Updated to libadwaita 1.5</p>
-        <ul>
-          <li>Reworked settings</li>
-          <li>Reworked notifications</li>
-          <li>New initial status page</li>
-          <li>Bugfixes and translation updates</li>
-        </ul>
-      </description>
-    </release>
-    <release version="2.0.1" date="2024-03-08">
-      <description translate="no">
-        <p>Increased flatpak support to only require a minimum set of non-standard privileges.</p>
-      </description>
-    </release>
-    <release version="2.0.0" date="2024-03-07">
-      <description translate="no">
-        <p>First release using GTK4 and libadwaita</p>
-        <ul>
-          <li>Added automatic cover sizing</li>
-          <li>Greatly improved search</li>
-          <li>Removed mini-player</li>
         </ul>
       </description>
     </release>

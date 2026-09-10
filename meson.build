@@ -1,4 +1,4 @@
-project('plattenalbum', version: '2.6.0')
+project('plattenalbum', version: '2.7.0')
 
 python = import('python')
 i18n = import('i18n')
