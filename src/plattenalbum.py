@@ -1634,10 +1634,10 @@ class AlbumsPage(Adw.NavigationPage):
 			self._settings.set_property("cursor-watch", False)
 
 	def _get_album(self, x, y):
-		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is self or item is None:
+		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if widget is self or widget is None:
 			return None
-		row=item.get_ancestor(AlbumRow)
+		row=widget.get_ancestor(AlbumRow)
 		if row is None:
 			return None
 		return row.album
@@ -2014,10 +2014,10 @@ class PlaylistView(Gtk.ListView):
 		return self.get_focus_child().get_first_child()
 
 	def _get_row(self, x, y):
-		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is self or item is None:
+		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if widget is self or widget is None:
 			return None
-		row=item.get_ancestor(SongRow)
+		row=widget.get_ancestor(SongRow)
 		if row is None:
 			return None
 		return row
