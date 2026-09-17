@@ -1594,7 +1594,7 @@ class AlbumsPage(Adw.NavigationPage):
 			while main.pending():
 				main.iteration()
 			self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist.name)])
-			self._selection_model.append(sorted(self._client.get_albums(artist), key=lambda item: item.date))
+			self._selection_model.append(self._client.get_albums(artist))
 			self._settings.set_property("cursor-watch", False)
 
 	def _on_activate(self, widget, pos):
