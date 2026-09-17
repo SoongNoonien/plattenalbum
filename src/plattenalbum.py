@@ -1888,10 +1888,10 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		self.popup()
 
 class SongRow(Gtk.Box):
-	position=GObject.Property(type=int, default=-1)
 	def __init__(self, show_track=True, **kwargs):
 		# can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
 		super().__init__(can_target=False, **kwargs)
+		self.song=None
 
 		# labels
 		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
@@ -1906,16 +1906,12 @@ class SongRow(Gtk.Box):
 		self.append(self._length)
 
 	def set_song(self, song):
+		self.song=song
 		subtitle=str(song["artist"])
 		self._title.set_text(song["title"][0])
 		self._subtitle.set_visible(bool(subtitle))
 		self._subtitle.set_text(subtitle)
 		self._length.set_text(str(song["duration"]))
-
-	def unset_song(self):
-		self._title.set_text("")
-		self._subtitle.set_text("")
-		self._length.set_text("")
 
 class PlaylistView(Gtk.ListView):
 	def __init__(self, client):
@@ -1935,16 +1931,9 @@ class PlaylistView(Gtk.ListView):
 			row=item.get_child()
 			song=item.get_item()
 			row.set_song(song)
-			row.set_property("position", item.get_position())
-		def unbind(factory, item):
-			row=item.get_child()
-			song=item.get_item()
-			row.unset_song()
-			row.set_property("position", -1)
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
-		factory.connect("unbind", unbind)
 		self.set_factory(factory)
 
 		# model
@@ -2003,14 +1992,11 @@ class PlaylistView(Gtk.ListView):
 	def _get_focus_row(self):
 		return self.get_focus_child().get_first_child()
 
-	def _get_position(self, x, y):
+	def _get_song(self, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if item is self or item is None:
 			return None
-		return item.get_first_child().get_property("position")
-
-	def _get_song(self, row):
-		return self._selection_model.get_item(row.get_property("position"))
+		return item.get_first_child().song
 
 	def _clear(self, *args):
 		self._menu.popdown()
@@ -2024,31 +2010,31 @@ class PlaylistView(Gtk.ListView):
 			self._selection_model.select(int(song))
 
 	def _on_button_pressed(self, controller, n_press, x, y):
-		if (position:=self._get_position(x,y)) is None:
+		if (song:=self._get_song(x,y)) is None:
 			if controller.get_current_button() == 3 and n_press == 1:
 				self._menu.open(None, None, x, y)
 		else:
 			if controller.get_current_button() == 1 and n_press == 1:
 				self._activate_on_release=True
 			elif controller.get_current_button() == 2 and n_press == 1:
-				self._client.delete_song(self._selection_model.get_item(position))
+				self._client.delete_song(song)
 			elif controller.get_current_button() == 3 and n_press == 1:
-				self._menu.open(self._selection_model.get_item(position), self._selection_model.get_selected(), x, y)
+				self._menu.open(song, self._selection_model.get_selected(), x, y)
 
 	def _on_button_stopped(self, controller):
 		self._activate_on_release=False
 
 	def _on_button_released(self, controller, n_press, x, y):
-		if self._activate_on_release and (position:=self._get_position(x,y)) is not None:
+		if self._activate_on_release and (song:=self._get_song(x,y)) is not None:
 			self._autoscroll=False
-			self._client.play(position)
+			self._client.play(song["pos"])
 		self._activate_on_release=False
 
 	def _on_long_pressed(self, controller, x, y):
-		if (position:=self._get_position(x,y)) is None:
+		if (song:=self._get_song(x,y)) is None:
 			self._menu.open(None, None, x, y)
 		else:
-			self._menu.open(self._selection_model.get_item(position), self._selection_model.get_selected(), x, y)
+			self._menu.open(song, self._selection_model.get_selected(), x, y)
 
 	def _on_activate(self, listview, pos):
 		self._autoscroll=False
@@ -2081,16 +2067,16 @@ class PlaylistView(Gtk.ListView):
 		row=self._get_focus_row()
 		computed_point,point=row.compute_point(self, Graphene.Point.zero())
 		if computed_point:
-			self._menu.open(self._get_song(row), self._selection_model.get_selected(), point.x, point.y)
+			self._menu.open(row.song, self._selection_model.get_selected(), point.x, point.y)
 		else:
-			self._menu.open(self._get_song(row), self._selection_model.get_selected(), 0, 0)
+			self._menu.open(row.song, self._selection_model.get_selected(), 0, 0)
 
 	def _on_delete(self, action, state):
-		self._client.delete_song(self._get_song(self._get_focus_row()))
+		self._client.delete_song(self._get_focus_row().song)
 
 	def _on_drag_prepare(self, drag_source, x, y):
-		if (position:=self._get_position(x,y)) is not None:
-			return Gdk.ContentProvider.new_for_value(position)
+		if (song:=self._get_song(x,y)) is not None:
+			return Gdk.ContentProvider.new_for_value(int(song["pos"]))
 
 	def _on_drop(self, drop_target, value, x, y):
 		self._remove_highlight()
@@ -2099,7 +2085,7 @@ class PlaylistView(Gtk.ListView):
 			if item is self:
 				position=self._selection_model.get_n_items()-1
 			else:
-				position=item.get_first_child().get_property("position")
+				position=int(item.get_first_child().song["pos"])
 			if value != position:
 				self._client.move(value, position)
 				return True
@@ -2107,7 +2093,7 @@ class PlaylistView(Gtk.ListView):
 			if item is self:
 				position=self._selection_model.get_n_items()
 			else:
-				position=item.get_first_child().get_property("position")
+				position=item.get_first_child().song["pos"]
 			self._client.add_song(value, position)
 			return True
 		return False
