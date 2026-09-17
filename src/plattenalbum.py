@@ -2110,28 +2110,20 @@ class PlaylistView(Gtk.ListView):
 
 	def _on_drop(self, drop_target, value, x, y):
 		self._remove_highlight()
-		song=self._get_song(x,y)
-		if isinstance(value, int):
-			if song is None:
-				position=self._selection_model.get_n_items()-1
-			else:
-				position=int(song["pos"])
-			if value != position:
-				self._client.move(value, position)
-				return True
-		elif isinstance(value, Song):
-			if song is None:
+		match value, self._get_song(x,y):
+			case int(), None:
+				self._client.move(value, self._selection_model.get_n_items()-1)
+			case int(), song:
+				self._client.move(value, song["pos"])
+			case Song(), None:
 				self._client.append_song(value)
-			else:
+			case Song(), song:
 				self._client.add_song(value, song["pos"])
-			return True
-		elif isinstance(value, Album):
-			if song is None:
+			case Album(), None:
 				self._client.append_album(value)
-			else:
+			case Album(), song:
 				self._client.add_album(value, song["pos"])
-			return True
-		return False
+		return True
 
 	def _remove_highlight(self):
 		if self._highlighted_widget is not None:
@@ -2179,11 +2171,9 @@ class PlaylistWindow(Gtk.Stack):
 	def _on_drop(self, drop_target, value, x, y):
 		if isinstance(value, Song):
 			self._client.append_song(value)
-			return True
 		elif isinstance(value, Album):
 			self._client.append_album(value)
-			return True
-		return False
+		return True
 
 	def _on_playlist_changed(self, client, version, length, songpos):
 		if length:
