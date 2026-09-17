@@ -1527,7 +1527,7 @@ class AlbumRow(Gtk.Box):
 		overlay.set_child(self._cover)
 		overlay.add_overlay(button_box)
 
-		# controller
+		# event controller
 		controller_motion=Gtk.EventControllerMotion()
 		controller_motion.bind_property("contains-pointer", button_box, "visible", GObject.BindingFlags.DEFAULT)
 		self.add_controller(controller_motion)
