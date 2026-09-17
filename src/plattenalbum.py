@@ -2164,7 +2164,7 @@ class PlaylistWindow(Gtk.Stack):
 		# event controller
 		drop_target=Gtk.DropTarget()
 		drop_target.set_actions(Gdk.DragAction.COPY)
-		drop_target.set_gtypes((Song,))
+		drop_target.set_gtypes((Song,Album))
 		status_page.add_controller(drop_target)
 
 		# connect
@@ -2179,6 +2179,9 @@ class PlaylistWindow(Gtk.Stack):
 	def _on_drop(self, drop_target, value, x, y):
 		if isinstance(value, Song):
 			self._client.append_song(value)
+			return True
+		elif isinstance(value, Album):
+			self._client.append_album(value)
 			return True
 		return False
 
