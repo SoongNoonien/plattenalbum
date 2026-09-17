@@ -1910,9 +1910,8 @@ class PlaylistMenu(Gtk.PopoverMenu):
 		self.popup()
 
 class SongRow(Gtk.Box):
-	def __init__(self, show_track=True, **kwargs):
-		# can_target=False is needed to use Gtk.Widget.pick() in Gtk.ListView
-		super().__init__(can_target=False, **kwargs)
+	def __init__(self):
+		super().__init__()
 		self.song=None
 
 		# labels
@@ -2014,11 +2013,20 @@ class PlaylistView(Gtk.ListView):
 	def _get_focus_row(self):
 		return self.get_focus_child().get_first_child()
 
-	def _get_song(self, x, y):
+	def _get_row(self, x, y):
 		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if item is self or item is None:
 			return None
-		return item.get_first_child().song
+		row=item.get_ancestor(SongRow)
+		if row is None:
+			return None
+		return row
+
+	def _get_song(self, x, y):
+		row=self._get_row(x,y)
+		if row is None:
+			return None
+		return row.song
 
 	def _clear(self, *args):
 		self._menu.popdown()
@@ -2102,27 +2110,26 @@ class PlaylistView(Gtk.ListView):
 
 	def _on_drop(self, drop_target, value, x, y):
 		self._remove_highlight()
-		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		song=self._get_song(x,y)
 		if isinstance(value, int):
-			if item is self:
+			if song is None:
 				position=self._selection_model.get_n_items()-1
 			else:
-				position=int(item.get_first_child().song["pos"])
+				position=int(song["pos"])
 			if value != position:
 				self._client.move(value, position)
 				return True
 		elif isinstance(value, Song):
-			if item is self:
-				position=self._selection_model.get_n_items()
+			if song is None:
+				self._client.append_song(value)
 			else:
-				position=item.get_first_child().song["pos"]
-			self._client.add_song(value, position)
+				self._client.add_song(value, song["pos"])
 			return True
 		elif isinstance(value, Album):
-			if item is self:
+			if song is None:
 				self._client.append_album(value)
 			else:
-				self._client.add_album(value, item.get_first_child().song["pos"])
+				self._client.add_album(value, song["pos"])
 			return True
 		return False
 
@@ -2133,10 +2140,9 @@ class PlaylistView(Gtk.ListView):
 
 	def _on_drop_motion(self, drop_motion, x, y):
 		self._remove_highlight()
-		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if item is not self:
-			item.add_css_class("drop-row")
-			self._highlighted_widget=item
+		if (row:=self._get_row(x,y)) is not None:
+			self._highlighted_widget=row.get_parent()
+			self._highlighted_widget.add_css_class("drop-row")
 
 	def _on_drop_leave(self, drop_target):
 		self._remove_highlight()
