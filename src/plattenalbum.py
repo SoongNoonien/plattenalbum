@@ -1936,10 +1936,9 @@ class SongRow(Gtk.Box):
 
 class PlaylistView(Gtk.ListView):
 	def __init__(self, client):
-		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM)
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True)
 		self._client=client
 		self._playlist_version=None
-		self._activate_on_release=False
 		self._autoscroll=True
 		self._highlighted_widget=None
 		self.add_css_class("playlist")
@@ -1999,8 +1998,6 @@ class PlaylistView(Gtk.ListView):
 		# connect
 		self.connect("activate", self._on_activate)
 		button_controller.connect("pressed", self._on_button_pressed)
-		button_controller.connect("stopped", self._on_button_stopped)
-		button_controller.connect("released", self._on_button_released)
 		long_press_controller.connect("pressed", self._on_long_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
 		drop_target.connect("drop", self._on_drop)
@@ -2044,21 +2041,10 @@ class PlaylistView(Gtk.ListView):
 			if controller.get_current_button() == 3 and n_press == 1:
 				self._menu.open(None, None, x, y)
 		else:
-			if controller.get_current_button() == 1 and n_press == 1:
-				self._activate_on_release=True
-			elif controller.get_current_button() == 2 and n_press == 1:
+			if controller.get_current_button() == 2 and n_press == 1:
 				self._client.delete_song(song)
 			elif controller.get_current_button() == 3 and n_press == 1:
 				self._menu.open(song, self._selection_model.get_selected(), x, y)
-
-	def _on_button_stopped(self, controller):
-		self._activate_on_release=False
-
-	def _on_button_released(self, controller, n_press, x, y):
-		if self._activate_on_release and (song:=self._get_song(x,y)) is not None:
-			self._autoscroll=False
-			self._client.play(song["pos"])
-		self._activate_on_release=False
 
 	def _on_long_pressed(self, controller, x, y):
 		if (song:=self._get_song(x,y)) is None:
