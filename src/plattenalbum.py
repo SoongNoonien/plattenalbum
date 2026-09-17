@@ -679,6 +679,9 @@ class Client(GObject.Object):
 	def move_as_next_song(self, song):
 		self._run_command(f'moveid {song["id"]} +0')
 
+	def add_album(self, album, position):
+		self._run_command(f"findadd {album.tag_filter()} position {position}")
+
 	def append_album(self, album):
 		self._run_command(f"findadd {album.tag_filter()}")
 
@@ -1504,7 +1507,7 @@ class AlbumRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
 		self._client=client
-		self._album=None
+		self.album=None
 
 		# widgets
 		self._cover=AlbumCover()
@@ -1513,9 +1516,9 @@ class AlbumRow(Gtk.Box):
 
 		# buttons
 		play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"), css_classes=["circular", "osd"])
-		play_button.connect("clicked", lambda *args: client.play_album(self._album))
+		play_button.connect("clicked", lambda *args: client.play_album(self.album))
 		append_button=Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Append"), css_classes=["circular", "osd"])
-		append_button.connect("clicked", lambda *args: client.append_album(self._album))
+		append_button.connect("clicked", lambda *args: client.append_album(self.album))
 
 		# button box
 		button_box=Gtk.Box(halign=Gtk.Align.END, valign=Gtk.Align.START, spacing=6, margin_end=9, margin_top=9, visible=False)
@@ -1538,7 +1541,7 @@ class AlbumRow(Gtk.Box):
 		self.append(self._date)
 
 	def set_album(self, album):
-		self._album=album
+		self.album=album
 		if album.name:
 			self._title.set_text(album.name)
 			self._cover.set_alternative_text(_("Album cover of {album}").format(album=album.name))
@@ -1594,8 +1597,14 @@ class AlbumsPage(Adw.NavigationPage):
 		self._stack.add_named(breakpoint_bin, "albums")
 		self._stack.add_named(status_page, "status-page")
 
+		# event controller
+		drag_source=Gtk.DragSource()
+		drag_source.set_icon(lookup_icon("media-optical", 32, self.get_scale_factor()), 0, 0)
+		self.add_controller(drag_source)
+
 		# connect
 		self.grid_view.connect("activate", self._on_activate)
+		drag_source.connect("prepare", self._on_drag_prepare)
 		self._client.connect("disconnected", self._on_disconnected)
 
 		# packing
@@ -1624,8 +1633,21 @@ class AlbumsPage(Adw.NavigationPage):
 			self._selection_model.append(self._client.get_albums(artist))
 			self._settings.set_property("cursor-watch", False)
 
+	def _get_album(self, x, y):
+		item=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if item is self or item is None:
+			return None
+		row=item.get_ancestor(AlbumRow)
+		if row is None:
+			return None
+		return row.album
+
 	def _on_activate(self, widget, pos):
 		self.emit("album-selected", self._selection_model.get_item(pos))
+
+	def _on_drag_prepare(self, drag_source, x, y):
+		if (album:=self._get_album(x, y)) is not None:
+			return Gdk.ContentProvider.new_for_value(album)
 
 	def _on_disconnected(self, *args):
 		self._stack.set_visible_child_name("albums")
@@ -1970,7 +1992,7 @@ class PlaylistView(Gtk.ListView):
 		self.add_controller(drag_source)
 		drop_target=Gtk.DropTarget()
 		drop_target.set_actions(Gdk.DragAction.COPY|Gdk.DragAction.MOVE)
-		drop_target.set_gtypes((int,Song,))
+		drop_target.set_gtypes((int,Song,Album))
 		self.add_controller(drop_target)
 		drop_motion=Gtk.DropControllerMotion()
 		self.add_controller(drop_motion)
@@ -2095,6 +2117,12 @@ class PlaylistView(Gtk.ListView):
 			else:
 				position=item.get_first_child().song["pos"]
 			self._client.add_song(value, position)
+			return True
+		elif isinstance(value, Album):
+			if item is self:
+				self._client.append_album(value)
+			else:
+				self._client.add_album(value, item.get_first_child().song["pos"])
 			return True
 		return False
 
