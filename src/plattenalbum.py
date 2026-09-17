@@ -1504,14 +1504,41 @@ class AlbumRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
 		self._client=client
+		self._album=None
+
+		# widgets
 		self._cover=AlbumCover()
 		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, margin_top=3)
 		self._date=Gtk.Label(single_line_mode=True, css_classes=["dimmed", "caption"])
-		self.append(self._cover)
+
+		# buttons
+		play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"), css_classes=["circular", "osd"])
+		play_button.connect("clicked", lambda *args: client.play_album(self._album))
+		append_button=Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Append"), css_classes=["circular", "osd"])
+		append_button.connect("clicked", lambda *args: client.append_album(self._album))
+
+		# button box
+		button_box=Gtk.Box(halign=Gtk.Align.END, valign=Gtk.Align.START, spacing=6, margin_end=9, margin_top=9, visible=False)
+		button_box.append(append_button)
+		button_box.append(play_button)
+
+		# overlay
+		overlay=Gtk.Overlay()
+		overlay.set_child(self._cover)
+		overlay.add_overlay(button_box)
+
+		# controller
+		controller_motion=Gtk.EventControllerMotion()
+		controller_motion.bind_property("contains-pointer", button_box, "visible", GObject.BindingFlags.DEFAULT)
+		self.add_controller(controller_motion)
+
+		# packing
+		self.append(overlay)
 		self.append(self._title)
 		self.append(self._date)
 
 	def set_album(self, album):
+		self._album=album
 		if album.name:
 			self._title.set_text(album.name)
 			self._cover.set_alternative_text(_("Album cover of {album}").format(album=album.name))
