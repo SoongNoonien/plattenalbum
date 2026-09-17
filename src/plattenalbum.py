@@ -437,6 +437,8 @@ class Artist(GObject.Object):
 		self.sortname=sortname
 
 	def __eq__(self, other):
+		if not isinstance(other, Artist):
+			return NotImplemented
 		return (self.name == other.name) and (self.sortname == other.sortname)
 
 	def tag_filter(self):
@@ -1619,19 +1621,20 @@ class AlbumsPage(Adw.NavigationPage):
 		self._artist=None
 
 	def display(self, artist):
-		if artist != self._artist:
-			self._settings.set_property("cursor-watch", True)
-			self._artist=artist
-			self._selection_model.clear()
-			self.set_title(artist.name)
-			self._stack.set_visible_child_name("albums")
-			# ensure list is empty
-			main=GLib.main_context_default()
-			while main.pending():
-				main.iteration()
-			self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist.name)])
-			self._selection_model.append(self._client.get_albums(artist))
-			self._settings.set_property("cursor-watch", False)
+		if artist == self._artist:
+			return
+		self._settings.set_property("cursor-watch", True)
+		self._artist=artist
+		self._selection_model.clear()
+		self.set_title(artist.name)
+		self._stack.set_visible_child_name("albums")
+		# ensure list is empty
+		main=GLib.main_context_default()
+		while main.pending():
+			main.iteration()
+		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist.name)])
+		self._selection_model.append(self._client.get_albums(artist))
+		self._settings.set_property("cursor-watch", False)
 
 	def _get_album(self, x, y):
 		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
