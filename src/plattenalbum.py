@@ -689,23 +689,17 @@ class Client(GObject.Object):
 
 	def enqueue(self):
 		song=self.currentsong()
-		songid=self.get_songid()
-		self._run_command(f'moveid {songid} 0')
-		if self.get_playlistlength() > 1:
-			self._run_command("delete 1:")
+		self.tidy_playlist()
 		self.append_album(song.get_album())
 		self._send_command(f"playlistfind file {song.get_quoted_file()}")
 		if duplicate:=self._parse_song():
-			self._run_command(f'swapid {songid} {duplicate["id"]}')
+			self._run_command(f'swapid {song["id"]} {duplicate["id"]}')
 			self._run_command(f'deleteid {duplicate["id"]}')
 
 	def tidy_playlist(self):
-		if (songid:=self.get_songid()) is None:
-			self.clear()
-		else:
-			self._run_command(f"moveid {songid} 0")
-			if self.get_playlistlength() > 1:
-				self._run_command("delete 1:")
+		self._run_command(f"moveid {self.get_songid()} 0")
+		if self.get_playlistlength() > 1:
+			self._run_command("delete 1:")
 
 	def search_songs(self, keywords, num):
 		tags=("title", "artist", "album", "date")
