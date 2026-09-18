@@ -1101,11 +1101,13 @@ class HeadingBox(Gtk.Box):
 
 class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 	show_selection=GObject.Property(type=bool, default=True)
-	def __init__(self, item_type):
+	def __init__(self, item_type, manual_selection=True):
 		super().__init__()
 		self._item_type=item_type
 		self._data=[]
 		self._selected=None
+
+		self._manual_selection=manual_selection
 
 		# connect
 		self.connect("notify::show-selection", self._on_show_selection)
@@ -1160,7 +1162,12 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 	def do_get_n_items(self): return len(self._data)
 
 	# Gtk.SelectionModel methods
-	def do_select_item(self, position, unselect_rest): return False
+	def do_select_item(self, position, unselect_rest):
+		if self._manual_selection:
+			return False
+		if unselect_rest:
+			self.unselect()
+		self.select(position)
 	def do_select_all(self): return False
 	def do_select_range(self, position, n_items, unselect_rest): return False
 	def do_set_selection(self, selected, mask): return False
@@ -1532,10 +1539,19 @@ class AlbumRow(Gtk.Box):
 		overlay.set_child(self._cover)
 		overlay.add_overlay(button_box)
 
+		self.b=button_box
+
 		# event controller
-		controller_motion=Gtk.EventControllerMotion()
-		controller_motion.bind_property("contains-pointer", button_box, "visible", GObject.BindingFlags.DEFAULT)
-		self.add_controller(controller_motion)
+#		controller_motion=Gtk.EventControllerMotion()
+#		controller_motion.bind_property("contains-pointer", button_box, "visible", GObject.BindingFlags.DEFAULT)
+#		self.add_controller(controller_motion)
+
+#		def test(widget, flags):
+#			print(bool(widget.get_state_flags()&Gtk.StateFlags.PRELIGHT))
+#			button_box.set_visible(widget.get_state_flags()&Gtk.StateFlags.PRELIGHT)
+
+#		self.connect("state-flags-changed", test)
+
 
 		# packing
 		self.append(overlay)
@@ -1567,13 +1583,16 @@ class AlbumsPage(Adw.NavigationPage):
 		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
 		self.grid_view.add_css_class("navigation-sidebar")
 		self.grid_view.add_css_class("albums-view")
-		self._selection_model=SelectionModel(Album)
+		self._selection_model=SelectionModel(Album, manual_selection=False)
 		self.grid_view.set_model(self._selection_model)
+
+		print("a")
 
 		# factory
 		def setup(factory, item):
 			row=AlbumRow(self._client)
 			item.set_child(row)
+			item.bind_property("selected", row.b, "visible", GObject.BindingFlags.DEFAULT)
 		def bind(factory, item):
 			row=item.get_child()
 			row.set_album(item.get_item())
