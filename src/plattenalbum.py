@@ -1170,29 +1170,39 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 	def do_get_selection_in_range(self, position, n_items): return False
 	def do_is_selected(self, position): return position == self._selected and self.get_property("show-selection")
 
-class SongMenu(Gtk.PopoverMenu):
-	def __init__(self, client, show_album=False):
+class ContextMenu(Gtk.PopoverMenu):
+	def __init__(self):
 		super().__init__(has_arrow=False, halign=Gtk.Align.START)
 		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
+
+		# action group
+		self._action_group=Gio.SimpleActionGroup()
+		self.insert_action_group("menu", self._action_group)
+
+	def new_action(self, name, function):
+		action=Gio.SimpleAction.new(name, None)
+		action.connect("activate", function)
+		self._action_group.add_action(action)
+		return action
+
+	def popup_at(self, x, y):
+		rect=Gdk.Rectangle()
+		rect.x,rect.y=x,y
+		self.set_pointing_to(rect)
+		self.popup()
+
+class SongMenu(ContextMenu):
+	def __init__(self, client, show_album=False):
+		super().__init__()
 		self._client=client
 		self._song=None
 
-		# action group
-		action_group=Gio.SimpleActionGroup()
-		action=Gio.SimpleAction.new("append", None)
-		action.connect("activate", lambda *args: self._client.append_song(self._song))
-		action_group.add_action(action)
-		action=Gio.SimpleAction.new("as-next", None)
-		action.connect("activate", lambda *args: self._client.add_as_next_song(self._song))
-		action_group.add_action(action)
+		# actions
+		self.new_action("append", lambda *args: self._client.append_song(self._song))
+		self.new_action("as-next", lambda *args: self._client.add_as_next_song(self._song))
 		if show_album:
-			action=Gio.SimpleAction.new("show-album", None)
-			action.connect("activate", lambda *args: self._client.show_album(self._song))
-			action_group.add_action(action)
-		self._show_file_action=Gio.SimpleAction.new("show-file", None)
-		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._song))
-		action_group.add_action(self._show_file_action)
-		self.insert_action_group("menu", action_group)
+			self.new_action("show-album", lambda *args: self._client.show_album(self._song))
+		self._show_file_action=self.new_action("show-file", lambda *args: self._client.show_file(self._song))
 
 		# menu model
 		menu=Gio.Menu()
@@ -1207,11 +1217,8 @@ class SongMenu(Gtk.PopoverMenu):
 
 	def open(self, song, x, y):
 		self._song=song
-		rect=Gdk.Rectangle()
-		rect.x,rect.y=x,y
-		self.set_pointing_to(rect)
 		self._show_file_action.set_enabled(self._client.can_show_file(self._song))
-		self.popup()
+		self.popup_at(x, y)
 
 class SongActionRow(Adw.ActionRow):
 	def __init__(self, song, show_track=True, hide_artist="", **kwargs):
@@ -1505,22 +1512,15 @@ class ArtistList(Gtk.ListView):
 				self._refresh()
 				self.select(artist)
 
-class AlbumMenu(Gtk.PopoverMenu):
+class AlbumMenu(ContextMenu):
 	def __init__(self, client):
-		super().__init__(has_arrow=False, halign=Gtk.Align.START)
-		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
+		super().__init__()
 		self._client=client
 		self._album=None
 
-		# action group
-		action_group=Gio.SimpleActionGroup()
-		action=Gio.SimpleAction.new("append", None)
-		action.connect("activate", lambda *args: client.append_album(self._album))
-		action_group.add_action(action)
-		action=Gio.SimpleAction.new("play", None)
-		action.connect("activate", lambda *args: client.play_album(self._album))
-		action_group.add_action(action)
-		self.insert_action_group("menu", action_group)
+		# actions
+		self.new_action("append", lambda *args: client.append_album(self._album))
+		self.new_action("play", lambda *args: client.play_album(self._album))
 
 		# menu model
 		menu=Gio.Menu()
@@ -1530,10 +1530,7 @@ class AlbumMenu(Gtk.PopoverMenu):
 
 	def open(self, album, x, y):
 		self._album=album
-		rect=Gdk.Rectangle()
-		rect.x,rect.y=x,y
-		self.set_pointing_to(rect)
-		self.popup()
+		self.popup_at(x, y)
 
 class AlbumRow(Gtk.Box):
 	def __init__(self, client):
@@ -1935,28 +1932,17 @@ class Browser(Gtk.Stack):
 # playlist #
 ############
 
-class PlaylistMenu(Gtk.PopoverMenu):
+class PlaylistMenu(ContextMenu):
 	def __init__(self, client):
-		super().__init__(has_arrow=False, halign=Gtk.Align.START)
-		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
+		super().__init__()
 		self._client=client
 		self._song=None
 
-		# action group
-		action_group=Gio.SimpleActionGroup()
-		self._remove_action=Gio.SimpleAction.new("delete", None)
-		self._remove_action.connect("activate", lambda *args: self._client.delete_song(self._song))
-		action_group.add_action(self._remove_action)
-		self._as_next_action=Gio.SimpleAction.new("as-next", None)
-		self._as_next_action.connect("activate", lambda *args: self._client.move_as_next_song(self._song))
-		action_group.add_action(self._as_next_action)
-		self._show_album_action=Gio.SimpleAction.new("show-album", None)
-		self._show_album_action.connect("activate", lambda *args: self._client.show_album(self._song))
-		action_group.add_action(self._show_album_action)
-		self._show_file_action=Gio.SimpleAction.new("show-file", None)
-		self._show_file_action.connect("activate", lambda *args: self._client.show_file(self._song))
-		action_group.add_action(self._show_file_action)
-		self.insert_action_group("menu", action_group)
+		# actions
+		self._remove_action=self.new_action("delete", lambda *args: self._client.delete_song(self._song))
+		self._as_next_action=self.new_action("as-next", lambda *args: self._client.move_as_next_song(self._song))
+		self._show_album_action=self.new_action("show-album", lambda *args: self._client.show_album(self._song))
+		self._show_file_action=self.new_action("show-file", lambda *args: self._client.show_file(self._song))
 
 		# menu model
 		menu=Gio.Menu()
@@ -1975,9 +1961,6 @@ class PlaylistMenu(Gtk.PopoverMenu):
 
 	def open(self, song, songpos, x, y):
 		self._song=song
-		rect=Gdk.Rectangle()
-		rect.x,rect.y=x,y
-		self.set_pointing_to(rect)
 		if song is None:
 			self._remove_action.set_enabled(False)
 			self._as_next_action.set_enabled(False)
@@ -1988,7 +1971,7 @@ class PlaylistMenu(Gtk.PopoverMenu):
 			self._as_next_action.set_enabled(songpos is not None and songpos != int(song["pos"]) != songpos+1)
 			self._show_album_action.set_enabled(self._client.can_show_album(song))
 			self._show_file_action.set_enabled(self._client.can_show_file(song))
-		self.popup()
+		self.popup_at(x, y)
 
 class SongRow(Gtk.Box):
 	def __init__(self):
