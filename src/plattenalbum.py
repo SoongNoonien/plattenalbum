@@ -1505,6 +1505,36 @@ class ArtistList(Gtk.ListView):
 				self._refresh()
 				self.select(artist)
 
+class AlbumMenu(Gtk.PopoverMenu):
+	def __init__(self, client):
+		super().__init__(has_arrow=False, halign=Gtk.Align.START)
+		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
+		self._client=client
+		self._album=None
+
+		# action group
+		action_group=Gio.SimpleActionGroup()
+		action=Gio.SimpleAction.new("append", None)
+		action.connect("activate", lambda *args: client.append_album(self._album))
+		action_group.add_action(action)
+		action=Gio.SimpleAction.new("play", None)
+		action.connect("activate", lambda *args: client.play_album(self._album))
+		action_group.add_action(action)
+		self.insert_action_group("menu", action_group)
+
+		# menu model
+		menu=Gio.Menu()
+		menu.append(_("_Append"), "menu.append")
+		menu.append(_("_Play"), "menu.play")
+		self.set_menu_model(menu)
+
+	def open(self, album, x, y):
+		self._album=album
+		rect=Gdk.Rectangle()
+		rect.x,rect.y=x,y
+		self.set_pointing_to(rect)
+		self.popup()
+
 class AlbumRow(Gtk.Box):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
@@ -1555,20 +1585,13 @@ class AlbumRow(Gtk.Box):
 			album.cover=self._client.get_cover(album)
 		self._cover.set_paintable(album.cover)
 
-class AlbumsPage(Adw.NavigationPage):
-	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (Album,))}
-	def __init__(self, client, settings):
-		super().__init__(title=_("Albums"), tag="album_list")
-		self._settings=settings
+class AlbumsView(Gtk.GridView):
+	def __init__(self, client):
+		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
+		self.add_css_class("navigation-sidebar")
+		self.add_css_class("albums-view")
+		self.set_model(SelectionModel(Album))
 		self._client=client
-		self._artist=None
-
-		# grid view
-		self.grid_view=Gtk.GridView(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
-		self.grid_view.add_css_class("navigation-sidebar")
-		self.grid_view.add_css_class("albums-view")
-		self._selection_model=SelectionModel(Album)
-		self.grid_view.set_model(self._selection_model)
 
 		# factory
 		def setup(factory, item):
@@ -1580,7 +1603,81 @@ class AlbumsPage(Adw.NavigationPage):
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
-		self.grid_view.set_factory(factory)
+		self.set_factory(factory)
+
+		# menu
+		self._menu=AlbumMenu(client)
+		self._menu.set_parent(self)
+
+		# action group
+		action_group=Gio.SimpleActionGroup()
+		action=Gio.SimpleAction.new("menu", None)
+		action.connect("activate", self._on_menu)
+		action_group.add_action(action)
+		self.insert_action_group("view", action_group)
+
+		# shortcuts
+		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_Menu, 0), Gtk.NamedAction.new("view.menu")))
+		self.add_shortcut(Gtk.Shortcut.new(Gtk.KeyvalTrigger.new(Gdk.KEY_F10, Gdk.ModifierType.SHIFT_MASK), Gtk.NamedAction.new("view.menu")))
+
+		# event controller
+		button_controller=Gtk.GestureClick(button=0)
+		self.add_controller(button_controller)
+		long_press_controller=Gtk.GestureLongPress()
+		self.add_controller(long_press_controller)
+		drag_source=Gtk.DragSource()
+		drag_source.set_icon(lookup_icon("media-optical", 32, self.get_scale_factor()), 0, 0)
+		self.add_controller(drag_source)
+
+		# connect
+		button_controller.connect("pressed", self._on_button_pressed)
+		long_press_controller.connect("pressed", self._on_long_pressed)
+		drag_source.connect("prepare", self._on_drag_prepare)
+
+	def _get_focus_row(self):
+		return self.get_focus_child().get_first_child()
+
+	def _get_album(self, x, y):
+		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if widget is self or widget is None:
+			return None
+		row=widget.get_ancestor(AlbumRow)
+		if row is None:
+			return None
+		return row.album
+
+	def _on_button_pressed(self, controller, n_press, x, y):
+		if (album:=self._get_album(x,y)) is not None:
+			if controller.get_current_button() == 2 and n_press == 1:
+				self._client.append_album(album)
+			elif controller.get_current_button() == 3 and n_press == 1:
+				self._menu.open(album, x, y)
+
+	def _on_long_pressed(self, controller, x, y):
+		if (album:=self._get_album(x,y)) is not None:
+			self._menu.open(album, x, y)
+
+	def _on_menu(self, action, state):
+		row=self._get_focus_row()
+		computed_point,point=row.compute_point(self, Graphene.Point.zero())
+		if computed_point:
+			self._menu.open(row.album, point.x, point.y)
+
+	def _on_drag_prepare(self, drag_source, x, y):
+		if (album:=self._get_album(x, y)) is not None:
+			return Gdk.ContentProvider.new_for_value(album)
+
+class AlbumsPage(Adw.NavigationPage):
+	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (Album,))}
+	def __init__(self, client, settings):
+		super().__init__(title=_("Albums"), tag="album_list")
+		self._settings=settings
+		self._client=client
+		self._artist=None
+
+		# grid view
+		self.grid_view=AlbumsView(self._client)
+		self._selection_model=self.grid_view.get_model()
 
 		# breakpoint bin
 		breakpoint_bin=Adw.BreakpointBin(width_request=320, height_request=200)
@@ -1599,14 +1696,8 @@ class AlbumsPage(Adw.NavigationPage):
 		self._stack.add_named(breakpoint_bin, "albums")
 		self._stack.add_named(status_page, "status-page")
 
-		# event controller
-		drag_source=Gtk.DragSource()
-		drag_source.set_icon(lookup_icon("media-optical", 32, self.get_scale_factor()), 0, 0)
-		self.add_controller(drag_source)
-
 		# connect
 		self.grid_view.connect("activate", self._on_activate)
-		drag_source.connect("prepare", self._on_drag_prepare)
 		self._client.connect("disconnected", self._on_disconnected)
 
 		# packing
@@ -1636,21 +1727,8 @@ class AlbumsPage(Adw.NavigationPage):
 		self._selection_model.append(self._client.get_albums(artist))
 		self._settings.set_property("cursor-watch", False)
 
-	def _get_album(self, x, y):
-		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if widget is self or widget is None:
-			return None
-		row=widget.get_ancestor(AlbumRow)
-		if row is None:
-			return None
-		return row.album
-
 	def _on_activate(self, widget, pos):
 		self.emit("album-selected", self._selection_model.get_item(pos))
-
-	def _on_drag_prepare(self, drag_source, x, y):
-		if (album:=self._get_album(x, y)) is not None:
-			return Gdk.ContentProvider.new_for_value(album)
 
 	def _on_disconnected(self, *args):
 		self._stack.set_visible_child_name("albums")
