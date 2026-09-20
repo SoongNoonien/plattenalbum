@@ -1609,7 +1609,6 @@ class AlbumsView(Gtk.GridView):
 		long_press_controller=Gtk.GestureLongPress()
 		self.add_controller(long_press_controller)
 		drag_source=Gtk.DragSource()
-		drag_source.set_icon(lookup_icon("media-optical", 32, self.get_scale_factor()), 0, 0)
 		self.add_controller(drag_source)
 
 		# connect
@@ -1620,11 +1619,17 @@ class AlbumsView(Gtk.GridView):
 	def _get_focus_row(self):
 		return self.get_focus_child().get_first_child()
 
-	def _get_album(self, x, y):
+	def _get_row(self, x, y):
 		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if widget is self or widget is None:
 			return None
 		row=widget.get_ancestor(AlbumRow)
+		if row is None:
+			return None
+		return row
+
+	def _get_album(self, x, y):
+		row=self._get_row(x,y)
 		if row is None:
 			return None
 		return row.album
@@ -1647,8 +1652,11 @@ class AlbumsView(Gtk.GridView):
 			self._menu.open(row.album, point.x, point.y)
 
 	def _on_drag_prepare(self, drag_source, x, y):
-		if (album:=self._get_album(x, y)) is not None:
-			return Gdk.ContentProvider.new_for_value(album)
+		if (row:=self._get_row(x, y)) is not None:
+			snapshot=Gtk.Snapshot()
+			row.snapshot_child(row.get_first_child(), snapshot)
+			drag_source.set_icon(snapshot.to_paintable(None), 0, 0)
+			return Gdk.ContentProvider.new_for_value(row.album)
 
 class AlbumsPage(Adw.NavigationPage):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (Album,))}
