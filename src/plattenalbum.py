@@ -1623,16 +1623,14 @@ class AlbumsView(Gtk.GridView):
 		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if widget is self or widget is None:
 			return None
-		row=widget.get_ancestor(AlbumRow)
-		if row is None:
-			return None
-		return row
+		if (row:=widget.get_ancestor(AlbumRow)) is not None:
+			return row
+		return None
 
 	def _get_album(self, x, y):
-		row=self._get_row(x,y)
-		if row is None:
-			return None
-		return row.album
+		if (row:=self._get_row(x,y)) is not None:
+			return row.album
+		return None
 
 	def _on_button_pressed(self, controller, n_press, x, y):
 		if (album:=self._get_album(x,y)) is not None:
@@ -2072,16 +2070,14 @@ class PlaylistView(Gtk.ListView):
 		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if widget is self or widget is None:
 			return None
-		row=widget.get_ancestor(SongRow)
-		if row is None:
-			return None
-		return row
+		if (row:=widget.get_ancestor(SongRow)) is not None:
+			return row
+		return None
 
 	def _get_song(self, x, y):
-		row=self._get_row(x,y)
-		if row is None:
-			return None
-		return row.song
+		if (row:=self._get_row(x,y)) is not None:
+			return row.song
+		return None
 
 	def _clear(self, *args):
 		self._menu.popdown()
