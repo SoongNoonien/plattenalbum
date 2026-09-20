@@ -1534,40 +1534,26 @@ class AlbumMenu(ContextMenu):
 
 class AlbumRow(Gtk.Box):
 	def __init__(self, client):
-		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		self._client=client
 		self.album=None
 
 		# widgets
 		self._cover=AlbumCover()
-		self._title=Gtk.Label(single_line_mode=True, ellipsize=Pango.EllipsizeMode.END, margin_top=3)
-		self._date=Gtk.Label(single_line_mode=True, css_classes=["dimmed", "caption"])
-
-		# buttons
-		play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"), css_classes=["circular", "osd"])
+		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
+		self._date=Gtk.Label(xalign=0, single_line_mode=True, css_classes=["dimmed", "caption"])
+		play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"), css_classes=["flat"])
 		play_button.connect("clicked", lambda *args: client.play_album(self.album))
-		append_button=Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Append"), css_classes=["circular", "osd"])
-		append_button.connect("clicked", lambda *args: client.append_album(self.album))
-
-		# button box
-		button_box=Gtk.Box(halign=Gtk.Align.END, valign=Gtk.Align.START, spacing=6, margin_end=9, margin_top=9, visible=False)
-		button_box.append(append_button)
-		button_box.append(play_button)
-
-		# overlay
-		overlay=Gtk.Overlay()
-		overlay.set_child(self._cover)
-		overlay.add_overlay(button_box)
-
-		# event controller
-		controller_motion=Gtk.EventControllerMotion()
-		controller_motion.bind_property("contains-pointer", button_box, "visible", GObject.BindingFlags.DEFAULT)
-		self.add_controller(controller_motion)
 
 		# packing
-		self.append(overlay)
-		self.append(self._title)
-		self.append(self._date)
+		label_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3, hexpand=True)
+		label_box.append(self._title)
+		label_box.append(self._date)
+		box=Gtk.Box(spacing=3, margin_start=3)
+		box.append(label_box)
+		box.append(play_button)
+		self.append(self._cover)
+		self.append(box)
 
 	def set_album(self, album):
 		self.album=album
