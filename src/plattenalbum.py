@@ -21,7 +21,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, Gdk, Pango, GObject, GLib, Graphene
-from html.parser import HTMLParser
+import json
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -2228,27 +2228,6 @@ class PlaylistWindow(Gtk.Stack):
 # lyrics #
 ##########
 
-class LetrasParser(HTMLParser):
-	def __init__(self):
-		super().__init__()
-		self._found_text=False
-		self.text=""
-
-	def handle_starttag(self, tag, attrs):
-		if tag == "div" and ("id", "letra-cnt") in attrs:
-			self._found_text=True
-
-	def handle_endtag(self, tag):
-		if self._found_text:
-			if tag == "p":
-				self.text+="\n"
-			elif tag == "div":
-				self._found_text=False
-
-	def handle_data(self, data):
-		if self._found_text and data:
-			self.text+=data+"\n"
-
 class LyricsWindow(Gtk.Stack):
 	song=GObject.Property(type=Song)
 	def __init__(self):
@@ -2296,24 +2275,23 @@ class LyricsWindow(Gtk.Stack):
 		self._text_buffer.delete(self._text_buffer.get_start_iter(), self._text_buffer.get_end_iter())
 
 	def _get_lyrics(self, title, artist):
-		title=urllib.parse.quote_plus(title)
-		artist=urllib.parse.quote_plus(artist)
-		parser=LetrasParser()
-		with urllib.request.urlopen(f"https://www.letras.mus.br/winamp.php?musica={title}&artista={artist}") as response:
-			parser.feed(response.read().decode("utf-8"))
-		if text:=parser.text.strip("\n "):
-			return text
-		else:
-			raise ValueError("Not found")
+		title=urllib.parse.quote(title)
+		artist=urllib.parse.quote(artist)
+		with urllib.request.urlopen(f"https://api.lyrics.ovh/v1/{artist}/{title}") as response:
+			data=json.load(response)
+		return data["lyrics"]
 
 	def _display_lyrics(self, title, artist):
 		try:
 			idle_add(self._text_buffer.set_text, self._get_lyrics(title, artist))
 			idle_add(self.set_visible_child_name, "lyrics")
+		except urllib.error.HTTPError as e:
+			if e.code == 404:
+				idle_add(self.set_visible_child_name, "no-lyrics")
+			else:
+				idle_add(self.set_visible_child_name, "connection-error")
 		except urllib.error.URLError:
 			idle_add(self.set_visible_child_name, "connection-error")
-		except ValueError:
-			idle_add(self.set_visible_child_name, "no-lyrics")
 
 ##########
 # player #
