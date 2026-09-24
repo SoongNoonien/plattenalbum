@@ -1038,10 +1038,14 @@ class CommandLabel(Gtk.Label):
 class SetupDialog(Adw.Dialog):
 	def __init__(self):
 		super().__init__(title=_("Setup"), width_request=360, follows_content_size=True)
-		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-		box.append(Gtk.Label(label=_("To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package manager, and"\
+		label=Gtk.Label(label=_("To get started, install the Music Player Daemon (<tt>mpd</tt>) with your system package manager, and"\
 			" run the following commands to configure and initialize a basic local instance. After that, Plattenalbum should be able to"\
-			" seamlessly connect to it."), use_markup=True, xalign=0, wrap=True))
+			" seamlessly connect to it."), use_markup=True, xalign=0, wrap=True)
+		self.update_relation([Gtk.AccessibleRelation.DESCRIBED_BY], [Gtk.AccessibleList.new_from_list([label])])
+
+		# box
+		box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+		box.append(label)
 		box.append(CommandLabel(label="mkdir ~/.mpd"))
 		box.append(CommandLabel(label='cat << EOF > ~/.mpd/mpd.conf\ndb_file\t\t"~/.mpd/database"\nstate_file\t"~/.mpd/state"\n\n'\
 			'audio_output {\n\ttype\t"pulse"\n\tname\t"Music"\n}\nEOF'))
@@ -1173,7 +1177,6 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 class ContextMenu(Gtk.PopoverMenu):
 	def __init__(self):
 		super().__init__(has_arrow=False, halign=Gtk.Align.START)
-		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Context menu")])
 
 		# action group
 		self._action_group=Gio.SimpleActionGroup()
