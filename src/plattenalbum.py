@@ -1266,7 +1266,7 @@ class SongList(Gtk.ListBox):
 		long_press_controller=Gtk.GestureLongPress()
 		self.add_controller(long_press_controller)
 		drag_source=Gtk.DragSource()
-		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
+		drag_source.set_icon(lookup_icon("audio-x-generic", 64, self.get_scale_factor()), 0, 0)
 		self.add_controller(drag_source)
 
 		# connect
@@ -1658,7 +1658,7 @@ class AlbumsView(Gtk.GridView):
 	def _on_drag_prepare(self, drag_source, x, y):
 		if (row:=self._get_row(x, y)) is not None:
 			snapshot=Gtk.Snapshot()
-			row.snapshot_child(row.get_first_child(), snapshot)
+			row.album.cover.snapshot(snapshot, 64, 64)
 			drag_source.set_icon(snapshot.to_paintable(None), 0, 0)
 			return Gdk.ContentProvider.new_for_value(row.album)
 
@@ -2047,7 +2047,7 @@ class PlaylistView(Gtk.ListView):
 		long_press_controller=Gtk.GestureLongPress()
 		self.add_controller(long_press_controller)
 		drag_source=Gtk.DragSource()
-		drag_source.set_icon(lookup_icon("audio-x-generic", 32, self.get_scale_factor()), 0, 0)
+		drag_source.set_icon(lookup_icon("audio-x-generic", 64, self.get_scale_factor()), 0, 0)
 		drag_source.set_actions(Gdk.DragAction.MOVE)
 		self.add_controller(drag_source)
 		drop_target=Gtk.DropTarget()
