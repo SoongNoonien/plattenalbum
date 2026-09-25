@@ -862,7 +862,10 @@ class Client(GObject.Object):
 		try:
 			return self._cover_fetch_loop("albumart", quoted_file)
 		except CommandError:
-			return self._cover_fetch_loop("readpicture", quoted_file)
+			try:
+				return self._cover_fetch_loop("readpicture", quoted_file)
+			except CommandError:
+				return FALLBACK_COVER
 
 	def _get_cover_with_path(self, song):
 		if (cover_path:=self._get_cover_path(song["file"])) is None:
