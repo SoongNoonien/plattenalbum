@@ -6,6 +6,7 @@
 		<file>preferences-dialog.ui</file>
 		<file>style.css</file>
 		<file>mpris.xml</file>
+		<file>fallback-cover.svg</file>
 	</gresource>
 	<gresource prefix="/de/wagnermartin/Plattenalbum/icons/scalable/actions">
 		<file>view-lyrics-symbolic.svg</file>

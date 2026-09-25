@@ -44,7 +44,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)  # allow using ctrl-c to terminate
 # global constants and functions #
 ##################################
 
-FALLBACK_COVER=Gdk.Paintable.new_empty(1, 1)
+FALLBACK_COVER=Gtk.Svg.new_from_resource("/de/wagnermartin/Plattenalbum/fallback-cover.svg")
 CONNECTION_TIMEOUT=30
 MINIMUM_MPD_VERSION="0.24.0"
 
