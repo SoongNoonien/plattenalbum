@@ -659,6 +659,10 @@ class Client(GObject.Object):
 			return False
 
 	def delete_song(self, song):
+		try:
+			self._run_command(f'playlistid {song["id"]}')  # check if songid is valid, i.e. the song is still in the playlist
+		except CommandError:
+			return
 		self._run_command(f'deleteid {song["id"]}')
 
 	def add_song(self, song, position):
