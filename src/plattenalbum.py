@@ -822,6 +822,7 @@ class Client(GObject.Object):
 	def get_elapsed(self): return float(self._cached_status.get("elapsed", "0"))
 	def get_playlistlength(self): return int(self._cached_status.get("playlistlength", "0"))
 	def get_songid(self): return self._cached_status.get("songid")
+	def get_songpos(self): return int(self._cached_status.get("song", "-1"))
 	def get_random(self): return self._cached_status.get("random", "0") != "0"
 	def get_repeat(self): return self._cached_status.get("repeat", "0") != "0"
 	def get_single(self): return self._cached_status.get("single", "0") != "0"
@@ -1959,8 +1960,9 @@ class PlaylistSongMenu(ContextMenu):
 		menu.append_section(None, mpd_section)
 		self.set_menu_model(menu)
 
-	def popup(self, row, songpos, x=-1, y=-1):
-		self._as_next_action.set_enabled(songpos is not None and songpos != int(row.song["pos"]) != songpos+1)
+	def popup(self, row, x=-1, y=-1):
+		songpos=self._client.get_songpos()
+		self._as_next_action.set_enabled(-1 != songpos != int(row.song["pos"]) != songpos+1)
 		self._show_album_action.set_enabled(self._client.can_show_album(row.song))
 		self._show_file_action.set_enabled(self._client.can_show_file(row.song))
 		super().popup(row, x, y)
@@ -2084,13 +2086,13 @@ class PlaylistView(ListBase, Gtk.ListView):
 			if controller.get_current_button() == 2 and n_press == 1:
 				self._client.delete_song(row.song)
 			elif controller.get_current_button() == 3 and n_press == 1:
-				self._song_menu.popup(row, self._selection_model.get_selected(), x, y)
+				self._song_menu.popup(row, x, y)
 
 	def _on_long_pressed(self, controller, x, y):
 		if (row:=self.get_row_at(x,y)) is None:
 			self._menu.popup(x, y)
 		else:
-			self._song_menu.popup(row, self._selection_model.get_selected(), x, y)
+			self._song_menu.popup(row, x, y)
 
 	def _on_activate(self, listview, pos):
 		self._autoscroll=False
@@ -2121,7 +2123,7 @@ class PlaylistView(ListBase, Gtk.ListView):
 			self._autoscroll=True
 
 	def _on_menu(self, action, state):
-		self._song_menu.popup(self.get_focus_row(), self._selection_model.get_selected())
+		self._song_menu.popup(self.get_focus_row())
 
 	def _on_delete(self, action, state):
 		self._client.delete_song(self.get_focus_row().song)
