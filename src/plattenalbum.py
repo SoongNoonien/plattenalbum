@@ -676,11 +676,19 @@ class Client(GObject.Object):
 		self.append_song(song)
 		self.play()
 
+	def can_add_as_next(self, song):
+		current_songpos=self._cached_status.get("song")
+		if current_songpos is None:
+			return False
+		songpos=song["pos"]
+		if songpos is None:
+			return True
+		current_songpos=int(current_songpos)
+		songpos=int(songpos)
+		return current_songpos != songpos != current_songpos+1
+
 	def add_as_next_song(self, song):
-		try:
-			self.add_song(song, "+0")
-		except CommandError:
-			self.add_song(song, "0")
+		self.add_song(song, "+0")
 
 	def move_as_next_song(self, song):
 		self._run_command(f'moveid {song["id"]} +0')
@@ -822,7 +830,6 @@ class Client(GObject.Object):
 	def get_elapsed(self): return float(self._cached_status.get("elapsed", "0"))
 	def get_playlistlength(self): return int(self._cached_status.get("playlistlength", "0"))
 	def get_songid(self): return self._cached_status.get("songid")
-	def get_songpos(self): return int(self._cached_status.get("song", "-1"))
 	def get_random(self): return self._cached_status.get("random", "0") != "0"
 	def get_repeat(self): return self._cached_status.get("repeat", "0") != "0"
 	def get_single(self): return self._cached_status.get("single", "0") != "0"
@@ -1232,7 +1239,7 @@ class SongMenu(ContextMenu):
 
 		# actions
 		self.new_action("append", lambda *args: self._client.append_song(self.get_parent().song))
-		self.new_action("as-next", lambda *args: self._client.add_as_next_song(self.get_parent().song))
+		self._as_next_action=self.new_action("as-next", lambda *args: self._client.add_as_next_song(self.get_parent().song))
 		if show_album:
 			self.new_action("show-album", lambda *args: self._client.show_album(self.get_parent().song))
 		self._show_file_action=self.new_action("show-file", lambda *args: self._client.show_file(self.get_parent().song))
@@ -1249,6 +1256,7 @@ class SongMenu(ContextMenu):
 		self.set_menu_model(menu)
 
 	def popup(self, row, x=-1, y=-1):
+		self._as_next_action.set_enabled(self._client.can_add_as_next(row.song))
 		self._show_file_action.set_enabled(self._client.can_show_file(row.song))
 		super().popup(row, x, y)
 
@@ -1961,8 +1969,7 @@ class PlaylistSongMenu(ContextMenu):
 		self.set_menu_model(menu)
 
 	def popup(self, row, x=-1, y=-1):
-		songpos=self._client.get_songpos()
-		self._as_next_action.set_enabled(-1 != songpos != int(row.song["pos"]) != songpos+1)
+		self._as_next_action.set_enabled(self._client.can_add_as_next(row.song))
 		self._show_album_action.set_enabled(self._client.can_show_album(row.song))
 		self._show_file_action.set_enabled(self._client.can_show_file(row.song))
 		super().popup(row, x, y)
