@@ -1929,7 +1929,7 @@ class Browser(Gtk.Stack):
 
 class PlaylistMenu(Gtk.PopoverMenu):
 	def __init__(self):
-		super().__init__()
+		super().__init__(has_arrow=False, halign=Gtk.Align.START)
 		menu=Gio.Menu()
 		menu.append(_("_Enqueue Album"), "app.enqueue")
 		menu.append(_("_Tidy"), "app.tidy")
