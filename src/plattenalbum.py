@@ -527,10 +527,10 @@ class Client(GObject.Object):
 		if line.startswith("ACK"):
 			if "you don't have permission" in line:
 				self.emit("server-error", _("No permission"))
-				return None
+				return
 			raise CommandError(line)
 		if line == "OK":
-			return None
+			return
 		return line
 
 	def _parse_pairs(self):
@@ -829,7 +829,7 @@ class Client(GObject.Object):
 
 	def _get_cover_path(self, uri):
 		if self._music_directory is None:
-			return None
+			return
 		song_dir=GLib.build_filenamev([self._music_directory, GLib.path_get_dirname(uri)])
 		if uri.lower().endswith(".cue"):
 			song_dir=GLib.path_get_dirname(song_dir)  # get actual directory of .cue file
@@ -1114,10 +1114,9 @@ class ListBase():
 	def get_row_at(self, x, y):
 		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
 		if widget is self or widget is None:
-			return None
+			return
 		if (row:=widget.get_ancestor(ListRow)) is not None:
 			return row
-		return None
 
 class HeadingBox(Gtk.Box):
 	def __init__(self, heading, widget):
@@ -1180,7 +1179,7 @@ class SelectionModel(GObject.Object, Gio.ListModel, Gtk.SelectionModel):
 		try:
 			return self._data[position]
 		except IndexError:
-			return None
+			return
 
 	def do_get_item_type(self): return self._item_type
 	def do_get_n_items(self): return len(self._data)
