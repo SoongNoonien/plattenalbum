@@ -1104,6 +1104,21 @@ class ServerInfo(Adw.Dialog):
 # general purpose widgets #
 ###########################
 
+class ListRow(Gtk.Box):
+	pass
+
+class ListBase():
+	def get_focus_row(self):
+		return self.get_focus_child().get_first_child()
+
+	def get_row_at(self, x, y):
+		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
+		if widget is self or widget is None:
+			return None
+		if (row:=widget.get_ancestor(ListRow)) is not None:
+			return row
+		return None
+
 class HeadingBox(Gtk.Box):
 	def __init__(self, heading, widget):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -1532,7 +1547,7 @@ class AlbumMenu(ContextMenu):
 		menu.append(_("_Play"), "menu.play")
 		self.set_menu_model(menu)
 
-class AlbumRow(Gtk.Box):
+class AlbumRow(ListRow):
 	def __init__(self, client):
 		super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		self._client=client
@@ -1568,7 +1583,7 @@ class AlbumRow(Gtk.Box):
 			album.cover=self._client.get_cover(album)
 		self._cover.set_paintable(album.cover)
 
-class AlbumsView(Gtk.GridView):
+class AlbumsView(ListBase, Gtk.GridView):
 	def __init__(self, client):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
 		self.add_css_class("navigation-sidebar")
@@ -1615,33 +1630,22 @@ class AlbumsView(Gtk.GridView):
 		long_press_controller.connect("pressed", self._on_long_pressed)
 		drag_source.connect("prepare", self._on_drag_prepare)
 
-	def _get_focus_row(self):
-		return self.get_focus_child().get_first_child()
-
-	def _get_row(self, x, y):
-		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if widget is self or widget is None:
-			return None
-		if (row:=widget.get_ancestor(AlbumRow)) is not None:
-			return row
-		return None
-
 	def _on_button_pressed(self, controller, n_press, x, y):
-		if (row:=self._get_row(x,y)) is not None:
+		if (row:=self.get_row_at(x,y)) is not None:
 			if controller.get_current_button() == 2 and n_press == 1:
 				self._client.append_album(row.album)
 			elif controller.get_current_button() == 3 and n_press == 1:
 				self._menu.popup(row, x, y)
 
 	def _on_long_pressed(self, controller, x, y):
-		if (row:=self._get_row(x,y)) is not None:
+		if (row:=self.get_row_at(x,y)) is not None:
 			self._menu.popup(row, x, y)
 
 	def _on_menu(self, action, state):
-		self._menu.popup(self._get_focus_row())
+		self._menu.popup(self.get_focus_row())
 
 	def _on_drag_prepare(self, drag_source, x, y):
-		if (row:=self._get_row(x, y)) is not None:
+		if (row:=self.get_row_at(x, y)) is not None:
 			snapshot=Gtk.Snapshot()
 			row.album.cover.snapshot(snapshot, 64, 64)
 			drag_source.set_icon(snapshot.to_paintable(None), 0, 0)
@@ -1954,7 +1958,7 @@ class PlaylistMenu(ContextMenu):
 			self._show_file_action.set_enabled(self._client.can_show_file(row.song))
 		super().popup(row, x, y)
 
-class SongRow(Gtk.Box):
+class SongRow(ListRow):
 	def __init__(self):
 		super().__init__()
 		self.song=None
@@ -1979,7 +1983,7 @@ class SongRow(Gtk.Box):
 		self._subtitle.set_text(subtitle)
 		self._length.set_text(str(song["duration"]))
 
-class PlaylistView(Gtk.ListView):
+class PlaylistView(ListBase, Gtk.ListView):
 	def __init__(self, client):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True)
 		self._client=client
@@ -2051,22 +2055,6 @@ class PlaylistView(Gtk.ListView):
 		self._client.connect("songid", self._on_songid_changed)
 		self._client.connect("disconnected", self._on_disconnected)
 
-	def _get_focus_row(self):
-		return self.get_focus_child().get_first_child()
-
-	def _get_row(self, x, y):
-		widget=self.pick(x,y,Gtk.PickFlags.DEFAULT)
-		if widget is self or widget is None:
-			return None
-		if (row:=widget.get_ancestor(SongRow)) is not None:
-			return row
-		return None
-
-	def _get_song(self, x, y):
-		if (row:=self._get_row(x,y)) is not None:
-			return row.song
-		return None
-
 	def _clear(self, *args):
 		self._menu.popdown()
 		self._playlist_version=None
@@ -2079,7 +2067,7 @@ class PlaylistView(Gtk.ListView):
 			self._selection_model.select(int(song))
 
 	def _on_button_pressed(self, controller, n_press, x, y):
-		if (row:=self._get_row(x,y)) is None:
+		if (row:=self.get_row_at(x,y)) is None:
 			if controller.get_current_button() == 3 and n_press == 1:
 				self._menu.popup(self, None, x, y)
 		else:
@@ -2089,7 +2077,7 @@ class PlaylistView(Gtk.ListView):
 				self._menu.popup(row, self._selection_model.get_selected(), x, y)
 
 	def _on_long_pressed(self, controller, x, y):
-		if (row:=self._get_row(x,y)) is None:
+		if (row:=self.get_row_at(x,y)) is None:
 			self._menu.popup(self, None, x, y)
 		else:
 			self._menu.popup(row, self._selection_model.get_selected(), x, y)
@@ -2122,30 +2110,30 @@ class PlaylistView(Gtk.ListView):
 			self._autoscroll=True
 
 	def _on_menu(self, action, state):
-		self._menu.popup(self._get_focus_row(), self._selection_model.get_selected())
+		self._menu.popup(self.get_focus_row(), self._selection_model.get_selected())
 
 	def _on_delete(self, action, state):
-		self._client.delete_song(self._get_focus_row().song)
+		self._client.delete_song(self.get_focus_row().song)
 
 	def _on_drag_prepare(self, drag_source, x, y):
-		if (song:=self._get_song(x,y)) is not None:
-			return Gdk.ContentProvider.new_for_value(int(song["pos"]))
+		if (row:=self.get_row_at(x,y)) is not None:
+			return Gdk.ContentProvider.new_for_value(int(row.song["pos"]))
 
 	def _on_drop(self, drop_target, value, x, y):
 		self._remove_highlight()
-		match value, self._get_song(x,y):
+		match value, self.get_row_at(x,y):
 			case int(), None:
 				self._client.move(value, self._selection_model.get_n_items()-1)
-			case int(), song:
-				self._client.move(value, song["pos"])
+			case int(), row:
+				self._client.move(value, row.song["pos"])
 			case Song(), None:
 				self._client.append_song(value)
-			case Song(), song:
-				self._client.add_song(value, song["pos"])
+			case Song(), row:
+				self._client.add_song(value, row.song["pos"])
 			case Album(), None:
 				self._client.append_album(value)
-			case Album(), song:
-				self._client.add_album(value, song["pos"])
+			case Album(), row:
+				self._client.add_album(value, row.song["pos"])
 		return True
 
 	def _remove_highlight(self):
@@ -2155,7 +2143,7 @@ class PlaylistView(Gtk.ListView):
 
 	def _on_drop_motion(self, drop_motion, x, y):
 		self._remove_highlight()
-		if (row:=self._get_row(x,y)) is not None:
+		if (row:=self.get_row_at(x,y)) is not None:
 			self._highlighted_widget=row.get_parent()
 			self._highlighted_widget.add_css_class("drop-row")
 
