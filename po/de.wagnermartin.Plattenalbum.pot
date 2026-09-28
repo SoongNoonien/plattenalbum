@@ -574,3 +574,7 @@ msgstr ""
 #: data/preferences-dialog.ui:29
 msgid "Disable if “MPRIS” is supported by another client"
 msgstr ""
+
+#: data/preferences-dialog.ui:35
+msgid "Enable Type-to-Search"
+msgstr ""

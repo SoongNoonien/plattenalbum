@@ -1002,11 +1002,13 @@ class PreferencesDialog(Adw.PreferencesDialog):
 	show_bit_rate=Gtk.Template.Child()
 	stop_on_quit=Gtk.Template.Child()
 	mpris=Gtk.Template.Child()
+	type_to_search=Gtk.Template.Child()
 	def __init__(self, settings):
 		super().__init__()
 		settings.bind("show-bit-rate", self.show_bit_rate, "active", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("stop-on-quit", self.stop_on_quit, "active", Gio.SettingsBindFlags.DEFAULT)
 		settings.bind("mpris", self.mpris, "active", Gio.SettingsBindFlags.DEFAULT)
+		settings.bind("type-to-search", self.type_to_search, "active", Gio.SettingsBindFlags.DEFAULT)
 
 class ConnectDialog(Adw.Dialog):
 	def __init__(self, settings):
@@ -1872,10 +1874,14 @@ class Browser(Gtk.Stack):
 		self.add_named(self._navigation_view, "browser")
 		self.add_named(status_page_toolbar_view, "empty-collection")
 
-	def search(self):
+	def search(self, search_text=None):
 		if self._navigation_view.get_visible_page_tag() != "search":
 			self._navigation_view.push_by_tag("search")
-		self.search_entry.select_region(0, -1)
+		if search_text is None:
+			self.search_entry.select_region(0, -1)
+		else:
+			self.search_entry.set_text(search_text)
+			self.search_entry.set_position(-1)
 		self.search_entry.grab_focus()
 
 	def _on_search_changed(self, entry):
@@ -2781,11 +2787,15 @@ class MainWindow(Adw.ApplicationWindow):
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
 		self._browser.search_entry.add_controller(controller_focus)
+		controller_key=Gtk.EventControllerKey()
+		controller_key.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+		self.add_controller(controller_key)
 
 		# connect
 		multi_layout_view.connect("notify::layout-name", self._on_layout_name)
 		controller_focus.connect("enter", self._on_search_entry_focus_event, True)
 		controller_focus.connect("leave", self._on_search_entry_focus_event, False)
+		controller_key.connect("key-pressed", self._on_key_pressed)
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.connect("songid", self._on_songid_or_metadata_changed)
 		self._client.connect("metadata", self._on_songid_or_metadata_changed)
@@ -2832,6 +2842,21 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_search(self, action, param):
 		self._browser.search()
+
+	def _on_key_pressed(self, controller, keyval, keycode, state):
+		if not self._settings.get_boolean("type-to-search") or self.get_visible_dialog() is not None:
+			return False
+		focus=self.get_focus()
+		if isinstance(focus, Gtk.Editable) or isinstance(focus, Gtk.TextView) and focus.get_editable():
+			return False
+		modifiers=Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.ALT_MASK | Gdk.ModifierType.SUPER_MASK | Gdk.ModifierType.META_MASK
+		if state & modifiers:
+			return False
+		character=chr(Gdk.keyval_to_unicode(keyval))
+		if not character.isprintable() or character.isspace():
+			return False
+		self._browser.search(character)
+		return True
 
 	def _on_preferences(self, action, param):
 		if self.get_visible_dialog() is None:
