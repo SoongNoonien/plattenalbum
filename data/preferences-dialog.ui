@@ -30,11 +30,6 @@
 			<property name="use-underline">true</property>
 			</object>
 		</child>
-		<child>
-			<object class="AdwSwitchRow" id="type_to_search">
-			<property name="title" translatable="yes">Enable Type-to-Search</property>
-			</object>
-		</child>
 		</object>
 	</child>
 	</object>
