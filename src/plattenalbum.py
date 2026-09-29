@@ -1874,18 +1874,14 @@ class Browser(Gtk.Stack):
 		self.add_named(self._navigation_view, "browser")
 		self.add_named(status_page_toolbar_view, "empty-collection")
 
-	def search(self, search_text=None):
+	def search(self):
 		if self._navigation_view.get_visible_page_tag() != "search":
 			self._navigation_view.push_by_tag("search")
-		if search_text is None:
-			self.search_entry.select_region(0, -1)
-		else:
-			self.search_entry.set_text(search_text)
-			self.search_entry.set_position(-1)
 		self.search_entry.grab_focus()
 
 	def _on_search_started(self, entry):
-		self.search(entry.get_text()[-1])
+		self.search()
+		self.search_entry.set_position(-1)
 
 	def _on_search_changed(self, entry):
 		if (search_text:=self.search_entry.get_text()):
