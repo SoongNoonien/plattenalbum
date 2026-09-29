@@ -1861,8 +1861,10 @@ class Browser(Gtk.Stack):
 		self._artist_list.connect("clear", self._albums_page.clear)
 		self._search_view.connect("artist-selected", self._on_search_artist_selected)
 		self._search_view.connect("album-selected", lambda widget, album: self._show_album(album))
+		self.search_entry.connect("search-started", self._on_search_started)
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
+		self._navigation_view.connect("popped", lambda view, page: self.search_entry.select_region(0, -1))
 		client.connect("disconnected", self._on_disconnected)
 		client.connect("connected", self._on_connected_or_updated_db)
 		client.connect("updated-db", self._on_connected_or_updated_db)
@@ -1875,8 +1877,11 @@ class Browser(Gtk.Stack):
 	def search(self):
 		if self._navigation_view.get_visible_page_tag() != "search":
 			self._navigation_view.push_by_tag("search")
-		self.search_entry.select_region(0, -1)
 		self.search_entry.grab_focus()
+
+	def _on_search_started(self, entry):
+		self.search()
+		self.search_entry.set_position(-1)
 
 	def _on_search_changed(self, entry):
 		if (search_text:=self.search_entry.get_text()):
@@ -2716,6 +2721,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# widgets
 		self._browser=Browser(self._client, self._settings)
+		self._browser.search_entry.set_key_capture_widget(self)
 		player=Player(self._client, self._settings)
 
 		# actions
