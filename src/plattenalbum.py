@@ -2724,6 +2724,7 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# widgets
 		self._browser=Browser(self._client, self._settings)
+		self._browser.search_entry.set_key_capture_widget(self)
 		player=Player(self._client, self._settings)
 
 		# actions
@@ -2789,7 +2790,6 @@ class MainWindow(Adw.ApplicationWindow):
 		# event controller
 		controller_focus=Gtk.EventControllerFocus()
 		self._browser.search_entry.add_controller(controller_focus)
-		self._browser.search_entry.set_key_capture_widget(self)
 
 		# connect
 		multi_layout_view.connect("notify::layout-name", self._on_layout_name)
