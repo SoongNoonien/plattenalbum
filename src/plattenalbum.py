@@ -1864,6 +1864,7 @@ class Browser(Gtk.Stack):
 		self.search_entry.connect("search-started", self._on_search_started)
 		self.search_entry.connect("search-changed", self._on_search_changed)
 		self.search_entry.connect("stop-search", self._on_search_stopped)
+		self._navigation_view.connect("popped", lambda view, page: self.search_entry.select_region(0, -1))
 		client.connect("disconnected", self._on_disconnected)
 		client.connect("connected", self._on_connected_or_updated_db)
 		client.connect("updated-db", self._on_connected_or_updated_db)
