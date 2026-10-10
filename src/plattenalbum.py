@@ -2876,7 +2876,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._update_title(song)
 
 	def _on_songs_added(self, client, count):
-		self._toast_overlay.add_toast(Adw.Toast(title=ngettext("{n} song added", "{n} songs added", count).format(n=count)))
+		self._toast_overlay.add_toast(Adw.Toast(title=ngettext("{n} song added to playlist", "{n} songs added to playlist", count).format(n=count)))
 
 	def _on_connected(self, *args):
 		self._toast_overlay.dismiss_all()
