@@ -458,6 +458,7 @@ class Client(GObject.Object):
 		"elapsed": (GObject.SignalFlags.RUN_FIRST, None, (float,float,)),
 		"volume": (GObject.SignalFlags.RUN_FIRST, None, (float,)),
 		"playlist": (GObject.SignalFlags.RUN_FIRST, None, (int,int,str,)),
+		"songs-added": (GObject.SignalFlags.RUN_FIRST, None, (int,)),
 		"repeat": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"random": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"single": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -473,6 +474,8 @@ class Client(GObject.Object):
 		super().__init__()
 		self._settings=settings
 		self._cached_status={}
+		self._known_songids=set()
+		self._cached_playlist_changes=[]
 
 	def _post_connect(self):
 		self._socket.settimeout(None)
@@ -649,6 +652,8 @@ class Client(GObject.Object):
 		except BrokenPipeError:
 			pass
 		self._cached_status={}
+		self._known_songids=set()
+		self._cached_playlist_changes=[]
 		self.emit("disconnected")
 
 	def connected(self):
@@ -786,6 +791,9 @@ class Client(GObject.Object):
 		for song in self._parse_songs():
 			yield song
 
+	def get_cached_playlist_changes(self):
+		return self._cached_playlist_changes
+
 	def get_absolute_path(self, song):
 		stripped_uri=re.sub(r"(.*\.cue)\/track\d+$", r"\1", song["file"], flags=re.IGNORECASE)
 		if GLib.file_test(stripped_uri, GLib.FileTest.IS_REGULAR):
@@ -908,6 +916,12 @@ class Client(GObject.Object):
 			if "updating_db" in diff:
 				self.emit("updating-db")
 			if (playlist:=diff.get("playlist")) is not None:
+				self._cached_playlist_changes=list(self.get_playlist_changes(last_status.get("playlist")))
+				new_songids={int(changed_song["id"]) for changed_song in self._cached_playlist_changes}
+				added_songids=new_songids-self._known_songids
+				self._known_songids|=new_songids
+				if last_status and added_songids:
+					self.emit("songs-added", len(added_songids))
 				self.emit("playlist", int(playlist), int(self._cached_status["playlistlength"]), self._cached_status.get("song"))
 				song=self.currentsong()
 			if (songid:=diff.get("songid")) is not None:
@@ -2113,7 +2127,7 @@ class PlaylistView(ListBase, Gtk.ListView):
 	def _on_playlist_changed(self, client, version, length, songpos):
 		self._menu.popdown()
 		self._song_menu.popdown()
-		for song in self._client.get_playlist_changes(self._playlist_version):
+		for song in self._client.get_cached_playlist_changes():
 			self._selection_model.set(int(song["pos"]), song)
 		self._selection_model.clear(length)
 		self._refresh_selection(songpos)
@@ -2795,6 +2809,7 @@ class MainWindow(Adw.ApplicationWindow):
 		self._settings.connect_after("notify::cursor-watch", self._on_cursor_watch)
 		self._client.connect("songid", self._on_songid_or_metadata_changed)
 		self._client.connect("metadata", self._on_songid_or_metadata_changed)
+		self._client.connect("songs-added", self._on_songs_added)
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("server-error", self._on_server_error)
@@ -2859,6 +2874,9 @@ class MainWindow(Adw.ApplicationWindow):
 
 	def _on_songid_or_metadata_changed(self, client, song, *args):
 		self._update_title(song)
+
+	def _on_songs_added(self, client, count):
+		self._toast_overlay.add_toast(Adw.Toast(title=ngettext("{n} song added", "{n} songs added", count).format(n=count)))
 
 	def _on_connected(self, *args):
 		self._toast_overlay.dismiss_all()
