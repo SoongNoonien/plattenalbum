@@ -475,6 +475,7 @@ class Client(GObject.Object):
 		self._settings=settings
 		self._cached_status={}
 		self._known_songids=set()
+		self._songs_added_override=None
 		self._cached_playlist_changes=[]
 
 	def _post_connect(self):
@@ -653,6 +654,7 @@ class Client(GObject.Object):
 			pass
 		self._cached_status={}
 		self._known_songids=set()
+		self._songs_added_override=None
 		self._cached_playlist_changes=[]
 		self.emit("disconnected")
 
@@ -711,12 +713,14 @@ class Client(GObject.Object):
 
 	def enqueue(self):
 		song=self.currentsong()
+		length_before=int(self.status()["playlistlength"])
 		self.tidy_playlist()
 		self.append_album(song.get_album())
 		self._send_command(f"playlistfind file {song.get_quoted_file()}")
 		if duplicate:=self._parse_song():
 			self._run_command(f'swapid {song["id"]} {duplicate["id"]}')
 			self._run_command(f'deleteid {duplicate["id"]}')
+		self._songs_added_override=max(0, int(self.status()["playlistlength"])-length_before)
 
 	def tidy_playlist(self):
 		self._run_command(f"moveid {self.get_songid()} 0")
@@ -920,10 +924,14 @@ class Client(GObject.Object):
 				new_songids={int(changed_song["id"]) for changed_song in self._cached_playlist_changes}
 				added_songids=new_songids-self._known_songids
 				self._known_songids|=new_songids
-				if last_status and added_songids:
-					self.emit("songs-added", len(added_songids))
+				added_count=len(added_songids)
+				if self._songs_added_override is not None:
+					added_count=self._songs_added_override
+				if last_status and added_count:
+					self.emit("songs-added", added_count)
 				self.emit("playlist", int(playlist), int(self._cached_status["playlistlength"]), self._cached_status.get("song"))
 				song=self.currentsong()
+			self._songs_added_override=None  # only valid for the poll right after enqueue
 			if (songid:=diff.get("songid")) is not None:
 				if song is None:
 					song=self.currentsong()
