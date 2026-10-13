@@ -1566,8 +1566,7 @@ class AlbumRow(ListRow):
 		self._cover=AlbumCover()
 		self._title=Gtk.Label(xalign=0, single_line_mode=True, ellipsize=Pango.EllipsizeMode.END)
 		self._date=Gtk.Label(xalign=0, single_line_mode=True, css_classes=["dimmed", "caption"])
-		play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"), css_classes=["flat"])
-		play_button.connect("clicked", lambda *args: client.play_album(self.album))
+		self._play_button=Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play"), css_classes=["flat"])
 
 		# packing
 		label_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3, hexpand=True)
@@ -1575,7 +1574,7 @@ class AlbumRow(ListRow):
 		label_box.append(self._date)
 		box=Gtk.Box(spacing=3, margin_start=3)
 		box.append(label_box)
-		box.append(play_button)
+		box.append(self._play_button)
 		self.append(self._cover)
 		self.append(box)
 
@@ -1592,6 +1591,12 @@ class AlbumRow(ListRow):
 			album.cover=self._client.get_cover(album)
 		self._cover.set_paintable(album.cover)
 
+	def connect_handlers(self):
+		self._handler_id=self._play_button.connect("clicked", lambda *args: self._client.play_album(self.album))
+
+	def disconnect_handlers(self):
+		self._play_button.disconnect(self._handler_id)
+
 class AlbumsView(ListBase, Gtk.GridView):
 	def __init__(self, client):
 		super().__init__(tab_behavior=Gtk.ListTabBehavior.ITEM, single_click_activate=True, vexpand=True, max_columns=2)
@@ -1607,9 +1612,14 @@ class AlbumsView(ListBase, Gtk.GridView):
 		def bind(factory, item):
 			row=item.get_child()
 			row.set_album(item.get_item())
+			row.connect_handlers()
+		def unbind(factory, item):
+			row=item.get_child()
+			row.disconnect_handlers()
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
+		factory.connect("unbind", unbind)
 		self.set_factory(factory)
 
 		# menu
