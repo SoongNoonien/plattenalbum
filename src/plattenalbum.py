@@ -1607,8 +1607,7 @@ class AlbumsView(ListBase, Gtk.GridView):
 
 		# factory
 		def setup(factory, item):
-			row=AlbumRow(self._client)
-			item.set_child(row)
+			item.set_child(AlbumRow(self._client))
 		def bind(factory, item):
 			row=item.get_child()
 			row.set_album(item.get_item())
@@ -2030,8 +2029,7 @@ class PlaylistView(ListBase, Gtk.ListView):
 			item.set_child(SongRow())
 		def bind(factory, item):
 			row=item.get_child()
-			song=item.get_item()
-			row.set_song(song)
+			row.set_song(item.get_item())
 		factory=Gtk.SignalListItemFactory()
 		factory.connect("setup", setup)
 		factory.connect("bind", bind)
