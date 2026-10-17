@@ -1344,7 +1344,10 @@ class AlbumCover(Gtk.Widget):
 		super().__init__(hexpand=True, **kwargs)
 		self._picture=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
 		self._picture.set_parent(self)
-		self.connect("destroy", lambda *args: self._picture.unparent())
+
+	def do_dispose(self):
+		self._picture.unparent()
+		super().do_dispose()
 
 	def do_get_request_mode(self):
 		return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
