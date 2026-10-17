@@ -1356,7 +1356,7 @@ class AlbumCover(Gtk.Widget):
 		self._picture.allocate(width, height, baseline, None)
 
 	def do_measure(self, orientation, for_size):
-		size=max(0, for_size)
+		size=max(64, for_size)
 		return (size, size, -1, -1)
 
 	def set_paintable(self, paintable):
