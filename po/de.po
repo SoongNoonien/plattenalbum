@@ -386,6 +386,13 @@ msgstr "Datenbank wird aktualisiert"
 msgid "Database updated"
 msgstr "Datenbank aktualisiert"
 
+#: src/plattenalbum.py:2879
+#, python-brace-format
+msgid "{n} song added to playlist"
+msgid_plural "{n} songs added to playlist"
+msgstr[0] "{n} Titel zur Wiedergabeliste hinzugefügt"
+msgstr[1] "{n} Titel zur Wiedergabeliste hinzugefügt"
+
 #: src/plattenalbum.py:3032
 msgid "translator-credits"
 msgstr "Martin Wagner <martin.wagner.dev@gmail.com>"
