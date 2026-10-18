@@ -58,6 +58,14 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.8.1" date="2026-10-18">
+      <description translate="no">
+        <ul>
+          <li>Fix a memory leak</li>
+          <li>Fix a crash</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.8.0" date="2026-10-10">
       <description translate="no">
         <ul>
