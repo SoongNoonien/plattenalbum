@@ -1675,7 +1675,7 @@ class AlbumsView(ListBase, Gtk.GridView):
 class AlbumsPage(Adw.NavigationPage):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (Album,))}
 	def __init__(self, client, settings):
-		super().__init__(title=_("Albums"), tag="album_list")
+		super().__init__(title=_("Albums"), tag="album-list")
 		self._settings=settings
 		self._client=client
 		self._artist=None
@@ -1907,7 +1907,7 @@ class Browser(Gtk.Stack):
 
 	def _on_artist_selected(self, widget, artist):
 		self._navigation_split_view.set_show_content(True)
-		self._album_navigation_view.replace_with_tags(["album_list"])
+		self._album_navigation_view.replace_with_tags(["album-list"])
 		self._albums_page.display(artist)
 
 	def _on_album_selected(self, widget, album):
@@ -1928,13 +1928,13 @@ class Browser(Gtk.Stack):
 		album_page.play_button.grab_focus()
 
 	def _on_disconnected(self, *args):
-		self._album_navigation_view.pop_to_tag("album_list")
+		self._album_navigation_view.pop_to_tag("album-list")
 		self.set_visible_child_name("browser")
 		self._navigation_split_view.set_show_content(False)
 		self.search_entry.emit("stop-search")
 
 	def _on_connected_or_updated_db(self, client, database_is_empty):
-		self._album_navigation_view.pop_to_tag("album_list")
+		self._album_navigation_view.pop_to_tag("album-list")
 		self.search_entry.emit("stop-search")
 		self.search_entry.set_text("")
 		if database_is_empty:
