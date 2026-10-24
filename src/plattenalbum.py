@@ -1934,6 +1934,7 @@ class Browser(Gtk.Stack):
 		self.search_entry.emit("stop-search")
 
 	def _on_connected_or_updated_db(self, client, database_is_empty):
+		self._album_navigation_view.pop_to_tag("album_list")
 		self.search_entry.emit("stop-search")
 		self.search_entry.set_text("")
 		if database_is_empty:
