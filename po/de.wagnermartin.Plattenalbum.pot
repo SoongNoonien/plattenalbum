@@ -380,6 +380,13 @@ msgstr ""
 msgid "Database updated"
 msgstr ""
 
+#: src/plattenalbum.py:2879
+#, python-brace-format
+msgid "{n} song added to playlist"
+msgid_plural "{n} songs added to playlist"
+msgstr[0] ""
+msgstr[1] ""
+
 #: src/plattenalbum.py:3032
 msgid "translator-credits"
 msgstr ""
