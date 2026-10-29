@@ -521,7 +521,7 @@ msgstr "Continuo"
 
 #: data/shortcuts-dialog.ui:118
 msgid "Single Songs"
-msgstr "Canzone Singola"
+msgstr "Canzoni Singole"
 
 #: data/shortcuts-dialog.ui:124
 msgid "Pause Next Song"
