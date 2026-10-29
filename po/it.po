@@ -79,7 +79,7 @@ msgid ""
 "to seamlessly connect to it."
 msgstr ""
 "Per prima cosa, installa Music Player Daemon (<tt>mpd</tt>) con il gestore "
-"pacchetti del tuo sistema, ed esegui i seguenti comandi per configurare e "
+"pacchetti del tuo sistema ed esegui i seguenti comandi per configurare ed "
 "inizializzare una istanza locale di base. Fatto quello, Plattenalbum "
 "dovrebbe essere in grado di connettersi ad essa senza problemi."
 
@@ -109,7 +109,7 @@ msgstr "Canzoni"
 
 #: src/plattenalbum.py:1081
 msgid "Total Playtime"
-msgstr "Tempo di Riproduzione"
+msgstr "Tempo totale di Riproduzione"
 
 #: src/plattenalbum.py:1083
 msgid "Last Update"
@@ -371,7 +371,7 @@ msgid ""
 "To use Plattenalbum, an instance of the Music Player Daemon needs to be set "
 "up and running on this device or another one on the network"
 msgstr ""
-"Per usare Plattenalbum, una istanza di Music Player Daemon deve essere in "
+"Per usare Plattenalbum, un'istanza di Music Player Daemon deve essere in "
 "esecuzione su questo dispositivo o su uno nella rete locale"
 
 #: src/plattenalbum.py:2801
@@ -435,7 +435,7 @@ msgid ""
 "Browse your collection while viewing large album covers. Play your music "
 "without managing playlists."
 msgstr ""
-"Sfoglia la tua collezione ammirano le copertine. Riproduci la tua musica "
+"Sfoglia la tua collezione attraverso le copertine. Riproduci la tua musica "
 "senza gestire le playlist."
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:37
