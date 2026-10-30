@@ -632,7 +632,7 @@ class Client(GObject.Object):
 					pass
 			if "tagtypes" not in commands or "status" not in commands:
 				self.close_connection()
-				self.emit("server-error", _("Not enough permissions"))
+				self.emit("server-error", _("Insufficient permissions"))
 				return False
 			self._set_default_tagtypes()
 			self._settings.set_boolean("manual-connection", manual)

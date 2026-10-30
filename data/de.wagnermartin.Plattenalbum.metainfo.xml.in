@@ -8,7 +8,7 @@
   <summary>Connect to your music</summary>
   <description>
     <p>A client for the Music Player Daemon (MPD).</p>
-    <p>Browse your collection while viewing large album covers. Play your music without managing playlists.</p>
+    <p>Browse your collection by viewing large album covers. Play your music without managing playlists.</p>
   </description>
   <launchable type="desktop-id">de.wagnermartin.Plattenalbum.desktop</launchable>
   <translation type="gettext">de.wagnermartin.Plattenalbum</translation>
