@@ -632,7 +632,7 @@ class Client(GObject.Object):
 					pass
 			if "tagtypes" not in commands or "status" not in commands:
 				self.close_connection()
-				self.emit("server-error", _("Not enough permissions"))
+				self.emit("server-error", _("Insufficient permissions"))
 				return False
 			self._set_default_tagtypes()
 			self._settings.set_boolean("manual-connection", manual)
@@ -1344,7 +1344,10 @@ class AlbumCover(Gtk.Widget):
 		super().__init__(hexpand=True, **kwargs)
 		self._picture=Gtk.Picture(css_classes=["cover"], accessible_role=Gtk.AccessibleRole.PRESENTATION)
 		self._picture.set_parent(self)
-		self.connect("destroy", lambda *args: self._picture.unparent())
+
+	def do_dispose(self):
+		self._picture.unparent()
+		super().do_dispose()
 
 	def do_get_request_mode(self):
 		return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
@@ -1353,7 +1356,7 @@ class AlbumCover(Gtk.Widget):
 		self._picture.allocate(width, height, baseline, None)
 
 	def do_measure(self, orientation, for_size):
-		size=max(0, for_size)
+		size=max(64, for_size)
 		return (size, size, -1, -1)
 
 	def set_paintable(self, paintable):
@@ -1672,7 +1675,7 @@ class AlbumsView(ListBase, Gtk.GridView):
 class AlbumsPage(Adw.NavigationPage):
 	__gsignals__={"album-selected": (GObject.SignalFlags.RUN_FIRST, None, (Album,))}
 	def __init__(self, client, settings):
-		super().__init__(title=_("Albums"), tag="album_list")
+		super().__init__(title=_("Albums"), tag="album-list")
 		self._settings=settings
 		self._client=client
 		self._artist=None
@@ -1904,7 +1907,7 @@ class Browser(Gtk.Stack):
 
 	def _on_artist_selected(self, widget, artist):
 		self._navigation_split_view.set_show_content(True)
-		self._album_navigation_view.replace_with_tags(["album_list"])
+		self._album_navigation_view.replace_with_tags(["album-list"])
 		self._albums_page.display(artist)
 
 	def _on_album_selected(self, widget, album):
@@ -1925,12 +1928,13 @@ class Browser(Gtk.Stack):
 		album_page.play_button.grab_focus()
 
 	def _on_disconnected(self, *args):
-		self._album_navigation_view.pop_to_tag("album_list")
+		self._album_navigation_view.pop_to_tag("album-list")
 		self.set_visible_child_name("browser")
 		self._navigation_split_view.set_show_content(False)
 		self.search_entry.emit("stop-search")
 
 	def _on_connected_or_updated_db(self, client, database_is_empty):
+		self._album_navigation_view.pop_to_tag("album-list")
 		self.search_entry.emit("stop-search")
 		self.search_entry.set_text("")
 		if database_is_empty:
