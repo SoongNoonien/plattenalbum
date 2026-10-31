@@ -450,7 +450,7 @@ class Client(GObject.Object):
 		"updating-db": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"updated-db": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
 		"disconnected": (GObject.SignalFlags.RUN_FIRST, None, ()),
-		"connected": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+		"connected": (GObject.SignalFlags.RUN_FIRST, None, ()),
 		"server-error": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
 		"songid": (GObject.SignalFlags.RUN_FIRST, None, (Song,Gdk.Paintable,str,str,str,str,)),
 		"metadata": (GObject.SignalFlags.RUN_FIRST, None, (Song,)),
@@ -636,7 +636,7 @@ class Client(GObject.Object):
 				return False
 			self._set_default_tagtypes()
 			self._settings.set_boolean("manual-connection", manual)
-			self.emit("connected", self._database_is_empty())
+			self.emit("connected")
 			GLib.timeout_add(100, self._main_loop)
 			return False
 		GLib.idle_add(callback)
@@ -907,6 +907,8 @@ class Client(GObject.Object):
 			diff=dict(set(self._cached_status.items())-set(last_status.items()))
 			if "updating_db" in diff:
 				self.emit("updating-db")
+			elif not last_status:
+				self.emit("updated-db", self._database_is_empty())
 			if (playlist:=diff.get("playlist")) is not None:
 				self.emit("playlist", int(playlist), int(self._cached_status["playlistlength"]), self._cached_status.get("song"))
 				song=self.currentsong()
@@ -1503,7 +1505,6 @@ class ArtistList(Gtk.ListView):
 		# connect
 		self.connect("activate", self._on_activate)
 		self._client.connect("disconnected", self._on_disconnected)
-		self._client.connect("connected", self._on_connected)
 		self._client.connect("updated-db", self._on_updated_db)
 
 	def select(self, artist):
@@ -1529,19 +1530,17 @@ class ArtistList(Gtk.ListView):
 	def _on_disconnected(self, *args):
 		self._clear()
 
-	def _on_connected(self, client, database_is_empty):
-		if not database_is_empty:
-			self._refresh()
-			if (song:=self._client.currentsong()):
-				self.select(song.get_album_artist())
-
 	def _on_updated_db(self, client, database_is_empty):
 		if database_is_empty:
 			self._clear()
 		else:
+			artist=None
 			if (selected:=self._selection_model.get_selected()) is not None:
 				artist=self._selection_model.get_item(selected)
-				self._refresh()
+			elif (song:=self._client.currentsong()):
+				artist=song.get_album_artist()
+			self._refresh()
+			if artist is not None:
 				self.select(artist)
 
 class AlbumMenu(ContextMenu):
@@ -1811,6 +1810,15 @@ class MainMenuButton(Gtk.MenuButton):
 		menu.append_section(None, app_section)
 		self.set_menu_model(menu)
 
+class BrowserPage(Adw.Bin):
+	def __init__(self, content):
+		super().__init__()
+		header_bar=Adw.HeaderBar(show_title=False)
+		header_bar.pack_end(MainMenuButton())
+		toolbar_view=Adw.ToolbarView(content=content)
+		toolbar_view.add_top_bar(header_bar)
+		self.set_child(toolbar_view)
+
 class Browser(Gtk.Stack):
 	def __init__(self, client, settings):
 		super().__init__()
@@ -1856,12 +1864,12 @@ class Browser(Gtk.Stack):
 		breakpoint_bin.add_breakpoint(break_point)
 		breakpoint_bin.set_child(self._navigation_split_view)
 
-		# status page
-		status_page=Adw.StatusPage(icon_name="folder-music-symbolic", title=_("Collection is Empty"))
-		status_page_header_bar=Adw.HeaderBar(show_title=False)
-		status_page_header_bar.pack_end(MainMenuButton())
-		status_page_toolbar_view=Adw.ToolbarView(content=status_page)
-		status_page_toolbar_view.add_top_bar(status_page_header_bar)
+		# status pages
+		empty_collection_view=BrowserPage(Adw.StatusPage(icon_name="folder-music-symbolic", title=_("Collection is Empty")))
+		status_page=Adw.StatusPage(title=_("Updating…"))
+		spinner=Adw.SpinnerPaintable(widget=status_page)
+		status_page.set_paintable(spinner)
+		updating_view=BrowserPage(status_page)
 
 		# navigation view
 		self._navigation_view=Adw.NavigationView()
@@ -1879,18 +1887,26 @@ class Browser(Gtk.Stack):
 		self.search_entry.connect("stop-search", self._on_search_stopped)
 		self._navigation_view.connect("popped", lambda view, page: self.search_entry.select_region(0, -1))
 		client.connect("disconnected", self._on_disconnected)
-		client.connect("connected", self._on_connected_or_updated_db)
-		client.connect("updated-db", self._on_connected_or_updated_db)
+		client.connect("updating-db", self._on_updating_db)
+		client.connect("updated-db", self._on_updated_db)
 		client.connect("show-album", lambda widget, album: self._show_album(album))
 
 		# packing
 		self.add_named(self._navigation_view, "browser")
-		self.add_named(status_page_toolbar_view, "empty-collection")
+		self.add_named(empty_collection_view, "empty-collection")
+		self.add_named(updating_view, "updating")
 
 	def search(self):
 		if self._navigation_view.get_visible_page_tag() != "search":
 			self._navigation_view.push_by_tag("search")
 		self.search_entry.grab_focus()
+
+	def _clear(self):
+		self._album_navigation_view.pop_to_tag("album-list")
+		self._navigation_split_view.set_show_content(False)
+		self.search_entry.emit("stop-search")
+		self.search_entry.set_text("")
+		self.set_visible_child_name("browser")
 
 	def _on_search_started(self, entry):
 		self.search()
@@ -1928,15 +1944,13 @@ class Browser(Gtk.Stack):
 		album_page.play_button.grab_focus()
 
 	def _on_disconnected(self, *args):
-		self._album_navigation_view.pop_to_tag("album-list")
-		self.set_visible_child_name("browser")
-		self._navigation_split_view.set_show_content(False)
-		self.search_entry.emit("stop-search")
+		self._clear()
 
-	def _on_connected_or_updated_db(self, client, database_is_empty):
-		self._album_navigation_view.pop_to_tag("album-list")
-		self.search_entry.emit("stop-search")
-		self.search_entry.set_text("")
+	def _on_updating_db(self, *args):
+		self._clear()
+		self.set_visible_child_name("updating")
+
+	def _on_updated_db(self, client, database_is_empty):
 		if database_is_empty:
 			self.set_visible_child_name("empty-collection")
 		else:
@@ -2812,8 +2826,6 @@ class MainWindow(Adw.ApplicationWindow):
 		self._client.connect("connected", self._on_connected)
 		self._client.connect("disconnected", self._on_disconnected)
 		self._client.connect("server-error", self._on_server_error)
-		self._client.connect("updating-db", self._on_updating_db)
-		self._client.connect("updated-db", self._on_updated_db)
 		self._client.connect("show-album", lambda *args: self._bottom_sheet.set_open(False))
 
 		# packing
@@ -2900,15 +2912,6 @@ class MainWindow(Adw.ApplicationWindow):
 			dialog.close()
 		self._toast_overlay.dismiss_all()
 		self._toast_overlay.add_toast(Adw.Toast(title=message))
-
-	def _on_updating_db(self, *args):
-		self._toast_overlay.add_toast(Adw.Toast(title=_("Database is being updated"), timeout=0))
-
-	def _on_updated_db(self, *args):
-		self._toast_overlay.dismiss_all()
-		if isinstance(dialog:=self.get_visible_dialog(), ServerInfo):
-			dialog.close()
-		self._toast_overlay.add_toast(Adw.Toast(title=_("Database updated")))
 
 	def _on_cursor_watch(self, obj, typestring):
 		if obj.get_property("cursor-watch"):
