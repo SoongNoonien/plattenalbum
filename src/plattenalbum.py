@@ -2734,7 +2734,8 @@ class MainWindow(Adw.ApplicationWindow):
 
 		# widgets
 		self._browser=Browser(self._client, self._settings)
-		self._browser.search_entry.set_key_capture_widget(self)
+		# TODO: re-enable once https://gitlab.gnome.org/GNOME/gtk/-/work_items/8349 is fixed
+#+		self._browser.search_entry.set_key_capture_widget(self)
 		player=Player(self._client, self._settings)
 
 		# actions
