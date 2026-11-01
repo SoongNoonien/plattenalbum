@@ -2542,7 +2542,6 @@ class VolumeControl(Gtk.Box):
 class PlayerMenu(Gtk.PopoverMenu):
 	def __init__(self, client):
 		super().__init__()
-		self._volume_visible=False
 
 		# volume
 		self._volume_control=VolumeControl(client)
@@ -2570,18 +2569,17 @@ class PlayerMenu(Gtk.PopoverMenu):
 		client.connect("disconnected", self._on_disconnected)
 
 	def _on_volume_changed(self, client, volume):
-		if volume < 0 and self._volume_visible:
+		if volume < 0 and self._volume_control.is_ancestor(self):
+			self.remove_child(self._volume_control)
 			self._menu.remove(0)
-			self._volume_visible=False
-		elif volume >= 0 and not self._volume_visible:
+		elif volume >= 0 and not self._volume_control.is_ancestor(self):
 			self._menu.prepend_item(self._volume_item)
 			self.add_child(self._volume_control, "volume")
-			self._volume_visible=True
 
 	def _on_disconnected(self, *args):
-		if self._volume_visible:
+		if self._volume_control.is_ancestor(self):
+			self.remove_child(self._volume_control)
 			self._menu.remove(0)
-			self._volume_visible=False
 
 class Player(Adw.Bin):
 	def __init__(self, client, settings):
