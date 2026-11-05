@@ -56,16 +56,12 @@ msgid "Disable if “MPRIS” is supported by another client"
 msgstr "Отключите, если MPRIS поддерживается другим клиентом"
 
 #: src/plattenalbum.py:1005
-#, fuzzy
-#| msgid "Local Connection"
 msgid "Manual Connection"
-msgstr "Локальное подключение"
+msgstr "Ручное подключение"
 
 #: src/plattenalbum.py:1008
-#, fuzzy
-#| msgid "Host Name"
 msgid "Host"
-msgstr "Имя хоста"
+msgstr "Хост"
 
 #: src/plattenalbum.py:1012
 msgid "Port"
@@ -101,21 +97,19 @@ msgstr ""
 
 #: src/plattenalbum.py:1069
 msgid "Information"
-msgstr ""
+msgstr "Информация"
 
 #: src/plattenalbum.py:1079
 msgid "Server"
-msgstr ""
+msgstr "Сервер"
 
 #: src/plattenalbum.py:1080
-#, fuzzy
-#| msgid "Database Update"
 msgid "Database"
-msgstr "Актуальность базы данных"
+msgstr "База данных"
 
 #: src/plattenalbum.py:1084
 msgid "Address"
-msgstr ""
+msgstr "Адрес"
 
 #: src/plattenalbum.py:1085
 msgid "Protocol"
@@ -130,10 +124,8 @@ msgid "Total Playtime"
 msgstr "Время проигрывания всей коллекции"
 
 #: src/plattenalbum.py:1089
-#, fuzzy
-#| msgid "Database Update"
 msgid "Last Update"
-msgstr "Актуальность базы данных"
+msgstr "Последнее обновление"
 
 #: src/plattenalbum.py:1221 src/plattenalbum.py:1922
 msgid "Context menu"
@@ -149,11 +141,11 @@ msgstr "Воспроизвести следующим"
 
 #: src/plattenalbum.py:1248 src/plattenalbum.py:1942
 msgid "Show Al_bum"
-msgstr ""
+msgstr "Показать альбом"
 
 #: src/plattenalbum.py:1249 src/plattenalbum.py:1943
 msgid "Show _File"
-msgstr ""
+msgstr "Показать файл"
 
 #. boxes
 #: src/plattenalbum.py:1466 src/plattenalbum.py:1803
@@ -167,20 +159,16 @@ msgstr "Альбомы"
 
 #. status page
 #: src/plattenalbum.py:1479
-#, fuzzy
-#| msgid "No Results Found"
 msgid "No Results"
-msgstr "Не найдено"
+msgstr "Нет результатов"
 
 #: src/plattenalbum.py:1479
 msgid "Try a different search"
 msgstr "Попробовать снова"
 
 #: src/plattenalbum.py:1540
-#, fuzzy
-#| msgid "Unknown Album"
 msgid "Unknown Artist"
-msgstr "Неизвестный альбом"
+msgstr "Неизвестный исполнитель"
 
 #: src/plattenalbum.py:1615
 #, python-brace-format
@@ -197,14 +185,12 @@ msgstr "Обложка неизвестного альбома"
 
 #. status page
 #: src/plattenalbum.py:1660
-#, fuzzy
-#| msgid "Albums"
 msgid "No Albums"
-msgstr "Альбомы"
+msgstr "Нет альбомов"
 
 #: src/plattenalbum.py:1660
 msgid "Select an artist"
-msgstr ""
+msgstr "Выберите исполнителя"
 
 #: src/plattenalbum.py:1691
 #, python-brace-format
@@ -246,7 +232,7 @@ msgstr "Обновить базу данных"
 
 #: src/plattenalbum.py:1775
 msgid "_Server Information"
-msgstr ""
+msgstr "Информация о сервере"
 
 #: src/plattenalbum.py:1786 src/plattenalbum.py:1787
 msgid "Search collection"
@@ -264,10 +250,8 @@ msgid "Collection is Empty"
 msgstr "Фонотека пуста"
 
 #: src/plattenalbum.py:1835
-#, fuzzy
-#| msgid "Collection is Empty"
 msgid "Collection"
-msgstr "Фонотека пуста"
+msgstr "Фонотека"
 
 #: src/plattenalbum.py:1941
 msgid "_Remove"
@@ -295,10 +279,8 @@ msgstr "Показать текущий трек"
 
 #. status pages
 #: src/plattenalbum.py:2247
-#, fuzzy
-#| msgid "No Lyrics Found"
 msgid "No Lyrics"
-msgstr "Текст песни не найден"
+msgstr "Нет текста песни"
 
 #: src/plattenalbum.py:2250
 msgid "Connection Error"
@@ -366,8 +348,6 @@ msgid "Playlist"
 msgstr "Плейлист"
 
 #: src/plattenalbum.py:2583
-#, fuzzy
-#| msgid "_Lyrics"
 msgid "Lyrics"
 msgstr "Текст песни"
 
@@ -397,14 +377,12 @@ msgstr ""
 "или ином устройстве в сети"
 
 #: src/plattenalbum.py:2773
-#, fuzzy
-#| msgid "Connect _Locally"
 msgid "Connect _Manually"
-msgstr "Подключиться локально"
+msgstr "Подключиться вручную"
 
 #: src/plattenalbum.py:2876
 msgid "Playing music"
-msgstr ""
+msgstr "Воспроизведение музыки"
 
 #: src/plattenalbum.py:3003
 msgid "translator-credits"
@@ -426,17 +404,15 @@ msgstr "Играет «{title}»"
 
 #: src/plattenalbum.py:3051
 msgid "Skip"
-msgstr ""
+msgstr "Пропустить"
 
 #: src/plattenalbum.py:3058
-#, fuzzy
-#| msgid "Playback Options"
 msgid "Playback Finished"
-msgstr "Настройки воспроизведения"
+msgstr "Воспроизведение завершено"
 
 #: src/plattenalbum.py:3059
 msgid "The playlist is over"
-msgstr ""
+msgstr "Плейлист закончился"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:7
 #: data/de.wagnermartin.Plattenalbum.desktop.in:3
@@ -465,8 +441,6 @@ msgid "Main window"
 msgstr "Основное окно"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:24
-#, fuzzy
-#| msgid "Album View"
 msgid "Album view"
 msgstr "Просмотр альбома"
 
@@ -475,16 +449,12 @@ msgid "Small window"
 msgstr "Мини-окно"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:36
-#, fuzzy
-#| msgid "Small window"
 msgid "Small window with playlist"
-msgstr "Мини-окно"
+msgstr "Мини-окно с плейлистом"
 
 #: data/de.wagnermartin.Plattenalbum.metainfo.xml.in:40
-#, fuzzy
-#| msgid "Small window"
 msgid "Small window with cover"
-msgstr "Мини-окно"
+msgstr "Мини-окно с обложкой"
 
 #: data/de.wagnermartin.Plattenalbum.desktop.in:4
 msgid "Music Browser"
@@ -492,10 +462,8 @@ msgstr "Браузер музыки"
 
 #. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
 #: data/de.wagnermartin.Plattenalbum.desktop.in:11
-#, fuzzy
-#| msgid "Music;Player;"
 msgid "music;player;audio;MPD;"
-msgstr "Music;Player;"
+msgstr "музыка;плеер;аудио;MPD;Music;Player;"
 
 #: data/shortcuts-dialog.ui:6
 msgid "General"
@@ -511,7 +479,7 @@ msgstr "Обновить базу данных"
 
 #: data/shortcuts-dialog.ui:27
 msgid "Server Information"
-msgstr ""
+msgstr "Информация о сервере"
 
 #: data/shortcuts-dialog.ui:33
 msgid "Preferences"
