@@ -635,6 +635,9 @@ class Client(GObject.Object):
 				self.emit("server-error", _("Insufficient permissions"))
 				return False
 			self._set_default_tagtypes()
+			if "binarylimit" in commands:
+				# increase the binary limit to speed up reading album covers
+				self._run_command(f"binarylimit {2 * 1024 * 1024}")
 			self._settings.set_boolean("manual-connection", manual)
 			self.emit("connected")
 			GLib.timeout_add(100, self._main_loop)
