@@ -389,7 +389,7 @@ class Song(collections.UserDict, GObject.Object, metaclass=SongMetaclass):
 	def __setitem__(self, key, value):
 		if key == "duration":
 			super().__setitem__(key, Duration(value))
-		elif key in ("file", "pos", "id"):
+		elif key in ("file", "pos", "id", "last-modified"):
 			super().__setitem__(key, value)
 		elif key in ("track", "title", "artist", "album", "albumartist", "albumartistsort", "date"):
 			if key in self.data:
@@ -443,6 +443,13 @@ class Artist(GObject.Object):
 
 	def tag_filter(self):
 		return TagFilter(albumartist=self.name, albumartistsort=self.sortname)
+
+class AllArtists(Artist):
+	def __init__(self):
+		Artist.__init__(self, _("All artists"), "")
+
+	def __eq__(self, other):
+		return isinstance(other, AllArtists)
 
 class CommandError(Exception): pass
 class Client(GObject.Object):
@@ -758,6 +765,14 @@ class Client(GObject.Object):
 				date=value
 			else:
 				yield Album(artist, value, date)
+
+	def get_all_albums(self):
+		self._send_command('find "(base \'\')" sort "-Last-Modified"')
+		albums = {}
+		for song in self._parse_songs():
+			album = song.get_album()
+			albums[(album.artist.name, album.name, album.date)] = album
+		return albums.values()
 
 	def get_artists(self):
 		self._send_command(f"list albumartist group albumartistsort")
@@ -1521,6 +1536,7 @@ class ArtistList(Gtk.ListView):
 
 	def _refresh(self):
 		self._clear()
+		self._selection_model.append([AllArtists()])
 		self._selection_model.append(sorted(self._client.get_artists(), key=lambda item: locale.strxfrm(item.sortname)))
 
 	def _on_activate(self, widget, pos):
@@ -1727,8 +1743,12 @@ class AlbumsPage(Adw.NavigationPage):
 		main=GLib.main_context_default()
 		while main.pending():
 			main.iteration()
-		self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist.name)])
-		self._selection_model.append(self._client.get_albums(artist))
+		if isinstance(artist, AllArtists):
+			self.update_property([Gtk.AccessibleProperty.LABEL], [_("All albums")])
+			self._selection_model.append(self._client.get_all_albums())
+		else:
+			self.update_property([Gtk.AccessibleProperty.LABEL], [_("Albums of {artist}").format(artist=artist.name)])
+			self._selection_model.append(self._client.get_albums(artist))
 		self._settings.set_property("cursor-watch", False)
 
 	def _on_activate(self, widget, pos):
