@@ -1,5 +1,5 @@
 # Spanish translation for de.wagnermartin.Plattenalbum.
-# Copyright (C) 2026 Martin Wagner
+# Copyright (C) 2026 Plattenalbum's COPYRIGHT HOLDER
 # This file is distributed under the same license as the de.wagnermartin.Plattenalbum package.
 # Pedro Flores, 2026.
 #
